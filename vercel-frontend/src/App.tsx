@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import Hls from "hls.js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type ApiResponse } from "./api";
 // Real photos: the image files are in ./assets/ (uploaded to the repo).
@@ -715,9 +716,12 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
   const [vidMuted, setVidMuted] = useState(true);
   // The Baladeur film is the ONLY video on the homepage (verified on
   // hermes.com). It starts moving when scrolled into view and freezes when
-  // out of view or paused — exactly the real behaviour. Hermes' own footage
-  // cannot be copied, so the motion is recreated in-app on the editorial
-  // still (slow cinematic pan); the controls match the real ones.
+  // out of view or paused — exactly the real behaviour. NOTE (2026-11-10):
+  // the original Hermes video file could NOT be wired in yet — its URL is
+  // not in any product asset list, the homepage HTML is Cloudflare-blocked
+  // and the archived copy is rate-limited, so no verified video URL exists
+  // for it. Until one is found, the motion stays recreated in-app on the
+  // editorial still (slow cinematic pan); the controls match the real ones.
   const vidRef = useRef<HTMLElement>(null);
   const [vidInView, setVidInView] = useState(false);
   useEffect(() => { const el = vidRef.current; if (!el) return; const ob = new IntersectionObserver((es) => setVidInView(!!es[0]?.isIntersecting), { threshold: 0.2 }); ob.observe(el); return () => ob.disconnect(); }, []);
@@ -1399,6 +1403,59 @@ function RelatedRow({ title, items, go }: { title: string; items: Product[]; go:
   );
 }
 
+// Real Hermes product video (HLS) — the original hermes.com video for a
+// product, hotlinked from assets.hermes.com (user instruction 2026-11-09/10:
+// use the original video wherever the original site has one). Safari plays
+// HLS natively; every other browser plays it through hls.js. Muted, no
+// autoplay, no seek bar: it only plays while `playing` is true, exactly like
+// the original product-page video. If the stream fails to load, it falls
+// back to the poster still with the old pan motion, so the panel never goes
+// blank.
+function HlsVideo({ src, poster, playing, className }: { src: string; poster: string; playing: boolean; className?: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [ready, setReady] = useState(false);
+  const [failed, setFailed] = useState(false);
+  // A new video URL resets the load state.
+  useEffect(() => { setReady(false); setFailed(false); }, [src]);
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || failed) return;
+    let hls: Hls | null = null;
+    let cancelled = false;
+    const onReady = () => { if (!cancelled) setReady(true); };
+    const onFail = () => { if (!cancelled) setFailed(true); };
+    if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      video.src = src;
+    } else if (Hls.isSupported()) {
+      hls = new Hls({ maxBufferLength: 30 });
+      hls.on(Hls.Events.MANIFEST_PARSED, onReady);
+      hls.on(Hls.Events.ERROR, (_event, data) => { if (data.fatal) onFail(); });
+      hls.loadSource(src);
+      hls.attachMedia(video);
+    } else {
+      video.src = src;
+    }
+    video.addEventListener("loadedmetadata", onReady);
+    video.addEventListener("error", onFail);
+    return () => {
+      cancelled = true;
+      video.removeEventListener("loadedmetadata", onReady);
+      video.removeEventListener("error", onFail);
+      hls?.destroy();
+    };
+  }, [src, failed]);
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !ready || failed) return;
+    if (playing) video.play().catch(() => {});
+    else video.pause();
+  }, [playing, ready, failed]);
+  if (failed) {
+    return <img src={poster} alt="Product video" className={`${className ?? ""}${playing ? " dress-walk" : ""}`} />;
+  }
+  return <video ref={videoRef} muted loop playsInline preload="metadata" poster={poster} className={className} aria-label="Product video" />;
+}
+
 function ProductView({ products, id, go, addToCart, settings, user }: { products: Product[]; id: number; go: (v: View) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; settings: Settings; user: { name: string; email: string } | null }) {
   const p = products.find((x) => x.id === id) ?? products[0];
   // Finish options (e.g. the Kelly Pocket belt's Gold / Argenté buckle group)
@@ -1461,7 +1518,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
   // exact complaint ("2nd and 3rd photos are in the wrong style or just
   // repeat the first"). Colour switch reloads the WHOLE gallery with the
   // selected colourway's own photos and backgrounds, thumbnails included.
-  type GalView = { label: string; src: string; video?: boolean };
+  type GalView = { label: string; src: string; video?: boolean; videoSrc?: string };
   const views: GalView[] = galleryForProduct(p, colorIdx);
   const curView = views[thumb] ?? views[0];
   // Colour switch reloads the WHOLE gallery: the new colourway's own view
@@ -1529,7 +1586,11 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
               <div key={v.label + i} data-panel data-viewsrc={v.src} className={`relative aspect-[3/4] w-[82%] shrink-0 snap-center overflow-hidden bg-[#efe9df] sm:w-[48%] lg:w-[33.5%] ${thumb === i ? "ring-1 ring-black/50" : ""}`}>
                 {v.video ? (
                   <button aria-label={vidPlaying && thumb === i ? "Pause video" : "Play video"} aria-pressed={vidPlaying && thumb === i} className="relative block h-full w-full" onClick={() => { if (thumb === i) setVidPlaying(!vidPlaying); else { setThumb(i); setVidPlaying(true); } }}>
-                    <img src={v.src} alt={`${p.name} — video`} className={`h-full w-full object-cover ${vidPlaying && thumb === i ? "dress-walk" : ""}`} />
+                    {v.videoSrc ? (
+                      <HlsVideo src={v.videoSrc} poster={v.src} playing={vidPlaying && thumb === i && !zoomOpen} className="h-full w-full object-cover" />
+                    ) : (
+                      <img src={v.src} alt={`${p.name} — video`} className={`h-full w-full object-cover ${vidPlaying && thumb === i ? "dress-walk" : ""}`} />
+                    )}
                     {!(vidPlaying && thumb === i) && <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true"><span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-black"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg></span></span>}
                     <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center bg-white text-black shadow" aria-hidden="true">
                       {vidPlaying && thumb === i
@@ -1661,6 +1722,13 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
         </div>
       </div>
 
+      {/* NOTE (2026-11-10): the original "tying your Twilly" video for this
+          scarf (a 16-second clip below the description on hermes.com) could
+          NOT be wired in yet — its video URL is not in any product asset
+          list and the scarf page HTML is Cloudflare-blocked, so no verified
+          video URL exists for it. Until one is found, the motion stays
+          recreated in-app on the product photo (slow pan); the controls
+          match the real ones. */}
       {isScarfStory && (
         <section className="mx-auto mt-12 max-w-5xl px-4 sm:px-6">
           <h2 className="text-[12px] font-semibold uppercase tracking-[0.25em]">Play the illustration video</h2>
@@ -1713,7 +1781,11 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
           <div className="relative flex flex-1 items-center justify-center overflow-hidden px-4 pb-28">
             {curView.video ? (
               <button aria-label={vidPlaying ? "Pause video" : "Play video"} aria-pressed={vidPlaying} className="relative block max-h-full" onClick={() => setVidPlaying(!vidPlaying)}>
-                <img src={curView.src} alt={`${p.name} — video`} className={`max-h-[62vh] w-auto object-contain ${vidPlaying ? "dress-walk" : ""}`} />
+                {curView.videoSrc ? (
+                  <HlsVideo src={curView.videoSrc} poster={curView.src} playing={vidPlaying} className="max-h-[62vh] w-auto object-contain" />
+                ) : (
+                  <img src={curView.src} alt={`${p.name} — video`} className={`max-h-[62vh] w-auto object-contain ${vidPlaying ? "dress-walk" : ""}`} />
+                )}
                 {!vidPlaying && <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true"><span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-black"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg></span></span>}
               </button>
             ) : (

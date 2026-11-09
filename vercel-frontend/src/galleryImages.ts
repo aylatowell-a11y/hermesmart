@@ -17,7 +17,12 @@
 // the ORIGINAL Hermes photos hotlinked from assets.hermes.com, because the
 // generated type set showed a sneaker for these sandals. Each hotlinked
 // URL was verified to load (HTTP 200) and to show the correct product and
-// view before it was wired in.
+// view before it was wired in. The same exception covers the two dresses'
+// "Video" views (user instruction 2026-11-10): the Mid-length buttoned
+// dress and the Long sleeveless dress play the ORIGINAL Hermes video
+// (HLS .m3u8, hotlinked from assets.hermes.com, played via hls.js), not
+// the old pan-over-stills. Each video URL was verified to load (HTTP 200)
+// and its poster frame visually confirmed to show the correct dress.
 import kellyFront from "./assets/gallery/kelly-belt-front.webp";
 import kellyWorn from "./assets/gallery/kelly-belt-worn.webp";
 import kellyFront2 from "./assets/gallery/kelly-belt-front2.webp";
@@ -111,7 +116,7 @@ export type GalleryProduct = {
   colors?: { name: string }[];
 };
 
-const V = (label: string, src: string) => ({ label, src });
+const V = (label: string, src: string, videoSrc?: string) => ({ label, src, videoSrc });
 
 // Audited products — exact view sets from the verified per-view specs.
 const KELLY_NOIR = [V("Front", kellyFront), V("Worn", kellyWorn), V("Front", kellyFront2), V("Detail", kellyDetail)];
@@ -123,13 +128,24 @@ const BOUNCING_BLANC = [V("Front", bFront), V("Worn", bWorn), V("Side", bSide), 
 // never another colourway's photos mixed in.
 const bouncingAlt = (front: string, back: string, above: string) => [V("Front", front), V("Back", back), V("Above", above)];
 
-const MID_NOIR = [V("Worn", midFront), V("Video", midFront), V("Worn", midCloseup), V("Worn", midBack), V("Worn", midThreeQuarter), V("Worn", midSide), V("Worn", midFront2)];
+// Original Hermes product videos, hotlinked from assets.hermes.com
+// (user instruction 2026-11-09/10 — use the original video wherever the
+// original site has one). HLS (.m3u8) streams; each URL was verified to
+// return HTTP 200 with the store's Referer, and the poster frame visually
+// confirmed to show the correct dress. Played via hls.js (Safari plays HLS
+// natively). The video is one per product — the same clip for both
+// colourways of the Mid-length dress.
+const HERMES_VIDEO = "https://assets.hermes.com/is/content/hermesproduct/";
+const MID_DRESS_VIDEO = HERMES_VIDEO + "6H2542D502_video_102-AVS.m3u8";
+const LONG_DRESS_VIDEO = HERMES_VIDEO + "6H2521D7DC_video_102-AVS.m3u8";
+
+const MID_NOIR = [V("Worn", midFront), V("Video", midFront, MID_DRESS_VIDEO), V("Worn", midCloseup), V("Worn", midBack), V("Worn", midThreeQuarter), V("Worn", midSide), V("Worn", midFront2)];
 // The Gorgeous Blue colourway has its own three model-worn photos (front /
 // back / side, light beige background); its gallery is exactly those plus
 // the video slot, whose poster is the blue front photo.
-const MID_BLUE = [V("Worn", dBlueFront), V("Video", dBlueFront), V("Worn", dBlueBack), V("Worn", dBlueSide)];
+const MID_BLUE = [V("Worn", dBlueFront), V("Video", dBlueFront, MID_DRESS_VIDEO), V("Worn", dBlueBack), V("Worn", dBlueSide)];
 
-const LONG_SET = [V("Worn", longFront), V("Video", longFront), V("Worn", longCloseup), V("Worn", longBack), V("Worn", longThreeQuarter), V("Worn", longSide), V("Detail", longDetail)];
+const LONG_SET = [V("Worn", longFront), V("Video", longFront, LONG_DRESS_VIDEO), V("Worn", longCloseup), V("Worn", longBack), V("Worn", longThreeQuarter), V("Worn", longSide), V("Detail", longDetail)];
 
 // Izmir sandal — ORIGINAL Hermes photos, hotlinked from assets.hermes.com
 // (user instruction 2026-11-09). Ref H041141ZH01, black calfskin, $950.
@@ -229,10 +245,10 @@ function typeSet(p: GalleryProduct): { label: string; src: string }[] {
 export function galleryForProduct(
   p: GalleryProduct & { galleryViews?: string[] },
   colorIndex: number,
-): { label: string; src: string; video: boolean }[] {
+): { label: string; src: string; video: boolean; videoSrc?: string }[] {
   const name = p.name;
   const colorName = (p.colors?.[colorIndex]?.name ?? p.colors?.[0]?.name ?? "").toLowerCase();
-  let set: { label: string; src: string }[] | null = null;
+  let set: { label: string; src: string; videoSrc?: string }[] | null = null;
 
   if (name === "Kelly Pocket 18 belt") {
     set = /vert/.test(colorName) ? KELLY_VERT : /etoupe/.test(colorName) ? KELLY_ETOUPE : KELLY_NOIR;
@@ -309,7 +325,7 @@ export function galleryForProduct(
       if (alt) src = alt.src;
     }
     if (!video) used.add(src);
-    return { label: v.label, src, video };
+    return { label: v.label, src, video, videoSrc: v.videoSrc };
   });
   return out;
 }
