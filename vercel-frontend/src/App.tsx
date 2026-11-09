@@ -1,14 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type ApiResponse } from "./api";
-// Standalone build: the photo/logo/GIF files live outside the repo, so the
-// imagery below comes from ./placeholders (clearly-marked SVG placeholders).
-// Swap these back to the real asset imports when the photos are in the repo.
-import {
-  heroImg, heroBenchImg, runwayImg, outdoorsImg, kellyImg,
-  carriageBlackImg, carriageWhiteImg, logoBlackImg, logoWhiteImg,
-  loadingHorseTrotGif, loadingHorseJumpRunGif, loadingHorseGallopGif,
-} from "./placeholders";
+// Real photos: the image files are in ./assets/ (uploaded to the repo).
+import heroImg from "./assets/media-generation-hero-hands-blanket-0-42d3a746-833a-44bc-b0cb-99ad6e08730c.webp";
+import heroBenchImg from "./assets/media-generation-hero-tiled-bench-0-f087b40a-577c-45f0-a118-76c1b93888ae.webp";
+import runwayImg from "./assets/media-generation-runway-show-0-97e89bc4-b374-4de6-96e4-e7a69020f3a2.webp";
+import outdoorsImg from "./assets/media-generation-editorial-outdoors-0-67c3bd9b-b631-4b20-a0fa-75d9e7d34982.webp";
+import kellyImg from "./assets/media-generation-editorial-kelly-coat-0-7238f945-faef-4dda-bd99-0169e098f7ee.webp";
+import carriageBlackImg from "./assets/hermes-carriage-black.png";
+import carriageWhiteImg from "./assets/hermes-carriage-white.png";
+import logoBlackImg from "./assets/hermes-logo-black.png";
+import logoWhiteImg from "./assets/hermes-logo-white.png";
+import loadingHorseTrotGif from "./assets/loading-horse-trot.gif";
+import loadingHorseJumpRunGif from "./assets/loading-horse-jump-run.gif";
+import loadingHorseGallopGif from "./assets/loading-horse-gallop.gif";
+// Mega-menu category photos — one distinct photo per nav category.
+import riderJacketImg from "./assets/products/rider-jacket.webp";
+import chaineNecklaceImg from "./assets/products/chaine-dancre-necklace.webp";
+import capeCodImg from "./assets/products/cape-cod-large.webp";
+import muscPallidaImg from "./assets/products/musc-pallida.webp";
+import avalonBlanketImg from "./assets/products/avalon-blanket.webp";
+import saddleBridleImg from "./assets/products/saddle-bridle.webp";
+import scarfColliersImg from "./assets/products/scarf-90-colliers.webp";
 import { fileToBase64 } from "./fileToBase64";
 import { productImageFor } from "./productImages";
 import { galleryForProduct } from "./galleryImages";
@@ -30,7 +43,7 @@ const MEGA_RAW: MegaEntry[] = [
     [{ heading: "SCARVES SHAWLS AND STOLES", items: ["Silk scarves and accessories","Cashmere shawls and stoles","Twilly and other small formats","View all","How to tie your scarf","Styled in Silk"] }, { heading: "FASHION JEWELRY", items: ["Bracelets","Necklaces and pendants","Earrings","Rings","View all"] }],
     [{ heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }, { heading: "HAIR ACCESSORIES", items: [] }],
   ]},
-  { key: "men", label: "MEN", caption: "MEN'S READY-TO-WEAR", tone: "#c8a97e", glyph: "🧥", img: "outdoors", columns: [
+  { key: "men", label: "MEN", caption: "MEN'S READY-TO-WEAR", tone: "#c8a97e", glyph: "🧥", img: "riderJacket", columns: [
     [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026 Collection","Spring-Summer 2026 Collection","Coats and parkas","Jackets and blazers","Knitwear","Shirts","T-shirts and sweatshirts","Pants and shorts","Beachwear","Fall-Winter 2026 runway show"] }],
     [{ heading: "SHOES", items: ["Sneakers","Sandals","Loafers and mules","Derbies and Oxford shoes","Boots and ankle boots","View all"] }],
     [{ heading: "TIES AND SCARVES", items: ["Ties, bow ties and pocket squares","Scarves","Styled in Silk"] }, { heading: "FASHION JEWELRY", items: [] }, { heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }],
@@ -41,33 +54,33 @@ const MEGA_RAW: MegaEntry[] = [
     [{ heading: "ACCESSORIES", items: ["Charms","Straps","Reading and writing"] }],
     [{ heading: "LUGGAGE", items: ["Suitcases and travel bags","Travel accessories"] }],
   ]},
-  { key: "jewelry", label: "JEWELRY", caption: "PRECIOUS MOMENTS", tone: "#b98a4a", glyph: "✦", img: "kelly", columns: [
+  { key: "jewelry", label: "JEWELRY", caption: "PRECIOUS MOMENTS", tone: "#b98a4a", glyph: "✦", img: "chaineNecklace", columns: [
     [{ heading: "GOLD JEWELRY", items: ["Rings","Wedding rings","Bracelets","Necklaces and pendants","Earrings","View all"] }],
     [{ heading: "SILVER JEWELRY", items: ["Rings","Bracelets","Necklaces and pendants","Earrings","View all"] }],
     [{ heading: "COLLECTIONS", items: ["Kelly","Chaînes d'ancre","Equestrian","The Wonders","Precious moments"] }],
     [{ heading: "MEN", items: [] }],
   ]},
-  { key: "watches", label: "WATCHES", caption: "CAPE COD", tone: "#8a7a68", glyph: "⌚", img: "outdoors", columns: [
+  { key: "watches", label: "WATCHES", caption: "CAPE COD", tone: "#8a7a68", glyph: "⌚", img: "capeCod", columns: [
     [{ heading: "TIMEPIECES", items: ["Our collections","Women","Men","Straps"] }],
     [{ heading: "HERMÈS TIME", items: ["Watches and Wonders Geneva"] }, { heading: "APPLE WATCH HERMÈS", items: [] }],
   ]},
-  { key: "fragrances", label: "FRAGRANCES AND MAKE-UP", caption: "LIMITED EDITION GRIGRIS D'HERMÈS COLLECTION", tone: "#dfb3ba", glyph: "◈", img: "hero", columns: [
+  { key: "fragrances", label: "FRAGRANCES AND MAKE-UP", caption: "LIMITED EDITION GRIGRIS D'HERMÈS COLLECTION", tone: "#dfb3ba", glyph: "◈", img: "muscPallida", columns: [
     [{ heading: "FRAGRANCES", items: ["Hermessence collection","The Women's Universe","The Men's Universe","Bath","View all"] }],
     [{ heading: "MAKE-UP", items: ["Lips","Face","Eyes","Hands","Accessories","View all"] }],
     [{ heading: "GIFTS", items: [] }, { heading: "SERVICES", items: ["Virtual try on","Foundation Shade Finder","Fragrance Finder"] }],
   ]},
-  { key: "home", label: "HOME AND ART OF LIVING", caption: "BLANKETS AND PILLOWS", tone: "#d8cfc4", glyph: "▦", img: "hero", columns: [
+  { key: "home", label: "HOME AND ART OF LIVING", caption: "BLANKETS AND PILLOWS", tone: "#d8cfc4", glyph: "▦", img: "avalonBlanket", columns: [
     [{ heading: "HOME", items: ["Tableware","Blankets and pillows","Decorative objects and games","Furniture, lighting and rugs","Office and writing","Cases and bath linens"] }],
     [{ heading: "CHILDREN AND BABY", items: [] }, { heading: "BEACH", items: [] }, { heading: "SPORTS AND OUTDOOR", items: [] }, { heading: "TECH UNIVERSE", items: [] }, { heading: "HORIZONS ATELIERS", items: [] }],
     [{ heading: "PETIT H", items: [] }],
   ]},
-  { key: "equestrian", label: "EQUESTRIAN", caption: "HORSE", tone: "#a6703f", glyph: "♞", img: "outdoors", columns: [
+  { key: "equestrian", label: "EQUESTRIAN", caption: "HORSE", tone: "#a6703f", glyph: "♞", img: "saddleBridle", columns: [
     [{ heading: "SADDLES", items: [] }, { heading: "HORSE", items: [] }, { heading: "RIDER", items: [] }],
   ]},
-  { key: "gifts", label: "GIFTS", caption: "CASHMERE SHAWLS AND STOLES", tone: "#7d8b6f", glyph: "🎁", img: "kelly", columns: [
+  { key: "gifts", label: "GIFTS", caption: "CASHMERE SHAWLS AND STOLES", tone: "#7d8b6f", glyph: "🎁", img: "scarfColliers", columns: [
     [{ heading: "GIFTS FOR WOMEN", items: [] }, { heading: "GIFTS FOR MEN", items: [] }, { heading: "GIFTS FOR CHILDREN AND BABIES", items: [] }, { heading: "GIFTS FOR DOGS", items: [] }],
   ]},
-  { key: "about", label: "ABOUT HERMÈS", caption: "HERMÈS PARIS", tone: "#efe9df", glyph: "H", img: "hero", columns: [
+  { key: "about", label: "ABOUT HERMÈS", caption: "HERMÈS PARIS", tone: "#efe9df", glyph: "H", img: "heroBench", columns: [
     [{ heading: "", items: ["Contemporary Artisans Since 1837","Finance & Governance","Join Hermès","Sustainable Development"] }],
   ]},
 ];
@@ -84,7 +97,24 @@ type NavOverrides = Record<string, NavOverride>;
 function applyNavOverrides(overrides: NavOverrides): MegaEntry[] {
   return MEGA_RAW.filter(e => !overrides[e.key]?.hidden).map(e => ({ ...e, label: overrides[e.key]?.label || e.label, caption: overrides[e.key]?.caption || e.caption, key: e.key }));
 }
-function megaImage(e: MegaEntry): string { return e.img === "outdoors" ? outdoorsImg : e.img === "kelly" ? kellyImg : e.img === "runway" ? runwayImg : heroImg; }
+// One distinct photo per nav category (mega-menu left image). The `img` key
+// on each MEGA_RAW entry selects its photo; anything unknown falls back to heroImg.
+function megaImage(e: MegaEntry): string {
+  switch (e.img) {
+    case "outdoors": return outdoorsImg;
+    case "kelly": return kellyImg;
+    case "runway": return runwayImg;
+    case "heroBench": return heroBenchImg;
+    case "riderJacket": return riderJacketImg;
+    case "chaineNecklace": return chaineNecklaceImg;
+    case "capeCod": return capeCodImg;
+    case "muscPallida": return muscPallidaImg;
+    case "avalonBlanket": return avalonBlanketImg;
+    case "saddleBridle": return saddleBridleImg;
+    case "scarfColliers": return scarfColliersImg;
+    default: return heroImg;
+  }
+}
 function headingToSub(h: string): string { const t = h.toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); }
 function megaTarget(entry: MegaEntry, overrides: NavOverrides, heading: string, item?: string): View {
   const dest = overrides[entry.key]?.dest || entry.key;
