@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@import "tailwindcss-safe-area";
+
+@theme {
+  --text-xs: 12px; --text-xs--line-height: 16px;
+  --text-sm: 14px; --text-sm--line-height: 20px;
+  --text-base: 16px; --text-base--line-height: 24px;
+  --text-lg: 18px; --text-lg--line-height: 28px;
+  --text-xl: 20px; --text-xl--line-height: 28px;
+  --text-2xl: 24px; --text-2xl--line-height: 32px;
+  --text-3xl: 30px; --text-3xl--line-height: 38px;
+  --text-4xl: 36px; --text-4xl--line-height: 42px;
+  --text-5xl: 48px; --text-5xl--line-height: 54px;
+}
+
+:root {
+  color-scheme: light;
+  --bg: #f7f2ec;
+  --surface: #fffdf9;
+  --text: #191919;
+  --dim: #6f6a61;
+  --border: #d8cfc4;
+  --accent: #191919;
+  --radius: 2px;
+  --space-surface: var(--surface);
+  --space-surface-alt: #efe9df;
+  --space-muted: var(--dim);
+  --space-border: var(--border);
+  --space-accent: var(--accent);
+}
+.font-serif-d { font-family: "Playfair Display", Georgia, "Times New Roman", serif; }
+@media (min-width: 1024px) { .product-name { font-family: "Playfair Display", Georgia, "Times New Roman", serif; } }
+body { font-family: "Inter", "Helvetica Neue", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+@keyframes slideInRight { from { transform: translateX(100%);} to { transform: translateX(0);} }
+@keyframes slideInLeft { from { transform: translateX(-100%);} to { transform: translateX(0);} }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+@keyframes kenburns { from { transform: scale(1);} to { transform: scale(1.09);} }
+@keyframes baladeurPan { from { transform: scale(1.03) translateX(0); } to { transform: scale(1.15) translateX(-2.5%); } }
+.baladeur-motion { animation: baladeurPan 26s ease-in-out infinite alternate; will-change: transform; }
+@keyframes dressWalkPan { from { transform: scale(1.05) translateX(1.5%); } to { transform: scale(1.17) translateX(-2%); } }
+.dress-walk { animation: dressWalkPan 9s ease-in-out infinite alternate; will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .baladeur-motion, .dress-walk { animation: none; } }
+.drawer-in { animation: slideInRight .32s ease both; }
+@keyframes slideInUp { from { transform: translateY(100%);} to { transform: translateY(0);} }
+/* On phones the filter panel is a bottom sheet (per the user's own videos
+   of hermes.com), so the same drawer slides UP instead of in from the right. */
+@media (max-width: 1023px) { .drawer-in { animation-name: slideInUp; } }
+.drawer-left { animation: slideInLeft .3s ease both; }
+.kenburns { animation: kenburns 16s ease-in-out infinite alternate; }
+.fade-up { animation: fadeUp .45s ease both; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+/* The loading horse is one of the user's own three animated GIFs (trot /
+   jump-then-run / gallop, rotating in that fixed order) — the GIF files
+   carry the motion themselves, so no CSS transform animation is applied
+   to the horse any more. */
+@keyframes fadeInSoft { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOutSoft { from { opacity: 1; } to { opacity: 0; } }
+/* Veil fades IN fast (~180ms) when navigation starts and OUT smoothly
+   (~300ms) when the page is ready — the .leaving state swaps the animation
+   (higher specificity wins) so there is never a hard cut or flash. */
+.loading-veil { animation: fadeInSoft .18s ease both; }
+.loading-veil.leaving { animation: fadeOutSoft .3s ease both; }
+/* Top progress bar: grows left-to-right through the load — about 1/6 early,
+   ~36% mid-way, full width as the page settles. Duration is set inline to
+   match the veil's hold time so bar and veil stay in sync everywhere. */
+@keyframes loadbar { 0% { width: 2%; } 18% { width: 17%; } 55% { width: 37%; } 82% { width: 68%; } 100% { width: 100%; } }
+.loadbar { animation: loadbar 2.2s cubic-bezier(.25,.6,.3,1) forwards; }
+@media (prefers-reduced-motion: reduce) { .loadbar { animation: none; width: 100%; } }
