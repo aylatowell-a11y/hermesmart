@@ -120,6 +120,21 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   // to load and to show the black calfskin Izmir sandal (H cut-out strap).
   "Izmir sandal":
     "https://assets.hermes.com/is/image/hermesproduct/041141ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Chypre sandal, ref H222000ZH01, $1,125 —
+  // verified to load and to show the black calfskin techno-sandal.
+  "Chypre sandal":
+    "https://assets.hermes.com/is/image/hermesproduct/222000ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Naxos sandal, ref H262912ZHC9, $1,425 —
+  // verified to load and to show the beige suede sandal (Albion buckles).
+  "Naxos sandal":
+    "https://assets.hermes.com/is/image/hermesproduct/262912ZHC9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Jackson sandal, ref H242948ZHC9, $1,500 —
+  // verified to load and to show the beige/black sandal (Kelly buckle).
+  "Jackson sandal":
+    "https://assets.hermes.com/is/image/hermesproduct/242948ZHC9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   "Bouncing sneaker, Blanc": bouncingSneakerBlancV2,
   "Neon sneaker": neonSneaker,
   "Next sneaker": nextSneaker,

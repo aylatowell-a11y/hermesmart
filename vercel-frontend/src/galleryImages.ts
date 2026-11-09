@@ -145,6 +145,28 @@ const IZMIR_SET = [
   V("Above", HERMES_IMG + "041141ZH01_front_wm_106" + HERMES_Q),
 ];
 
+// Chypre sandal — ORIGINAL Hermes photos, hotlinked from assets.hermes.com
+// (user instruction 2026-11-09). Ref H222000ZH01, black calfskin, $1,125.
+// Views verified: 101 = front, 102 = model wearing (104/105/106 do not exist).
+const CHYPRE_SET = [
+  V("Front", HERMES_IMG + "222000ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "222000ZH01_worn_102" + HERMES_Q),
+];
+// Naxos sandal — ORIGINAL Hermes photos, hotlinked from assets.hermes.com
+// (user instruction 2026-11-09). Ref H262912ZHC9, beige suede, $1,425.
+// Views verified: 101 = front, 103 = model wearing (104/105/106, worn_102 do not exist).
+const NAXOS_SET = [
+  V("Front", HERMES_IMG + "262912ZHC9_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262912ZHC9_worn_103" + HERMES_Q),
+];
+// Jackson sandal — ORIGINAL Hermes photos, hotlinked from assets.hermes.com
+// (user instruction 2026-11-09). Ref H242948ZHC9, beige/black, $1,500.
+// Views verified: 101 = front, 103 = model wearing (104/105/106, worn_102 do not exist).
+const JACKSON_SET = [
+  V("Front", HERMES_IMG + "242948ZHC9_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "242948ZHC9_worn_103" + HERMES_Q),
+];
+
 // Type sets — applied to every other product by the type rules. Each label
 // maps to the photo actually shot for that label, never a reuse.
 const BAG_SET = [V("Front", bagFront), V("Side", bagSide), V("Above", bagAbove), V("Back", bagBack)];
@@ -231,6 +253,15 @@ export function galleryForProduct(
   } else if (name === "Izmir sandal") {
     // Original Hermes photos, hotlinked (user instruction 2026-11-09).
     set = IZMIR_SET;
+  } else if (name === "Chypre sandal") {
+    // Original Hermes photos, hotlinked (user instruction 2026-11-09).
+    set = CHYPRE_SET;
+  } else if (name === "Naxos sandal") {
+    // Original Hermes photos, hotlinked (user instruction 2026-11-09).
+    set = NAXOS_SET;
+  } else if (name === "Jackson sandal") {
+    // Original Hermes photos, hotlinked (user instruction 2026-11-09).
+    set = JACKSON_SET;
   }
 
   if (!set) {
