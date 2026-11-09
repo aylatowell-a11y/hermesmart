@@ -18,7 +18,7 @@ type Settings = ApiResponse<typeof api, "getStorefront">["settings"];
 type View =
   | { t: "home" } | { t: "category"; cat: string; sub?: string }
   | { t: "product"; id: number } | { t: "page"; page: string }
-  | { t: "account" } | { t: "checkout" } | { t: "admin" } | { t: "about" } | { t: "cart" };
+  | { t: "account"; mode?: "login" | "signup" } | { t: "checkout" } | { t: "admin" } | { t: "about" } | { t: "cart" };
 type CartItem = { key: string; productId: number; name: string; price: number; qty: number; color: string; size: string; glyph: string; tone: string; refCode: string };
 
 type MegaSection = { heading: string; items: string[] };
@@ -455,6 +455,13 @@ export function App() {
             <span className="lg:hidden"><HermesLogo settings={settings} light={onHero} variant="header" /></span>
           </button>
           <div className="flex items-center justify-end gap-0.5 sm:gap-2">
+            {/* Sign up / Login — visible text options in the header (desktop),
+                next to Account / Cart, in the Hermes small-uppercase style.
+                "Sign up" opens the create-account page, "Login" the sign-in
+                page. On mobile they are hidden; the Account icon opens the
+                account page there. */}
+            <button aria-label="Sign up" className="hidden px-2 text-[11px] font-medium uppercase tracking-[0.18em] hover:underline lg:block" style={{ color: ink }} onClick={() => go({ t: "account", mode: "signup" })}>Sign up</button>
+            <button aria-label="Login" className="hidden px-2 text-[11px] font-medium uppercase tracking-[0.18em] hover:underline lg:block" style={{ color: ink }} onClick={() => go({ t: "account", mode: "login" })}>Login</button>
             <button aria-label="Account" className="flex h-9 w-9 items-center justify-center" onClick={() => go({ t: "account" })}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.6 4.2-5.2 7.5-5.2s6.1 1.6 7.5 5.2" /></svg>
             </button>
@@ -601,7 +608,7 @@ export function App() {
         {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} />}
         {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} />}
         {view.t === "about" && <AboutPage go={go} />}
-        {view.t === "account" && <AccountView user={user} setUser={setUser} go={go} />}
+        {view.t === "account" && <AccountView key={view.mode ?? "login"} user={user} setUser={setUser} go={go} mode={view.mode} />}
         {view.t === "checkout" && <CheckoutView cart={cart} setCart={setCart} user={user} go={go} total={cartTotal} settings={settings} />}
         {view.t === "admin" && <AdminView products={products} settings={settings} qc={qc} navOverrides={navOverrides} setNavOverrides={setNavOverrides} />}
       </main>
@@ -2051,7 +2058,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
   const services: { title: string; body: React.ReactNode; page: string }[] = [
     { title: "STANDARD DELIVERY", page: "shipping", body: <>Free standard delivery. Hermès offers several fast and secure delivery options.</> },
     { title: "RETURNS", page: "returns", body: <>Free returns within 30 days. See conditions and procedure in our <button aria-label="Return FAQs" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "returns" }); }}>return FAQs</button>.</> },
-    { title: "CUSTOMER SERVICE", page: "contact", body: <>{settings.serviceHours}<br /><a aria-label="Call Hermès customer service" className="underline underline-offset-2" href={`tel:${settings.phone}`} onClick={(e) => e.stopPropagation()}>{settings.phone}</a> | <button aria-label="Contact us from footer" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Contact us</button></> },
+    { title: "CUSTOMER SERVICE", page: "contact", body: <>{settings.serviceHours}, <a aria-label="Call Hermès customer service" className="underline underline-offset-2" href={`tel:${settings.phone}`} onClick={(e) => e.stopPropagation()}>{settings.phone}</a> | <button aria-label="Contact us from footer" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Contact us</button></> },
     { title: "SECURED PAYMENT", page: "payment", body: <>All the transactions made on Hermes.com are secured</> },
   ];
   const newsletterForm = (boxed: boolean) => done ? <p className="mt-3 text-sm font-medium" role="status">{done}</p> : boxed ? (
@@ -2142,7 +2149,6 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
             </select>
           </label>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600">
-            <button aria-label="Admin Panel" className="underline" onClick={() => go({ t: "admin" })}>Admin Panel</button>
             <p>© Hermès 2026. All rights reserved.</p>
           </div>
         </div>
@@ -2159,7 +2165,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.25em]">Newsletter</p>
             <p className="mt-2 text-sm leading-6 text-neutral-600">Receive our newsletter and discover our stories, collections, and surprises.</p>
-            {newsletterForm(true)}
+            {newsletterForm(false)}
             <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.25em]">Follow us</p>
             <div className="mt-3"><SocialCircles /></div>
           </div>
@@ -2167,16 +2173,12 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
       </div>
       <div className="hidden border-t border-black/10 lg:block" style={{ background: "#f6f1eb" }}>
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-5 text-xs text-neutral-600">
-          <label className="flex items-center gap-2 uppercase tracking-wider">Ship to:
+          <label className="flex items-center gap-2 uppercase tracking-wider">Ship to :
             <select aria-label="Ship to country selector" className="appearance-none bg-transparent py-1 font-medium uppercase underline underline-offset-4" value={ship} onChange={(e) => setShip(e.target.value)}>
               {["UNITED STATES", "UNITED KINGDOM", "FRANCE", "PAKISTAN", "UNITED ARAB EMIRATES", "INDIA"].map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
-            <span>Change your location</span>
           </label>
-          <span className="flex items-center gap-4">
-            <button aria-label="Admin Panel" className="underline" onClick={() => go({ t: "admin" })}>Admin Panel</button>
-            <p>© Hermès 2026. All rights reserved.</p>
-          </span>
+          <p>© Hermès 2026. All rights reserved.</p>
         </div>
       </div>
       {/* BOARD h) BELOW THE FOOTER — the lockup band: a large plain area in
@@ -2196,12 +2198,20 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
   );
 }
 
-function AccountView({ user, setUser, go }: { user: { name: string; email: string } | null; setUser: (u: { name: string; email: string } | null) => void; go: (v: View) => void }) {
-  const [step, setStep] = useState(1);
-  const [name, setName] = useState(""); const [email, setEmail] = useState(""); const [pw, setPw] = useState("");
-  const [msg, setMsg] = useState("");
-  const login = useMutation({ mutationFn: () => api.loginUser({ email, password: pw }), onSuccess: (r) => { setMsg(r.message); if (r.ok) setUser({ name: r.name, email }); } });
-  const reg = useMutation({ mutationFn: () => api.registerUser({ name, email, password: pw }), onSuccess: (r) => { setMsg(r.message); if (r.ok) setUser({ name, email }); } });
+function AccountView({ user, setUser, go, mode }: { user: { name: string; email: string } | null; setUser: (u: { name: string; email: string } | null) => void; go: (v: View) => void; mode?: "login" | "signup" }) {
+  // Which form shows first: "signup" when opened from the header "Sign up"
+  // option, "login" otherwise. The visitor can switch inside the page.
+  const [authMode, setAuthMode] = useState<"login" | "signup">(mode ?? "login");
+  // Sign-in form.
+  const [liEmail, setLiEmail] = useState(""); const [liPw, setLiPw] = useState(""); const [liMsg, setLiMsg] = useState("");
+  const [forgotMsg, setForgotMsg] = useState("");
+  // Create-account form (Hermes create-account page layout).
+  const [suTitle, setSuTitle] = useState(""); const [suFirst, setSuFirst] = useState(""); const [suLast, setSuLast] = useState("");
+  const [suEmail, setSuEmail] = useState(""); const [suCode, setSuCode] = useState(""); const [suShowCode, setSuShowCode] = useState(false);
+  const [suPw, setSuPw] = useState(""); const [suArea, setSuArea] = useState("US +1"); const [suPhone, setSuPhone] = useState(""); const [suDob, setSuDob] = useState("");
+  const [suMsg, setSuMsg] = useState(""); const [sentCode, setSentCode] = useState("");
+  const login = useMutation({ mutationFn: () => api.loginUser({ email: liEmail, password: liPw }), onSuccess: (r) => { setLiMsg(r.message); if (r.ok) setUser({ name: r.name, email: liEmail }); } });
+  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) setUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail }); } });
   const ordersQ = useQuery({ queryKey: ["myorders", user?.email], queryFn: () => api.myOrders({ email: user?.email ?? "" }), enabled: !!user });
   const extrasQ = useQuery({ queryKey: ["myextras", user?.email], queryFn: () => api.myExtras({ email: user?.email ?? "" }), enabled: !!user });
   const [retMsg, setRetMsg] = useState("");
@@ -2244,33 +2254,132 @@ function AccountView({ user, setUser, go }: { user: { name: string; email: strin
       </div>
     );
   }
-  return (
-    <div className="mx-4 my-10 max-w-md bg-white px-6 py-10 sm:mx-auto sm:px-8">
-      <h1 className="text-center text-[13px] uppercase tracking-[0.3em] [font-family:ui-monospace,Menlo,monospace]">Account</h1>
-      {step === 1 ? (
-        <div className="mt-6">
-          <p className="text-center text-sm leading-6 text-neutral-700">Please enter your email below to access or create your account</p>
-          <label className="mt-6 block text-left text-[13px] text-neutral-500">E-mail *
-            <input aria-label="Account email first step" type="email" className="mt-1 w-full border-0 border-b border-black/40 bg-transparent px-0 py-2.5 text-[15px] normal-case tracking-normal text-black outline-none focus:border-black" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <span className="mt-1 block text-xs normal-case tracking-normal text-neutral-500">Expected format: yourname@domain.com</span>
+  // Password criteria for the create-account form (live-checked).
+  const crit = {
+    len: suPw.length >= 10,
+    upper: /[A-Z]/.test(suPw),
+    lower: /[a-z]/.test(suPw),
+    digit: /[0-9]/.test(suPw),
+    special: /[^A-Za-z0-9]/.test(suPw),
+  };
+  const critOk = crit.len && crit.upper && crit.lower && crit.digit && crit.special;
+  // SEND CODE is a demo in this standalone build: there is no email service,
+  // so the code is generated here and shown to the visitor to enter below.
+  const sendCode = () => {
+    if (!suEmail.includes("@")) { setSuMsg("Please enter a valid email address first."); return; }
+    setSentCode(String(Math.floor(100000 + Math.random() * 900000)));
+    setSuMsg("");
+  };
+  const submitSignup = () => {
+    if (!suEmail.includes("@")) return setSuMsg("Please enter a valid email address.");
+    if (!sentCode) return setSuMsg("Please press SEND CODE first — a demo code will be shown for you to enter.");
+    if (suCode.trim() !== sentCode) return setSuMsg("The verification code does not match the demo code shown above.");
+    if (!critOk) return setSuMsg("Please choose a password that meets all the criteria below.");
+    if (!suTitle) return setSuMsg("Please choose a title.");
+    if (!suFirst.trim() || !suLast.trim()) return setSuMsg("Please enter your first and last name.");
+    const digits = suPhone.replace(/\D/g, "").replace(/^1/, "");
+    if (!/^\d{10}$/.test(digits)) return setSuMsg("Please enter a 10-digit telephone number.");
+    setSuMsg("");
+    reg.mutate();
+  };
+  const underline = "mt-1 w-full border-0 border-b border-black/40 bg-transparent px-0 py-2.5 text-[15px] text-black outline-none focus:border-black";
+  const lab = "block text-left text-[13px] text-neutral-500";
+  const hint = "mt-1 block text-xs text-neutral-500";
+  if (authMode === "login") {
+    return (
+      <div className="mx-4 my-10 max-w-md bg-white px-6 py-10 sm:mx-auto sm:px-8">
+        <h1 className="text-center text-[13px] uppercase tracking-[0.3em] [font-family:ui-monospace,Menlo,monospace]">Sign in</h1>
+        <p className="mt-4 text-center text-sm leading-6 text-neutral-700">Please sign in with your email and password to access your account.</p>
+        <div className="mt-6 space-y-4">
+          <label className={lab}>E-mail *
+            <input aria-label="Sign in email" type="email" className={underline} value={liEmail} onChange={(e) => setLiEmail(e.target.value)} />
+            <span className={hint}>Expected format: yourname@domain.com</span>
           </label>
-          {msg && <p className="mt-3 text-sm text-red-700" role="status">{msg}</p>}
-          <button aria-label="Continue with email" className="mt-5 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white disabled:bg-neutral-400" disabled={!email.includes("@")} onClick={() => { setMsg(""); setStep(2); }}>Continue</button>
+          <label className={lab}>Password *
+            <input aria-label="Sign in password" type="password" className={underline} value={liPw} onChange={(e) => setLiPw(e.target.value)} />
+          </label>
         </div>
-      ) : (
-        <div className="mt-6">
-          <p className="text-center text-sm leading-6 text-neutral-700">{email}</p>
-          <p className="mt-2 text-center text-xs leading-5 text-neutral-500">If you have already registered with us, enter your password to sign in. New to Hermès? Add your name and choose a password to create your account.</p>
-          <div className="mt-5 space-y-3">
-            <input aria-label="Full name for new account" className="w-full border border-black/30 px-3 py-3 text-sm" placeholder="Full name (new accounts only)" value={name} onChange={(e) => setName(e.target.value)} />
-            <input aria-label="Account password" type="password" className="w-full border border-black/30 px-3 py-3 text-sm" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} />
+        {liMsg && <p className="mt-3 text-sm text-red-700" role="status">{liMsg}</p>}
+        <button aria-label="Sign in button" className="mt-5 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => login.mutate()}>Sign in</button>
+        <button aria-label="Forgot password" className="mt-4 w-full text-center text-xs uppercase tracking-[0.2em] underline" onClick={() => setForgotMsg("This standalone build has no email service, so password reset is unavailable — please create a new account or contact customer service.")}>Forgot your password?</button>
+        {forgotMsg && <p className="mt-3 text-center text-xs leading-5 text-neutral-600" role="status">{forgotMsg}</p>}
+        <p className="mt-6 text-center text-sm text-neutral-700">New to Hermès? <button aria-label="Go to create account" className="underline" onClick={() => { setAuthMode("signup"); setLiMsg(""); setForgotMsg(""); }}>Create an account</button></p>
+        <p className="mt-8 border-t border-black/10 pt-4 text-center text-xs text-neutral-500">Store admin? <button aria-label="Sign in to Admin Panel" className="underline" onClick={() => go({ t: "admin" })}>Sign in to Admin Panel</button></p>
+      </div>
+    );
+  }
+  // Create account — laid out like hermes.com/us/en/account/create/:
+  // intro + "* Required information", then two columns (Login information |
+  // Personal information), then the create button.
+  return (
+    <div className="mx-4 my-10 max-w-4xl bg-white px-6 py-10 sm:mx-auto sm:px-8">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <p className="max-w-2xl text-sm leading-6 text-neutral-700">By creating an account, you agree to accept the <button aria-label="General Terms and Conditions of Use" className="underline" onClick={() => go({ t: "page", page: "terms" })}>General Terms and Conditions of Use</button> and that your data will be processed in compliance with the <button aria-label="Privacy Policy" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button> of Hermès.</p>
+        <p className="shrink-0 text-xs text-neutral-500">* Required information</p>
+      </div>
+      <div className="mt-8 grid gap-10 md:grid-cols-2">
+        <div>
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Login information</h2>
+          <label className={`${lab} mt-5`}>E-mail *
+            <span className="mt-1 flex items-end gap-3">
+              <input aria-label="Create account email" type="email" className={`${underline} min-w-0 flex-1`} value={suEmail} onChange={(e) => setSuEmail(e.target.value)} />
+              <button aria-label="Send verification code" type="button" className="shrink-0 bg-black px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={sendCode}>Send code</button>
+            </span>
+            <span className={hint}>Expected format: yourname@domain.com</span>
+          </label>
+          {sentCode && <p className="mt-3 border border-amber-700/30 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900" role="status">Demo code — this standalone build has no email service, so no email is sent. Your code is <strong>{sentCode}</strong>; enter it in Verification code below.</p>}
+          <label className={`${lab} mt-5`}>Verification code *
+            <input aria-label="Verification code" type={suShowCode ? "text" : "password"} inputMode="numeric" className={underline} value={suCode} onChange={(e) => setSuCode(e.target.value)} />
+            <span className={hint}>Expected format: 123456</span>
+          </label>
+          <button aria-label={suShowCode ? "Hide verification code" : "Show verification code"} type="button" className="mt-1 block w-full text-right text-xs uppercase tracking-[0.15em] underline" onClick={() => setSuShowCode(!suShowCode)}>{suShowCode ? "Hide" : "Show"}</button>
+          <label className={`${lab} mt-5`}>Password *
+            <input aria-label="Create account password" type="password" className={underline} value={suPw} onChange={(e) => setSuPw(e.target.value)} />
+          </label>
+          <div className="mt-3 bg-[#f5f1ea] px-4 py-3">
+            <p className="text-xs leading-5 text-neutral-700">For your security, we invite you to fill your password according to the following criteria:</p>
+            <ul className="mt-2 space-y-1 text-xs text-neutral-700">
+              <li><span className={crit.len ? "font-bold text-green-700" : "text-neutral-400"}>{crit.len ? "✓" : "•"}</span> At least 10 characters</li>
+              <li><span className={crit.upper ? "font-bold text-green-700" : "text-neutral-400"}>{crit.upper ? "✓" : "•"}</span> At least 1 uppercase letter</li>
+              <li><span className={crit.lower ? "font-bold text-green-700" : "text-neutral-400"}>{crit.lower ? "✓" : "•"}</span> At least 1 lowercase letter</li>
+              <li><span className={crit.digit ? "font-bold text-green-700" : "text-neutral-400"}>{crit.digit ? "✓" : "•"}</span> At least 1 number</li>
+              <li><span className={crit.special ? "font-bold text-green-700" : "text-neutral-400"}>{crit.special ? "✓" : "•"}</span> At least 1 special character</li>
+            </ul>
           </div>
-          {msg && <p className="mt-3 text-sm" role="status">{msg}</p>}
-          <button aria-label="Sign in button" className="mt-5 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => login.mutate()}>Sign in</button>
-          <button aria-label="Create account button" className="mt-2 w-full border border-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => reg.mutate()}>Create account</button>
-          <button aria-label="Back to email step" className="mt-4 w-full text-center text-xs uppercase tracking-[0.2em] underline" onClick={() => { setStep(1); setMsg(""); }}>Use a different email</button>
         </div>
-      )}
+        <div>
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Personal information</h2>
+          <label className={`${lab} mt-5`}>Title *
+            <select aria-label="Title" className={underline} value={suTitle} onChange={(e) => setSuTitle(e.target.value)}>
+              <option value="">Select</option><option value="Mr">Mr</option><option value="Mrs">Mrs</option><option value="Ms">Ms</option><option value="Dr">Dr</option>
+            </select>
+          </label>
+          <label className={`${lab} mt-5`}>First name *
+            <input aria-label="First name" type="text" className={underline} value={suFirst} onChange={(e) => setSuFirst(e.target.value)} />
+          </label>
+          <label className={`${lab} mt-5`}>Last name *
+            <input aria-label="Last name" type="text" className={underline} value={suLast} onChange={(e) => setSuLast(e.target.value)} />
+          </label>
+          <div className="mt-5 flex items-end gap-3">
+            <label className={`${lab} w-32 shrink-0`}>Area code *
+              <select aria-label="Area code" className={underline} value={suArea} onChange={(e) => setSuArea(e.target.value)}>
+                <option value="US +1">🇺🇸 US +1</option><option value="GB +44">🇬🇧 GB +44</option><option value="FR +33">🇫🇷 FR +33</option><option value="PK +92">🇵🇰 PK +92</option><option value="IN +91">🇮🇳 IN +91</option><option value="AE +971">🇦🇪 AE +971</option>
+              </select>
+            </label>
+            <label className={`${lab} min-w-0 flex-1`}>Telephone number *
+              <input aria-label="Telephone number" type="tel" className={underline} value={suPhone} onChange={(e) => setSuPhone(e.target.value)} />
+              <span className={hint}>Expected format: phone number with 10 digits</span>
+            </label>
+          </div>
+          <label className={`${lab} mt-5`}>Date of birth
+            <input aria-label="Date of birth" type="date" className={underline} value={suDob} onChange={(e) => setSuDob(e.target.value)} />
+          </label>
+        </div>
+      </div>
+      {suMsg && <p className="mt-6 text-sm text-red-700" role="status">{suMsg}</p>}
+      <button aria-label="Create my account" className="mt-8 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white sm:mx-auto sm:block sm:w-80" onClick={submitSignup}>Create my account</button>
+      <p className="mt-6 text-center text-sm text-neutral-700">Already have an account? <button aria-label="Go to sign in" className="underline" onClick={() => { setAuthMode("login"); setSuMsg(""); }}>Sign in</button></p>
+      <p className="mt-8 border-t border-black/10 pt-4 text-center text-xs text-neutral-500">Store admin? <button aria-label="Sign in to Admin Panel" className="underline" onClick={() => go({ t: "admin" })}>Sign in to Admin Panel</button></p>
     </div>
   );
 
@@ -2623,34 +2732,35 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
 }
 
 function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { products: Product[]; settings: Settings; qc: ReturnType<typeof useQueryClient>; navOverrides: NavOverrides; setNavOverrides: (n: NavOverrides) => void }) {
-  const [pw, setPw] = useState(""); const [authed, setAuthed] = useState(false); const [tab, setTab] = useState("Dashboard");
+  const [pw, setPw] = useState(""); const [adminEmail, setAdminEmail] = useState(""); const [authed, setAuthed] = useState(false); const [tab, setTab] = useState("Dashboard");
   const [msg, setMsg] = useState("");
-  const dataQ = useQuery({ queryKey: ["admin", pw], queryFn: () => api.adminData({ password: pw }), enabled: authed });
+  const dataQ = useQuery({ queryKey: ["admin", adminEmail, pw], queryFn: () => api.adminData({ email: adminEmail, password: pw }), enabled: authed });
   const blank = { id: 0, name: "", category: "women", subcategory: "", theme: "Silk", price: 0, priceLabel: "", status: "available" as const, line: "", material: "", modelSize: "", metallicFinish: "", colorsJson: JSON.stringify([{ name: "Etoupe", hex: "#8a7a68", available: true }]), description: "", story: "", tone: "#e9ede8", glyph: "◆" };
   const [form, setForm] = useState(blank);
   const [logoUploading, setLogoUploading] = useState(false);
   const [stg, setStg] = useState<Settings>(settings);
   useEffect(() => { setStg(settings); }, [settings]);
-  const saveProduct = useMutation({ mutationFn: () => api.adminSaveProduct({ password: pw, ...form }), onSuccess: (r) => { setMsg(r.ok ? "Product saved — it is now live on the storefront." : "Save failed."); setForm(blank); qc.invalidateQueries({ queryKey: ["storefront"] }); dataQ.refetch(); } });
-  const delProduct = useMutation({ mutationFn: (id: number) => api.adminDeleteProduct({ password: pw, id }), onSuccess: () => { setMsg("Product deleted."); qc.invalidateQueries({ queryKey: ["storefront"] }); dataQ.refetch(); } });
-  const updOrder = useMutation({ mutationFn: (v: { id: number; status: string }) => api.adminUpdateOrder({ password: pw, ...v }), onSuccess: () => { setMsg("Order status updated."); dataQ.refetch(); qc.invalidateQueries({ queryKey: ["myorders"] }); } });
-  const saveSettings = useMutation({ mutationFn: () => api.adminSaveSettings({ password: pw, settings: stg }), onSuccess: () => { setMsg("Settings saved — the storefront now shows the new values."); qc.invalidateQueries({ queryKey: ["storefront"] }); } });
+  const saveProduct = useMutation({ mutationFn: () => api.adminSaveProduct({ email: adminEmail, password: pw, ...form }), onSuccess: (r) => { setMsg(r.ok ? "Product saved — it is now live on the storefront." : "Save failed."); setForm(blank); qc.invalidateQueries({ queryKey: ["storefront"] }); dataQ.refetch(); } });
+  const delProduct = useMutation({ mutationFn: (id: number) => api.adminDeleteProduct({ email: adminEmail, password: pw, id }), onSuccess: () => { setMsg("Product deleted."); qc.invalidateQueries({ queryKey: ["storefront"] }); dataQ.refetch(); } });
+  const updOrder = useMutation({ mutationFn: (v: { id: number; status: string }) => api.adminUpdateOrder({ email: adminEmail, password: pw, ...v }), onSuccess: () => { setMsg("Order status updated."); dataQ.refetch(); qc.invalidateQueries({ queryKey: ["myorders"] }); } });
+  const saveSettings = useMutation({ mutationFn: () => api.adminSaveSettings({ email: adminEmail, password: pw, settings: stg }), onSuccess: () => { setMsg("Settings saved — the storefront now shows the new values."); qc.invalidateQueries({ queryKey: ["storefront"] }); } });
   const [orderQ, setOrderQ] = useState(""); const [orderStatus, setOrderStatus] = useState("All"); const [orderDetail, setOrderDetail] = useState<number | null>(null);
   const [prodQ, setProdQ] = useState("");
   const [custQ, setCustQ] = useState(""); const [custDetail, setCustDetail] = useState<number | null>(null); const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
-  const markViewed = useMutation({ mutationFn: (v: { kind: "order" | "user"; id: number }) => api.adminMarkViewed({ password: pw, ...v }), onSuccess: () => dataQ.refetch() });
-  const setDisabled = useMutation({ mutationFn: (v: { id: number; disabled: boolean }) => api.adminSetUserDisabled({ password: pw, ...v }), onSuccess: () => { setMsg("Account updated."); dataQ.refetch(); } });
-  const delUser = useMutation({ mutationFn: (id: number) => api.adminDeleteUser({ password: pw, id }), onSuccess: () => { setMsg("Account deleted."); setConfirmDelete(null); setCustDetail(null); dataQ.refetch(); } });
+  const markViewed = useMutation({ mutationFn: (v: { kind: "order" | "user"; id: number }) => api.adminMarkViewed({ email: adminEmail, password: pw, ...v }), onSuccess: () => dataQ.refetch() });
+  const setDisabled = useMutation({ mutationFn: (v: { id: number; disabled: boolean }) => api.adminSetUserDisabled({ email: adminEmail, password: pw, ...v }), onSuccess: () => { setMsg("Account updated."); dataQ.refetch(); } });
+  const delUser = useMutation({ mutationFn: (id: number) => api.adminDeleteUser({ email: adminEmail, password: pw, id }), onSuccess: () => { setMsg("Account deleted."); setConfirmDelete(null); setCustDetail(null); dataQ.refetch(); } });
 
   if (!authed) return (
     <div className="mx-auto max-w-md px-4 py-14">
       <h1 className="font-serif-d text-center text-3xl italic">Admin Panel</h1>
       <p className="mt-2 text-center text-sm text-neutral-600">Sign in to manage products, orders, customers, theme and settings.</p>
-      <input aria-label="Admin password" type="password" className="mt-6 w-full border border-black/30 px-3 py-3 text-sm" placeholder="Admin password" value={pw} onChange={(e) => setPw(e.target.value)} />
+      <input aria-label="Admin email" type="email" className="mt-6 w-full border border-black/30 px-3 py-3 text-sm" placeholder="Admin email (Gmail)" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
+      <input aria-label="Admin password" type="password" className="mt-3 w-full border border-black/30 px-3 py-3 text-sm" placeholder="Admin password" value={pw} onChange={(e) => setPw(e.target.value)} />
       {msg && <p className="mt-2 text-sm text-red-700" role="status">{msg}</p>}
       <button aria-label="Admin sign in" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={async () => {
-        const r = await api.adminData({ password: pw });
-        if (r.ok) { setAuthed(true); setMsg(""); qc.invalidateQueries({ queryKey: ["admin"] }); } else setMsg("Incorrect admin password.");
+        const r = await api.adminData({ email: adminEmail, password: pw });
+        if (r.ok) { setAuthed(true); setMsg(""); qc.invalidateQueries({ queryKey: ["admin"] }); } else setMsg("Incorrect admin email or password.");
       }}>Sign in to Admin</button>
     </div>
   );
@@ -2661,7 +2771,7 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-serif-d text-3xl italic">Admin Panel</h1>
-        <button aria-label="Admin sign out" className="border border-black px-5 py-2 text-[11px] uppercase tracking-[0.2em]" onClick={() => { setAuthed(false); setPw(""); }}>Sign out</button>
+        <button aria-label="Admin sign out" className="border border-black px-5 py-2 text-[11px] uppercase tracking-[0.2em]" onClick={() => { setAuthed(false); setPw(""); setAdminEmail(""); }}>Sign out</button>
       </div>
       <div className="no-scrollbar mt-5 flex gap-2 overflow-x-auto">
         {tabs.map((t) => <button key={t} aria-label={`Admin tab ${t}`} className={`shrink-0 border px-4 py-2.5 text-[11px] uppercase tracking-[0.15em] ${tab === t ? "border-black bg-black text-white" : "border-black/30"}`} onClick={() => { setTab(t); dataQ.refetch(); }}>{t}</button>)}
@@ -2858,11 +2968,11 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
                     const f = e.target.files?.[0]; e.target.value = "";
                     if (!f) return;
                     setLogoUploading(true);
-                    try { const f64 = await fileToBase64(f); const r = await api.adminUploadLogo({ password: pw, dataBase64: f64.dataBase64, mimeType: f64.mimeType || f.type || "image/png", clear: false }); if (r.ok) { setStg(s => ({ ...s, logoUrl: r.logoUrl })); setMsg("Logo image uploaded — press “Save settings & theme” to keep the display mode, the image itself is already live."); qc.invalidateQueries({ queryKey: ["storefront"] }); } else setMsg("Logo upload failed — please use a PNG, JPG, WebP or SVG under 5 MB."); } catch { setMsg("Logo upload failed."); }
+                    try { const f64 = await fileToBase64(f); const r = await api.adminUploadLogo({ email: adminEmail, password: pw, dataBase64: f64.dataBase64, mimeType: f64.mimeType || f.type || "image/png", clear: false }); if (r.ok) { setStg(s => ({ ...s, logoUrl: r.logoUrl })); setMsg("Logo image uploaded — press “Save settings & theme” to keep the display mode, the image itself is already live."); qc.invalidateQueries({ queryKey: ["storefront"] }); } else setMsg("Logo upload failed — please use a PNG, JPG, WebP or SVG under 5 MB."); } catch { setMsg("Logo upload failed."); }
                     setLogoUploading(false);
                   }} />
                 </label>
-                {stg.logoUrl && <button aria-label="Remove logo image" type="button" className="ml-2 border border-red-800 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-red-800" onClick={async () => { const r = await api.adminUploadLogo({ password: pw, dataBase64: "", mimeType: "image/png", clear: true }); if (r.ok) { setStg(s => ({ ...s, logoUrl: "" })); setMsg("Logo image removed — the default carriage emblem is shown again."); qc.invalidateQueries({ queryKey: ["storefront"] }); } }}>Remove logo image</button>}
+                {stg.logoUrl && <button aria-label="Remove logo image" type="button" className="ml-2 border border-red-800 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-red-800" onClick={async () => { const r = await api.adminUploadLogo({ email: adminEmail, password: pw, dataBase64: "", mimeType: "image/png", clear: true }); if (r.ok) { setStg(s => ({ ...s, logoUrl: "" })); setMsg("Logo image removed — the default carriage emblem is shown again."); qc.invalidateQueries({ queryKey: ["storefront"] }); } }}>Remove logo image</button>}
               </div>
             </div>
           </div>

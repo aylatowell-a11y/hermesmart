@@ -23,6 +23,21 @@ import { PRODUCTS, SETTINGS, type Product, type Settings } from "./data";
 // this browser's local copy.
 const DEMO_ADMIN_PASSWORD = "admin123";
 
+// Admin sign-in email — the SINGLE configurable value for the admin login.
+// The admin signs in with this Gmail address + the admin password above.
+// Change this one line to change the admin email everywhere.
+export const ADMIN_EMAIL = "nauman4915@gmail.com";
+
+// The admin gate: the password must match AND the email must match
+// ADMIN_EMAIL (case-insensitive). This is a client-side demo gate only —
+// it keeps the admin panel behind the admin's Gmail, not just a password.
+// If ADMIN_EMAIL is ever cleared, the gate falls back to password-only.
+function isAdmin(email: string | undefined, password: string | undefined): boolean {
+  if (password !== DEMO_ADMIN_PASSWORD) return false;
+  if (!ADMIN_EMAIL) return true;
+  return (email ?? "").trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
+
 export type ApiResponse<TApi, TAction extends keyof TApi> =
   TApi[TAction] extends (...args: never[]) => Promise<infer R> ? R : never;
 
@@ -270,7 +285,7 @@ export const api = {
     return { ok: true, message: "Return requested. Our customer service will contact you." };
   },
 
-  async adminData(args: { password: string }): Promise<{
+  async adminData(args: { email?: string; password: string }): Promise<{
     ok: boolean;
     stats: { products: number; orders: number; users: number; revenue: number; newsletter: number; notify: number; visitsTotal: number; visitsToday: number; pendingOrders: number; newAccountsToday: number; newOrders: number; returns: number };
     visitsByDay: { day: string; count: number }[];
@@ -302,7 +317,7 @@ export const api = {
       notify: [] as { id: number; productName: string; email: string }[],
       returns: [] as { id: number; orderId: number; email: string; reason: string; status: string }[],
     };
-    if (args.password !== DEMO_ADMIN_PASSWORD) return empty;
+    if (!isAdmin(args.email, args.password)) return empty;
     const prods = getProducts();
     const ords = read<LocalOrder[]>("orders", []);
     const usrs = read<LocalUser[]>("users", []);
@@ -369,8 +384,8 @@ export const api = {
     };
   },
 
-  async adminMarkViewed(args: { password: string; kind: "order" | "user"; id: number }): Promise<{ ok: boolean }> {
-    if (args.password !== DEMO_ADMIN_PASSWORD) return { ok: false };
+  async adminMarkViewed(args: { email?: string; password: string; kind: "order" | "user"; id: number }): Promise<{ ok: boolean }> {
+    if (!isAdmin(args.email, args.password)) return { ok: false };
     if (args.kind === "order") {
       const orders = read<LocalOrder[]>("orders", []);
       write("orders", orders.map((o) => (o.id === args.id ? { ...o, viewedByAdmin: 1 } : o)));
@@ -381,27 +396,27 @@ export const api = {
     return { ok: true };
   },
 
-  async adminSetUserDisabled(args: { password: string; id: number; disabled: boolean }): Promise<{ ok: boolean }> {
-    if (args.password !== DEMO_ADMIN_PASSWORD) return { ok: false };
+  async adminSetUserDisabled(args: { email?: string; password: string; id: number; disabled: boolean }): Promise<{ ok: boolean }> {
+    if (!isAdmin(args.email, args.password)) return { ok: false };
     const users = read<LocalUser[]>("users", []);
     write("users", users.map((u) => (u.id === args.id ? { ...u, disabled: args.disabled ? 1 : 0 } : u)));
     return { ok: true };
   },
 
-  async adminDeleteUser(args: { password: string; id: number }): Promise<{ ok: boolean }> {
-    if (args.password !== DEMO_ADMIN_PASSWORD) return { ok: false };
+  async adminDeleteUser(args: { email?: string; password: string; id: number }): Promise<{ ok: boolean }> {
+    if (!isAdmin(args.email, args.password)) return { ok: false };
     write("users", read<LocalUser[]>("users", []).filter((u) => u.id !== args.id));
     return { ok: true };
   },
 
   async adminSaveProduct(args: {
-    password: string; id?: number; name: string; category: string; subcategory?: string; theme?: string;
+    email?: string; password: string; id?: number; name: string; category: string; subcategory?: string; theme?: string;
     price: number; priceLabel?: string; status?: string; line?: string; material?: string; modelSize?: string;
     metallicFinish?: string; colorsJson?: string; description?: string; story?: string; tone?: string;
     glyph?: string; refCode?: string; galleryViews?: string; applePay?: boolean; sizeOptions?: string;
     accordions?: string; shippingDelay?: string; detailLines?: string;
   }): Promise<{ ok: boolean; id: number }> {
-    if (args.password !== DEMO_ADMIN_PASSWORD) return { ok: false, id: 0 };
+    if (!isAdmin(args.email, args.password)) return { ok: false, id: 0 };
     const overrides = read<Record<string, Partial<Product>>>("products-overrides", {});
     const added = read<Product[]>("products-new", []);
     const vals: Partial<Product> = {
@@ -449,8 +464,8 @@ export const api = {
     return { ok: true, id };
   },
 
-  async adminDeleteProduct(args: { password: string; id: number }): Promise<{ ok: boolean }> {
-    if (args.password !== DEMO_ADMIN_PASSWORD) return { ok: false };
+  async adminDeleteProduct(args: { email?: string; password: string; id: number }): Promise<{ ok: boolean }> {
+    if (!isAdmin(args.email, args.password)) return { ok: false };
     const deleted = new Set(read<number[]>("products-deleted", []));
     deleted.add(args.id);
     write("products-deleted", [...deleted]);
@@ -458,21 +473,21 @@ export const api = {
     return { ok: true };
   },
 
-  async adminUpdateOrder(args: { password: string; id: number; status: string }): Promise<{ ok: boolean }> {
-    if (args.password !== DEMO_ADMIN_PASSWORD) return { ok: false };
+  async adminUpdateOrder(args: { email?: string; password: string; id: number; status: string }): Promise<{ ok: boolean }> {
+    if (!isAdmin(args.email, args.password)) return { ok: false };
     const orders = read<LocalOrder[]>("orders", []);
     write("orders", orders.map((o) => (o.id === args.id ? { ...o, status: args.status } : o)));
     return { ok: true };
   },
 
-  async adminSaveSettings(args: { password: string; settings: Settings }): Promise<{ ok: boolean }> {
-    if (args.password !== DEMO_ADMIN_PASSWORD) return { ok: false };
+  async adminSaveSettings(args: { email?: string; password: string; settings: Settings }): Promise<{ ok: boolean }> {
+    if (!isAdmin(args.email, args.password)) return { ok: false };
     write("settings", args.settings);
     return { ok: true };
   },
 
-  async adminUploadLogo(args: { password: string; dataBase64: string; mimeType: string; clear: boolean }): Promise<{ ok: boolean; logoUrl: string }> {
-    if (args.password !== DEMO_ADMIN_PASSWORD) return { ok: false, logoUrl: "" };
+  async adminUploadLogo(args: { email?: string; password: string; dataBase64: string; mimeType: string; clear: boolean }): Promise<{ ok: boolean; logoUrl: string }> {
+    if (!isAdmin(args.email, args.password)) return { ok: false, logoUrl: "" };
     if (args.clear || !args.dataBase64) {
       const cur = read<Partial<Settings> | null>("settings", null);
       write("settings", { ...(cur ?? {}), logoUrl: "" });
