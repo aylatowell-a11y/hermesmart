@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1794055319721,
+      "tag": "0001_initial",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794055319721,
+      "tag": "0002_store_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794056399338,
+      "tag": "0003_sales_visits_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794057196439,
+      "tag": "0004_logo_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794057196439,
+      "tag": "0005_product_detail_fields",
+      "breakpoints": true
+    }
+  ]
+}
