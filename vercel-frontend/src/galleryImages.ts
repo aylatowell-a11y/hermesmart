@@ -12,7 +12,12 @@
 // type) a contact sheet was generated in the same studio style — plain
 // seamless background correct for the colourway — with one panel per view,
 // then cut into one file per view under assets/gallery/. Nothing was
-// downloaded or hotlinked from hermes.com.
+// downloaded or hotlinked from hermes.com — EXCEPT the four men's sandals
+// (user instruction 2026-11-09, overrides that rule): their galleries use
+// the ORIGINAL Hermes photos hotlinked from assets.hermes.com, because the
+// generated type set showed a sneaker for these sandals. Each hotlinked
+// URL was verified to load (HTTP 200) and to show the correct product and
+// view before it was wired in.
 import kellyFront from "./assets/gallery/kelly-belt-front.webp";
 import kellyWorn from "./assets/gallery/kelly-belt-worn.webp";
 import kellyFront2 from "./assets/gallery/kelly-belt-front2.webp";
@@ -126,6 +131,20 @@ const MID_BLUE = [V("Worn", dBlueFront), V("Video", dBlueFront), V("Worn", dBlue
 
 const LONG_SET = [V("Worn", longFront), V("Video", longFront), V("Worn", longCloseup), V("Worn", longBack), V("Worn", longThreeQuarter), V("Worn", longSide), V("Detail", longDetail)];
 
+// Izmir sandal — ORIGINAL Hermes photos, hotlinked from assets.hermes.com
+// (user instruction 2026-11-09). Ref H041141ZH01, black calfskin, $950.
+// Views verified against the originals: 101 = pair front 3/4, 102 = model
+// wearing, 104 = single side profile, 105 = pair back 3/4, 106 = top-down.
+const HERMES_IMG = "https://assets.hermes.com/is/image/hermesproduct/";
+const HERMES_Q = "?wid=750&hei=1000&fit=fit&$product_default_bg$";
+const IZMIR_SET = [
+  V("Front", HERMES_IMG + "041141ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "041141ZH01_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "041141ZH01_front_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "041141ZH01_front_wm_105" + HERMES_Q),
+  V("Above", HERMES_IMG + "041141ZH01_front_wm_106" + HERMES_Q),
+];
+
 // Type sets — applied to every other product by the type rules. Each label
 // maps to the photo actually shot for that label, never a reuse.
 const BAG_SET = [V("Front", bagFront), V("Side", bagSide), V("Above", bagAbove), V("Back", bagBack)];
@@ -209,6 +228,9 @@ export function galleryForProduct(
     set = [V("Flat", phFlat), V("Worn", phWorn), V("Detail", phDetail)];
   } else if (name === "Embroidered pocket dress") {
     set = [V("Front", embFront), V("Side", embSide), V("Back", embBack), V("Detail", embDetail)];
+  } else if (name === "Izmir sandal") {
+    // Original Hermes photos, hotlinked (user instruction 2026-11-09).
+    set = IZMIR_SET;
   }
 
   if (!set) {

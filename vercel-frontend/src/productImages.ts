@@ -4,6 +4,13 @@
 // hotlinked. Exact products map by name; anything else (catalog-expansion
 // rows, admin-added products) falls back to the closest photo of the same
 // product type and colour family, so no tile ever shows a glyph/emoji.
+//
+// EXCEPTION (user instruction 2026-11-09, overrides the no-hotlink rule):
+// the four men's sandals use the ORIGINAL Hermes photos hotlinked from
+// assets.hermes.com, because the generated pool showed the wrong item for
+// them (all four showed the same brown loafer; Izmir's gallery showed a
+// sneaker). Each hotlinked URL was verified to load (HTTP 200) and to show
+// the correct product before it was wired in.
 import lePetitSac from "./assets/products/le-petit-sac.webp";
 import doubleLonge from "./assets/products/double-longe.webp";
 import tablierSellier from "./assets/products/tablier-sellier.webp";
@@ -108,6 +115,11 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   "Jet sneaker": jetSneaker,
   "Nine ankle boot": nineAnkleBoot,
   "Noe loafer": noeLoafer,
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Izmir sandal, ref H041141ZH01, $950 — verified
+  // to load and to show the black calfskin Izmir sandal (H cut-out strap).
+  "Izmir sandal":
+    "https://assets.hermes.com/is/image/hermesproduct/041141ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   "Bouncing sneaker, Blanc": bouncingSneakerBlancV2,
   "Neon sneaker": neonSneaker,
   "Next sneaker": nextSneaker,
