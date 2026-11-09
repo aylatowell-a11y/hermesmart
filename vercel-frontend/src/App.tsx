@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import Hls from "hls.js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type ApiResponse } from "./api";
 // Real photos: the image files are in ./assets/ (uploaded to the repo).
@@ -1403,57 +1402,25 @@ function RelatedRow({ title, items, go }: { title: string; items: Product[]; go:
   );
 }
 
-// Real Hermes product video (HLS) — the original hermes.com video for a
-// product, hotlinked from assets.hermes.com (user instruction 2026-11-09/10:
-// use the original video wherever the original site has one). Safari plays
-// HLS natively; every other browser plays it through hls.js. Muted, no
-// autoplay, no seek bar: it only plays while `playing` is true, exactly like
-// the original product-page video. If the stream fails to load, it falls
-// back to the poster still with the old pan motion, so the panel never goes
-// blank.
-function HlsVideo({ src, poster, playing, className }: { src: string; poster: string; playing: boolean; className?: string }) {
+// Real Hermes product video — the original hermes.com video for a
+// product, downloaded and hosted on the store itself (user instruction
+// 2026-11-09/10: use the original video wherever the original site has
+// one). The HLS (.m3u8) hotlink was replaced 2026-11-10 because the stream
+// never advanced in the browser (frozen poster, 0 pixel change over 7s of
+// "playing"): the MP4 here is the same original Hermes clip, converted
+// from the HLS stream and served from the store's own origin, so a plain
+// <video> plays it natively in every browser — no hls.js, no cross-origin
+// fetch. Muted, no autoplay, no seek bar: it only plays while `playing`
+// is true, exactly like the original product-page video.
+function ProductVideo({ src, poster, playing, className }: { src: string; poster: string; playing: boolean; className?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [ready, setReady] = useState(false);
-  const [failed, setFailed] = useState(false);
-  // A new video URL resets the load state.
-  useEffect(() => { setReady(false); setFailed(false); }, [src]);
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || failed) return;
-    let hls: Hls | null = null;
-    let cancelled = false;
-    const onReady = () => { if (!cancelled) setReady(true); };
-    const onFail = () => { if (!cancelled) setFailed(true); };
-    if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = src;
-    } else if (Hls.isSupported()) {
-      hls = new Hls({ maxBufferLength: 30 });
-      hls.on(Hls.Events.MANIFEST_PARSED, onReady);
-      hls.on(Hls.Events.ERROR, (_event, data) => { if (data.fatal) onFail(); });
-      hls.loadSource(src);
-      hls.attachMedia(video);
-    } else {
-      video.src = src;
-    }
-    video.addEventListener("loadedmetadata", onReady);
-    video.addEventListener("error", onFail);
-    return () => {
-      cancelled = true;
-      video.removeEventListener("loadedmetadata", onReady);
-      video.removeEventListener("error", onFail);
-      hls?.destroy();
-    };
-  }, [src, failed]);
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !ready || failed) return;
+    if (!video) return;
     if (playing) video.play().catch(() => {});
     else video.pause();
-  }, [playing, ready, failed]);
-  if (failed) {
-    return <img src={poster} alt="Product video" className={`${className ?? ""}${playing ? " dress-walk" : ""}`} />;
-  }
-  return <video ref={videoRef} muted loop playsInline preload="metadata" poster={poster} className={className} aria-label="Product video" />;
+  }, [playing]);
+  return <video ref={videoRef} src={src} muted loop playsInline preload="metadata" poster={poster} className={className} aria-label="Product video" />;
 }
 
 function ProductView({ products, id, go, addToCart, settings, user }: { products: Product[]; id: number; go: (v: View) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; settings: Settings; user: { name: string; email: string } | null }) {
@@ -1497,7 +1464,16 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
       setLastViewed(ids.slice(1).map((i) => products.find((x) => x.id === i)).filter((x): x is Product => !!x).slice(0, 4));
     } catch { /* ignore */ }
   }, [p?.id]);
-  useEffect(() => { setVidPlaying(false); stripRef.current?.querySelectorAll<HTMLElement>("[data-panel]")[thumb]?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" }); }, [thumb]);
+  useEffect(() => {
+    // Stop the video only when LEAVING the video view. Selecting the video
+    // view must NOT reset vidPlaying: the tap sets thumb to the video view
+    // AND vidPlaying to true, and an unconditional reset here would
+    // immediately clobber vidPlaying back to false, so the first tap to
+    // play would do nothing and the video would sit frozen on its poster.
+    const isVideoView = galleryForProduct(p, colorIdx)[thumb]?.video;
+    if (!isVideoView) setVidPlaying(false);
+    stripRef.current?.querySelectorAll<HTMLElement>("[data-panel]")[thumb]?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [thumb]);
   useEffect(() => { if (!zoomOpen) return; const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setZoomOpen(false); }; document.addEventListener("keydown", onKey); return () => document.removeEventListener("keydown", onKey); }, [zoomOpen]);
   useEffect(() => { if (!tiePlaying) return; const t = window.setInterval(() => setTieProg((v) => (v + 1) % 101), 120); return () => window.clearInterval(t); }, [tiePlaying]);
   if (!p) return <p className="p-10 text-center">Product not found.</p>;
@@ -1587,7 +1563,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
                 {v.video ? (
                   <button aria-label={vidPlaying && thumb === i ? "Pause video" : "Play video"} aria-pressed={vidPlaying && thumb === i} className="relative block h-full w-full" onClick={() => { if (thumb === i) setVidPlaying(!vidPlaying); else { setThumb(i); setVidPlaying(true); } }}>
                     {v.videoSrc ? (
-                      <HlsVideo src={v.videoSrc} poster={v.src} playing={vidPlaying && thumb === i && !zoomOpen} className="h-full w-full object-cover" />
+                      <ProductVideo src={v.videoSrc} poster={v.src} playing={vidPlaying && thumb === i && !zoomOpen} className="h-full w-full object-cover" />
                     ) : (
                       <img src={v.src} alt={`${p.name} — video`} className={`h-full w-full object-cover ${vidPlaying && thumb === i ? "dress-walk" : ""}`} />
                     )}
@@ -1782,7 +1758,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
             {curView.video ? (
               <button aria-label={vidPlaying ? "Pause video" : "Play video"} aria-pressed={vidPlaying} className="relative block max-h-full" onClick={() => setVidPlaying(!vidPlaying)}>
                 {curView.videoSrc ? (
-                  <HlsVideo src={curView.videoSrc} poster={curView.src} playing={vidPlaying} className="max-h-[62vh] w-auto object-contain" />
+                  <ProductVideo src={curView.videoSrc} poster={curView.src} playing={vidPlaying} className="max-h-[62vh] w-auto object-contain" />
                 ) : (
                   <img src={curView.src} alt={`${p.name} — video`} className={`max-h-[62vh] w-auto object-contain ${vidPlaying ? "dress-walk" : ""}`} />
                 )}
@@ -3098,3 +3074,4 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
     </div>
   );
 }
+

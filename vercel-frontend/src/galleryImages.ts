@@ -19,10 +19,12 @@
 // URL was verified to load (HTTP 200) and to show the correct product and
 // view before it was wired in. The same exception covers the two dresses'
 // "Video" views (user instruction 2026-11-10): the Mid-length buttoned
-// dress and the Long sleeveless dress play the ORIGINAL Hermes video
-// (HLS .m3u8, hotlinked from assets.hermes.com, played via hls.js), not
-// the old pan-over-stills. Each video URL was verified to load (HTTP 200)
-// and its poster frame visually confirmed to show the correct dress.
+// dress and the Long sleeveless dress play the ORIGINAL Hermes video, not
+// the old pan-over-stills. The clips are the original Hermes videos,
+// downloaded and hosted on the store itself as MP4s (converted from the
+// Hermes HLS stream — the HLS hotlink froze on its poster in the browser,
+// so it was replaced 2026-11-10). Each clip's poster frame was visually
+// confirmed to show the correct dress.
 import kellyFront from "./assets/gallery/kelly-belt-front.webp";
 import kellyWorn from "./assets/gallery/kelly-belt-worn.webp";
 import kellyFront2 from "./assets/gallery/kelly-belt-front2.webp";
@@ -128,16 +130,19 @@ const BOUNCING_BLANC = [V("Front", bFront), V("Worn", bWorn), V("Side", bSide), 
 // never another colourway's photos mixed in.
 const bouncingAlt = (front: string, back: string, above: string) => [V("Front", front), V("Back", back), V("Above", above)];
 
-// Original Hermes product videos, hotlinked from assets.hermes.com
-// (user instruction 2026-11-09/10 — use the original video wherever the
-// original site has one). HLS (.m3u8) streams; each URL was verified to
-// return HTTP 200 with the store's Referer, and the poster frame visually
-// confirmed to show the correct dress. Played via hls.js (Safari plays HLS
-// natively). The video is one per product — the same clip for both
-// colourways of the Mid-length dress.
-const HERMES_VIDEO = "https://assets.hermes.com/is/content/hermesproduct/";
-const MID_DRESS_VIDEO = HERMES_VIDEO + "6H2542D502_video_102-AVS.m3u8";
-const LONG_DRESS_VIDEO = HERMES_VIDEO + "6H2521D7DC_video_102-AVS.m3u8";
+// Original Hermes product videos, downloaded and hosted on the store
+// itself (user instruction 2026-11-09/10 — use the original video wherever
+// the original site has one). The HLS (.m3u8) hotlink was replaced
+// 2026-11-10 because the stream never advanced in the browser (frozen
+// poster, 0 pixel change over 7s of "playing"): the MP4s below are the
+// same original Hermes clips, converted from the HLS stream (highest
+// -bandwidth variant, H.264/AAC, no re-encode) and served from the store's
+// own origin, so they play natively in every browser without hls.js and
+// without a cross-origin fetch. The video is one per product — the same
+// clip for both colourways of the Mid-length dress.
+// Files live in vercel-frontend/public/videos/ (served at /videos/...).
+const MID_DRESS_VIDEO = "/videos/mid-dress.mp4";
+const LONG_DRESS_VIDEO = "/videos/long-dress.mp4";
 
 const MID_NOIR = [V("Worn", midFront), V("Video", midFront, MID_DRESS_VIDEO), V("Worn", midCloseup), V("Worn", midBack), V("Worn", midThreeQuarter), V("Worn", midSide), V("Worn", midFront2)];
 // The Gorgeous Blue colourway has its own three model-worn photos (front /
