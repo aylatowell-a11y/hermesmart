@@ -3,10 +3,25 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type ApiResponse } from "./api";
 // Real photos: the image files are in ./assets/ (uploaded to the repo).
 import heroImg from "./assets/media-generation-hero-hands-blanket-0-42d3a746-833a-44bc-b0cb-99ad6e08730c.webp";
-import heroBenchImg from "./assets/media-generation-hero-tiled-bench-0-f087b40a-577c-45f0-a118-76c1b93888ae.webp";
+// Original Hermes hero photo (hermes.com homepage, verified 2026-11-10):
+// black-and-white triangular tiled bench + blue patterned blanket on a beige
+// stone wall. Desktop 16:9, mobile 9:16 (the crop hermes.com serves ≤1023px).
+const heroBenchImg = "https://assets.hermes.com/is/image/hermesedito/cover_maison_167?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const heroBenchImgMobile = "https://assets.hermes.com/is/image/hermesedito/Cover_maison_mobile?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 import runwayImg from "./assets/media-generation-runway-show-0-97e89bc4-b374-4de6-96e4-e7a69020f3a2.webp";
 import outdoorsImg from "./assets/media-generation-editorial-outdoors-0-67c3bd9b-b631-4b20-a0fa-75d9e7d34982.webp";
+// Original Hermes Baladeur poster (hermes.com homepage, verified 2026-11-10):
+// woman + bicycle + large white Afghan hound in front of a desert screen.
+// The video itself is served from public/videos/ as MP4 (see BOARD d).
+const baladeurPosterImg = "https://assets.hermes.com/is/image/hermesedito/Hero_Baladeur_Cover_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const baladeurPosterImgMobile = "https://assets.hermes.com/is/image/hermesedito/Hero_Baladeur_Cover_9x16?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 import kellyImg from "./assets/media-generation-editorial-kelly-coat-0-7238f945-faef-4dda-bd99-0169e098f7ee.webp";
+// Original Hermes Kelly editorial (hermes.com homepage, verified 2026-11-10):
+// two stacked gold Kelly RINGS (one plain, one diamond-pavé) on an orange /
+// terracotta background. "Bague" = ring — this is what hermes.com shows for
+// the Kelly story text; there is no bracelet version on the homepage.
+const kellyRingsImg = "https://assets.hermes.com/is/image/hermesedito/Bague_Kelly_Push_2_Nov_Phase_1_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const kellyRingsImgMobile = "https://assets.hermes.com/is/image/hermesedito/Bague_Kelly_Push_2_Nov_Phase_1_9x16?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 import carriageBlackImg from "./assets/hermes-carriage-black.png";
 import carriageWhiteImg from "./assets/hermes-carriage-white.png";
 import logoBlackImg from "./assets/hermes-logo-black.png";
@@ -282,7 +297,14 @@ export function ProductVisual({ p, large: _large, altSrc, altActive }: { p: Prod
   );
 }
 
-function ProductCard({ p, onOpen, onQuickBuy, colourInName }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean }) {
+// Quick buy exists on hermes.com only on sneaker tiles. Every sneaker in
+// this catalogue has "sneaker" in its name (45 products, subcategory
+// "Shoes") — the same test the category page already uses for its Sneakers
+// filter — so this per-product test is the reliable gate. Belts, beauty,
+// bags, etc. never get a quick-buy button.
+function isSneakerProduct(p: Product): boolean { return /sneaker/i.test(p.name); }
+
+function ProductCard({ p, onOpen, onQuickBuy, colourInName, portrait }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean; portrait?: boolean }) {
   const bagIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>;
   // Tile alternate views (hermes.com parity): the tile photo swaps on hover
   // (desktop) and cycles on horizontal swipe (touch) through the product's
@@ -339,7 +361,7 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName }: { p: Product; onOp
       onClick={() => { if (suppressClickRef.current) { suppressClickRef.current = false; return; } onOpen(p.id); }} onKeyDown={(e) => { if (e.key === "Enter") onOpen(p.id); }}
       onMouseEnter={onHoverStart} onMouseLeave={() => setAltIdx(null)}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <div className="aspect-square overflow-hidden transition-transform duration-300 group-hover:scale-[1.015]"><ProductVisual p={p} altSrc={altIdx !== null ? altViews[altIdx] : (altArmed ? altViews[0] : undefined)} altActive={altIdx !== null} /></div>
+      <div className={`${portrait ? "aspect-[4/5] sm:aspect-square" : "aspect-square"} overflow-hidden transition-transform duration-300 group-hover:scale-[1.015]`}><ProductVisual p={p} altSrc={altIdx !== null ? altViews[altIdx] : (altArmed ? altViews[0] : undefined)} altActive={altIdx !== null} /></div>
       {colourInName ? (
         // Category tile, as on hermes.com: the colour is appended to the
         // name ("Le Petit Sac bag, Beige/Natural"), the price sits below,
@@ -356,9 +378,9 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName }: { p: Product; onOp
         </div>
       ) : (
         <>
-          <p className="product-name mt-3 text-left text-sm text-[var(--text)]">{p.name}</p>
-          {p.colors[0] && <p className="mt-0.5 text-left text-xs text-neutral-500">{p.colors[0].name}</p>}
-          <p className="mt-0.5 text-left text-sm text-[var(--text)]">{priceText(p)}</p>
+          <p className={`product-name mt-3 text-left ${portrait ? "px-2 text-[13px] leading-snug sm:px-0 sm:text-sm" : "text-sm"} text-[var(--text)]`}>{p.name}</p>
+          {p.colors[0] && <p className={`mt-0.5 text-left ${portrait ? "px-2 text-[11px] sm:px-0 sm:text-xs" : "text-xs"} text-neutral-500`}>{p.colors[0].name}</p>}
+          <p className={`mt-0.5 text-left ${portrait ? "px-2 text-[13px] sm:px-0 sm:text-sm" : "text-sm"} text-[var(--text)]`}>{priceText(p)}</p>
           {onQuickBuy && p.status === "available" && (
             <button aria-label={`Quick buy ${p.name}`} className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-base shadow transition hover:bg-black hover:text-white"
               onClick={(e) => { e.stopPropagation(); onQuickBuy(p); }}>{bagIcon}</button>
@@ -789,6 +811,12 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
   };
   const [vidPaused, setVidPaused] = useState(false);
   const [vidMuted, setVidMuted] = useState(true);
+  // Baladeur video: portrait MP4 + poster on phones, landscape on desktop
+  // (the original serves 9:16 mobile / 16:9 desktop). MP4s live in
+  // public/videos/ (dress-video precedent); poster is the Hermes CDN cover.
+  const baladeurIsMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches;
+  const baladeurSrc = baladeurIsMobile ? "/videos/baladeur-mobile.mp4" : "/videos/baladeur-desktop.mp4";
+  const baladeurPoster = baladeurIsMobile ? baladeurPosterImgMobile : baladeurPosterImg;
   // The Baladeur film is the ONLY video on the homepage (verified on
   // hermes.com). It starts moving when scrolled into view and freezes when
   // out of view or paused — exactly the real behaviour. NOTE (2026-11-10):
@@ -801,14 +829,17 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
   const [vidInView, setVidInView] = useState(false);
   useEffect(() => { const el = vidRef.current; if (!el) return; const ob = new IntersectionObserver((es) => setVidInView(!!es[0]?.isIntersecting), { threshold: 0.2 }); ob.observe(el); return () => ob.disconnect(); }, []);
   return (
-    <div>
+    <div className="overflow-x-clip">
       {/* BOARD a) HERO — full-viewport, full-bleed; the whole hero is a link */}
-      <section className="relative cursor-pointer" onClick={() => go({ t: "category", cat: "home", sub: "Blankets and pillows" })} aria-label="Threading ideas — discover the blanket collection">
-        <img src={heroBenchImg} alt="Blue patterned blanket folded on a black-and-white triangular tiled bench against a beige stone wall" className="h-screen w-full object-cover" />
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent pb-10 pt-24 text-white">
-          <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-10 lg:text-left">
-            <h1 className="font-serif-d text-4xl italic sm:text-5xl"><span className="lg:block">{heroFirst}</span> {heroRest}</h1>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 lg:mx-0">{heroText}</p>
+      <section className="relative cursor-pointer overflow-x-clip" onClick={() => go({ t: "category", cat: "home", sub: "Blankets and pillows" })} aria-label="Threading ideas — discover the blanket collection">
+        <picture>
+          <source media="(max-width: 640px)" srcSet={heroBenchImgMobile} />
+          <img src={heroBenchImg} alt="Blue patterned blanket folded on a black-and-white triangular tiled bench against a beige stone wall" className="h-[70vh] w-full object-cover object-center sm:h-screen" />
+        </picture>
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent pb-8 pt-24 text-white sm:pb-10">
+          <div className="mx-auto max-w-7xl px-5 text-center sm:px-6 lg:px-10 lg:text-left">
+            <h1 className="font-serif-d text-[32px] italic leading-tight sm:text-5xl"><span className="lg:block">{heroFirst}</span> {heroRest}</h1>
+            <p className="mx-auto mt-3 w-full max-w-full break-words font-serif-d text-[13px] italic leading-[1.75] sm:max-w-xl sm:text-sm lg:mx-0">{heroText}</p>
             <button aria-label="Discover the blanket collection" className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] underline underline-offset-8" onClick={() => go({ t: "category", cat: "home", sub: "Blankets and pillows" })}>Discover</button>
           </div>
         </div>
@@ -836,15 +867,15 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           </div>
         </div>
         {/* Swipe carousel — one large central image, neighbours peeking at the edges */}
-        <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[15%] pb-1 sm:px-[18%] lg:px-[31%]" role="tablist" aria-label="Discover themes">
+        <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[12%] pb-1 sm:px-[18%] lg:px-[31%]" role="tablist" aria-label="Discover themes">
           {CAROUSEL_THEMES.map((t, i) => {
             const rep = products.find((p) => p.theme === t) ?? products[0];
             if (!rep) return null;
             return (
               <button key={`${t}-${i}`} data-slide role="tab" aria-selected={activeIdx === i} aria-label={`Theme ${t}, ${i + 1} of ${CAROUSEL_THEMES.length}`} onClick={() => centerSlide(i)}
-                className={`relative aspect-[3/4] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
+                className={`relative aspect-[4/5] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 lg:aspect-[3/4] ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
                 <ProductVisual p={rep} large />
-                <span className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-5 py-2 text-[11px] font-medium uppercase tracking-[0.18em] text-black shadow">{t}</span>
+                <span className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-6 py-2.5 text-xs font-medium uppercase tracking-[0.2em] text-black shadow">{t}</span>
               </button>
             );
           })}
@@ -858,8 +889,8 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           <button aria-label="Next theme" className="flex h-8 w-8 items-center justify-center border border-black/25" onClick={() => centerSlide(activeIdx + 1)}>›</button>
         </div>
         <h3 className="mt-10 text-center text-[11px] font-semibold uppercase tracking-[0.25em] lg:text-left">Products for the theme {theme}</h3>
-        <div key={theme} className="mt-5 grid grid-cols-2 gap-5 lg:grid-cols-4">
-          {shown.map((p) => <ProductCard key={p.id} p={p} onOpen={(id) => go({ t: "product", id })} onQuickBuy={(prod) => addToCart(prod)} />)}
+        <div key={theme} className="-mx-4 mt-5 grid grid-cols-2 gap-x-[3px] gap-y-10 sm:mx-0 sm:gap-5 lg:grid-cols-4">
+          {shown.map((p) => <ProductCard key={p.id} p={p} portrait onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
         </div>
       </div>
       </section>
@@ -869,7 +900,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           title, sub-text and Discover link centred on black BELOW the frame. */}
       <section ref={vidRef} className="relative overflow-hidden bg-black" aria-label="The great outdoors in stereo video">
         <div className="relative overflow-hidden">
-        <img src={outdoorsImg} alt="Woman on a bicycle with a large white Afghan hound in a desert landscape" className="baladeur-motion h-[62vh] w-full object-cover" style={{ animationPlayState: vidPaused || !vidInView ? "paused" : "running" }} />
+        <ProductVideo src={baladeurSrc} poster={baladeurPoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[62vh] w-full object-cover" />
         <div className="absolute bottom-4 right-4 z-10 flex gap-2">
           <button aria-label={vidPaused ? "Play video" : "Pause video"} aria-pressed={vidPaused} className="flex h-9 w-9 items-center justify-center bg-white text-black shadow" onClick={() => setVidPaused(!vidPaused)}>
             {vidPaused
@@ -891,13 +922,17 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
       </section>
 
       {/* BOARD e) KELLY EDITORIAL — full-bleed photographic board, as on
-          hermes.com: a woman in a dark brown coat holding a tan Kelly bag
-          against a dark brown wood-panelled wall; the whole image is a link */}
-      <section className="relative cursor-pointer overflow-hidden" style={{ background: "#2e1c11" }} onClick={() => go({ t: "category", cat: "leather", sub: "Bags and clutches" })} aria-label="The Kelly story — discover the collection">
-        <img src={kellyImg} alt="Woman in a dark brown coat holding a tan Kelly bag against a dark brown wood-panelled wall" className="h-[62vh] w-full object-cover" />
+          hermes.com: two stacked gold Kelly RINGS (one plain, one pavé-set
+          with diamonds) on an orange background; the whole image is a link
+          to Jewelry, as on the original. */}
+      <section className="relative cursor-pointer overflow-hidden" style={{ background: "#2e1c11" }} onClick={() => go({ t: "category", cat: "jewelry" })} aria-label="The Kelly story — discover the collection">
+        <picture>
+          <source media="(max-width: 640px)" srcSet={kellyRingsImgMobile} />
+          <img src={kellyRingsImg} alt="Two gold Kelly rings, one pavé-set with diamonds, on an orange background" className="h-[62vh] w-full object-cover" />
+        </picture>
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent pb-12 pt-24 text-center text-white">
           <p className="font-serif-d mx-auto max-w-2xl px-4 text-2xl italic leading-snug sm:text-3xl">With each new collection, the Kelly story reinvents itself and reveals new depths. A legendary design, constantly in motion.</p>
-          <button aria-label="Discover the Kelly collection" className="mt-5 text-xs font-semibold uppercase tracking-[0.3em] underline underline-offset-8" onClick={() => go({ t: "category", cat: "leather", sub: "Bags and clutches" })}>Discover the collection</button>
+          <button aria-label="Discover the Kelly collection" className="mt-5 text-xs font-semibold uppercase tracking-[0.3em] underline underline-offset-8" onClick={() => go({ t: "category", cat: "jewelry" })}>Discover the collection</button>
         </div>
       </section>
     </div>
@@ -1325,7 +1360,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
       {!mosaic ? (
         <div className="mt-8 grid grid-cols-2 gap-5 lg:grid-cols-4">
           {gridItems.map((it) => it.kind === "product" ? (
-            <ProductCard key={it.p.id} p={it.p} colourInName onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn ? (prod) => addToCart(prod) : undefined} />
+            <ProductCard key={it.p.id} p={it.p} colourInName onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
           ) : it.kind === "text" ? (
             <div key="ed-text" className="flex aspect-square flex-col justify-center bg-[#efe9df] p-6">
               <p className="font-serif-d text-xl italic">{edText.title}</p>
@@ -1488,15 +1523,16 @@ function RelatedRow({ title, items, go }: { title: string; items: Product[]; go:
 // <video> plays it natively in every browser — no hls.js, no cross-origin
 // fetch. Muted, no autoplay, no seek bar: it only plays while `playing`
 // is true, exactly like the original product-page video.
-function ProductVideo({ src, poster, playing, className }: { src: string; poster: string; playing: boolean; className?: string }) {
+function ProductVideo({ src, poster, playing, muted = true, className }: { src: string; poster: string; playing: boolean; muted?: boolean; className?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    video.muted = muted;
     if (playing) video.play().catch(() => {});
     else video.pause();
-  }, [playing]);
-  return <video ref={videoRef} src={src} muted loop playsInline preload="metadata" poster={poster} className={className} aria-label="Product video" />;
+  }, [playing, muted]);
+  return <video ref={videoRef} src={src} muted={muted} loop playsInline preload="metadata" poster={poster} className={className} aria-label="Product video" />;
 }
 
 function ProductView({ products, id, go, addToCart, settings, user }: { products: Product[]; id: number; go: (v: View) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; settings: Settings; user: { name: string; email: string } | null }) {
