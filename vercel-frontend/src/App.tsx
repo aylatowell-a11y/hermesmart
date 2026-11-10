@@ -178,6 +178,21 @@ const CAROUSEL_EDITORIAL: Record<string, { img: string; alt: string }> = {
   "Silk": { img: "https://assets.hermes.com/is/image/hermesedito/SILK_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing a patterned silk scarf" },
   "Beauty": { img: "https://assets.hermes.com/is/image/hermesedito/MAKEUP_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Close-up of a model wearing red lipstick" },
 };
+// Discover carousel DESKTOP editorial photos — the original's desktop
+// (≥1024px) carousel serves the SAME scenes in 16:9 landscape (verified
+// 2026-11-10: all 5 URLs HTTP 200 at wid=1920; the probed files are
+// 1237×696 = 16:9, including the "9x16"-named Fashion Jewelry one). The
+// desktop carousel uses these for EVERY slide — centre and side strips
+// alike — so a strip becoming the centre only changes width, never the
+// image (the strips show the 16:9 image centre-cropped to 128px, exactly
+// as on hermes.com). Mobile keeps the 3x4 portrait URLs above.
+const CAROUSEL_EDITORIAL_DESKTOP: Record<string, { img: string; alt: string }> = {
+  "Belts": { img: "https://assets.hermes.com/is/image/hermesedito/WOMEN_BELT_NOV_P1_26_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing the Kelly Pocket 18 belt" },
+  "Men's Shoes": { img: "https://assets.hermes.com/is/image/hermesedito/SHOES_NOV_P1_26_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing brown leather loafers" },
+  "Fashion Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/FASHION_JEWELRY_BELT_NOV_P1_26_9x16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Close-up of a model wearing Kelly bracelets" },
+  "Silk": { img: "https://assets.hermes.com/is/image/hermesedito/SILK_NOV_P1_26_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing a patterned silk scarf" },
+  "Beauty": { img: "https://assets.hermes.com/is/image/hermesedito/MAKEUP_NOV_P1_26_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Close-up of a model wearing red lipstick" },
+};
 // Verified theme grids on hermes.com (7 Nov 2026): the exact four products, in
 // this order, shown under each carousel theme. Names match this store's catalog
 // rows exactly, so repeats (1/6/11, 2/7/12, …) render identical products/prices.
@@ -273,7 +288,11 @@ function HermesLogo({ settings, light, variant = "full" }: { settings: Settings;
   if (variant === "header") {
     // Header on hermes.com: ONLY the small carriage emblem, dead-centre —
     // white while over the dark hero image, black once on the cream header.
-    return <img src={light ? carriageWhiteImg : carriageBlackImg} alt={raw} className="h-[36px] w-auto object-contain" />;
+    // Original mobile logo box is 60x36 (3.75rem x 2.25rem) with the carriage
+    // artwork 60px wide inside it, so the img is fixed to 60px wide and the
+    // carriage (aspect 820:369) renders 60x27, centred — not the 80px wide
+    // it rendered at w-auto.
+    return <img src={light ? carriageWhiteImg : carriageBlackImg} alt={raw} className="h-[36px] w-[60px] object-contain" />;
   }
   if (variant === "compact") {
     // Cart / checkout top: ONLY the carriage emblem, centred.
@@ -816,6 +835,14 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
     if (slide) slide.scrollIntoView({ behavior: smooth ? "smooth" : "auto", inline: "center", block: "nearest" });
     setThemeIdx(idx);
   };
+  // Desktop carousel navigation — no scrolling: the desktop carousel is a
+  // fixed window (see below), so changing the theme re-renders it with the
+  // new centre slide and the width transition does the move. Wraps 15→1
+  // and 1→15, as on hermes.com. Used by the desktop slides + arrows.
+  const goToSlide = (i: number) => {
+    const idx = ((i % CAROUSEL_THEMES.length) + CAROUSEL_THEMES.length) % CAROUSEL_THEMES.length;
+    setThemeIdx(idx);
+  };
   const onCarouselScroll = () => {
     const el = carouselRef.current;
     if (!el) return;
@@ -880,22 +907,58 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
               <button aria-label={`Discover the theme ${theme}`} className="font-mono-d mt-3 text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => go(themeDest(theme))}>Discover the theme</button>
             </div>
             <div className="absolute right-0 top-2 flex items-center gap-3" aria-label="Theme position">
-              <button aria-label="Previous theme" className="flex h-9 w-9 items-center justify-center border border-black/25 hover:border-black" onClick={() => centerSlide(activeIdx - 1)}>‹</button>
+              <button aria-label="Previous theme" className="flex h-9 w-9 items-center justify-center border border-black/25 hover:border-black" onClick={() => goToSlide(activeIdx - 1)}>‹</button>
               <span className="text-sm tabular-nums" aria-live="polite">{activeIdx + 1} / {CAROUSEL_THEMES.length}</span>
-              <button aria-label="Next theme" className="flex h-9 w-9 items-center justify-center border border-black/25 hover:border-black" onClick={() => centerSlide(activeIdx + 1)}>›</button>
+              <button aria-label="Next theme" className="flex h-9 w-9 items-center justify-center border border-black/25 hover:border-black" onClick={() => goToSlide(activeIdx + 1)}>›</button>
             </div>
           </div>
         </div>
-        {/* Swipe carousel — one large central image, neighbours peeking at the edges */}
-        <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[12%] pb-1 sm:px-[18%] lg:mt-8 lg:px-[31%]" role="tablist" aria-label="Discover themes">
+        {/* DESKTOP carousel (lg+) — matches hermes.com desktop exactly
+            (measured from the user's laptop screenshots of hermes.com):
+            full-bleed; centre slide 60.8vw wide × 35vw tall (16:9 desktop
+            editorial); side slides as 128px strips (same 16:9 image,
+            centre-cropped), 2 visible per side; white label button only on
+            the centre slide, 32px above its bottom. Clicking a strip (or an
+            arrow) brings it to the centre with a smooth width transition
+            and the previous centre becomes a strip. Starts with BELTS
+            (index 0) in the centre. The window renders the 11 slides
+            around the active index (circular), so wrapping 15→1 / 1→15 is
+            seamless and no slide mounts/unmounts in view. */}
+        <div className="carousel-full-bleed mt-6 hidden overflow-hidden lg:mt-8 lg:block" role="tablist" aria-label="Discover themes">
+          <div className="flex h-[35vw] justify-center gap-[3px]">
+            {Array.from({ length: 11 }, (_, k) => k - 5).map((off) => {
+              const logicalIdx = (((activeIdx + off) % CAROUSEL_THEMES.length) + CAROUSEL_THEMES.length) % CAROUSEL_THEMES.length;
+              const t = CAROUSEL_THEMES[logicalIdx] ?? "Belts";
+              const ed = CAROUSEL_EDITORIAL_DESKTOP[t];
+              if (!ed) return null;
+              const isActive = off === 0;
+              return (
+                <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${logicalIdx + 1} of ${CAROUSEL_THEMES.length}`} onClick={() => goToSlide(logicalIdx)}
+                  className="relative h-full shrink-0 overflow-hidden transition-[width] duration-500 ease-out"
+                  style={{ width: isActive ? "60.8vw" : 128 }}>
+                  <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
+                  {isActive && (
+                    <span className="font-mono-d absolute bottom-8 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-[2px] bg-white px-8 text-xs font-medium uppercase text-black shadow">{t}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {/* MOBILE carousel — swipeable scroll-snap, portrait 3:4 editorial,
+            centre ~76% wide with neighbours peeking (verified against the
+            user's phone screenshot of hermes.com). Tap a slide to centre
+            it; no counter/arrows on mobile (only the progress line below).
+            Unchanged by the desktop fix. */}
+        <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[12%] pb-1 sm:px-[18%] lg:hidden" role="tablist" aria-label="Discover themes">
           {CAROUSEL_THEMES.map((t, i) => {
             const ed = CAROUSEL_EDITORIAL[t];
             if (!ed) return null;
             return (
               <button key={`${t}-${i}`} data-slide role="tab" aria-selected={activeIdx === i} aria-label={`Theme ${t}, ${i + 1} of ${CAROUSEL_THEMES.length}`} onClick={() => centerSlide(i)}
-                className={`relative aspect-[4/5] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 lg:aspect-[3/4] ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
+                className={`relative aspect-[4/5] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
                 <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
-                <span className="font-mono-d absolute bottom-4 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-[2px] bg-white px-8 text-xs font-medium uppercase text-black shadow lg:bottom-8">{t}</span>
+                <span className="font-mono-d absolute bottom-4 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-[2px] bg-white px-8 text-xs font-medium uppercase text-black shadow">{t}</span>
               </button>
             );
           })}
