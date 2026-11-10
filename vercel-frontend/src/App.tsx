@@ -1866,11 +1866,11 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
     { title: "CARE", content: <>Preserve the original qualities of this article by avoiding contact with water, perfume and cosmetics. Store it in its original case, away from direct light and heat, and entrust maintenance to a Hermès boutique.</> },
     { title: "DELIVERY & RETURNS", content: (<>
       <p className="font-semibold text-black">Shipping</p>
-      <p className="mt-1">Complimentary ground shipping within 1 to 10 business days for items up to $2,000. Ship to a store for collection with 2 Day delivery. Express delivery is required for orders greater than $2,000. Items greater than $25,000 require white glove delivery. Purchases are delivered in an orange box tied with a Bolduc ribbon, with the exception of certain items. Select items require ground shipping. See the delivery <button aria-label="Delivery FAQs" className="underline underline-offset-2" onClick={() => go({ t: "page", page: "faq" })}>FAQs</button> for details on shipping methods, costs and delivery times.</p>
+      {settings.deliveryText ? <p className="mt-1">{settings.deliveryText}</p> : <p className="mt-1">Complimentary ground shipping within 1 to 10 business days for items up to $2,000. Ship to a store for collection with 2 Day delivery. Express delivery is required for orders greater than $2,000. Items greater than $25,000 require white glove delivery. Purchases are delivered in an orange box tied with a Bolduc ribbon, with the exception of certain items. Select items require ground shipping. See the delivery <button aria-label="Delivery FAQs" className="underline underline-offset-2" onClick={() => go({ t: "page", page: "faq" })}>FAQs</button> for details on shipping methods, costs and delivery times.</p>}
       <p className="mt-4 font-semibold text-black">Payment methods</p>
-      <p className="mt-1">By card: Visa®, MasterCard®, American Express®, Discover®, Diners Club®, JCB® and China Union Pay®. By PayPal® and Apple Pay®. Payment is debited immediately for personalized product.</p>
+      {settings.paymentMethods ? <p className="mt-1">{settings.paymentMethods}</p> : <p className="mt-1">By card: Visa®, MasterCard®, American Express®, Discover®, Diners Club®, JCB® and China Union Pay®. By PayPal® and Apple Pay®. Payment is debited immediately for personalized product.</p>}
       <p className="mt-4 font-semibold text-black">Returns and exchanges</p>
-      <p className="mt-1">Easy and complimentary, within 30 days. We recommend that you try your shoes on non-abrasive or carpeted surfaces. We will not be able to accept your return if the sole is damaged or marked. The Hermès Sellier tag must be intact, attached, and free of any alteration or damage. Personalized product cannot be refunded or exchanged. See conditions and procedure in our return FAQs.</p>
+      {settings.returnsText ? <p className="mt-1">{settings.returnsText}</p> : <p className="mt-1">Easy and complimentary, within 30 days. We recommend that you try your shoes on non-abrasive or carpeted surfaces. We will not be able to accept your return if the sole is damaged or marked. The Hermès Sellier tag must be intact, attached, and free of any alteration or damage. Personalized product cannot be refunded or exchanged. See conditions and procedure in our return FAQs.</p>}
     </>) },
     { title: "GIFTING", content: <>Your purchases are delivered in an orange box tied with a Bolduc ribbon, with the exception of fragrances, makeup and beauty products, books, certain equestrian and bulky items. During checkout, you can include one card with a personalized message and a priceless invoice. The gift recipient can exchange a gift. For more details, please contact Customer Service.</> },
     // USER GUIDE (Arceau id 53) is NOT rendered yet: the original's
@@ -2250,10 +2250,18 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
   }
   const pg = PAGES[page] ?? PAGES.faq;
   const data = pg ?? { title: "Hermès", body: [] as string[] };
+  // Admin-editable overrides (Theme & Settings): the delivery / returns /
+  // payment text and the flagship store address, when the admin has set
+  // them. Otherwise the original's wording stands.
+  let body = data.body;
+  if (page === "shipping" && settings.deliveryText) body = [settings.deliveryText, ...data.body.slice(1)];
+  if (page === "returns" && settings.returnsText) body = [settings.returnsText, ...data.body.slice(1)];
+  if (page === "payment" && settings.paymentMethods) body = [`We accept ${settings.paymentMethods}.`, ...data.body.slice(1)];
+  if (page === "stores" && settings.flagshipStore) body = data.body.map((b) => b.replace("691 Madison Avenue, New York", settings.flagshipStore));
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="font-serif-d text-3xl italic">{data.title}</h1>
-      {data.body.map((b, i) => <p key={i} className="mt-4 text-sm leading-7 text-neutral-700">{b}</p>)}
+      {body.map((b, i) => <p key={i} className="mt-4 text-sm leading-7 text-neutral-700">{b}</p>)}
       {page === "contact" && <ContactForm settings={settings} go={go} />}
       {(page === "donotsell" || page === "legal") && <p className="mt-4 text-sm">Customer service: <a aria-label="Call customer service" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a> — {settings.serviceHours}.</p>}
       <button aria-label="Continue shopping" className="mt-8 border border-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => go({ t: "home" })}>Continue shopping</button>
@@ -2376,7 +2384,7 @@ function CartPage({ cart, setCart, settings, go, total, count }: { cart: CartIte
             </div>
             <div className="mt-10 space-y-2 border-t border-[#f6f1eb] bg-[#fffcf7] px-5 py-5 text-[13px] text-neutral-600">
               {parseLegalLinks(settings).map(([l, pg]) => <button key={l} aria-label={`Cart footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
-              <p className="pt-1">© Hermès 2026. All rights reserved.</p>
+              <p className="pt-1">{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
             </div>
           </div>
         ) : (
@@ -2506,7 +2514,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
   const [openCol, setOpenCol] = useState<string | null>(null);
   const [subOpen, setSubOpen] = useState(false);
   const [svcIdx, setSvcIdx] = useState(0);
-  const sub = useMutation({ mutationFn: () => api.subscribeNewsletter({ email }), onSuccess: () => { setDone("Thank you — you are subscribed to the newsletter."); setEmail(""); } });
+  const sub = useMutation({ mutationFn: () => api.subscribeNewsletter({ email }), onSuccess: () => { setDone(settings.newsletterSuccess || "Thank you — you are subscribed to the newsletter."); setEmail(""); } });
   useEffect(() => { setShip(settings.shipTo); }, [settings.shipTo]);
   const serviceIcons: Record<string, React.ReactNode> = {
     "STANDARD DELIVERY": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2.5 6h12v10h-12zM14.5 9.5h3.6l3 3.4v3.1h-6.6" /><circle cx="6.5" cy="17.8" r="1.9" /><circle cx="17.3" cy="17.8" r="1.9" /></svg>,
@@ -2515,10 +2523,10 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
     "SECURED PAYMENT": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><rect x="2.5" y="6" width="15" height="11" rx="1.5" /><path d="M2.5 9.8h15" /><rect x="15.8" y="13.2" width="5.7" height="5" rx="0.8" /><path d="M17.2 13.2v-1.4a1.5 1.5 0 0 1 3 0v1.4" /></svg>,
   };
   const services: { title: string; body: React.ReactNode; page: string }[] = [
-    { title: "STANDARD DELIVERY", page: "shipping", body: <>Free standard delivery. Hermès offers several fast and secure delivery options.</> },
-    { title: "RETURNS", page: "returns", body: <>Free returns within 30 days. See conditions and procedure in our <button aria-label="Return FAQs" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "returns" }); }}>return FAQs</button>.</> },
+    { title: "STANDARD DELIVERY", page: "shipping", body: <>{settings.serviceDeliveryBody || "Free standard delivery. Hermès offers several fast and secure delivery options."}</> },
+    { title: "RETURNS", page: "returns", body: settings.serviceReturnsBody ? <>{settings.serviceReturnsBody}</> : <>Free returns within 30 days. See conditions and procedure in our <button aria-label="Return FAQs" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "returns" }); }}>return FAQs</button>.</> },
     { title: "CUSTOMER SERVICE", page: "contact", body: <>{settings.serviceHours}<br /><a aria-label="Call Hermès customer service" className="underline underline-offset-2" href={`tel:${settings.phone}`} onClick={(e) => e.stopPropagation()}>{settings.phone}</a> | <button aria-label="Contact us from footer" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Contact us</button></> },
-    { title: "SECURED PAYMENT", page: "payment", body: <>All the transactions made on Hermes.com are secured</> },
+    { title: "SECURED PAYMENT", page: "payment", body: <>{settings.servicePaymentBody || "All the transactions made on Hermes.com are secured"}</> },
   ];
   const newsletterForm = (boxed: boolean) => done ? <p className="mt-3 text-sm font-medium" role="status">{done}</p> : boxed ? (
     <>
@@ -2594,7 +2602,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
         </div>
         <div className="border-t border-black/10 px-4 py-6">
           <p className="font-mono-d text-xs font-light uppercase tracking-normal">Newsletter</p>
-          <p className="mt-4 text-[11px] leading-[18px] text-black">Receive our newsletter and discover our stories, collections, and surprises.</p>
+          <p className="mt-4 text-[11px] leading-[18px] text-black">{settings.newsletterText || "Receive our newsletter and discover our stories, collections, and surprises."}</p>
           {newsletterForm(false)}
           <p className="font-mono-d mt-8 text-xs font-light uppercase tracking-normal">Follow us</p>
           <div className="mt-3"><SocialCircles /></div>
@@ -2612,7 +2620,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
             )}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600">
-            <p>© Hermès 2026. All rights reserved.</p>
+            <p>{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
           </div>
         </div>
       </div>
@@ -2627,7 +2635,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
           ))}
           <div>
             <p className="font-mono-d text-xs font-light uppercase tracking-normal">Newsletter</p>
-            <p className="mt-4 text-[11px] leading-[18px] text-black">Receive our newsletter and discover our stories, collections, and surprises.</p>
+            <p className="mt-4 text-[11px] leading-[18px] text-black">{settings.newsletterText || "Receive our newsletter and discover our stories, collections, and surprises."}</p>
             {newsletterForm(false)}
             <p className="font-mono-d mt-8 text-xs font-light uppercase tracking-normal">Follow us</p>
             <div className="mt-3"><SocialCircles /></div>
@@ -2649,7 +2657,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
               </div>
             )}
           </div>
-          <p>© Hermès 2026. All rights reserved.</p>
+          <p>{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
         </div>
       </div>
       {/* BOARD h) BELOW THE FOOTER — the lockup band: a large plain area in
@@ -2922,7 +2930,9 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
   const [chatOpen, setChatOpen] = useState(false);
   const mountCartCount = useRef(cart.length);
   useEffect(() => { if (mountCartCount.current === 0) go({ t: "cart" }); }, []);
-  const payMethods = ["Visa", "MasterCard", "American Express", "Discover", "Diners Club", "JCB", "China Union Pay", "Carte Blanche", "Accel", "Pulse", "Nyce", "Star", "PayPal", "Apple Pay"];
+  // Payment methods are admin-editable (Theme & Settings); the default
+  // list is the original's US methods, in the original's order.
+  const payMethods = settings.paymentMethods ? settings.paymentMethods.split(",").map((m) => m.trim()).filter(Boolean) : ["Visa", "MasterCard", "American Express", "Discover", "Diners Club", "JCB", "China Union Pay", "Carte Blanche", "Accel", "Pulse", "Nyce", "Star", "PayPal", "Apple Pay"];
   const order = useMutation({
     mutationFn: () => api.placeOrder({ customerName: `${f.first} ${f.last}`.trim() || (user?.name ?? "Customer"), email, address: tab === "collect" ? `Collect in store — ${storePicked}` : `${f.address}${f.address2 ? ", " + f.address2 : ""}, ${f.city}, ${f.state} ${f.zip}`, paymentMethod: pay, deliveryOption: tab === "collect" ? "Collect in store" : "Ship to an address", items: cart.map((i) => ({ productId: i.productId, name: i.name, price: i.price, qty: i.qty, color: i.color, size: i.size })) }),
     onSuccess: (r) => { setPlacedTotal(total); setPlaced(r.orderId); setCart([]); window.scrollTo({ top: 0 }); },
@@ -3035,7 +3045,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
             <button aria-label="Continue from account step" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => { if (!email.includes("@")) { setEmailErr("Please enter a valid email address."); return; } setAccountEdit(false); }}>Continue</button>
             <div className="mt-6 space-y-2 border-t border-[#f6f1eb] pt-4 text-[13px] text-neutral-600">
               {footerLinks.map(([l, pg]) => <button key={l} aria-label={`Account footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
-              <p className="pt-1">© Hermès 2026. All rights reserved.</p>
+              <p className="pt-1">{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
             </div>
           </div>
         )}
@@ -3155,7 +3165,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
             {storeErr && <p className="mt-2 text-xs text-neutral-600" role="status">{storeErr}</p>}
             <button aria-label="Find a store to collect from" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => {
               if (!storeQuery.trim()) { setStoreErr("Please enter a location."); return; }
-              setStorePicked("Hermès — 691 Madison Avenue, New York"); setDeliverySaved(true);
+              setStorePicked(`Hermès — ${settings.flagshipStore || "691 Madison Avenue, New York"}`); setDeliverySaved(true);
             }}>Find</button>
             {storePicked && (
               <div className="mt-4 border border-[#f6f1eb] p-4" role="status">
@@ -3220,10 +3230,50 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
         </div>
         <div className="mt-8 space-y-2 border-t border-[#f6f1eb] pt-4 text-[13px] text-neutral-600">
           {footerLinks.map(([l, pg]) => <button key={l} aria-label={`Checkout footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
-          <p className="pt-1">© Hermès 2026. All rights reserved.</p>
+          <p className="pt-1">{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
         </div>
       </section>
     </div>, 2);
+}
+
+// Admin Panel — Chat tab. Reads the same localStorage thread (hv-chat)
+// the customer ChatBubble writes to, so both sides see one thread.
+// Admin edits are per-browser only (localStorage, no working backend):
+// messages live in this browser only.
+function AdminChat({ email, password }: { email: string; password: string }) {
+  const [msgs, setMsgs] = useState<LocalChat[]>([]);
+  const [reply, setReply] = useState("");
+  const [note, setNote] = useState("");
+  const load = async () => { const r = await api.getChatMessages({}); setMsgs(r.messages); };
+  useEffect(() => { void load(); }, []);
+  const sendReply = async () => {
+    const text = reply.trim(); if (!text) return;
+    const r = await api.sendChatMessage({ from: "admin", text });
+    if (r.ok) { setReply(""); setNote("Reply sent."); void load(); } else setNote("Reply failed.");
+  };
+  return (
+    <div className="mt-6 max-w-3xl">
+      <p className="text-sm text-neutral-600">Customer chat messages from the floating chat bubble. Reply here and the customer sees it in the same thread. Messages are stored in this browser only.</p>
+      <div className="mt-4 flex gap-2">
+        <button aria-label="Refresh chat messages" className="border border-black px-4 py-2 text-[11px] uppercase tracking-[0.18em]" onClick={() => void load()}>Refresh</button>
+        <button aria-label="Mark all chat messages read" className="border border-black px-4 py-2 text-[11px] uppercase tracking-[0.18em]" onClick={async () => { await api.adminMarkChatRead({ email, password }); setNote("Marked all read."); void load(); }}>Mark all read</button>
+        <button aria-label="Clear all chat messages" className="border border-red-800 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-red-800" onClick={async () => { const r = await api.adminClearChat({ email, password }); if (r.ok) { setNote("Chat cleared."); void load(); } }}>Clear all</button>
+      </div>
+      {note && <p className="mt-2 text-sm text-neutral-600" role="status">{note}</p>}
+      {msgs.length === 0 && <p className="mt-4 text-sm text-neutral-600">No chat messages yet.</p>}
+      {msgs.map((m) => (
+        <div key={m.id} className="mb-2 mt-3 border border-black/10 bg-[#fffdf9] p-4">
+          <p className="text-xs text-neutral-500">{m.from === "customer" ? "Customer" : "Admin"}{m.name ? ` — ${m.name}` : ""} · {new Date(m.createdAt).toLocaleString()}{m.readByAdmin ? "" : " · UNREAD"}</p>
+          <p className="mt-1 text-sm">{m.text}</p>
+          <button aria-label={`Delete chat message ${m.id}`} className="mt-2 border border-red-800 px-3 py-1 text-[11px] uppercase tracking-wider text-red-800" onClick={async () => { await api.adminDeleteChatMessage({ email, password, id: m.id }); void load(); }}>Delete</button>
+        </div>
+      ))}
+      <div className="mt-4 flex gap-2">
+        <input aria-label="Reply to chat" className="min-w-0 flex-1 border border-black/25 bg-white px-3 py-2.5 text-sm" placeholder="Reply as the store…" value={reply} onChange={(e) => setReply(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void sendReply(); }} />
+        <button aria-label="Send chat reply" className="bg-black px-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => void sendReply()}>Send reply</button>
+      </div>
+    </div>
+  );
 }
 
 function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { products: Product[]; settings: Settings; qc: ReturnType<typeof useQueryClient>; navOverrides: NavOverrides; setNavOverrides: (n: NavOverrides) => void }) {
@@ -3236,12 +3286,13 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
   const [stg, setStg] = useState<Settings>(settings);
   useEffect(() => { setStg(settings); }, [settings]);
   const saveProduct = useMutation({ mutationFn: () => api.adminSaveProduct({ email: adminEmail, password: pw, ...form }), onSuccess: (r) => { setMsg(r.ok ? "Product saved — it is now live on the storefront." : "Save failed."); setForm(blank); qc.invalidateQueries({ queryKey: ["storefront"] }); dataQ.refetch(); } });
-  const delProduct = useMutation({ mutationFn: (id: number) => api.adminDeleteProduct({ email: adminEmail, password: pw, id }), onSuccess: () => { setMsg("Product deleted."); qc.invalidateQueries({ queryKey: ["storefront"] }); dataQ.refetch(); } });
+  const delProduct = useMutation({ mutationFn: (id: number) => api.adminDeleteProduct({ email: adminEmail, password: pw, id }), onSuccess: () => { setMsg("Product deleted."); setConfirmProdDelete(null); qc.invalidateQueries({ queryKey: ["storefront"] }); dataQ.refetch(); } });
   const updOrder = useMutation({ mutationFn: (v: { id: number; status: string }) => api.adminUpdateOrder({ email: adminEmail, password: pw, ...v }), onSuccess: () => { setMsg("Order status updated."); dataQ.refetch(); qc.invalidateQueries({ queryKey: ["myorders"] }); } });
   const saveSettings = useMutation({ mutationFn: () => api.adminSaveSettings({ email: adminEmail, password: pw, settings: stg }), onSuccess: () => { setMsg("Settings saved — the storefront now shows the new values."); qc.invalidateQueries({ queryKey: ["storefront"] }); } });
   const [orderQ, setOrderQ] = useState(""); const [orderStatus, setOrderStatus] = useState("All"); const [orderDetail, setOrderDetail] = useState<number | null>(null);
   const [prodQ, setProdQ] = useState("");
   const [custQ, setCustQ] = useState(""); const [custDetail, setCustDetail] = useState<number | null>(null); const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [confirmProdDelete, setConfirmProdDelete] = useState<number | null>(null);
   const markViewed = useMutation({ mutationFn: (v: { kind: "order" | "user"; id: number }) => api.adminMarkViewed({ email: adminEmail, password: pw, ...v }), onSuccess: () => dataQ.refetch() });
   const setDisabled = useMutation({ mutationFn: (v: { id: number; disabled: boolean }) => api.adminSetUserDisabled({ email: adminEmail, password: pw, ...v }), onSuccess: () => { setMsg("Account updated."); dataQ.refetch(); } });
   const delUser = useMutation({ mutationFn: (id: number) => api.adminDeleteUser({ email: adminEmail, password: pw, id }), onSuccess: () => { setMsg("Account deleted."); setConfirmDelete(null); setCustDetail(null); dataQ.refetch(); } });
@@ -3260,7 +3311,7 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
     </div>
   );
   const d = dataQ.data;
-  const tabs = ["Dashboard", "Products", "Orders", "Customers", "Sales", "Navigation", "Newsletter", "Theme & Settings"];
+  const tabs = ["Dashboard", "Products", "Orders", "Customers", "Sales", "Navigation", "Newsletter", "Chat", "Theme & Settings"];
   const inputCls = "w-full border border-black/25 px-3 py-2.5 text-sm bg-white";
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -3302,7 +3353,7 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
                 <p className="text-sm">{priceText(p)}</p>
                 <span className="whitespace-nowrap text-xs text-neutral-500">{(dataQ.data?.productViews.find(v => v.productId === p.id)?.views ?? 0)} views</span>
                 <button aria-label={`Edit ${p.name}`} className="border border-black px-3 py-1.5 text-[11px] uppercase tracking-wider" onClick={() => setForm({ id: p.id, name: p.name, category: p.category, subcategory: p.subcategory, theme: p.theme, price: p.price, priceLabel: p.priceLabel, status: p.status as typeof blank.status, line: p.line, material: p.material, modelSize: p.modelSize, metallicFinish: p.metallicFinish, colorsJson: JSON.stringify(p.colors), description: p.description, story: p.story, tone: p.tone, glyph: p.glyph })}>Edit</button>
-                <button aria-label={`Delete ${p.name}`} className="border border-red-800 px-3 py-1.5 text-[11px] uppercase tracking-wider text-red-800" onClick={() => delProduct.mutate(p.id)}>Delete</button>
+                {confirmProdDelete === p.id ? <><span className="text-xs">Delete?</span><button aria-label={`Confirm delete ${p.name}`} className="border border-red-800 px-3 py-1.5 text-[11px] uppercase tracking-wider text-red-800" onClick={() => delProduct.mutate(p.id)}>Confirm</button><button aria-label="Cancel delete product" className="border border-black px-3 py-1.5 text-[11px] uppercase tracking-wider" onClick={() => setConfirmProdDelete(null)}>Cancel</button></> : <button aria-label={`Delete ${p.name}`} className="border border-red-800 px-3 py-1.5 text-[11px] uppercase tracking-wider text-red-800" onClick={() => setConfirmProdDelete(p.id)}>Delete</button>}
               </div>
             ))}
           </div>
@@ -3348,7 +3399,7 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
         <div className="mt-6">
           <div className="flex flex-wrap gap-2">
             <input aria-label="Search orders" className="min-w-52 flex-1 border border-black/25 bg-white px-3 py-2.5 text-sm" placeholder="Search by order #, customer, email or date…" value={orderQ} onChange={(e) => setOrderQ(e.target.value)} />
-            <select aria-label="Filter orders by status" className="border border-black/25 bg-white px-3 py-2.5 text-sm" value={orderStatus} onChange={(e) => setOrderStatus(e.target.value)}>{["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Placed", "Confirmed"].map(st => <option key={st} value={st}>{st}</option>)}</select>
+            <select aria-label="Filter orders by status" className="border border-black/25 bg-white px-3 py-2.5 text-sm" value={orderStatus} onChange={(e) => setOrderStatus(e.target.value)}>{["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"].map(st => <option key={st} value={st}>{st}</option>)}</select>
           </div>
           {d.orders.filter(o => (orderStatus === "All" || o.status === orderStatus) && (!orderQ || `#${o.id} ${o.customerName} ${o.email} ${o.createdAt}`.toLowerCase().includes(orderQ.toLowerCase()))).length === 0 && <p className="mt-4 text-sm text-neutral-600">No orders match.</p>}
           {d.orders.filter(o => (orderStatus === "All" || o.status === orderStatus) && (!orderQ || `#${o.id} ${o.customerName} ${o.email} ${o.createdAt}`.toLowerCase().includes(orderQ.toLowerCase()))).map((o) => {
@@ -3440,6 +3491,10 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
         </div>
       )}
 
+      {tab === "Chat" && (
+        <AdminChat email={adminEmail} password={pw} />
+      )}
+
       {tab === "Theme & Settings" && (
         <form className="mt-6 grid max-w-3xl gap-3" onSubmit={(e) => { e.preventDefault(); saveSettings.mutate(); }}>
           <div className="border border-black/15 bg-white p-4">
@@ -3485,6 +3540,17 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
           <label className="text-xs uppercase tracking-[0.2em]">Delivery text<textarea aria-label="Setting delivery text" className={inputCls + " mt-1"} rows={3} value={stg.deliveryText} onChange={(e) => setStg({ ...stg, deliveryText: e.target.value })} /></label>
           <label className="text-xs uppercase tracking-[0.2em]">Returns text<textarea aria-label="Setting returns text" className={inputCls + " mt-1"} rows={2} value={stg.returnsText} onChange={(e) => setStg({ ...stg, returnsText: e.target.value })} /></label>
           <label className="text-xs uppercase tracking-[0.2em]">Payment methods<input aria-label="Setting payment methods" className={inputCls + " mt-1"} value={stg.paymentMethods} onChange={(e) => setStg({ ...stg, paymentMethods: e.target.value })} /></label>
+          <label className="text-xs uppercase tracking-[0.2em]">Flagship store address<input aria-label="Setting flagship store" className={inputCls + " mt-1"} value={stg.flagshipStore} onChange={(e) => setStg({ ...stg, flagshipStore: e.target.value })} /></label>
+          <label className="text-xs uppercase tracking-[0.2em]">Ship-to countries (comma separated)<input aria-label="Setting ship-to countries" className={inputCls + " mt-1"} value={stg.shipToCountries} onChange={(e) => setStg({ ...stg, shipToCountries: e.target.value })} /></label>
+          <label className="text-xs uppercase tracking-[0.2em]">Newsletter text<textarea aria-label="Setting newsletter text" className={inputCls + " mt-1"} rows={2} value={stg.newsletterText} onChange={(e) => setStg({ ...stg, newsletterText: e.target.value })} /></label>
+          <label className="text-xs uppercase tracking-[0.2em]">Newsletter success message<input aria-label="Setting newsletter success" className={inputCls + " mt-1"} value={stg.newsletterSuccess} onChange={(e) => setStg({ ...stg, newsletterSuccess: e.target.value })} /></label>
+          <label className="text-xs uppercase tracking-[0.2em]">Copyright line<input aria-label="Setting copyright text" className={inputCls + " mt-1"} value={stg.copyrightText} onChange={(e) => setStg({ ...stg, copyrightText: e.target.value })} /></label>
+          <label className="text-xs uppercase tracking-[0.2em]">Service strip — delivery text<textarea aria-label="Setting service delivery body" className={inputCls + " mt-1"} rows={2} value={stg.serviceDeliveryBody} onChange={(e) => setStg({ ...stg, serviceDeliveryBody: e.target.value })} /></label>
+          <label className="text-xs uppercase tracking-[0.2em]">Service strip — returns text<textarea aria-label="Setting service returns body" className={inputCls + " mt-1"} rows={2} value={stg.serviceReturnsBody} onChange={(e) => setStg({ ...stg, serviceReturnsBody: e.target.value })} /></label>
+          <label className="text-xs uppercase tracking-[0.2em]">Service strip — payment text<textarea aria-label="Setting service payment body" className={inputCls + " mt-1"} rows={2} value={stg.servicePaymentBody} onChange={(e) => setStg({ ...stg, servicePaymentBody: e.target.value })} /></label>
+          <label className="text-xs uppercase tracking-[0.2em]">Chat welcome message<textarea aria-label="Setting chat welcome" className={inputCls + " mt-1"} rows={2} value={stg.chatWelcome} onChange={(e) => setStg({ ...stg, chatWelcome: e.target.value })} /></label>
+          <label className="flex items-center gap-2 text-xs uppercase tracking-[0.2em]"><input aria-label="Setting chat enabled" type="checkbox" checked={stg.chatEnabled} onChange={(e) => setStg({ ...stg, chatEnabled: e.target.checked })} /> Chat bubble enabled</label>
+          <p className="text-xs leading-5 text-neutral-500">Admin changes are saved in this browser only (localStorage) — there is no working backend, so they do not carry to another device or browser, and clearing browser data wipes them.</p>
           <button aria-label="Save settings" type="submit" className="bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white">{saveSettings.isPending ? "Saving…" : "Save settings & theme"}</button>
         </form>
       )}
