@@ -16,6 +16,7 @@ import loadingHorseJumpRunGif from "./assets/loading-horse-jump-run.gif";
 import loadingHorseGallopGif from "./assets/loading-horse-gallop.gif";
 // Mega-menu category photos — one distinct photo per nav category.
 import riderJacketImg from "./assets/products/rider-jacket.webp";
+import mensLeatherJacketImg from "./assets/products/mens-leather-jacket.webp";
 import chaineNecklaceImg from "./assets/products/chaine-dancre-necklace.webp";
 import capeCodImg from "./assets/products/cape-cod-large.webp";
 import muscPallidaImg from "./assets/products/musc-pallida.webp";
@@ -43,7 +44,7 @@ const MEGA_RAW: MegaEntry[] = [
     [{ heading: "SCARVES SHAWLS AND STOLES", items: ["Silk scarves and accessories","Cashmere shawls and stoles","Twilly and other small formats","View all","How to tie your scarf","Styled in Silk"] }, { heading: "FASHION JEWELRY", items: ["Bracelets","Necklaces and pendants","Earrings","Rings","View all"] }],
     [{ heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }, { heading: "HAIR ACCESSORIES", items: [] }],
   ]},
-  { key: "men", label: "MEN", caption: "MEN'S READY-TO-WEAR", tone: "#c8a97e", glyph: "🧥", img: "riderJacket", columns: [
+  { key: "men", label: "MEN", caption: "MEN'S READY-TO-WEAR", tone: "#c8a97e", glyph: "🧥", img: "mensLeatherJacket", columns: [
     [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026 Collection","Spring-Summer 2026 Collection","Coats and parkas","Jackets and blazers","Knitwear","Shirts","T-shirts and sweatshirts","Pants and shorts","Beachwear","Fall-Winter 2026 runway show"] }],
     [{ heading: "SHOES", items: ["Sneakers","Sandals","Loafers and mules","Derbies and Oxford shoes","Boots and ankle boots","View all"] }],
     [{ heading: "TIES AND SCARVES", items: ["Ties, bow ties and pocket squares","Scarves","Styled in Silk"] }, { heading: "FASHION JEWELRY", items: [] }, { heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }],
@@ -106,6 +107,7 @@ function megaImage(e: MegaEntry): string {
     case "runway": return runwayImg;
     case "heroBench": return heroBenchImg;
     case "riderJacket": return riderJacketImg;
+    case "mensLeatherJacket": return mensLeatherJacketImg;
     case "chaineNecklace": return chaineNecklaceImg;
     case "capeCod": return capeCodImg;
     case "muscPallida": return muscPallidaImg;
