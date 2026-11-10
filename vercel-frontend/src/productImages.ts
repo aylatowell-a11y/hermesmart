@@ -92,18 +92,45 @@ import fallbackStillLife from "./assets/products/fallback-still-life.webp";
 import fallbackHandbag from "./assets/products/fallback-handbag.webp";
 
 export const PRODUCT_IMAGES: Record<string, string> = {
-  "Picotin Lock 18 pocket bag": picotinLock18V2,
-  "Le Petit Sac bag": lePetitSac,
-  "Double Longe bag": doubleLonge,
-  "Tablier Sellier bag": tablierSellier,
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Picotin Lock 18 pocket bag, ref H083189CCBQ,
+  // $4,850 — verified to load and to show the grey-green pocket bag
+  // (exterior pocket + padlock). Only the front view exists on the CDN.
+  "Picotin Lock 18 pocket bag":
+    "https://assets.hermes.com/is/image/hermesproduct/083189CCBQ_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked (user instruction 2026-11-09).
+  // Le Petit Sac bag, ref H087967CC28, $6,350, Mysore goatskin — verified.
+  "Le Petit Sac bag":
+    "https://assets.hermes.com/is/image/hermesproduct/087967CC28_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked (user instruction 2026-11-09).
+  // Double Longe bag, ref H087953CCAC, $7,100 — verified.
+  "Double Longe bag":
+    "https://assets.hermes.com/is/image/hermesproduct/087953CCAC_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked (user instruction 2026-11-09).
+  // Tablier Sellier bag, ref H086583CKAA, $5,850 — verified.
+  "Tablier Sellier bag":
+    "https://assets.hermes.com/is/image/hermesproduct/086583CKAA_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   "Kelly Shoulder Etoupe bag": kellyShoulderV2,
   "Bolide Plume 45 bag": bolidePlume45,
   "Zipengo So Kelly pouch": zipengoSoKelly,
   "Box bag": boxBag,
   "Kelly Messenger bag": kellyMessenger,
-  "Bolide 1923 mini bag": bolide1923Mini,
-  "Videpoches bag": videpoches,
-  "Neo Double Sens 35 bag": neoDoubleSens35,
+  // Original Hermes photo, hotlinked (user instruction 2026-11-09).
+  // Bolide 1923 mini bag, ref H075180CK18, Etoupe Evercolor, $7,300 —
+  // verified. NOTE: this changes the tile colour from the current pink
+  // generated tile to Etoupe (REPORT §3, id 10).
+  "Bolide 1923 mini bag":
+    "https://assets.hermes.com/is/image/hermesproduct/075180CK18_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked (user instruction 2026-11-09).
+  // Videpoches bag, ref H087901CKAE, $3,975 — verified.
+  "Videpoches bag":
+    "https://assets.hermes.com/is/image/hermesproduct/087901CKAE_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked (user instruction 2026-11-09).
+  // Neo Double Sens 35 bicolor bag, ref H089099CAAD, $5,850 — verified.
+  // (Store name is "Neo Double Sens 35 bag"; rename per REPORT §1 first,
+  // or keep this key as-is until the rename is applied.)
+  "Neo Double Sens 35 bicolor bag":
+    "https://assets.hermes.com/is/image/hermesproduct/089099CAAD_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   "Kelly Pocket 18 belt": kellyPocket18Belt,
   "Collier de Chien 50 belt": collierDeChien50Belt,
   "Elan Pocket 24 reversible belt": elanPocket24Belt,
@@ -111,10 +138,199 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   "H belt buckle & Reversible leather strap 38 mm": hBelt38,
   "Etriviere belt buckle & Reversible leather strap 38 mm": etriviereBelt38,
   "Etriers belt buckle & Reversible leather strap 38 mm": etriersBelt38,
-  "Bouncing sneaker": bouncingSneaker,
-  "Jet sneaker": jetSneaker,
-  "Nine ankle boot": nineAnkleBoot,
-  "Noe loafer": noeLoafer,
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Bouncing sneaker, ref H252782ZHF7, $1,275 —
+  // verified to load and to show the brown suede Bouncing sneaker.
+  "Bouncing sneaker":
+    "https://assets.hermes.com/is/image/hermesproduct/252782ZHF7_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Jet sneaker, ref H261807ZHAF, $1,300 —
+  // verified to load and to show the rust suede/fabric Jet sneaker.
+  "Jet sneaker":
+    "https://assets.hermes.com/is/image/hermesproduct/261807ZHAF_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Nine ankle boot, ref H262820ZHNL, $1,450 —
+  // verified to load and to show the beige suede Nine ankle boot.
+  "Nine ankle boot":
+    "https://assets.hermes.com/is/image/hermesproduct/262820ZHNL_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Noe loafer, ref H262834ZAAC, $1,175 —
+  // verified to load and to show the rust suede Noe loafer (H cut-out).
+  "Noe loafer":
+    "https://assets.hermes.com/is/image/hermesproduct/262834ZAAC_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photos, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Bags ids 62–88 — every URL below returned
+  // HTTP 200 with Referer https://hermesmart.vercel.app/ and was visually
+  // confirmed to show the named product. Full audit: REPORT.md §3/§5.
+  // Duplicate names share one key (one colourway wired per name, §2):
+  // "24/24 - 21 bag" = H082141CCAJ (id 65; id 75 is H085157CKAL),
+  // "Neo Garden Voyage 41 bag" = H086934CKAB (id 67; id 76 is H086717CKAC),
+  // "Neo Garden Voyage 41 bredies bag" = H087934CKAB (id 62; id 82 is H087934CKAA).
+  "Neo Garden Voyage 41 bredies bag":
+    "https://assets.hermes.com/is/image/hermesproduct/087934CKAB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Medor bag":
+    "https://assets.hermes.com/is/image/hermesproduct/085055CKAT_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Arcon slim bag":
+    "https://assets.hermes.com/is/image/hermesproduct/087032CKAB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "24/24 - 21 bag":
+    "https://assets.hermes.com/is/image/hermesproduct/082141CCAJ_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Hermès Geta bag":
+    "https://assets.hermes.com/is/image/hermesproduct/085408CKAB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Neo Garden Voyage 41 bag":
+    "https://assets.hermes.com/is/image/hermesproduct/086934CKAB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Messenger Attelage bag":
+    "https://assets.hermes.com/is/image/hermesproduct/084111CK89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Besace Attelee bag":
+    "https://assets.hermes.com/is/image/hermesproduct/087913CC89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Cliquetis bag":
+    "https://assets.hermes.com/is/image/hermesproduct/086913CK89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Jypsiere mini bag":
+    "https://assets.hermes.com/is/image/hermesproduct/083982CKAY_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Mallette bag":
+    "https://assets.hermes.com/is/image/hermesproduct/087960CT89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Jige Elan 29 colorblock clutch":
+    "https://assets.hermes.com/is/image/hermesproduct/083286CACD_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Lassoie Hermès bag":
+    "https://assets.hermes.com/is/image/hermesproduct/087076CKAB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "In-the-Loop plush belt bag":
+    "https://assets.hermes.com/is/image/hermesproduct/084987CKAB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Etriviere Shopping voyage bag":
+    "https://assets.hermes.com/is/image/hermesproduct/088128CKAA_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Roulis mini bag":
+    "https://assets.hermes.com/is/image/hermesproduct/070510CP1C_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Lindy 26 bag":
+    "https://assets.hermes.com/is/image/hermesproduct/073430CP2D_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Silkycity 33 bag":
+    "https://assets.hermes.com/is/image/hermesproduct/085933CKAB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Hermès In-the-Loop 18 bag":
+    "https://assets.hermes.com/is/image/hermesproduct/084274CCY1_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Hermès Della Cavalleria Elan bag":
+    "https://assets.hermes.com/is/image/hermesproduct/089063CK37_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Hermès Geta slim bag":
+    "https://assets.hermes.com/is/image/hermesproduct/086984CKAW_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Mini Medor bag":
+    "https://assets.hermes.com/is/image/hermesproduct/085003CKY1_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "P'tit Arcon bag":
+    "https://assets.hermes.com/is/image/hermesproduct/085871CKAE_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Halzan 25 bag":
+    "https://assets.hermes.com/is/image/hermesproduct/082027CKY1_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Kelly Chaine bracelet, small model":
+    "https://assets.hermes.com/is/image/hermesproduct/kelly-chaine-bracelet-small-model--218471B%2000-front-wm-2-0-0-1000-1000_g.jpg", // V, ref H218471Bv00 candidate — which of $12,900/$41,900 unconfirmed
+  "Kelly Gourmette bracelet, very small model":
+    "https://assets.hermes.com/is/image/hermesproduct/kelly-gourmette-bracelet-very-small-model--221410B%2000-front-wm-1-0-0-1000-1000_g.jpg", // V, ref H221410Bv00, $12,500 + $19,100 share this tile
+  "Vertige bracelet":
+    "https://assets.hermes.com/is/image/hermesproduct/vertige-bracelet--221207B%2000-front-wm-2-0-0-1000-1000_g.jpg", // V, ref H221207Bv00, $90,900 + $72,600 share this tile
+  "Chaine d'ancre Chaos Nano bracelet":
+    "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-chaos-nano-bracelet--225411B%2000-front-wm-1-0-0-1000-1000_g.jpg", // ref H225411Bv00; also H123431Bv00 (same view set)
+  "Boucle Sellier “On The Rocks” bracelet, small model":
+    "https://assets.hermes.com/is/image/hermesproduct/boucle-sellier-on-the-rocks-bracelet-small-model--224402B%2000-front-wm-2-0-0-1000-1000_g.jpg", // ref H224402Bv00; also H224401Bv00
+  "Chaine d'ancre Verso bracelet, large model":
+    "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-verso-bracelet--125408B%2000-front-wm-2-0-0-1000-1000_g.jpg", // ref H125408Bv00 (US page)
+  "Clou de forge bracelet":
+    "https://assets.hermes.com/is/image/hermesproduct/clou-de-forge-bracelet--125405B%2000-front-wm-2-0-0-1000-1000_g.jpg", // ref H125405Bv00 (US page)
+  "Planètes & Météores bracelet":
+    "https://assets.hermes.com/is/image/hermesproduct/223413B%2000_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H223413Bv00, $45,700
+  "Farandole bracelet":
+    "https://assets.hermes.com/is/image/hermesproduct/farandole-bracelet--221413B%2000-front-wm-2-0-0-1000-1000_g.jpg", // ref H221413Bv00
+  "Amulettes Kelly bracelet":
+    "https://assets.hermes.com/is/image/hermesproduct/bracelet-amulettes-kelly--121425B%2000-front-wm-2-0-0-1000-1000_g.jpg", // ref H121425Bv00
+  "Amulettes Constance bracelet":
+    "https://assets.hermes.com/is/image/hermesproduct/amulettes-constance-bracelet--121400B%2000-worn-1-0-0-1000-1000_g.jpg", // ref H121400Bv00 — worn shot is the only verified view; front unverified
+  "Kelly Cadenas double bracelet, small model":
+    "https://assets.hermes.com/is/image/hermesproduct/brazalete-kelly-cadenas-tamano-pequeno--220465B%2000-front-wm-2-0-0-1000-1000_g.jpg", // ref H220465Bv00; see §4 caution (double-tour ref may differ)
+  "Kelly watch, Mini model, 16 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--056853WW00-front-wm-1-0-0-1000-1000_g.jpg", // V, ref W056853WW00 — fully pavé rose gold; best matches $97,400 (id 260), NOT $6,750/$45,600
+  "Arceau Chronographe watch, 42 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/arceau-chronographe-watch-42mm--404112WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W404112WW00; also W404113WW00 / W403964WW00
+  "Heure H watch, Medium model, 30 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/heure-h-watch-medium-model-30mm--404144WW00-front-wm-1-0-0-1000-1000_g.jpg", // V, ref W404144WW00 — diamond pavé; most likely the $25,550 row, NOT the $8,800 plain row
+  "Heure H watch, Small model, 25 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/heure-h-watch-small-model-25mm--404283WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W404283WW00
+  "Hermès H08 Chronographe watch, 45 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/hermes-h08-chronographe-watch-45mm--403130WW00-front-wm-1-0-0-1000-1000_g.jpg", // V, ref W403130WW00, orange strap, $13,000
+  "Arceau Le Temps Voyageur watch, 38 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/arceau-le-temps-voyageur-watch-38mm--057343WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W057343WW00, $31,275
+  "Cape Cod watch, Mini model, 27 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-mini-model-27mm--408333WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W408333WW00; price mismatch §2.3
+  "Nantucket watch, Small model, 29 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/nantucket-watch-small-model-29mm--044188WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W044188WW00
+  "Faubourg Marguerite watch, Mini model, 15 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/faubourg-marguerite-watch-mini-model-15mm--402996WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W402996WW00 (US), $75,300
+  "Faubourg watch, Mini model, 15 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/faubourg-watch-mini-model-15mm--049310WW00-front-1-300-0-1000-1000_g.jpg", // ref W049310WW00 (US)
+  "Hermès Cut Le Temps Suspendu watch, Large model, 39 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/hermes-cut-le-temps-suspendu-watch-large-model-39mm--408256WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W408256WW00, $44,900
+  // Original Hermes photos, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). All URLs below returned HTTP 200 and were
+  // visually confirmed to show the correct model (audit 2026-11-10).
+  "Master sneaker":
+    "https://assets.hermes.com/is/image/hermesproduct/261881ZHD8_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Day sneaker":
+    "https://assets.hermes.com/is/image/hermesproduct/252883ZH90_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Match sneaker":
+    "https://assets.hermes.com/is/image/hermesproduct/261863ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Kid sneaker":
+    "https://assets.hermes.com/is/image/hermesproduct/251929ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Lucky slip-on sneaker":
+    "https://assets.hermes.com/is/image/hermesproduct/252896ZHC9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Quicker sneaker":
+    "https://assets.hermes.com/is/image/hermesproduct/102190ZH09_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Nathan ankle boot":
+    "https://assets.hermes.com/is/image/hermesproduct/262901ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Mateo ankle boot":
+    "https://assets.hermes.com/is/image/hermesproduct/261972ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Jeff ankle boot: the exact $2,425 colourway ref H252122Zv02 has no
+  // locatable CDN images (see report §5). This is the $2,500 Jeff colourway
+  // (ref H242946ZH01, black PVD buckle) — same model, verified Jeff boot.
+  "Jeff ankle boot":
+    "https://assets.hermes.com/is/image/hermesproduct/242946ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Newton loafer":
+    "https://assets.hermes.com/is/image/hermesproduct/262941ZAGN_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Honore loafer: PRICE MISMATCH — store $1,600, US hermes.com $1,650
+  // (ref H232903ZANP). Photo is the correct model; price left as-is here.
+  "Honore loafer":
+    "https://assets.hermes.com/is/image/hermesproduct/232903ZANP_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Mind loafer: covers the $1,600 rows (ref H261937ZAC9, verified) and the
+  // $1,675 row (id 183), whose US price is unconfirmed and whose own
+  // colourway ref was not found — same model, right photo, flag in §5.
+  "Mind loafer":
+    "https://assets.hermes.com/is/image/hermesproduct/261937ZAC9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Paris loafer":
+    "https://assets.hermes.com/is/image/hermesproduct/172368ZA02_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Member loafer":
+    "https://assets.hermes.com/is/image/hermesproduct/261947ZAC9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Nicolas loafer":
+    "https://assets.hermes.com/is/image/hermesproduct/262948ZA01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Nod loafer: ref H262939ZAC9 is the $1,350 colourway by inference
+  // (the $1,300 colourway is H262103ZvE5, whose CDN images are not
+  // locatable); the photo is visually confirmed to be a fringe Nod loafer.
+  "Nod loafer":
+    "https://assets.hermes.com/is/image/hermesproduct/262939ZAC9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Low loafer":
+    "https://assets.hermes.com/is/image/hermesproduct/252964ZAC9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Noon mule: the exact US colourway ref H262002ZvC9 has no locatable CDN
+  // images (see §5). This is the brown suede Noon mule (ref H262865ZHME) —
+  // same model, verified. Alternate verified Noon mule: 262911ZH01 (black).
+  "Noon mule":
+    "https://assets.hermes.com/is/image/hermesproduct/262865ZHME_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Nick mule":
+    "https://assets.hermes.com/is/image/hermesproduct/262937ZAC9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Nils derby shoe":
+    "https://assets.hermes.com/is/image/hermesproduct/262945ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Now derby shoe":
+    "https://assets.hermes.com/is/image/hermesproduct/262933ZHME_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Keneth derby shoe":
+    "https://assets.hermes.com/is/image/hermesproduct/251971ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Moreno derby shoe":
+    "https://assets.hermes.com/is/image/hermesproduct/261974ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Lawrence derby shoe":
+    "https://assets.hermes.com/is/image/hermesproduct/252998ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Middle derby shoe":
+    "https://assets.hermes.com/is/image/hermesproduct/261978ZHME_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "Lead derby shoe":
+    "https://assets.hermes.com/is/image/hermesproduct/252975ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  "May derby shoe":
+    "https://assets.hermes.com/is/image/hermesproduct/261956ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   // Original Hermes photo, hotlinked from assets.hermes.com (user
   // instruction 2026-11-09). Izmir sandal, ref H041141ZH01, $950 — verified
   // to load and to show the black calfskin Izmir sandal (H cut-out strap).
@@ -135,50 +351,257 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   // verified to load and to show the beige/black sandal (Kelly buckle).
   "Jackson sandal":
     "https://assets.hermes.com/is/image/hermesproduct/242948ZHC9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  "Bouncing sneaker, Blanc": bouncingSneakerBlancV2,
-  "Neon sneaker": neonSneaker,
-  "Next sneaker": nextSneaker,
-  "Nobu sneaker": nobuSneaker,
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Bouncing sneaker, Blanc, ref H262850ZH90,
+  // $1,125 — verified to load and to show the white Bouncing sneaker.
+  "Bouncing sneaker, Blanc":
+    "https://assets.hermes.com/is/image/hermesproduct/262850ZH90_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Neon sneaker, ref H262898ZH01, $1,350 —
+  // verified to load and to show the black Neon sneaker.
+  "Neon sneaker":
+    "https://assets.hermes.com/is/image/hermesproduct/262898ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Next sneaker, ref H262891ZH01, $1,450 —
+  // verified to load and to show the black/white Next sneaker.
+  "Next sneaker":
+    "https://assets.hermes.com/is/image/hermesproduct/262891ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Nobu sneaker, ref H262888ZH01, $1,400 —
+  // verified to load and to show the black Nobu sneaker.
+  "Nobu sneaker":
+    "https://assets.hermes.com/is/image/hermesproduct/262888ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   "Chaine d'ancre necklace, small model": chaineDancreNecklace,
-  "Clic Clac H bracelet": clicClacHBracelet,
+  "Clic Clac H bracelet":
+    "https://assets.hermes.com/is/image/hermesproduct/clic-clac-h-bracelet--300001FO31-front-wm-1-0-0-1000-1000_g.jpg", // V, ref H300001FO31, white enamel / rose gold, $960
   "Chaine d'ancre earrings": chaineDancreEarrings,
-  "Mini Thalassa bracelet": miniThalassaBracelet,
-  "Chaine d'ancre Contour bracelet, white gold": chaineDancreContourBracelet,
+  "Mini Thalassa bracelet":
+    "https://assets.hermes.com/is/image/hermesproduct/mini-thalassa-bracelet--500522FC37-front-wm-2-0-0-1000-1000_g.jpg", // V, ref 500522FC37, tan Swift / gold, $580
+  // Original Hermes photos, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Jewelry & watches audit 2026-11-10: each URL
+  // below returned HTTP 200 with Referer https://hermesmart.vercel.app/.
+  // "V" = also downloaded and visually confirmed to show the right item.
+  // Where several refs exist for one name, the PRIMARY ref is wired here;
+  // per-variant photos need an id-based lookup (see REPORT §2.5).
+  "Chaine d'ancre Contour bracelet, white gold":
+    "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-contour-bracelet--123405B%2000-front-wm-2-0-0-1000-1000_g.jpg", // V, ref H123405Bv00, $5,400
   "Colliers et Laisses pour Chiens scarf 90": scarf90V2,
   "Turf Les Courses Twilly": twillyTurf,
   "Casaque Jumping scarf": casaqueJumpingScarf,
   "Palonniers scarf 45": palonniersScarf45,
   "La Nature en Voyage scarf 90": laNatureScarf90,
   "Rouge Hermès gift set, Lip care": rougeLipCareSet,
-  "Ombres d'Hermès, Eye shadow quartet, Ombres Sables": ombresEyeShadow,
-  "Les Mains Hermès, Nail polish, Or Rose": nailPolishOrRose,
+  "Ombres d'Hermès, Eye shadow quartet, Ombres Sables":
+    "https://assets.hermes.com/is/image/hermesproduct/60875PV007_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60875PV007, $121 (REPLACE generated ombresEyeShadow)
+  "Les Mains Hermès, Nail polish, Or Rose":
+    "https://assets.hermes.com/is/image/hermesproduct/60861VV050_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60861VV050, $66 (REPLACE generated nailPolishOrRose)
   "Bride-a-Brac Sellier case, large model": brideABracCase,
-  "Matte lipstick, Rose Boisé": matteLipstickRoseBoise,
-  "Musc Pallida, Eau de parfum, 3.4 fl.oz": muscPallida,
-  "Musc Pallida refill, Eau de parfum": muscPallidaRefill,
+  "Matte lipstick, Rose Boisé":
+    "https://assets.hermes.com/is/image/hermesproduct/60001MV048_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60001MV048, $86 (REPLACE generated matteLipstickRoseBoise)
+  "Musc Pallida, Eau de parfum, 3.4 fl.oz":
+    "https://assets.hermes.com/is/image/hermesproduct/117337V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V117337V0, $435 (REPLACE generated muscPallida)
+  "Musc Pallida refill, Eau de parfum":
+    "https://assets.hermes.com/is/image/hermesproduct/118291V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V118291V0, $595 (REPLACE generated muscPallidaRefill)
   "Hermessence, Eau de toilette": hermessenceEdt,
   "Hermessence Essence, Eau de parfum": hermessenceEssence,
-  "Cape Cod watch, Large model, 37 mm": capeCodLarge,
-  "Cape Cod watch, Small model, 31 mm": capeCodSmall,
-  "Hermès H08 watch, 42 mm": h08Watch,
-  "Hermès Cut watch, Large model, 36 mm": cutWatch,
+  "Cape Cod watch, Large model, 37 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-large-model-37mm--403352WW00-front-wm-1-0-0-1000-1000_g.jpg", // V, ref W403352WW00, $3,950
+  "Cape Cod watch, Small model, 31 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-small-model-31mm--060115WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W060115WW00, $3,825
+  "Hermès H08 watch, 42 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/hermes-h08-watch-42mm--402990WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W402990WW00 candidate (US page), $8,600
+  "Hermès Cut watch, Large model, 36 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/hermes-cut-watch-large-model-36mm--403190WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W403190WW00 candidate, $7,125
   "Kelly watch, Mini model, 16 mm, Grey": kellyWatchMiniGrey,
   "Kelly watch, Mini model, 16 mm, Pink gold": kellyWatchMiniPink,
-  "Arceau Petite Lune watch, Large model, 38 mm": arceauPetiteLune,
-  "Avalon throw blanket": avalonBlanket,
-  "Mosaique au 24 dinner plate, set of 2": mosaiquePlates,
+  "Arceau Petite Lune watch, Large model, 38 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/arceau-petite-lune-watch-large-model-38mm--403043WW00-front-1-300-0-800-800_g.jpg", // V, ref W403043WW00, $20,800
+  "Avalon throw blanket":
+    "https://assets.hermes.com/is/image/hermesproduct/102668M59_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H102668M 59, $2,050 (REPLACE generated avalonBlanket; tile is the worn shot — no flat/front view exists on the CDN)
+  "Mosaique au 24 dinner plate, set of 2":
+    "https://assets.hermes.com/is/image/hermesproduct/035001P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P035001P, $340 (REPLACE generated mosaiquePlates)
   "Saddle and bridle set": saddleBridle,
   "Rider jacket": riderJacket,
   "Gift card": giftCard,
   "Silk gift set for her": silkGiftSet,
+  // Original Hermes photos, hotlinked from assets.hermes.com (user
+  // instruction 2026-11-09). Fragrance / make-up / home audit 2026-11-10:
+  // each URL below returned HTTP 200 with Referer
+  // https://hermesmart.vercel.app/ and was downloaded and visually
+  // confirmed to show the correct product ("V"). Duplicate name+price
+  // rows (expansion colourways) share one map entry.
+  "Ambre Narguile Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113483V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113483V0, $385
+  "Myrrhe Eglantine Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113575V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113575V0, $385
+  "Rose Ikebana Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113578V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113578V0, $385
+  "Cedre Sambac Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113485V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113485V0, $385
+  "Vetiver Tonka Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113580V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113580V0, $385
+  "Violette Volynka Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113581V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113581V0, $385
+  "Agar Ebene Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113482V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113482V0, $385
+  "Poivre Samarcande Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113577V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113577V0, $385
+  "Osmanthe Yunnan Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113576V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113576V0, $385
+  "Iris Ukiyoe Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113487V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113487V0, $385
+  "Santal Massoia Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113579V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113579V0, $385
+  "Cuir d'Ange Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113484V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113484V0, $385
+  "Oud Alezan Eau de parfum":
+    "https://assets.hermes.com/is/image/hermesproduct/113467V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113467V0, $435
+  "Ginseng biloba Eau de parfum":
+    "https://assets.hermes.com/is/image/hermesproduct/116173V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V116173V0, $435
+  "Oud Esma Essence de parfum":
+    "https://assets.hermes.com/is/image/hermesproduct/117057V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V117057V0, $782
+  "Cardamusc Essence de parfum":
+    "https://assets.hermes.com/is/image/hermesproduct/107117V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V107117V0, $465
+  "Musc Pallida Essence de parfum":
+    "https://assets.hermes.com/is/image/hermesproduct/107115V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V107115V0, $465
+  "Barénia Pleine Fleur Eau de parfum":
+    "https://assets.hermes.com/is/image/hermesproduct/118008V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V118008V0, $113 (30 ml)
+  "Barénia Eau de parfum":
+    "https://assets.hermes.com/is/image/hermesproduct/110436V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V110436V0, $113 (30 ml)
+  "Barénia Perfumed soap":
+    "https://assets.hermes.com/is/image/hermesproduct/110440V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V110440V0, $47
+  "Terre d'Hermès Eau de parfum intense":
+    "https://assets.hermes.com/is/image/hermesproduct/111230V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V111230V0, $137 (50 ml; note: data.ts wrongly files this under category "home" — see §5)
+  "Barénia Pleine Fleur Eau de parfum gift set":
+    "https://assets.hermes.com/is/image/hermesproduct/118236V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V118236V0, $147 (60 ml + 15 ml + 25 g soap)
+  "Barénia eau de parfum gift set – The fragrance ritual":
+    "https://assets.hermes.com/is/image/hermesproduct/116955V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V116955V0, $229 (100 ml + 15 ml + 25 g soap)
+  "Hermessence gift set, Limited edition":
+    "https://assets.hermes.com/is/image/hermesproduct/118249V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V118249V0, $240 (4×15 ml: Musc Pallida EDP, Oud Alezan EDP, Rose Ikebana EDT, Ambre Narguile EDT)
+  "Twilly d'Hermès eau de parfum gift set – The fragrance ritual":
+    "https://assets.hermes.com/is/image/hermesproduct/110983V0_front_wm_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V110983V0, $264 (85 ml + 15 ml + lotion; tile is front_wm_1 — no 101 exists)
+  "A Walk in the Garden teapot":
+    "https://assets.hermes.com/is/image/hermesproduct/043018P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043018P, $1,370
+  "Chevaux a la Couverture set of 2 mugs (n°1 and 2)":
+    "https://assets.hermes.com/is/image/hermesproduct/081031P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P081031P (mug n°1), $500
+  "Chevaux a la Couverture mug n°3":
+    "https://assets.hermes.com/is/image/hermesproduct/081231P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P081231P, $250
+  "Chevaux a la Couverture set of 3 mugs":
+    "https://assets.hermes.com/is/image/hermesproduct/081431P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P081431P, $750
+  "Iskender white wine glass":
+    "https://assets.hermes.com/is/image/hermesproduct/010108P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P010108P, $530
+  "Les Grigris Hermès Face and eye illuminating powder, Limited edition, Or Permabrass":
+    "https://assets.hermes.com/is/image/hermesproduct/60863PV002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60863PV002, $121
+  "HERMÈSISTIBLE Infused Care Oil, Rose Nashi":
+    "https://assets.hermes.com/is/image/hermesproduct/60346HV010_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60346HV010, $63
+  "ROSE HERMÈS Rosy lip enhancer, Limited Edition, Rouge Airelle":
+    "https://assets.hermes.com/is/image/hermesproduct/60843BV038_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60843BV038, $90
+  "TRAIT D'HERMÈS Precision eyeliner, Encre Noire":
+    "https://assets.hermes.com/is/image/hermesproduct/60574EV001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60574EV001, $71
+  "OMBRES D'HERMÈS Eye shadows, Ombres Pétales":
+    "https://assets.hermes.com/is/image/hermesproduct/60365PV001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60365PV001, $114
+  "TRAIT D'HERMÈS Revitalizing care mascara, Noir Fusain":
+    "https://assets.hermes.com/is/image/hermesproduct/60510EV001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60510EV001, $71
+  "ROSE HERMÈS Rosy lip glossy enhancer, Rose Confetti":
+    "https://assets.hermes.com/is/image/hermesproduct/60487BV027_front_wm_104?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60487BV027, $86 (tile is front_wm_104 — no 101/102 exists)
+  "TRAIT D'HERMÈS Eye pencil, Or Permabrass":
+    "https://assets.hermes.com/is/image/hermesproduct/60570CV010_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60570CV010, $53
+  "HERMÈS PLEIN AIR H Trio healthy glow mineral powder, Tottori":
+    "https://assets.hermes.com/is/image/hermesproduct/60447PV001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60447PV001, $111
+  "LES PINCEAUX HERMÈS Precision makeup brush, le Precis":
+    "https://assets.hermes.com/is/image/hermesproduct/604440V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V604440V0, $112
+  "ROUGE HERMÈS Silky Lipstick Shine, Rose Boisé":
+    "https://assets.hermes.com/is/image/hermesproduct/60267TV048_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60267TV048, $86
+  "ROUGE HERMÈS Satin lipstick, Limited Edition, Rose Épicé":
+    "https://assets.hermes.com/is/image/hermesproduct/60001SV021_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60001SV021, $90
+  "ROUGE HERMÈS Pre-composed gift set, Limited edition":
+    "https://assets.hermes.com/is/image/hermesproduct/604810V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V604810V0, $172 (price mismatch — see §5)
+  "Barénia Perfumed hair mist":
+    "https://assets.hermes.com/is/image/hermesproduct/115954V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V115954V0, $63
+  "Chevaux a la Couverture mug n°2":
+    "https://assets.hermes.com/is/image/hermesproduct/081131P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P081131P (confirmed by image: blue horse), $250
+  "Ambre Narguile Eau de toilette refill":
+    "https://assets.hermes.com/is/image/hermesproduct/29751_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V29751, $525
+  "Cedre Sambac Eau de toilette refill":
+    "https://assets.hermes.com/is/image/hermesproduct/39937_front_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V39937, $525 (tile is front_1; front_wm_101 is 403)
+  "Rose Ikebana Eau de toilette refill":
+    "https://assets.hermes.com/is/image/hermesproduct/38167_front_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V38167, $525 (tile is front_1; front_wm_101 is 403)
+  "Myrrhe Eglantine Eau de toilette refill":
+    "https://assets.hermes.com/is/image/hermesproduct/39935_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V39935, $525 (only worn_1 exists; front shot of the refill bottle)
+  "Oud Alezan Perfumed body cream":
+    "https://assets.hermes.com/is/image/hermesproduct/117059V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V117059V0, $165
+  "Musc Pallida Perfumed body cream":
+    "https://assets.hermes.com/is/image/hermesproduct/108377V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V108377V0, $165
+  "Twilly d'Hermès Moisturizing body lotion":
+    "https://assets.hermes.com/is/image/hermesproduct/107276V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V107276V0, $89
+  "Twilly d'Hermes Perfumed hair mist":
+    "https://assets.hermes.com/is/image/hermesproduct/108147V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V108147V0, $82
+  "Eau des Merveilles Perfumed hair mist":
+    "https://assets.hermes.com/is/image/hermesproduct/108145V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V108145V0, $82
+  "L'Ombre des Merveilles Eau de parfum":
+    "https://assets.hermes.com/is/image/hermesproduct/101653V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V101653V0 (100 ml), $147
+  "L'Ambre des Merveilles Eau de parfum":
+    "https://assets.hermes.com/is/image/hermesproduct/107246V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V107246V0 (100 ml), $147
   "Mid-length buttoned dress": dressMidLengthModel,
   "Long sleeveless dress": longSleevelessDressModel,
   "Embroidered pocket dress": embroideredPocketDress,
   "\"H\" jogging pants": hJoggingPants,
   "Kelly 18 belt": kelly18Belt,
-  "Rouge Hermès Nourishing lip care mask": lipCareMask,
+  "Rouge Hermès Nourishing lip care mask":
+    "https://assets.hermes.com/is/image/hermesproduct/60855BV000_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60855BV000, $100 (REPLACE generated lipCareMask)
   "Milo L'Aventure bucket hat": bucketHat,
   "Swing dressage breeches": dressageBreeches,
+};
+
+// Ready-to-wear — ORIGINAL Hermes photos, hotlinked from assets.hermes.com
+// (user instruction 2026-11-09). Audited 2026-11-10, see
+// workspace/hermes-audit/readytowear/REPORT.md: every URL returned HTTP 200
+// with Referer https://hermesmart.vercel.app/ and its tile was visually confirmed
+// to show the correct model-worn garment. Keyed by product id: repeated names
+// are separate colourways with different refs.
+const RTW_TILE: Record<number, string> = {
+  50: "https://assets.hermes.com/is/image/hermesproduct/6H2542D502_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Mid-length buttoned dress
+  61: "https://assets.hermes.com/is/image/hermesproduct/6H2521D7DC_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Long sleeveless dress
+  89: "https://assets.hermes.com/is/image/hermesproduct/6H0521D502_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Dress with shoulder straps
+  90: "https://assets.hermes.com/is/image/hermesproduct/6H0544D502_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Embroidered dress with shoulder straps
+  91: "https://assets.hermes.com/is/image/hermesproduct/6H0577DJ02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “H Kelly” caftan
+  92: "https://assets.hermes.com/is/image/hermesproduct/6H2324D14C_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Cashmere short skirt
+  93: "https://assets.hermes.com/is/image/hermesproduct/6H1309DT02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Zipped miniskirt
+  94: "https://assets.hermes.com/is/image/hermesproduct/6H0570DB4C_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “Mosaique” pouch dress
+  95: "https://assets.hermes.com/is/image/hermesproduct/6H0325DR02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “L'Enseigne du Sellier” long skirt
+  96: "https://assets.hermes.com/is/image/hermesproduct/6H0572DB4C_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “Mosaique” short-sleeve dress
+  97: "https://assets.hermes.com/is/image/hermesproduct/6H0542DRLK_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “L'Enseigne du Sellier” caftan
+  98: "https://assets.hermes.com/is/image/hermesproduct/6H2805DRDC_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “L'Enseigne du Sellier” caftan tunic
+  99: "https://assets.hermes.com/is/image/hermesproduct/6H0570DBDK_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “Mosaique” pouch dress
+  100: "https://assets.hermes.com/is/image/hermesproduct/6H0321DEMO_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “A Propos de Bottes” buttoned skirt
+  101: "https://assets.hermes.com/is/image/hermesproduct/6H4524DV91_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Sleeveless dress
+  102: "https://assets.hermes.com/is/image/hermesproduct/6H2321DBDC_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Straight skirt
+  103: "https://assets.hermes.com/is/image/hermesproduct/6H0577DJ91_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “H Kelly” caftan
+  104: "https://assets.hermes.com/is/image/hermesproduct/6H0540DT91_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Embroidered short shirt dress
+  105: "https://assets.hermes.com/is/image/hermesproduct/6H0570DB02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “Mosaique” pouch dress
+  106: "https://assets.hermes.com/is/image/hermesproduct/6H0333DB02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Pochon skirt
+  107: "https://assets.hermes.com/is/image/hermesproduct/6H0545DH02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “Soleil de Soie Poudre” classic caftan
+  108: "https://assets.hermes.com/is/image/hermesproduct/6H0573DNKL_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “Cahier du Colporteur” classic caftan
+  109: "https://assets.hermes.com/is/image/hermesproduct/6H0575DNKL_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “Cahier du Colporteur” shirt dress
+  110: "https://assets.hermes.com/is/image/hermesproduct/6H0550DQKL_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Wraparound dress
+  111: "https://assets.hermes.com/is/image/hermesproduct/6H4521DCKL_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Long dress
+  112: "https://assets.hermes.com/is/image/hermesproduct/6H0530DV90_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Equestrian shirt dress
+  113: "https://assets.hermes.com/is/image/hermesproduct/6H0572DB90_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “Mosaique” short-sleeve dress
+  114: "https://assets.hermes.com/is/image/hermesproduct/6H0333DB90_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Pochon skirt
+  115: "https://assets.hermes.com/is/image/hermesproduct/6H0572DB02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “Mosaique” short-sleeve dress
+  116: "https://assets.hermes.com/is/image/hermesproduct/6H0542DR02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “L'Enseigne du Sellier” caftan
+  117: "https://assets.hermes.com/is/image/hermesproduct/6H0530DV02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Equestrian shirt dress
+  118: "https://assets.hermes.com/is/image/hermesproduct/6H2324D15H_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Cashmere short skirt
+  119: "https://assets.hermes.com/is/image/hermesproduct/6H0354DY5H_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Equestrian miniskirt
+  120: "https://assets.hermes.com/is/image/hermesproduct/6H2324D1A3_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Cashmere short skirt
+  121: "https://assets.hermes.com/is/image/hermesproduct/6H0326D7LK_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Wrap skirt
+  122: "https://assets.hermes.com/is/image/hermesproduct/6H4316DFG8_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “Cahier du Colporteur” miniskirt
+  123: "https://assets.hermes.com/is/image/hermesproduct/6H4524DVLU_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Sleeveless dress
+  124: "https://assets.hermes.com/is/image/hermesproduct/6H0570DB90_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “Mosaique” pouch dress
+  125: "https://assets.hermes.com/is/image/hermesproduct/6H0325DRLK_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // “L'Enseigne du Sellier” long skirt
+  412: "https://assets.hermes.com/is/image/hermesproduct/800336E%2033_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Swing dressage breeches
+  413: "https://assets.hermes.com/is/image/hermesproduct/6E2404D3A3_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // “H” jogging pants
+  414: "https://assets.hermes.com/is/image/hermesproduct/6E4515DA90_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // Embroidered pocket dress
 };
 
 const BAG_POOL = [picotinLock18V2, kellyShoulderV2, tablierSellier, boxBag, doubleLonge, neoDoubleSens35, fallbackHandbag];
@@ -196,9 +619,31 @@ function pick(pool: string[], seed: string): string {
   return pool[h % pool.length] ?? pool[0] ?? fallbackStillLife;
 }
 
-export function productImageFor(p: { id?: number; name: string; category?: string; subcategory?: string; colors?: { name: string }[] }): string {
+export function productImageFor(p: { id?: number; price?: number; name: string; category?: string; subcategory?: string; colors?: { name: string }[] }): string {
+  // Original Hermes tile for audited ready-to-wear (id-keyed: colourways share names).
+  if (p.id !== undefined && RTW_TILE[p.id]) return RTW_TILE[p.id];
   const exact = PRODUCT_IMAGES[p.name];
   if (exact) return exact;
+  // One name, several real colourways at different prices — the tile must
+  // follow the price, not the name. All refs verified against hermes.com
+  // (audit 2026-11-10). "Match sneaker" and "Mind loafer" need no branch:
+  // all their rows share one ref, covered by the PRODUCT_IMAGES entry above.
+  if (p.name === "Leader sneaker") {
+    if (p.price === 1675) return "https://assets.hermes.com/is/image/hermesproduct/261884ZHNH_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+    if (p.price === 1600) return "https://assets.hermes.com/is/image/hermesproduct/252864ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+    if (p.price === 1525) return "https://assets.hermes.com/is/image/hermesproduct/252863ZHGQ_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+  }
+  if (p.name === "Loop sneaker") {
+    if (p.price === 1525) return "https://assets.hermes.com/is/image/hermesproduct/252853ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+    if (p.price === 1750) return "https://assets.hermes.com/is/image/hermesproduct/252857ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+  }
+  if (p.name === "Mix mule") {
+    // $1,150 rows use the SE-listed Mix ref H27107HZHAB (tile verified as a
+    // Mix mule); the US $1,150 colourway ref H261141ZvE5 has no locatable
+    // CDN images (see report §5).
+    if (p.price === 1150) return "https://assets.hermes.com/is/image/hermesproduct/27107HZHAB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+    if (p.price === 1425) return "https://assets.hermes.com/is/image/hermesproduct/261950ZHME_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+  }
   // Repeated name+price rows are separate colourway tiles (as on hermes.com);
   // the product id varies the photo within the type pool so no two tiles in a
   // grid are identical.

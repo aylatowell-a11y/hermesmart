@@ -113,6 +113,8 @@ import blanketDetail from "./assets/gallery/blanket-detail.webp";
 
 export type GalleryProduct = {
   name: string;
+  id?: number;
+  price?: number;
   category?: string;
   subcategory?: string;
   colors?: { name: string }[];
@@ -125,7 +127,11 @@ const KELLY_NOIR = [V("Front", kellyFront), V("Worn", kellyWorn), V("Front", kel
 const KELLY_VERT = [V("Front", kellyVertFront), V("Worn", kellyVertWorn), V("Front", kellyVertFront2), V("Detail", kellyVertDetail)];
 const KELLY_ETOUPE = [V("Front", kellyEtoupeFront), V("Worn", kellyEtoupeWorn), V("Front", kellyEtoupeFront2), V("Detail", kellyEtoupeDetail)];
 
-const BOUNCING_BLANC = [V("Front", bFront), V("Worn", bWorn), V("Side", bSide), V("Back", bBack), V("Detail", bDetail), V("Above", bAbove)];
+const HERMES_IMG = "https://assets.hermes.com/is/image/hermesproduct/";
+const HERMES_Q = "?wid=750&hei=1000&fit=fit&$product_default_bg$";
+// Bouncing sneaker, Blanc — ORIGINAL Hermes photos, hotlinked (user
+// instruction 2026-11-09). Ref H262850ZH90, $1,125. Views: 101 front, 102 worn.
+const BOUNCING_BLANC = [V("Front", HERMES_IMG + "262850ZH90_front_wm_101" + HERMES_Q), V("Worn", HERMES_IMG + "262850ZH90_worn_102" + HERMES_Q)];
 // Colourways that have their own shot set get exactly their own photos —
 // never another colourway's photos mixed in.
 const bouncingAlt = (front: string, back: string, above: string) => [V("Front", front), V("Back", back), V("Above", above)];
@@ -156,8 +162,6 @@ const LONG_SET = [V("Worn", longFront), V("Video", longFront, LONG_DRESS_VIDEO),
 // (user instruction 2026-11-09). Ref H041141ZH01, black calfskin, $950.
 // Views verified against the originals: 101 = pair front 3/4, 102 = model
 // wearing, 104 = single side profile, 105 = pair back 3/4, 106 = top-down.
-const HERMES_IMG = "https://assets.hermes.com/is/image/hermesproduct/";
-const HERMES_Q = "?wid=750&hei=1000&fit=fit&$product_default_bg$";
 const IZMIR_SET = [
   V("Front", HERMES_IMG + "041141ZH01_front_wm_101" + HERMES_Q),
   V("Worn", HERMES_IMG + "041141ZH01_worn_102" + HERMES_Q),
@@ -186,6 +190,833 @@ const NAXOS_SET = [
 const JACKSON_SET = [
   V("Front", HERMES_IMG + "242948ZHC9_front_wm_101" + HERMES_Q),
   V("Worn", HERMES_IMG + "242948ZHC9_worn_103" + HERMES_Q),
+];
+
+// Bouncing sneaker — ORIGINAL Hermes photos, hotlinked (user instruction
+// 2026-11-09). Ref H252782ZHF7, $1,275. Views: 101 front, 102 worn.
+const BOUNCING_SET = [
+  V("Front", HERMES_IMG + "252782ZHF7_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252782ZHF7_worn_102" + HERMES_Q),
+];
+// Jet sneaker — ref H261807ZHAF, $1,300. Views: 101 front, 102 worn.
+const JET_SET = [
+  V("Front", HERMES_IMG + "261807ZHAF_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261807ZHAF_worn_102" + HERMES_Q),
+];
+// Neon sneaker — ref H262898ZH01, $1,350. Views: 101 front, 102 worn.
+const NEON_SET = [
+  V("Front", HERMES_IMG + "262898ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262898ZH01_worn_102" + HERMES_Q),
+];
+// Next sneaker — ref H262891ZH01, $1,450. Views: 101 front, 102 worn.
+const NEXT_SET = [
+  V("Front", HERMES_IMG + "262891ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262891ZH01_worn_102" + HERMES_Q),
+];
+// Nobu sneaker — ref H262888ZH01, $1,400. Views: 101 front, 102 worn.
+const NOBU_SET = [
+  V("Front", HERMES_IMG + "262888ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262888ZH01_worn_102" + HERMES_Q),
+];
+// Master sneaker — ref H261881ZHD8, $1,275. Views: 101 front, 102 worn.
+const MASTER_SET = [
+  V("Front", HERMES_IMG + "261881ZHD8_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261881ZHD8_worn_102" + HERMES_Q),
+];
+// Day sneaker — ref H252883ZH90, $1,675. Views: 101 front, 102 worn.
+const DAY_SET = [
+  V("Front", HERMES_IMG + "252883ZH90_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252883ZH90_worn_102" + HERMES_Q),
+];
+// Match sneaker — ref H261863ZH01, $1,250 ($1,150 row uses the same set;
+// its own colourway ref was not found, price confirmed via US listing).
+// Views: 101 front, 102 worn.
+const MATCH_SET = [
+  V("Front", HERMES_IMG + "261863ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261863ZH01_worn_102" + HERMES_Q),
+];
+// Kid sneaker — ref H251929ZH01, $1,150. Views: 101 front, 102 worn.
+const KID_SET = [
+  V("Front", HERMES_IMG + "251929ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "251929ZH01_worn_102" + HERMES_Q),
+];
+// Leader sneaker $1,675 — ref H261884ZHNH. Views: 101 front, 102 worn.
+const LEADER_1675_SET = [
+  V("Front", HERMES_IMG + "261884ZHNH_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261884ZHNH_worn_102" + HERMES_Q),
+];
+// Leader sneaker $1,600 — ref H252864ZH01. Views: 101 front, 102 worn, 103 worn.
+const LEADER_1600_SET = [
+  V("Front", HERMES_IMG + "252864ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252864ZH01_worn_102" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252864ZH01_worn_103" + HERMES_Q),
+];
+// Leader sneaker $1,525 — ref H252863ZHGQ. Views: 101 front, 102 worn.
+const LEADER_1525_SET = [
+  V("Front", HERMES_IMG + "252863ZHGQ_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252863ZHGQ_worn_102" + HERMES_Q),
+];
+// Lucky slip-on sneaker — ref H252896ZHC9, $1,100. Views: 101 front, 102 worn.
+const LUCKY_SET = [
+  V("Front", HERMES_IMG + "252896ZHC9_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252896ZHC9_worn_102" + HERMES_Q),
+];
+// Loop sneaker $1,525 — ref H252853ZH01. Views: 101 front, 102 worn, 103 worn.
+const LOOP_1525_SET = [
+  V("Front", HERMES_IMG + "252853ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252853ZH01_worn_102" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252853ZH01_worn_103" + HERMES_Q),
+];
+// Loop sneaker $1,750 — ref H252857ZH01. Views: 101 front, 102 worn.
+const LOOP_1750_SET = [
+  V("Front", HERMES_IMG + "252857ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252857ZH01_worn_102" + HERMES_Q),
+];
+// Quicker sneaker — ref H102190ZH09, $1,175. Views: 101 front, 102 worn,
+// 104 side (single), 105 back (pair), 106 above (top-down), 107 side
+// (pair, second side angle). All six verified visually.
+const QUICKER_SET = [
+  V("Front", HERMES_IMG + "102190ZH09_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "102190ZH09_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "102190ZH09_front_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "102190ZH09_front_wm_105" + HERMES_Q),
+  V("Above", HERMES_IMG + "102190ZH09_front_wm_106" + HERMES_Q),
+  V("Side", HERMES_IMG + "102190ZH09_front_wm_107" + HERMES_Q),
+];
+// Nine ankle boot — ref H262820ZHNL, $1,450. Views: 101 front, 102 worn.
+const NINE_SET = [
+  V("Front", HERMES_IMG + "262820ZHNL_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262820ZHNL_worn_102" + HERMES_Q),
+];
+// Nathan ankle boot — ref H262901ZH01 (BE-listed), $1,600. Views: 101, 102 worn.
+const NATHAN_SET = [
+  V("Front", HERMES_IMG + "262901ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262901ZH01_worn_102" + HERMES_Q),
+];
+// Mateo ankle boot — ref H261972ZH01 (CA-listed), $1,825. Views: 101, 102 worn.
+const MATEO_SET = [
+  V("Front", HERMES_IMG + "261972ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261972ZH01_worn_102" + HERMES_Q),
+];
+// Jeff ankle boot — sibling colourway ref H242946ZH01 ($2,500) — the exact
+// $2,425 ref H252122Zv02 has no locatable CDN images (see report §5).
+// Views: 101 front, 102 worn.
+const JEFF_SET = [
+  V("Front", HERMES_IMG + "242946ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "242946ZH01_worn_102" + HERMES_Q),
+];
+// Noe loafer — ref H262834ZAAC, $1,175. Views: 101 front, 102 worn.
+const NOE_SET = [
+  V("Front", HERMES_IMG + "262834ZAAC_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262834ZAAC_worn_102" + HERMES_Q),
+];
+// Newton loafer — ref H262941ZAGN, $1,400. Views: 101 front, 102 worn.
+const NEWTON_SET = [
+  V("Front", HERMES_IMG + "262941ZAGN_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262941ZAGN_worn_102" + HERMES_Q),
+];
+// Honore loafer — ref H232903ZANP, US $1,650 (store $1,600 — mismatch, §5).
+// Views: 101 front, 102 worn.
+const HONORE_SET = [
+  V("Front", HERMES_IMG + "232903ZANP_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "232903ZANP_worn_102" + HERMES_Q),
+];
+// Mind loafer — ref H261937ZAC9, $1,600 (also used for the $1,675 row, whose
+// own colourway ref was not found). Views: 101 front, 102 worn.
+const MIND_SET = [
+  V("Front", HERMES_IMG + "261937ZAC9_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261937ZAC9_worn_102" + HERMES_Q),
+];
+// Paris loafer — ref H172368ZA02, $1,450. Views: 101 front, 102 worn.
+const PARIS_SET = [
+  V("Front", HERMES_IMG + "172368ZA02_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "172368ZA02_worn_102" + HERMES_Q),
+];
+// Member loafer — ref H261947ZAC9, $1,150. Views: 101 front, 103 worn.
+const MEMBER_SET = [
+  V("Front", HERMES_IMG + "261947ZAC9_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261947ZAC9_worn_103" + HERMES_Q),
+];
+// Nicolas loafer — ref H262948ZA01, $1,450. Views: 101 front, 102 worn.
+const NICOLAS_SET = [
+  V("Front", HERMES_IMG + "262948ZA01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262948ZA01_worn_102" + HERMES_Q),
+];
+// Nod loafer — ref H262939ZAC9 (inferred $1,350 colourway; fringe loafer
+// visually confirmed as Nod). Views: 101 front, 102 worn.
+const NOD_SET = [
+  V("Front", HERMES_IMG + "262939ZAC9_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262939ZAC9_worn_102" + HERMES_Q),
+];
+// Low loafer — ref H252964ZAC9 (UK/CA/MO-listed), $1,325 (US price
+// unconfirmed). Views: 101 front, 102 worn, 103 worn.
+const LOW_SET = [
+  V("Front", HERMES_IMG + "252964ZAC9_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252964ZAC9_worn_102" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252964ZAC9_worn_103" + HERMES_Q),
+];
+// Noon mule — sibling colourway ref H262865ZHME (brown suede); the exact US
+// ref H262002ZvC9 has no locatable CDN images (see §5). Views: 101, 102 worn.
+const NOON_SET = [
+  V("Front", HERMES_IMG + "262865ZHME_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262865ZHME_worn_102" + HERMES_Q),
+];
+// Mix mule $1,150 — ref H27107HZHAB (SE-listed). Only ONE view exists for
+// this ref (101 front); no worn view exists on the CDN. Do not add a worn
+// view from the $1,425 Mix — it is a different (shearling) colourway.
+const MIX_1150_SET = [
+  V("Front", HERMES_IMG + "27107HZHAB_front_wm_101" + HERMES_Q),
+];
+// Mix mule $1,425 — ref H261950ZHME. Views: 101 front, 102 worn.
+const MIX_1425_SET = [
+  V("Front", HERMES_IMG + "261950ZHME_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261950ZHME_worn_102" + HERMES_Q),
+];
+// Nick mule — ref H262937ZAC9, $1,375. Views: 101 front, 103 worn.
+const NICK_SET = [
+  V("Front", HERMES_IMG + "262937ZAC9_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262937ZAC9_worn_103" + HERMES_Q),
+];
+// Nils derby shoe — ref H262945ZH01, $1,525. Views: 101 front, 102 worn.
+const NILS_SET = [
+  V("Front", HERMES_IMG + "262945ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262945ZH01_worn_102" + HERMES_Q),
+];
+// Now derby shoe — ref H262933ZHME (IE/UK/CA/MO-listed), $1,825.
+// Views: 101 front, 102 worn.
+const NOW_SET = [
+  V("Front", HERMES_IMG + "262933ZHME_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262933ZHME_worn_102" + HERMES_Q),
+];
+// Keneth derby shoe — ref H251971ZH01, $1,825. Views: 101 front, 102 worn.
+const KENETH_SET = [
+  V("Front", HERMES_IMG + "251971ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "251971ZH01_worn_102" + HERMES_Q),
+];
+// Moreno derby shoe — ref H261974ZH01 (HK-listed), $1,375. Views: 101, 102 worn.
+const MORENO_SET = [
+  V("Front", HERMES_IMG + "261974ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261974ZH01_worn_102" + HERMES_Q),
+];
+// Lawrence derby shoe — ref H252998ZH01, $1,675. Views: 101 front, 102 worn.
+const LAWRENCE_SET = [
+  V("Front", HERMES_IMG + "252998ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252998ZH01_worn_102" + HERMES_Q),
+];
+// Middle derby shoe — ref H261978ZHME, $1,450. Views: 101 front, 102 worn.
+const MIDDLE_SET = [
+  V("Front", HERMES_IMG + "261978ZHME_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261978ZHME_worn_102" + HERMES_Q),
+];
+// Lead derby shoe — ref H252975ZH01, $1,750. Views: 101 front, 102 worn.
+const LEAD_SET = [
+  V("Front", HERMES_IMG + "252975ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "252975ZH01_worn_102" + HERMES_Q),
+];
+// May derby shoe — ref H261956ZH01, $1,375. Views: 101 front, 102 worn.
+// (Verified: the May derby really is this sleek Nappa lace-up with ecru
+// laces — it looks sneaker-like, and that is what hermes.com sells.)
+const MAY_SET = [
+  V("Front", HERMES_IMG + "261956ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261956ZH01_worn_102" + HERMES_Q),
+];
+
+// Bags — ORIGINAL Hermes photos, hotlinked from assets.hermes.com (user
+// instruction 2026-11-09). Every URL returned HTTP 200 with Referer
+// https://hermesmart.vercel.app/ and was visually confirmed (REPORT §5).
+// A view listed here exists; views that 403'd are omitted, so most bags
+// have a 1–2 view gallery — that is correct, do not pad with generated views.
+const PICOTIN_POCKET_SET = [
+  V("Front", HERMES_IMG + "083189CCBQ_front_wm_101" + HERMES_Q),
+];
+const LE_PETIT_SAC_SET = [
+  V("Front", HERMES_IMG + "087967CC28_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "087967CC28_worn_102" + HERMES_Q),
+];
+const DOUBLE_LONGE_SET = [
+  V("Front", HERMES_IMG + "087953CCAC_front_wm_101" + HERMES_Q),
+];
+const TABLIER_SET = [
+  V("Front", HERMES_IMG + "086583CKAA_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "086583CKAA_worn_102" + HERMES_Q),
+];
+const BOLIDE_1923_MINI_SET = [
+  V("Front", HERMES_IMG + "075180CK18_front_wm_101" + HERMES_Q),
+];
+const VIDEPOCHES_SET = [
+  V("Front", HERMES_IMG + "087901CKAE_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "087901CKAE_worn_102" + HERMES_Q),
+];
+const NEO_DOUBLE_SENS_SET = [
+  V("Front", HERMES_IMG + "089099CAAD_front_wm_101" + HERMES_Q),
+];
+const NEO_GARDEN_BREDIES_SET = [
+  V("Front", HERMES_IMG + "087934CKAB_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "087934CKAB_worn_102" + HERMES_Q),
+];
+const MEDOR_SET = [
+  V("Front", HERMES_IMG + "085055CKAT_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "085055CKAT_worn_102" + HERMES_Q),
+];
+const ARCON_SLIM_SET = [
+  V("Front", HERMES_IMG + "087032CKAB_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "087032CKAB_worn_102" + HERMES_Q),
+];
+const TWENTYFOUR_SET = [
+  V("Front", HERMES_IMG + "082141CCAJ_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "082141CCAJ_worn_102" + HERMES_Q),
+];
+const GETA_SET = [
+  V("Front", HERMES_IMG + "085408CKAB_front_wm_101" + HERMES_Q),
+];
+const NEO_GARDEN_41_SET = [
+  V("Front", HERMES_IMG + "086934CKAB_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "086934CKAB_worn_102" + HERMES_Q),
+];
+const MESSENGER_ATTELAGE_SET = [
+  V("Front", HERMES_IMG + "084111CK89_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "084111CK89_front_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "084111CK89_front_wm_105" + HERMES_Q),
+];
+const BESACE_SET = [
+  V("Front", HERMES_IMG + "087913CC89_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "087913CC89_worn_102" + HERMES_Q),
+  V("Worn", HERMES_IMG + "087913CC89_worn_103" + HERMES_Q),
+];
+const CLIQUETIS_SET = [
+  V("Front", HERMES_IMG + "086913CK89_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "086913CK89_worn_102" + HERMES_Q),
+];
+const JYPSIERE_MINI_SET = [
+  V("Front", HERMES_IMG + "083982CKAY_front_wm_101" + HERMES_Q),
+];
+const MALLETTE_SET = [
+  V("Front", HERMES_IMG + "087960CT89_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "087960CT89_worn_102" + HERMES_Q),
+  V("Worn", HERMES_IMG + "087960CT89_worn_103" + HERMES_Q),
+];
+const JIGE_SET = [
+  V("Front", HERMES_IMG + "083286CACD_front_wm_101" + HERMES_Q),
+];
+// Lassoie: Worn view (087076CKAB_worn_102) probed 200 but NOT yet visually
+// confirmed — Front only until that check is done (REPORT §4.7).
+const LASSOIE_SET = [
+  V("Front", HERMES_IMG + "087076CKAB_front_wm_101" + HERMES_Q),
+];
+const ITL_PLUSH_SET = [
+  V("Front", HERMES_IMG + "084987CKAB_front_wm_101" + HERMES_Q),
+];
+const ETRIVIERE_SET = [
+  V("Front", HERMES_IMG + "088128CKAA_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "088128CKAA_worn_102" + HERMES_Q),
+  V("Worn", HERMES_IMG + "088128CKAA_worn_103" + HERMES_Q),
+];
+const ROULIS_MINI_SET = [
+  V("Front", HERMES_IMG + "070510CP1C_front_wm_101" + HERMES_Q),
+];
+const LINDY_26_SET = [
+  V("Front", HERMES_IMG + "073430CP2D_front_wm_101" + HERMES_Q),
+];
+const SILKYCITY_SET = [
+  V("Front", HERMES_IMG + "085933CKAB_front_wm_101" + HERMES_Q),
+];
+const ITL_18_SET = [
+  V("Front", HERMES_IMG + "084274CCY1_front_wm_101" + HERMES_Q),
+];
+const DELLA_SET = [
+  V("Front", HERMES_IMG + "089063CK37_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "089063CK37_worn_102" + HERMES_Q),
+];
+const GETA_SLIM_SET = [
+  V("Front", HERMES_IMG + "086984CKAW_front_wm_101" + HERMES_Q),
+];
+const MINI_MEDOR_SET = [
+  V("Front", HERMES_IMG + "085003CKY1_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "085003CKY1_worn_102" + HERMES_Q),
+];
+const PTIT_ARCON_SET = [
+  V("Front", HERMES_IMG + "085871CKAE_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "085871CKAE_worn_102" + HERMES_Q),
+  V("Worn", HERMES_IMG + "085871CKAE_worn_103" + HERMES_Q),
+];
+const HALZAN_25_SET = [
+  V("Front", HERMES_IMG + "082027CKY1_front_wm_101" + HERMES_Q),
+];
+
+// Jewelry & watches audit 2026-11-10 — ORIGINAL Hermes photos, hotlinked
+// from assets.hermes.com. Every URL below returned HTTP 200 with
+// Referer https://hermesmart.vercel.app/. "V" = tile visually confirmed.
+const CONTOUR_BRACELET_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-contour-bracelet--123405B%2000-front-wm-2-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-contour-bracelet--123405B%2000-front-wm-4-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-contour-bracelet--123405B%2000-worn-3-300-0-800-800_g.jpg"),
+];
+const CLICCLAC_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/clic-clac-h-bracelet--300001FO31-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/clic-clac-h-bracelet--300001FO31-front-wm-4-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/clic-clac-h-bracelet--300001FO31-worn-3-300-0-800-800_g.jpg"),
+];
+const THALASSA_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/mini-thalassa-bracelet--500522FC37-front-wm-2-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/mini-thalassa-bracelet--500522FC37-worn-3-300-0-800-800_g.jpg"),
+];
+const KELLY_CHAINE_BRACELET_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/kelly-chaine-bracelet-small-model--218471B%2000-front-wm-2-0-0-1000-1000_g.jpg"),
+];
+const KELLY_GOURMETTE_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/kelly-gourmette-bracelet-very-small-model--221410B%2000-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/kelly-gourmette-bracelet-very-small-model--221410B%2000-front-wm-3-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/kelly-gourmette-bracelet-very-small-model--221410B%2000-front-wm-5-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/kelly-gourmette-bracelet-very-small-model--221410B%2000-worn-3-300-0-800-800_g.jpg"),
+];
+const VERTIGE_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/vertige-bracelet--221207B%2000-front-wm-2-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/vertige-bracelet--221207B%2000-front-wm-4-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/vertige-bracelet--221207B%2000-worn-3-300-0-800-800_g.jpg"),
+];
+const CHAOS_NANO_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-chaos-nano-bracelet--225411B%2000-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-chaos-nano-bracelet--225411B%2000-worn-3-300-0-800-800_g.jpg"),
+];
+const BOUCLE_SELLIER_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/boucle-sellier-on-the-rocks-bracelet-small-model--224402B%2000-front-wm-2-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/boucle-sellier-on-the-rocks-bracelet-small-model--224402B%2000-front-wm-4-0-0-1000-1000_g.jpg"),
+];
+const VERSO_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-verso-bracelet--125408B%2000-front-wm-2-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-verso-bracelet--125408B%2000-front-wm-4-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-verso-bracelet--125408B%2000-front-wm-5-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-verso-bracelet--125408B%2000-worn-3-300-0-800-800_g.jpg"),
+];
+const CLOU_FORGE_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/clou-de-forge-bracelet--125405B%2000-front-wm-2-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/clou-de-forge-bracelet--125405B%2000-worn-3-300-0-800-800_g.jpg"),
+];
+const PLANETES_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/223413B%2000_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/planetes-and-meteores-bracelet--223413B%2000-worn-1-300-0-800-800_g.jpg"),
+];
+const FARANDOLE_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/farandole-bracelet--221413B%2000-front-wm-2-0-0-1000-1000_g.jpg"),
+];
+const AMULETTES_KELLY_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/bracelet-amulettes-kelly--121425B%2000-front-wm-2-0-0-1000-1000_g.jpg"),
+];
+const AMULETTES_CONSTANCE_SET = [
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/amulettes-constance-bracelet--121400B%2000-worn-1-0-0-1000-1000_g.jpg"),
+];
+const KELLY_CADENAS_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/brazalete-kelly-cadenas-tamano-pequeno--220465B%2000-front-wm-2-0-0-1000-1000_g.jpg"),
+];
+const CAPECOD_LARGE_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-large-model-37mm--403352WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+];
+const CAPECOD_SMALL_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-small-model-31mm--060115WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Detail", "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-small-model-31mm--060115WW00-detail-wm-4-0-0-800-800_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-small-model-31mm--060115WW00-worn-2-300-0-800-800_g.jpg"),
+];
+const H08_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/hermes-h08-watch-42mm--402990WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+];
+const CUT_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/hermes-cut-watch-large-model-36mm--403190WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+];
+const KELLY_WATCH_MINI_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--056853WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--056853WW00-front-wm-4-0-0-1000-1000_g.jpg"),
+];
+const ARCEAU_LUNE_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/arceau-petite-lune-watch-large-model-38mm--403043WW00-front-1-300-0-800-800_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/arceau-petite-lune-watch-large-model-38mm--403043WW00-front-5-300-0-800-800_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/arceau-petite-lune-watch-large-model-38mm--403043WW00-worn-2-300-0-800-800_g.jpg"),
+];
+const ARCEAU_CHRONO_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/arceau-chronographe-watch-42mm--404112WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/arceau-chronographe-watch-42mm--404112WW00-worn-2-300-0-800-800_g.jpg"),
+];
+const HEUREH_MED_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/heure-h-watch-medium-model-30mm--404144WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+];
+const HEUREH_SMALL_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/heure-h-watch-small-model-25mm--404283WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+];
+const H08_CHRONO_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/hermes-h08-chronographe-watch-45mm--403130WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/hermes-h08-chronographe-watch-45mm--403130WW00-worn-2-300-0-800-800_g.jpg"),
+  V("Detail", "https://assets.hermes.com/is/image/hermesproduct/hermes-h08-chronographe-watch-45mm--403130WW00-detail-wm-4-0-0-800-800_g.jpg"),
+];
+const TEMPS_VOYAGEUR_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/arceau-le-temps-voyageur-watch-38mm--057343WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/arceau-le-temps-voyageur-watch-38mm--057343WW00-worn-3-300-0-800-800_g.jpg"),
+];
+const CAPECOD_MINI_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-mini-model-27mm--408333WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-mini-model-27mm--408333WW00-worn-2-300-0-800-800_g.jpg"),
+];
+const NANTUCKET_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/nantucket-watch-small-model-29mm--044188WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/nantucket-watch-small-model-29mm--044188WW00-front-wm-5-0-0-1000-1000_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/nantucket-watch-small-model-29mm--044188WW00-worn-2-300-0-800-800_g.jpg"),
+  V("Detail", "https://assets.hermes.com/is/image/hermesproduct/nantucket-watch-small-model-29mm--044188WW00-crop-wm-4-0-0-800-800_g.jpg"),
+];
+const FAUBOURG_MARGUERITE_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/faubourg-marguerite-watch-mini-model-15mm--402996WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+];
+const FAUBOURG_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/faubourg-watch-mini-model-15mm--049310WW00-front-1-300-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/faubourg-watch-mini-model-15mm--049310WW00-front-4-300-0-800-800_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/faubourg-watch-mini-model-15mm--049310WW00-worn-2-300-0-800-800_g.jpg"),
+];
+const CUT_SUSPENDU_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/hermes-cut-le-temps-suspendu-watch-large-model-39mm--408256WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/hermes-cut-le-temps-suspendu-watch-large-model-39mm--408256WW00-front-wm-4-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/hermes-cut-le-temps-suspendu-watch-large-model-39mm--408256WW00-front-wm-5-0-0-1000-1000_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/hermes-cut-le-temps-suspendu-watch-large-model-39mm--408256WW00-worn-2-300-0-800-800_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/hermes-cut-le-temps-suspendu-watch-large-model-39mm--408256WW00-worn-3-300-0-800-800_g.jpg"),
+];
+
+// Ready-to-wear — ORIGINAL Hermes photos, hotlinked from assets.hermes.com
+// (user instruction 2026-11-09). Audited 2026-11-10, see
+// workspace/hermes-audit/readytowear/REPORT.md. Every URL returned HTTP 200 with
+// Referer https://hermesmart.vercel.app/. Views are the original's own gallery in
+// numeric order, all model-worn (labelled "Worn"); ids 50/61 keep their video at
+// position 2 (their worn_102 does not exist on the CDN). Keyed by product id:
+// repeated names are separate colourways with different refs.
+const RTW_GALLERY: Record<number, { label: string; src: string; videoSrc?: string }[]> = {
+  50: [ // Mid-length buttoned dress — ref H6H2542D502
+    V("Worn", HERMES_IMG + "6H2542D502_worn_101" + HERMES_Q),
+    V("Video", HERMES_IMG + "6H2542D502_worn_101" + HERMES_Q, MID_DRESS_VIDEO),
+    V("Worn", HERMES_IMG + "6H2542D502_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2542D502_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2542D502_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2542D502_worn_106" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2542D502_worn_107" + HERMES_Q),
+  ],
+  61: [ // Long sleeveless dress — ref H6H2521D7DC
+    V("Worn", HERMES_IMG + "6H2521D7DC_worn_101" + HERMES_Q),
+    V("Video", HERMES_IMG + "6H2521D7DC_worn_101" + HERMES_Q, LONG_DRESS_VIDEO),
+    V("Worn", HERMES_IMG + "6H2521D7DC_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2521D7DC_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2521D7DC_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2521D7DC_worn_106" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2521D7DC_worn_107" + HERMES_Q),
+  ],
+  89: [ // Dress with shoulder straps — ref H6H0521D502
+    V("Worn", HERMES_IMG + "6H0521D502_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0521D502_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0521D502_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0521D502_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0521D502_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0521D502_worn_106" + HERMES_Q),
+  ],
+  90: [ // Embroidered dress with shoulder straps — ref H6H0544D502
+    V("Worn", HERMES_IMG + "6H0544D502_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0544D502_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0544D502_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0544D502_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0544D502_worn_106" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0544D502_worn_107" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0544D502_worn_108" + HERMES_Q),
+  ],
+  91: [ // “H Kelly” caftan — ref H6H0577DJ02
+    V("Worn", HERMES_IMG + "6H0577DJ02_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0577DJ02_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0577DJ02_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0577DJ02_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0577DJ02_worn_106" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0577DJ02_worn_107" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0577DJ02_worn_108" + HERMES_Q),
+  ],
+  92: [ // Cashmere short skirt — ref H6H2324D14C
+    V("Worn", HERMES_IMG + "6H2324D14C_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D14C_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D14C_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D14C_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D14C_worn_105" + HERMES_Q),
+  ],
+  93: [ // Zipped miniskirt — ref H6H1309DT02
+    V("Worn", HERMES_IMG + "6H1309DT02_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H1309DT02_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H1309DT02_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H1309DT02_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H1309DT02_worn_105" + HERMES_Q),
+  ],
+  94: [ // “Mosaique” pouch dress — ref H6H0570DB4C
+    V("Worn", HERMES_IMG + "6H0570DB4C_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DB4C_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DB4C_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DB4C_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DB4C_worn_105" + HERMES_Q),
+  ],
+  95: [ // “L'Enseigne du Sellier” long skirt — ref H6H0325DR02
+    V("Worn", HERMES_IMG + "6H0325DR02_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0325DR02_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0325DR02_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0325DR02_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0325DR02_worn_105" + HERMES_Q),
+  ],
+  96: [ // “Mosaique” short-sleeve dress — ref H6H0572DB4C
+    V("Worn", HERMES_IMG + "6H0572DB4C_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB4C_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB4C_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB4C_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB4C_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB4C_worn_106" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB4C_worn_107" + HERMES_Q),
+  ],
+  97: [ // “L'Enseigne du Sellier” caftan — ref H6H0542DRLK
+    V("Worn", HERMES_IMG + "6H0542DRLK_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DRLK_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DRLK_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DRLK_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DRLK_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DRLK_worn_106" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DRLK_worn_107" + HERMES_Q),
+  ],
+  98: [ // “L'Enseigne du Sellier” caftan tunic — ref H6H2805DRDC
+    V("Worn", HERMES_IMG + "6H2805DRDC_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2805DRDC_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2805DRDC_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2805DRDC_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2805DRDC_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2805DRDC_worn_106" + HERMES_Q),
+  ],
+  99: [ // “Mosaique” pouch dress — ref H6H0570DBDK
+    V("Worn", HERMES_IMG + "6H0570DBDK_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DBDK_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DBDK_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DBDK_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DBDK_worn_105" + HERMES_Q),
+  ],
+  100: [ // “A Propos de Bottes” buttoned skirt — ref H6H0321DEMO
+    V("Worn", HERMES_IMG + "6H0321DEMO_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0321DEMO_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0321DEMO_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0321DEMO_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0321DEMO_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0321DEMO_worn_106" + HERMES_Q),
+  ],
+  101: [ // Sleeveless dress — ref H6H4524DV91
+    V("Worn", HERMES_IMG + "6H4524DV91_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4524DV91_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4524DV91_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4524DV91_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4524DV91_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4524DV91_worn_106" + HERMES_Q),
+  ],
+  102: [ // Straight skirt — ref H6H2321DBDC
+    V("Worn", HERMES_IMG + "6H2321DBDC_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2321DBDC_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2321DBDC_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2321DBDC_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2321DBDC_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2321DBDC_worn_106" + HERMES_Q),
+  ],
+  103: [ // “H Kelly” caftan — ref H6H0577DJ91
+    V("Worn", HERMES_IMG + "6H0577DJ91_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0577DJ91_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0577DJ91_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0577DJ91_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0577DJ91_worn_105" + HERMES_Q),
+  ],
+  104: [ // Embroidered short shirt dress — ref H6H0540DT91
+    V("Worn", HERMES_IMG + "6H0540DT91_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0540DT91_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0540DT91_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0540DT91_worn_104" + HERMES_Q),
+  ],
+  105: [ // “Mosaique” pouch dress — ref H6H0570DB02
+    V("Worn", HERMES_IMG + "6H0570DB02_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DB02_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DB02_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DB02_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DB02_worn_105" + HERMES_Q),
+  ],
+  106: [ // Pochon skirt — ref H6H0333DB02
+    V("Worn", HERMES_IMG + "6H0333DB02_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0333DB02_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0333DB02_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0333DB02_worn_106" + HERMES_Q),
+  ],
+  107: [ // “Soleil de Soie Poudre” classic caftan — ref H6H0545DH02
+    V("Worn", HERMES_IMG + "6H0545DH02_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0545DH02_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0545DH02_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0545DH02_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0545DH02_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0545DH02_worn_106" + HERMES_Q),
+  ],
+  108: [ // “Cahier du Colporteur” classic caftan — ref H6H0573DNKL
+    V("Worn", HERMES_IMG + "6H0573DNKL_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0573DNKL_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0573DNKL_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0573DNKL_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0573DNKL_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0573DNKL_worn_106" + HERMES_Q),
+  ],
+  109: [ // “Cahier du Colporteur” shirt dress — ref H6H0575DNKL
+    V("Worn", HERMES_IMG + "6H0575DNKL_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0575DNKL_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0575DNKL_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0575DNKL_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0575DNKL_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0575DNKL_worn_106" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0575DNKL_worn_107" + HERMES_Q),
+  ],
+  110: [ // Wraparound dress — ref H6H0550DQKL
+    V("Worn", HERMES_IMG + "6H0550DQKL_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0550DQKL_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0550DQKL_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0550DQKL_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0550DQKL_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0550DQKL_worn_107" + HERMES_Q),
+  ],
+  111: [ // Long dress — ref H6H4521DCKL
+    V("Worn", HERMES_IMG + "6H4521DCKL_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4521DCKL_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4521DCKL_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4521DCKL_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4521DCKL_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4521DCKL_worn_106" + HERMES_Q),
+  ],
+  112: [ // Equestrian shirt dress — ref H6H0530DV90
+    V("Worn", HERMES_IMG + "6H0530DV90_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0530DV90_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0530DV90_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0530DV90_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0530DV90_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0530DV90_worn_106" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0530DV90_worn_107" + HERMES_Q),
+  ],
+  113: [ // “Mosaique” short-sleeve dress — ref H6H0572DB90
+    V("Worn", HERMES_IMG + "6H0572DB90_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB90_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB90_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB90_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB90_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB90_worn_106" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB90_worn_107" + HERMES_Q),
+  ],
+  114: [ // Pochon skirt — ref H6H0333DB90
+    V("Worn", HERMES_IMG + "6H0333DB90_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0333DB90_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0333DB90_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0333DB90_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0333DB90_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0333DB90_worn_106" + HERMES_Q),
+  ],
+  115: [ // “Mosaique” short-sleeve dress — ref H6H0572DB02
+    V("Worn", HERMES_IMG + "6H0572DB02_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB02_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB02_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB02_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB02_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB02_worn_106" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0572DB02_worn_107" + HERMES_Q),
+  ],
+  116: [ // “L'Enseigne du Sellier” caftan — ref H6H0542DR02
+    V("Worn", HERMES_IMG + "6H0542DR02_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DR02_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DR02_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DR02_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DR02_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DR02_worn_106" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0542DR02_worn_107" + HERMES_Q),
+  ],
+  117: [ // Equestrian shirt dress — ref H6H0530DV02
+    V("Worn", HERMES_IMG + "6H0530DV02_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0530DV02_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0530DV02_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0530DV02_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0530DV02_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0530DV02_worn_106" + HERMES_Q),
+  ],
+  118: [ // Cashmere short skirt — ref H6H2324D15H
+    V("Worn", HERMES_IMG + "6H2324D15H_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D15H_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D15H_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D15H_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D15H_worn_105" + HERMES_Q),
+  ],
+  119: [ // Equestrian miniskirt — ref H6H0354DY5H
+    V("Worn", HERMES_IMG + "6H0354DY5H_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0354DY5H_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0354DY5H_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0354DY5H_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0354DY5H_worn_105" + HERMES_Q),
+  ],
+  120: [ // Cashmere short skirt — ref H6H2324D1A3
+    V("Worn", HERMES_IMG + "6H2324D1A3_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D1A3_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D1A3_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D1A3_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H2324D1A3_worn_105" + HERMES_Q),
+  ],
+  121: [ // Wrap skirt — ref H6H0326D7LK
+    V("Worn", HERMES_IMG + "6H0326D7LK_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0326D7LK_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0326D7LK_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0326D7LK_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0326D7LK_worn_105" + HERMES_Q),
+  ],
+  122: [ // “Cahier du Colporteur” miniskirt — ref H6H4316DFG8
+    V("Worn", HERMES_IMG + "6H4316DFG8_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4316DFG8_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4316DFG8_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4316DFG8_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4316DFG8_worn_105" + HERMES_Q),
+  ],
+  123: [ // Sleeveless dress — ref H6H4524DVLU
+    V("Worn", HERMES_IMG + "6H4524DVLU_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4524DVLU_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4524DVLU_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4524DVLU_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4524DVLU_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H4524DVLU_worn_106" + HERMES_Q),
+  ],
+  124: [ // “Mosaique” pouch dress — ref H6H0570DB90
+    V("Worn", HERMES_IMG + "6H0570DB90_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DB90_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DB90_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0570DB90_worn_104" + HERMES_Q),
+  ],
+  125: [ // “L'Enseigne du Sellier” long skirt — ref H6H0325DRLK
+    V("Worn", HERMES_IMG + "6H0325DRLK_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0325DRLK_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0325DRLK_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0325DRLK_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6H0325DRLK_worn_105" + HERMES_Q),
+  ],
+  412: [ // Swing dressage breeches — ref H800336Ev3340
+    V("Worn", HERMES_IMG + "800336E 33_worn_101" + HERMES_Q),
+    V("Worn", HERMES_IMG + "800336E 33_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "800336E 33_worn_103" + HERMES_Q),
+  ],
+  413: [ // “H” jogging pants — ref H6E2404D3A3
+    V("Worn", HERMES_IMG + "6E2404D3A3_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6E2404D3A3_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6E2404D3A3_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6E2404D3A3_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6E2404D3A3_worn_106" + HERMES_Q),
+  ],
+  414: [ // Embroidered pocket dress — ref H6E4515DA90
+    V("Worn", HERMES_IMG + "6E4515DA90_worn_102" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6E4515DA90_worn_103" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6E4515DA90_worn_104" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6E4515DA90_worn_105" + HERMES_Q),
+    V("Worn", HERMES_IMG + "6E4515DA90_worn_106" + HERMES_Q),
+  ],
+};
+
+// Long sleeveless dress, Noir colourway (ref H6H2521D702) — its own photos, no video.
+const LONG_NOIR = [
+  V("Worn", HERMES_IMG + "6H2521D702_worn_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "6H2521D702_worn_102" + HERMES_Q),
+  V("Worn", HERMES_IMG + "6H2521D702_worn_103" + HERMES_Q),
+  V("Worn", HERMES_IMG + "6H2521D702_worn_104" + HERMES_Q),
+  V("Worn", HERMES_IMG + "6H2521D702_worn_105" + HERMES_Q),
+  V("Worn", HERMES_IMG + "6H2521D702_worn_106" + HERMES_Q),
 ];
 
 // Type sets — applied to every other product by the type rules. Each label
@@ -247,6 +1078,338 @@ function typeSet(p: GalleryProduct): { label: string; src: string }[] {
  * and matches its label. Colour switch returns that colourway's own photos
  * (and its own plain background, which is baked into the photos).
  */
+// Fragrance / make-up / home audit 2026-11-10 (see
+// workspace/hermes-audit/fragrance-home-scarves/REPORT.md §2):
+// ORIGINAL Hermes photos, hotlinked from assets.hermes.com (user
+// instruction 2026-11-09). Every view below was HTTP-200 +
+// download-verified. NOTE: 39937/38167 front_wm_101 are 403 despite
+// a probe HIT — the refill tiles use front_1 instead (REPORT §7.7).
+const AMBRE_NARGUILE_SET = [
+  V("Front", HERMES_IMG + "113483V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113483V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113483V0_front_wm_103" + HERMES_Q),
+  V("Refill", HERMES_IMG + "113483V0_front_wm_104" + HERMES_Q),
+];
+const MYRRHE_EGLANTINE_SET = [
+  V("Front", HERMES_IMG + "113575V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113575V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113575V0_front_wm_103" + HERMES_Q),
+];
+const ROSE_IKEBANA_SET = [
+  V("Front", HERMES_IMG + "113578V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113578V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113578V0_front_wm_103" + HERMES_Q),
+  V("Refill", HERMES_IMG + "113578V0_front_wm_104" + HERMES_Q),
+];
+const CEDRE_SAMBAC_SET = [
+  V("Front", HERMES_IMG + "113485V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113485V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113485V0_front_wm_103" + HERMES_Q),
+  V("Refill", HERMES_IMG + "113485V0_front_wm_104" + HERMES_Q),
+];
+const VETIVER_TONKA_SET = [
+  V("Front", HERMES_IMG + "113580V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113580V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113580V0_front_wm_103" + HERMES_Q),
+  V("Refill", HERMES_IMG + "113580V0_front_wm_104" + HERMES_Q),
+];
+const VIOLETTE_VOLYNKA_SET = [
+  V("Front", HERMES_IMG + "113581V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113581V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113581V0_front_wm_103" + HERMES_Q),
+  V("Refill", HERMES_IMG + "113581V0_front_wm_104" + HERMES_Q),
+];
+const AGAR_EBENE_SET = [
+  V("Front", HERMES_IMG + "113482V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113482V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113482V0_front_wm_103" + HERMES_Q),
+  V("Refill", HERMES_IMG + "113482V0_front_wm_104" + HERMES_Q),
+];
+const POIVRE_SAMARCANDE_SET = [
+  V("Front", HERMES_IMG + "113577V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113577V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113577V0_front_wm_103" + HERMES_Q),
+  V("Refill", HERMES_IMG + "113577V0_front_wm_104" + HERMES_Q),
+];
+const OSMANTHE_YUNNAN_SET = [
+  V("Front", HERMES_IMG + "113576V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113576V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113576V0_front_wm_103" + HERMES_Q),
+  V("Refill", HERMES_IMG + "113576V0_front_wm_104" + HERMES_Q),
+];
+const IRIS_UKIYOE_SET = [
+  V("Front", HERMES_IMG + "113487V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113487V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113487V0_front_wm_103" + HERMES_Q),
+];
+const SANTAL_MASSOIA_SET = [
+  V("Front", HERMES_IMG + "113579V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113579V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113579V0_front_wm_103" + HERMES_Q),
+];
+const CUIR_DANGE_SET = [
+  V("Front", HERMES_IMG + "113484V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113484V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113484V0_front_wm_103" + HERMES_Q),
+];
+const MUSC_PALLIDA_EDP_SET = [
+  V("Front", HERMES_IMG + "117337V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "117337V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "117337V0_front_wm_103" + HERMES_Q),
+  V("Side", HERMES_IMG + "117337V0_front_wm_104" + HERMES_Q),
+  V("Editorial", HERMES_IMG + "117337V0_front_wm_106" + HERMES_Q),
+];
+const MUSC_PALLIDA_REFILL_SET = [
+  V("Front", HERMES_IMG + "118291V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "118291V0_front_wm_102" + HERMES_Q),
+  V("Refill", HERMES_IMG + "118291V0_front_wm_103" + HERMES_Q),
+  V("Editorial", HERMES_IMG + "118291V0_front_wm_104" + HERMES_Q),
+];
+const OUD_ALEZAN_SET = [
+  V("Front", HERMES_IMG + "113467V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "113467V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113467V0_front_wm_104" + HERMES_Q),
+];
+const GINSENG_BILOBA_SET = [
+  V("Front", HERMES_IMG + "116173V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "116173V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "116173V0_front_wm_103" + HERMES_Q),
+  V("Refill", HERMES_IMG + "116173V0_front_wm_104" + HERMES_Q),
+  V("Editorial", HERMES_IMG + "116173V0_front_wm_106" + HERMES_Q),
+];
+const TERRE_INTENSE_SET = [
+  V("Front", HERMES_IMG + "111230V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "111230V0_front_wm_103" + HERMES_Q),
+  V("Detail", HERMES_IMG + "111230V0_front_wm_104" + HERMES_Q),
+  V("Refill", HERMES_IMG + "111230V0_front_wm_105" + HERMES_Q),
+  V("Editorial", HERMES_IMG + "111230V0_front_wm_106" + HERMES_Q),
+];
+const OUD_ESMA_SET = [
+  V("Front", HERMES_IMG + "117057V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "117057V0_front_wm_102" + HERMES_Q),
+];
+const CARDAMUSC_SET = [
+  V("Front", HERMES_IMG + "107117V0_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "107117V0_front_wm_102" + HERMES_Q),
+];
+const MUSC_PALLIDA_ESSENCE_SET = [
+  V("Front", HERMES_IMG + "107115V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "107115V0_front_wm_102" + HERMES_Q),
+];
+const BARENIA_EDP_SET = [
+  V("Front", HERMES_IMG + "110436V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "110436V0_front_wm_103" + HERMES_Q),
+  V("Detail", HERMES_IMG + "110436V0_front_wm_104" + HERMES_Q),
+  V("Detail", HERMES_IMG + "110436V0_worn_102" + HERMES_Q),
+];
+const PLEINE_FLEUR_SET = [
+  V("Front", HERMES_IMG + "118008V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "118008V0_front_wm_103" + HERMES_Q),
+  V("Detail", HERMES_IMG + "118008V0_front_wm_104" + HERMES_Q),
+  V("Refill", HERMES_IMG + "118008V0_front_wm_106" + HERMES_Q),
+];
+const BARENIA_SOAP_SET = [
+  V("Front", HERMES_IMG + "110440V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "110440V0_front_wm_102" + HERMES_Q),
+];
+const PLEINE_FLEUR_GIFT_SET = [
+  V("Front", HERMES_IMG + "118236V0_front_wm_101" + HERMES_Q),
+];
+const BARENIA_GIFT_SET = [
+  V("Front", HERMES_IMG + "116955V0_front_wm_101" + HERMES_Q),
+  V("Open", HERMES_IMG + "116955V0_front_wm_102" + HERMES_Q),
+];
+const HERMESSENCE_LE_GIFT_SET = [
+  V("Front", HERMES_IMG + "118249V0_front_wm_101" + HERMES_Q),
+  V("Flat", HERMES_IMG + "118249V0_front_wm_102" + HERMES_Q),
+];
+const TWILLY_GIFT_SET = [
+  V("Front", HERMES_IMG + "110983V0_front_wm_1" + HERMES_Q),
+  V("Detail", HERMES_IMG + "110983V0_front_wm_2" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "110983V0_front_wm_3" + HERMES_Q),
+];
+const AMBRE_REFILL_SET = [
+  V("Front", HERMES_IMG + "29751_front_wm_101" + HERMES_Q),
+];
+const CEDRE_REFILL_SET = [
+  V("Front", HERMES_IMG + "39937_front_1" + HERMES_Q),
+];
+const ROSE_IKEBANA_REFILL_SET = [
+  V("Front", HERMES_IMG + "38167_front_1" + HERMES_Q),
+];
+const MYRRHE_REFILL_SET = [
+  V("Front", HERMES_IMG + "39935_worn_1" + HERMES_Q),
+];
+const OUD_ALEZAN_CREAM_SET = [
+  V("Front", HERMES_IMG + "117059V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "117059V0_front_wm_102" + HERMES_Q),
+  V("Open", HERMES_IMG + "117059V0_front_wm_103" + HERMES_Q),
+  V("Above", HERMES_IMG + "117059V0_front_wm_104" + HERMES_Q),
+];
+const MUSC_PALLIDA_CREAM_SET = [
+  V("Front", HERMES_IMG + "108377V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "108377V0_front_wm_102" + HERMES_Q),
+  V("Open", HERMES_IMG + "108377V0_front_wm_103" + HERMES_Q),
+];
+const TWILLY_LOTION_SET = [
+  V("Front", HERMES_IMG + "107276V0_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "107276V0_front_wm_102" + HERMES_Q),
+];
+const TWILLY_MIST_SET = [
+  V("Front", HERMES_IMG + "108147V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "108147V0_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "108147V0_front_wm_103" + HERMES_Q),
+];
+const MERVEILLES_MIST_SET = [
+  V("Front", HERMES_IMG + "108145V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "108145V0_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "108145V0_front_wm_103" + HERMES_Q),
+];
+const LOMBRE_SET = [
+  V("Front", HERMES_IMG + "101653V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "101653V0_front_wm_103" + HERMES_Q),
+];
+const LAMBRE_SET = [
+  V("Front", HERMES_IMG + "107246V0_front_wm_101" + HERMES_Q),
+  V("Bottle + orange box", HERMES_IMG + "107246V0_front_wm_102" + HERMES_Q),
+];
+const MATTE_LIPSTICK_SET = [
+  V("Front", HERMES_IMG + "60001MV048_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60001MV048_front_wm_102" + HERMES_Q),
+  V("Open", HERMES_IMG + "60001MV048_front_wm_103" + HERMES_Q),
+  V("Case", HERMES_IMG + "60001MV048_front_wm_104" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60001MV048_worn_105" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60001MV048_worn_106" + HERMES_Q),
+];
+const OMBRES_SABLES_SET = [
+  V("Front", HERMES_IMG + "60875PV007_front_wm_101" + HERMES_Q),
+  V("Pans", HERMES_IMG + "60875PV007_front_wm_104" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60875PV007_front_wm_105" + HERMES_Q),
+  V("Open", HERMES_IMG + "60875PV007_front_wm_106" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60875PV007_worn_102" + HERMES_Q),
+];
+const NAIL_POLISH_SET = [
+  V("Front", HERMES_IMG + "60861VV050_front_wm_101" + HERMES_Q),
+  V("Swatch", HERMES_IMG + "60861VV050_front_wm_104" + HERMES_Q),
+  V("Box", HERMES_IMG + "60861VV050_front_wm_105" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60861VV050_front_wm_106" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60861VV050_worn_102" + HERMES_Q),
+];
+const LES_GRIGRIS_SET = [
+  V("Front", HERMES_IMG + "60863PV002_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60863PV002_front_wm_104" + HERMES_Q),
+  V("Open", HERMES_IMG + "60863PV002_front_wm_105" + HERMES_Q),
+  V("Box", HERMES_IMG + "60863PV002_front_wm_106" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60863PV002_worn_102" + HERMES_Q),
+];
+const HERMESISTIBLE_OIL_SET = [
+  V("Front", HERMES_IMG + "60346HV010_front_wm_101" + HERMES_Q),
+  V("Swatch", HERMES_IMG + "60346HV010_front_wm_104" + HERMES_Q),
+  V("Applicator", HERMES_IMG + "60346HV010_front_wm_105" + HERMES_Q),
+  V("Cap", HERMES_IMG + "60346HV010_front_wm_106" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60346HV010_worn_102" + HERMES_Q),
+];
+const ROUGE_AIRELLE_SET = [
+  V("Front", HERMES_IMG + "60843BV038_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60843BV038_front_wm_104" + HERMES_Q),
+  V("Box", HERMES_IMG + "60843BV038_front_wm_105" + HERMES_Q),
+  V("Case", HERMES_IMG + "60843BV038_front_wm_106" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60843BV038_worn_102" + HERMES_Q),
+];
+const EYELINER_SET = [
+  V("Front", HERMES_IMG + "60574EV001_front_wm_101" + HERMES_Q),
+  V("Box", HERMES_IMG + "60574EV001_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60574EV001_front_wm_103" + HERMES_Q),
+  V("Swatch", HERMES_IMG + "60574EV001_front_wm_106" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60574EV001_worn_105" + HERMES_Q),
+];
+const PETALES_SET = [
+  V("Front", HERMES_IMG + "60365PV001_front_wm_101" + HERMES_Q),
+  V("Pans", HERMES_IMG + "60365PV001_detail_wm_102" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60365PV001_worn_103" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60365PV001_worn_105" + HERMES_Q),
+];
+const MASCARA_SET = [
+  V("Front", HERMES_IMG + "60510EV001_front_wm_101" + HERMES_Q),
+  V("Box", HERMES_IMG + "60510EV001_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60510EV001_front_wm_103" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60510EV001_worn_105" + HERMES_Q),
+];
+const ROSE_CONFETTI_SET = [
+  V("Front", HERMES_IMG + "60487BV027_front_wm_104" + HERMES_Q),
+  V("Case", HERMES_IMG + "60487BV027_front_wm_3" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60487BV027_worn_105" + HERMES_Q),
+];
+const EYE_PENCIL_SET = [
+  V("Front", HERMES_IMG + "60570CV010_front_wm_101" + HERMES_Q),
+  V("Tip", HERMES_IMG + "60570CV010_front_wm_102" + HERMES_Q),
+  V("Cap", HERMES_IMG + "60570CV010_front_wm_103" + HERMES_Q),
+  V("Swatch", HERMES_IMG + "60570CV010_front_wm_106" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60570CV010_worn_105" + HERMES_Q),
+];
+const PLEIN_AIR_SET = [
+  V("Front", HERMES_IMG + "60447PV001_front_wm_101" + HERMES_Q),
+  V("Open", HERMES_IMG + "60447PV001_front_wm_102" + HERMES_Q),
+  V("Box", HERMES_IMG + "60447PV001_front_wm_103" + HERMES_Q),
+];
+const BRUSH_SET = [
+  V("Front", HERMES_IMG + "604440V0_front_wm_101" + HERMES_Q),
+  V("Box", HERMES_IMG + "604440V0_front_wm_102" + HERMES_Q),
+];
+const LIP_MASK_SET = [
+  V("Front", HERMES_IMG + "60855BV000_front_wm_101" + HERMES_Q),
+  V("Closed", HERMES_IMG + "60855BV000_front_wm_104" + HERMES_Q),
+  V("Box", HERMES_IMG + "60855BV000_front_wm_105" + HERMES_Q),
+  V("Flat", HERMES_IMG + "60855BV000_front_wm_106" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60855BV000_worn_103" + HERMES_Q),
+];
+const SILKY_LIPSTICK_SET = [
+  V("Front", HERMES_IMG + "60267TV048_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60267TV048_front_wm_102" + HERMES_Q),
+  V("Case", HERMES_IMG + "60267TV048_front_wm_103" + HERMES_Q),
+  V("Box", HERMES_IMG + "60267TV048_front_wm_104" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60267TV048_worn_105" + HERMES_Q),
+];
+const SATIN_LIPSTICK_SET = [
+  V("Front", HERMES_IMG + "60001SV021_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60001SV021_front_wm_102" + HERMES_Q),
+  V("Case", HERMES_IMG + "60001SV021_front_wm_103" + HERMES_Q),
+  V("Box", HERMES_IMG + "60001SV021_front_wm_104" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60001SV021_worn_105" + HERMES_Q),
+];
+const PRECOMPOSED_SET = [
+  V("Front", HERMES_IMG + "604810V0_front_wm_101" + HERMES_Q),
+  V("Closed", HERMES_IMG + "604810V0_front_wm_102" + HERMES_Q),
+  V("Refills", HERMES_IMG + "604810V0_front_wm_103" + HERMES_Q),
+  V("Worn", HERMES_IMG + "604810V0_worn_105" + HERMES_Q),
+];
+const BARENIA_MIST_SET = [
+  V("Front", HERMES_IMG + "115954V0_front_wm_101" + HERMES_Q),
+  V("Box", HERMES_IMG + "115954V0_front_wm_102" + HERMES_Q),
+  V("Editorial", HERMES_IMG + "115954V0_front_wm_103" + HERMES_Q),
+];
+const MUG_N2_SET = [ V("Front", HERMES_IMG + "081131P_front_wm_101" + HERMES_Q) ];
+const AVALON_SET = [
+  V("Worn", HERMES_IMG + "102668M59_worn_102" + HERMES_Q),
+];
+const MOSAIQUE_PLATE_SET = [
+  V("Front", HERMES_IMG + "035001P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "035001P_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "035001P_front_wm_103" + HERMES_Q),
+];
+const GARDEN_TEAPOT_SET = [
+  V("Front", HERMES_IMG + "043018P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "043018P_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "043018P_front_wm_103" + HERMES_Q),
+];
+const MUG_N1_SET = [ V("Front", HERMES_IMG + "081031P_front_wm_101" + HERMES_Q) ];
+const MUG_N3_SET = [ V("Front", HERMES_IMG + "081231P_front_wm_101" + HERMES_Q) ];
+const MUG_SET3_SET = [ V("Front", HERMES_IMG + "081431P_front_wm_101" + HERMES_Q) ];
+const ISKENDER_SET = [
+  V("Front", HERMES_IMG + "010108P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "010108P_front_wm_102" + HERMES_Q),
+];
+
 export function galleryForProduct(
   p: GalleryProduct & { galleryViews?: string[] },
   colorIndex: number,
@@ -255,7 +1418,11 @@ export function galleryForProduct(
   const colorName = (p.colors?.[colorIndex]?.name ?? p.colors?.[0]?.name ?? "").toLowerCase();
   let set: { label: string; src: string; videoSrc?: string }[] | null = null;
 
-  if (name === "Kelly Pocket 18 belt") {
+  if (p.id !== undefined && RTW_GALLERY[p.id]) {
+    // Original Hermes gallery for audited ready-to-wear (id-keyed: colourways share names).
+    set = RTW_GALLERY[p.id];
+    if (name === "Long sleeveless dress" && /noir|black/.test(colorName)) set = LONG_NOIR;
+  } else if (name === "Kelly Pocket 18 belt") {
     set = /vert/.test(colorName) ? KELLY_VERT : /etoupe/.test(colorName) ? KELLY_ETOUPE : KELLY_NOIR;
   } else if (name === "Bouncing sneaker, Blanc") {
     if (/noir|black/.test(colorName)) set = bouncingAlt(bNoirFront, bNoirBack, bNoirAbove);
@@ -265,8 +1432,6 @@ export function galleryForProduct(
     set = /blue/.test(colorName) ? MID_BLUE : MID_NOIR;
   } else if (name === "Long sleeveless dress") {
     set = LONG_SET;
-  } else if (name === "Picotin Lock 18 pocket bag") {
-    set = [V("Front", picFront), V("Side", picSide), V("Above", picAbove), V("Back", picBack)];
   } else if (name === "Le Philateliste du Faubourg scarf 90") {
     set = [V("Flat", phFlat), V("Worn", phWorn), V("Detail", phDetail)];
   } else if (name === "Embroidered pocket dress") {
@@ -283,6 +1448,336 @@ export function galleryForProduct(
   } else if (name === "Jackson sandal") {
     // Original Hermes photos, hotlinked (user instruction 2026-11-09).
     set = JACKSON_SET;
+  } else if (name === "Ambre Narguile Eau de toilette") {
+    set = AMBRE_NARGUILE_SET;
+  } else if (name === "Myrrhe Eglantine Eau de toilette") {
+    set = MYRRHE_EGLANTINE_SET;
+  } else if (name === "Rose Ikebana Eau de toilette") {
+    set = ROSE_IKEBANA_SET;
+  } else if (name === "Cedre Sambac Eau de toilette") {
+    set = CEDRE_SAMBAC_SET;
+  } else if (name === "Vetiver Tonka Eau de toilette") {
+    set = VETIVER_TONKA_SET;
+  } else if (name === "Violette Volynka Eau de toilette") {
+    set = VIOLETTE_VOLYNKA_SET;
+  } else if (name === "Agar Ebene Eau de toilette") {
+    set = AGAR_EBENE_SET;
+  } else if (name === "Poivre Samarcande Eau de toilette") {
+    set = POIVRE_SAMARCANDE_SET;
+  } else if (name === "Osmanthe Yunnan Eau de toilette") {
+    set = OSMANTHE_YUNNAN_SET;
+  } else if (name === "Iris Ukiyoe Eau de toilette") {
+    set = IRIS_UKIYOE_SET;
+  } else if (name === "Santal Massoia Eau de toilette") {
+    set = SANTAL_MASSOIA_SET;
+  } else if (name === "Cuir d'Ange Eau de toilette") {
+    set = CUIR_DANGE_SET;
+  } else if (name === "Musc Pallida, Eau de parfum, 3.4 fl.oz") {
+    set = MUSC_PALLIDA_EDP_SET;
+  } else if (name === "Musc Pallida refill, Eau de parfum") {
+    set = MUSC_PALLIDA_REFILL_SET;
+  } else if (name === "Oud Alezan Eau de parfum") {
+    set = OUD_ALEZAN_SET;
+  } else if (name === "Ginseng biloba Eau de parfum") {
+    set = GINSENG_BILOBA_SET;
+  } else if (name === "Terre d'Hermès Eau de parfum intense") {
+    set = TERRE_INTENSE_SET;
+  } else if (name === "Oud Esma Essence de parfum") {
+    set = OUD_ESMA_SET;
+  } else if (name === "Cardamusc Essence de parfum") {
+    set = CARDAMUSC_SET;
+  } else if (name === "Musc Pallida Essence de parfum") {
+    set = MUSC_PALLIDA_ESSENCE_SET;
+  } else if (name === "Barénia Eau de parfum") {
+    set = BARENIA_EDP_SET;
+  } else if (name === "Barénia Pleine Fleur Eau de parfum") {
+    set = PLEINE_FLEUR_SET;
+  } else if (name === "Barénia Perfumed soap") {
+    set = BARENIA_SOAP_SET;
+  } else if (name === "Barénia Pleine Fleur Eau de parfum gift set") {
+    set = PLEINE_FLEUR_GIFT_SET;
+  } else if (name === "Barénia eau de parfum gift set – The fragrance ritual") {
+    set = BARENIA_GIFT_SET;
+  } else if (name === "Hermessence gift set, Limited edition") {
+    set = HERMESSENCE_LE_GIFT_SET;
+  } else if (name === "Twilly d'Hermès eau de parfum gift set – The fragrance ritual") {
+    set = TWILLY_GIFT_SET;
+  } else if (name === "Ambre Narguile Eau de toilette refill") {
+    set = AMBRE_REFILL_SET;
+  } else if (name === "Cedre Sambac Eau de toilette refill") {
+    set = CEDRE_REFILL_SET;
+  } else if (name === "Rose Ikebana Eau de toilette refill") {
+    set = ROSE_IKEBANA_REFILL_SET;
+  } else if (name === "Myrrhe Eglantine Eau de toilette refill") {
+    set = MYRRHE_REFILL_SET;
+  } else if (name === "Oud Alezan Perfumed body cream") {
+    set = OUD_ALEZAN_CREAM_SET;
+  } else if (name === "Musc Pallida Perfumed body cream") {
+    set = MUSC_PALLIDA_CREAM_SET;
+  } else if (name === "Twilly d'Hermès Moisturizing body lotion") {
+    set = TWILLY_LOTION_SET;
+  } else if (name === "Twilly d'Hermes Perfumed hair mist") {
+    set = TWILLY_MIST_SET;
+  } else if (name === "Eau des Merveilles Perfumed hair mist") {
+    set = MERVEILLES_MIST_SET;
+  } else if (name === "L'Ombre des Merveilles Eau de parfum") {
+    set = LOMBRE_SET;
+  } else if (name === "L'Ambre des Merveilles Eau de parfum") {
+    set = LAMBRE_SET;
+  } else if (name === "Matte lipstick, Rose Boisé") {
+    set = MATTE_LIPSTICK_SET;
+  } else if (name === "Ombres d'Hermès, Eye shadow quartet, Ombres Sables") {
+    set = OMBRES_SABLES_SET;
+  } else if (name === "Les Mains Hermès, Nail polish, Or Rose") {
+    set = NAIL_POLISH_SET;
+  } else if (name === "Les Grigris Hermès Face and eye illuminating powder, Limited edition, Or Permabrass") {
+    set = LES_GRIGRIS_SET;
+  } else if (name === "HERMÈSISTIBLE Infused Care Oil, Rose Nashi") {
+    set = HERMESISTIBLE_OIL_SET;
+  } else if (name === "ROSE HERMÈS Rosy lip enhancer, Limited Edition, Rouge Airelle") {
+    set = ROUGE_AIRELLE_SET;
+  } else if (name === "TRAIT D'HERMÈS Precision eyeliner, Encre Noire") {
+    set = EYELINER_SET;
+  } else if (name === "OMBRES D'HERMÈS Eye shadows, Ombres Pétales") {
+    set = PETALES_SET;
+  } else if (name === "TRAIT D'HERMÈS Revitalizing care mascara, Noir Fusain") {
+    set = MASCARA_SET;
+  } else if (name === "ROSE HERMÈS Rosy lip glossy enhancer, Rose Confetti") {
+    set = ROSE_CONFETTI_SET;
+  } else if (name === "TRAIT D'HERMÈS Eye pencil, Or Permabrass") {
+    set = EYE_PENCIL_SET;
+  } else if (name === "HERMÈS PLEIN AIR H Trio healthy glow mineral powder, Tottori") {
+    set = PLEIN_AIR_SET;
+  } else if (name === "LES PINCEAUX HERMÈS Precision makeup brush, le Precis") {
+    set = BRUSH_SET;
+  } else if (name === "Rouge Hermès Nourishing lip care mask") {
+    set = LIP_MASK_SET;
+  } else if (name === "ROUGE HERMÈS Silky Lipstick Shine, Rose Boisé") {
+    set = SILKY_LIPSTICK_SET;
+  } else if (name === "ROUGE HERMÈS Satin lipstick, Limited Edition, Rose Épicé") {
+    set = SATIN_LIPSTICK_SET;
+  } else if (name === "ROUGE HERMÈS Pre-composed gift set, Limited edition") {
+    set = PRECOMPOSED_SET;
+  } else if (name === "Barénia Perfumed hair mist") {
+    set = BARENIA_MIST_SET;
+  } else if (name === "Chevaux a la Couverture mug n°2") {
+    set = MUG_N2_SET;
+  } else if (name === "Avalon throw blanket") {
+    set = AVALON_SET;
+  } else if (name === "Mosaique au 24 dinner plate, set of 2") {
+    set = MOSAIQUE_PLATE_SET;
+  } else if (name === "A Walk in the Garden teapot") {
+    set = GARDEN_TEAPOT_SET;
+  } else if (name === "Chevaux a la Couverture set of 2 mugs (n°1 and 2)") {
+    set = MUG_N1_SET;
+  } else if (name === "Chevaux a la Couverture mug n°3") {
+    set = MUG_N3_SET;
+  } else if (name === "Chevaux a la Couverture set of 3 mugs") {
+    set = MUG_SET3_SET;
+  } else if (name === "Iskender white wine glass") {
+    set = ISKENDER_SET;
+  } else if (name === "Bouncing sneaker") {
+    set = BOUNCING_SET;
+  } else if (name === "Jet sneaker") {
+    set = JET_SET;
+  } else if (name === "Neon sneaker") {
+    set = NEON_SET;
+  } else if (name === "Next sneaker") {
+    set = NEXT_SET;
+  } else if (name === "Nobu sneaker") {
+    set = NOBU_SET;
+  } else if (name === "Master sneaker") {
+    set = MASTER_SET;
+  } else if (name === "Day sneaker") {
+    set = DAY_SET;
+  } else if (name === "Match sneaker") {
+    set = MATCH_SET;
+  } else if (name === "Kid sneaker") {
+    set = KID_SET;
+  } else if (name === "Leader sneaker") {
+    // One name, three real colourways at three prices — gallery follows price.
+    set = p.price === 1675 ? LEADER_1675_SET : p.price === 1525 ? LEADER_1525_SET : LEADER_1600_SET;
+  } else if (name === "Lucky slip-on sneaker") {
+    set = LUCKY_SET;
+  } else if (name === "Loop sneaker") {
+    set = p.price === 1750 ? LOOP_1750_SET : LOOP_1525_SET;
+  } else if (name === "Quicker sneaker") {
+    set = QUICKER_SET;
+  } else if (name === "Nine ankle boot") {
+    set = NINE_SET;
+  } else if (name === "Nathan ankle boot") {
+    set = NATHAN_SET;
+  } else if (name === "Mateo ankle boot") {
+    set = MATEO_SET;
+  } else if (name === "Jeff ankle boot") {
+    set = JEFF_SET;
+  } else if (name === "Noe loafer") {
+    set = NOE_SET;
+  } else if (name === "Newton loafer") {
+    set = NEWTON_SET;
+  } else if (name === "Honore loafer") {
+    set = HONORE_SET;
+  } else if (name === "Mind loafer") {
+    set = MIND_SET;
+  } else if (name === "Paris loafer") {
+    set = PARIS_SET;
+  } else if (name === "Member loafer") {
+    set = MEMBER_SET;
+  } else if (name === "Nicolas loafer") {
+    set = NICOLAS_SET;
+  } else if (name === "Nod loafer") {
+    set = NOD_SET;
+  } else if (name === "Low loafer") {
+    set = LOW_SET;
+  } else if (name === "Noon mule") {
+    set = NOON_SET;
+  } else if (name === "Mix mule") {
+    set = p.price === 1425 ? MIX_1425_SET : MIX_1150_SET;
+  } else if (name === "Nick mule") {
+    set = NICK_SET;
+  } else if (name === "Nils derby shoe") {
+    set = NILS_SET;
+  } else if (name === "Now derby shoe") {
+    set = NOW_SET;
+  } else if (name === "Keneth derby shoe") {
+    set = KENETH_SET;
+  } else if (name === "Moreno derby shoe") {
+    set = MORENO_SET;
+  } else if (name === "Lawrence derby shoe") {
+    set = LAWRENCE_SET;
+  } else if (name === "Middle derby shoe") {
+    set = MIDDLE_SET;
+  } else if (name === "Lead derby shoe") {
+    set = LEAD_SET;
+  } else if (name === "May derby shoe") {
+    set = MAY_SET;
+  } else if (name === "Picotin Lock 18 pocket bag") {
+    // Original Hermes photos, hotlinked (user instruction 2026-11-09).
+    // Replaces the generated picotin-front/side/above/back set: only the
+    // front view exists on the CDN for this ref.
+    set = PICOTIN_POCKET_SET;
+  } else if (name === "Le Petit Sac bag") {
+    set = LE_PETIT_SAC_SET;
+  } else if (name === "Double Longe bag") {
+    set = DOUBLE_LONGE_SET;
+  } else if (name === "Tablier Sellier bag") {
+    set = TABLIER_SET;
+  } else if (name === "Bolide 1923 mini bag") {
+    set = BOLIDE_1923_MINI_SET;
+  } else if (name === "Videpoches bag") {
+    set = VIDEPOCHES_SET;
+  } else if (name === "Neo Double Sens 35 bicolor bag") {
+    set = NEO_DOUBLE_SENS_SET;
+  } else if (name === "Neo Garden Voyage 41 bredies bag") {
+    set = NEO_GARDEN_BREDIES_SET;
+  } else if (name === "Medor bag") {
+    set = MEDOR_SET;
+  } else if (name === "Arcon slim bag") {
+    set = ARCON_SLIM_SET;
+  } else if (name === "24/24 - 21 bag") {
+    set = TWENTYFOUR_SET;
+  } else if (name === "Hermès Geta bag") {
+    set = GETA_SET;
+  } else if (name === "Neo Garden Voyage 41 bag") {
+    set = NEO_GARDEN_41_SET;
+  } else if (name === "Messenger Attelage bag") {
+    set = MESSENGER_ATTELAGE_SET;
+  } else if (name === "Besace Attelee bag") {
+    set = BESACE_SET;
+  } else if (name === "Cliquetis bag") {
+    set = CLIQUETIS_SET;
+  } else if (name === "Jypsiere mini bag") {
+    set = JYPSIERE_MINI_SET;
+  } else if (name === "Mallette bag") {
+    set = MALLETTE_SET;
+  } else if (name === "Jige Elan 29 colorblock clutch") {
+    set = JIGE_SET;
+  } else if (name === "Lassoie Hermès bag") {
+    set = LASSOIE_SET;
+  } else if (name === "In-the-Loop plush belt bag") {
+    set = ITL_PLUSH_SET;
+  } else if (name === "Etriviere Shopping voyage bag") {
+    set = ETRIVIERE_SET;
+  } else if (name === "Roulis mini bag") {
+    set = ROULIS_MINI_SET;
+  } else if (name === "Lindy 26 bag") {
+    set = LINDY_26_SET;
+  } else if (name === "Silkycity 33 bag") {
+    set = SILKYCITY_SET;
+  } else if (name === "Hermès In-the-Loop 18 bag") {
+    set = ITL_18_SET;
+  } else if (name === "Hermès Della Cavalleria Elan bag") {
+    set = DELLA_SET;
+  } else if (name === "Hermès Geta slim bag") {
+    set = GETA_SLIM_SET;
+  } else if (name === "Mini Medor bag") {
+    set = MINI_MEDOR_SET;
+  } else if (name === "P'tit Arcon bag") {
+    set = PTIT_ARCON_SET;
+  } else if (name === "Halzan 25 bag") {
+    set = HALZAN_25_SET;
+  } else if (name === "Chaine d'ancre Contour bracelet, white gold") {
+    set = CONTOUR_BRACELET_SET;
+  } else if (name === "Clic Clac H bracelet") {
+    set = CLICCLAC_SET;
+  } else if (name === "Mini Thalassa bracelet") {
+    set = THALASSA_SET;
+  } else if (name === "Kelly Chaine bracelet, small model") {
+    set = KELLY_CHAINE_BRACELET_SET;
+  } else if (name === "Kelly Gourmette bracelet, very small model") {
+    set = KELLY_GOURMETTE_SET;
+  } else if (name === "Vertige bracelet") {
+    set = VERTIGE_SET;
+  } else if (name === "Chaine d'ancre Chaos Nano bracelet") {
+    set = CHAOS_NANO_SET;
+  } else if (name === "Boucle Sellier “On The Rocks” bracelet, small model") {
+    set = BOUCLE_SELLIER_SET;
+  } else if (name === "Chaine d'ancre Verso bracelet, large model") {
+    set = VERSO_SET;
+  } else if (name === "Clou de forge bracelet") {
+    set = CLOU_FORGE_SET;
+  } else if (name === "Planètes & Météores bracelet") {
+    set = PLANETES_SET;
+  } else if (name === "Farandole bracelet") {
+    set = FARANDOLE_SET;
+  } else if (name === "Amulettes Kelly bracelet") {
+    set = AMULETTES_KELLY_SET;
+  } else if (name === "Amulettes Constance bracelet") {
+    set = AMULETTES_CONSTANCE_SET;
+  } else if (name === "Kelly Cadenas double bracelet, small model") {
+    set = KELLY_CADENAS_SET;
+  } else if (name === "Cape Cod watch, Large model, 37 mm") {
+    set = CAPECOD_LARGE_SET;
+  } else if (name === "Cape Cod watch, Small model, 31 mm") {
+    set = CAPECOD_SMALL_SET;
+  } else if (name === "Hermès H08 watch, 42 mm") {
+    set = H08_SET;
+  } else if (name === "Hermès Cut watch, Large model, 36 mm") {
+    set = CUT_SET;
+  } else if (name === "Kelly watch, Mini model, 16 mm") {
+    set = KELLY_WATCH_MINI_SET;
+  } else if (name === "Arceau Petite Lune watch, Large model, 38 mm") {
+    set = ARCEAU_LUNE_SET;
+  } else if (name === "Arceau Chronographe watch, 42 mm") {
+    set = ARCEAU_CHRONO_SET;
+  } else if (name === "Heure H watch, Medium model, 30 mm") {
+    set = HEUREH_MED_SET;
+  } else if (name === "Heure H watch, Small model, 25 mm") {
+    set = HEUREH_SMALL_SET;
+  } else if (name === "Hermès H08 Chronographe watch, 45 mm") {
+    set = H08_CHRONO_SET;
+  } else if (name === "Arceau Le Temps Voyageur watch, 38 mm") {
+    set = TEMPS_VOYAGEUR_SET;
+  } else if (name === "Cape Cod watch, Mini model, 27 mm") {
+    set = CAPECOD_MINI_SET;
+  } else if (name === "Nantucket watch, Small model, 29 mm") {
+    set = NANTUCKET_SET;
+  } else if (name === "Faubourg Marguerite watch, Mini model, 15 mm") {
+    set = FAUBOURG_MARGUERITE_SET;
+  } else if (name === "Faubourg watch, Mini model, 15 mm") {
+    set = FAUBOURG_SET;
+  } else if (name === "Hermès Cut Le Temps Suspendu watch, Large model, 39 mm") {
+    set = CUT_SUSPENDU_SET;
   }
 
   if (!set) {

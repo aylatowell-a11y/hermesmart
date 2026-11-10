@@ -418,7 +418,7 @@ export function App() {
   useEffect(() => { save("hlx-cart", cart); }, [cart]);
   useEffect(() => { save("hlx-user", user); }, [user]);
   useEffect(() => { try { let k = localStorage.getItem("hlx-visitor"); if (!k) { k = "v-" + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("hlx-visitor", k); } const day = new Date().toISOString().slice(0, 10); const flag = `hlx-visit-${day}`; if (!localStorage.getItem(flag)) { localStorage.setItem(flag, "1"); api.recordVisit({ visitorKey: k, day }).catch(() => {}); } } catch { /* ignore */ } }, []);
-  const go = (v: View) => { if (v.t === "category" || v.t === "checkout" || v.t === "cart" || v.t === "page" || v.t === "about" || v.t === "product") pulse(2200); setView(v); setMobileNav(false); setMenuCat(null); topRef.current?.scrollIntoView(); window.scrollTo({ top: 0 }); };
+  const go = (v: View) => { setView(v); setMobileNav(false); setMenuCat(null); topRef.current?.scrollIntoView(); window.scrollTo({ top: 0 }); };
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const cartTotal = cart.reduce((s, i) => s + i.qty * i.price, 0);
 
@@ -436,7 +436,23 @@ export function App() {
   const searchResults = useMemo(() => {
     const q = searchQ.trim().toLowerCase();
     if (!q) return [];
-    return products.filter((p) => [p.name, p.category, p.subcategory, p.line, p.material, p.theme].join(" ").toLowerCase().includes(q));
+    // Plural/singular-insensitive search: singularize tokens on both sides
+    // ("sneakers" matches "sneaker", "scarves" matches "scarf") and require
+    // every query term to match, so "silk scarf" narrows instead of OR-ing.
+    const VARIANTS: Record<string, string> = { scarves: "scarf", sneakers: "sneaker", glasses: "glass" };
+    const norm = (w: string) => {
+      const v = VARIANTS[w];
+      if (v) return v;
+      if (/ies$/.test(w) && w.length > 3) return w.slice(0, -3) + "y";
+      if (/s$/.test(w) && !/ss$/.test(w)) return w.slice(0, -1);
+      return w;
+    };
+    const terms = q.split(/\s+/).map(norm);
+    return products.filter((p) => {
+      const tokens = [p.name, p.category, p.subcategory, p.line, p.material, p.theme]
+        .join(" ").toLowerCase().split(/[^a-z0-9\u00e0-\u00ff]+/).map(norm);
+      return terms.every((t) => tokens.some((tok) => tok.includes(t)));
+    });
   }, [searchQ, products]);
 
   if (store.isPending) return <div className="flex min-h-screen items-center justify-center" style={{ background: "#f7f2ec" }}><img src={carriageBlackImg} alt="Hermès Paris" className="h-10 w-auto object-contain" /></div>;
@@ -490,8 +506,8 @@ export function App() {
                 "Sign up" opens the create-account page, "Login" the sign-in
                 page. On mobile they are hidden; the Account icon opens the
                 account page there. */}
-            <button aria-label="Sign up" className="hidden px-2 text-[11px] font-medium uppercase tracking-[0.18em] hover:underline lg:block" style={{ color: ink }} onClick={() => go({ t: "account", mode: "signup" })}>Sign up</button>
-            <button aria-label="Login" className="hidden px-2 text-[11px] font-medium uppercase tracking-[0.18em] hover:underline lg:block" style={{ color: ink }} onClick={() => go({ t: "account", mode: "login" })}>Login</button>
+            <button aria-label="Sign up" className="hidden px-2 text-[12px] font-semibold uppercase tracking-[0.18em] hover:underline lg:block" style={{ color: ink, textShadow: onHero ? "0 1px 2px rgba(0,0,0,.45)" : undefined }} onClick={() => go({ t: "account", mode: "signup" })}>Sign up</button>
+            <button aria-label="Login" className="hidden px-2 text-[12px] font-semibold uppercase tracking-[0.18em] hover:underline lg:block" style={{ color: ink, textShadow: onHero ? "0 1px 2px rgba(0,0,0,.45)" : undefined }} onClick={() => go({ t: "account", mode: "login" })}>Login</button>
             <button aria-label="Account" className="flex h-9 w-9 items-center justify-center" onClick={() => go({ t: "account" })}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.6 4.2-5.2 7.5-5.2s6.1 1.6 7.5 5.2" /></svg>
             </button>
@@ -692,7 +708,6 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
   const centerSlide = (i: number, smooth = true) => {
     // Wrap around the 15 controls, as on hermes.com (15 → 1 and 1 → 15).
     const idx = ((i % CAROUSEL_THEMES.length) + CAROUSEL_THEMES.length) % CAROUSEL_THEMES.length;
-    if (idx !== activeIdx) pulse(1200);
     const el = carouselRef.current;
     const slide = el?.querySelectorAll<HTMLElement>("[data-slide]")[idx];
     if (slide) slide.scrollIntoView({ behavior: smooth ? "smooth" : "auto", inline: "center", block: "nearest" });
@@ -1279,10 +1294,10 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
         </div>
       )}
 
-      {loadingMore && <LoadingVeil leaving={moreLeaving} ms={2200} />}
+      {loadingMore && <LoadingVeil leaving={moreLeaving} ms={400} />}
       {!mosaic && visible < filtered.length && (
         <div className="mt-12 text-center">
-          <button aria-label={loadingMore ? "Loading, please wait." : "See more products"} disabled={loadingMore} className="border border-black px-10 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] disabled:opacity-60" onClick={() => { setLoadingMore(true); setMoreLeaving(false); setTimeout(() => setMoreLeaving(true), 1900); setTimeout(() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadingMore(false); setMoreLeaving(false); setLoadedMsg(`${added} products added. ${next} out of ${filtered.length} displayed`); }, 2200); }}>SEE MORE PRODUCTS</button>
+          <button aria-label={loadingMore ? "Loading, please wait." : "See more products"} disabled={loadingMore} className="border border-black px-10 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] disabled:opacity-60" onClick={() => { setLoadingMore(true); setMoreLeaving(false); setTimeout(() => setMoreLeaving(true), 100); setTimeout(() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadingMore(false); setMoreLeaving(false); setLoadedMsg(`${added} products added. ${next} out of ${filtered.length} displayed`); }, 400); }}>SEE MORE PRODUCTS</button>
           <div className="mx-auto mt-5 h-px w-64 bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${filtered.length ? (Math.min(visible, filtered.length) / filtered.length) * 100 : 0}%` }} /></div>
           <p className="mt-2 text-xs text-neutral-500">{Math.min(visible, filtered.length)} products viewed</p>
           {loadedMsg && <p className="mt-1 text-xs text-neutral-500" role="status">{loadedMsg}</p>}
@@ -2061,7 +2076,7 @@ function CartPage({ cart, setCart, settings, go, total, count }: { cart: CartIte
               <h1 className="text-xs font-semibold uppercase tracking-[0.25em]">You have {count} item{count === 1 ? "" : "s"} in your cart</h1>
               {cart.map((i) => (
                 <div key={i.key} className="mt-5 flex gap-4 border-b border-black/10 pb-5">
-                  <button aria-label={`Open ${i.name}`} className="h-24 w-24 shrink-0 overflow-hidden" onClick={() => go({ t: "product", id: i.productId })}><img src={productImageFor({ name: i.name })} alt={i.name} className="h-full w-full object-cover" /></button>
+                  <button aria-label={`Open ${i.name}`} className="h-24 w-24 shrink-0 overflow-hidden" onClick={() => go({ t: "product", id: i.productId })}><img src={productImageFor({ name: i.name, price: i.price })} alt={i.name} className="h-full w-full object-cover" /></button>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm">{i.name}</p>
                     <p className="mt-0.5 text-xs text-neutral-500">{i.color ? `Colour: ${i.color}` : ""}{i.size ? ` · Size: ${i.size}` : ""}{i.refCode ? <><br />Ref: {i.refCode}</> : null}</p>
@@ -2581,7 +2596,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
           <div className="px-5 pb-5">
             {cart.map((i) => (
               <div key={i.key} className="flex items-center gap-3 border-t border-black/10 py-3">
-                <span className="h-14 w-14 shrink-0 overflow-hidden" aria-hidden="true"><img src={productImageFor({ name: i.name })} alt="" className="h-full w-full object-cover" /></span>
+                <span className="h-14 w-14 shrink-0 overflow-hidden" aria-hidden="true"><img src={productImageFor({ name: i.name, price: i.price })} alt="" className="h-full w-full object-cover" /></span>
                 <span className="min-w-0 flex-1 text-sm">{i.name}<span className="block text-xs text-neutral-500">{i.color}{i.size ? ` · ${i.size}` : ""} · Qty {i.qty}</span></span>
                 <span className="text-sm">{fmt2(i.price * i.qty)}</span>
               </div>
