@@ -437,7 +437,7 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   "Chaine d'ancre Contour bracelet, white gold":
     "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-contour-bracelet--123405B%2000-front-wm-2-0-0-1000-1000_g.jpg", // V, ref H123405Bv00, $5,400
   "Colliers et Laisses pour Chiens scarf 90": scarf90V2,
-  "Turf Les Courses Twilly": twillyTurf,
+  "Turf Les Courses Twilly": "https://assets.hermes.com/is/image/hermesproduct/061144S%2005_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // Original Hermes photo, hotlinked (verified HTTP 200, 2026-11-10).
   // Original Hermes photo, hotlinked (CDN probe 2026-11-10, spaced ID
   // 251526S 02). No flat front view exists on the CDN — the tile is the
   // worn_1 model shot (verified: beige/brown striped stole).
@@ -797,7 +797,7 @@ export function productImageFor(p: { id?: number; price?: number; name: string; 
   const seed = `${p.name}#${p.id ?? ""}`;
   const n = `${p.name} ${p.subcategory ?? ""}`.toLowerCase();
   const col = (p.colors?.[0]?.name ?? "").toLowerCase();
-  if (/twilly/.test(n)) return twillyTurf;
+  if (/twilly/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/061144S%2005_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$"; // Original Hermes photo, hotlinked (verified HTTP 200, 2026-11-10).
   if (/scarf|shawl|stole|silk/.test(n) && !/gift set/.test(n)) {
     if (/45/.test(n)) return palonniersScarf45;
     return pick(SCARF_POOL, seed);

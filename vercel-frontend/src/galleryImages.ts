@@ -25,6 +25,7 @@
 // Hermes HLS stream — the HLS hotlink froze on its poster in the browser,
 // so it was replaced 2026-11-10). Each clip's poster frame was visually
 // confirmed to show the correct dress.
+import bolidePlume45 from "./assets/products/bolide-plume-45.webp";
 import kellyVertFront from "./assets/gallery/kelly-belt-vert-front.webp";
 import kellyVertWorn from "./assets/gallery/kelly-belt-vert-worn.webp";
 import kellyVertFront2 from "./assets/gallery/kelly-belt-vert-front2.webp";
@@ -1884,6 +1885,12 @@ export function galleryForProduct(
   } else if (name === "Jackson sandal") {
     // Original Hermes photos, hotlinked (user instruction 2026-11-09).
     set = JACKSON_SET;
+  } else if (name === "Bolide Plume 45 bag") {
+    // Invented product (no original on hermes.com). Its gallery fell through
+    // to the bag pool and showed a Kelly-style tan top-handle bag while the
+    // colour is Noir (found live 2026-11-10). Use its own generated Bolide
+    // dome-bag tile photo so the gallery shows the correct product.
+    set = [V("Front", bolidePlume45)];
   } else if (name === "Ambre Narguile Eau de toilette") {
     set = AMBRE_NARGUILE_SET;
   } else if (name === "Myrrhe Eglantine Eau de toilette") {
