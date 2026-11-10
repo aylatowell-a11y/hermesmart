@@ -2373,7 +2373,7 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
       <section className="bg-[#fffcf7] px-5 py-5" aria-label="The orange box section">
         <div className="border-b border-[#f6f1eb] pb-4"><h2 className={CO_HEAD_LG}>The Orange Box</h2></div>
         <div className="flex items-center gap-4 py-4">
-          <img src="/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
+          <img src="https://www.hermes.com/us/en/assets/images/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
           <p className="text-xs leading-5 text-black">All orders are delivered in an orange box tied with a Bolduc ribbon, with the exception of <button aria-label="Certain items exceptions from cart" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certain items</button></p>
         </div>
       </section>
@@ -3416,7 +3416,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
       <section className="bg-[#fffcf7] px-4 pt-0 lg:px-6" aria-label="The orange box section">
         <div className="flex min-h-[56px] items-center border-b border-[#f6f1eb]"><h2 className={CO_HEAD_LG}>The Orange Box</h2></div>
         <div className="flex items-center gap-4 py-4">
-          <img src="/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
+          <img src="https://www.hermes.com/us/en/assets/images/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
           <p className="text-xs leading-5 text-black">All orders are delivered in an orange box tied with a Bolduc ribbon, with the exception of <button aria-label="Certain items exceptions" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certain items</button></p>
         </div>
       </section>
