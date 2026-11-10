@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Overpass+Mono:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tailwindcss-safe-area";
 
@@ -29,9 +29,10 @@
   --space-border: var(--border);
   --space-accent: var(--accent);
 }
-.font-serif-d { font-family: "Playfair Display", Georgia, "Times New Roman", serif; }
-@media (min-width: 1024px) { .product-name { font-family: "Playfair Display", Georgia, "Times New Roman", serif; } }
-body { font-family: "Inter", "Helvetica Neue", system-ui, sans-serif; background: var(--bg); color: var(--text); }
+.font-serif-d { font-family: "EB Garamond", "Bell MT", Georgia, "Times New Roman", serif; }
+.font-mono-d { font-family: "Overpass Mono", "Gill Sans MT", Calibri, monospace; }
+@media (min-width: 1024px) { .product-name { font-family: "Manrope", "Roboto", sans-serif; } }
+body { font-family: "Manrope", "Roboto", "Helvetica Neue", system-ui, sans-serif; background: var(--bg); color: var(--text); }
 @keyframes slideInRight { from { transform: translateX(100%);} to { transform: translateX(0);} }
 @keyframes slideInLeft { from { transform: translateX(-100%);} to { transform: translateX(0);} }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }

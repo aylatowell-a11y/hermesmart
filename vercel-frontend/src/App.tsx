@@ -273,7 +273,7 @@ function HermesLogo({ settings, light, variant = "full" }: { settings: Settings;
   if (variant === "header") {
     // Header on hermes.com: ONLY the small carriage emblem, dead-centre —
     // white while over the dark hero image, black once on the cream header.
-    return <img src={light ? carriageWhiteImg : carriageBlackImg} alt={raw} className="h-[26px] w-auto object-contain lg:h-[30px]" />;
+    return <img src={light ? carriageWhiteImg : carriageBlackImg} alt={raw} className="h-[36px] w-auto object-contain" />;
   }
   if (variant === "compact") {
     // Cart / checkout top: ONLY the carriage emblem, centred.
@@ -283,7 +283,7 @@ function HermesLogo({ settings, light, variant = "full" }: { settings: Settings;
     // Desktop full header (top of page / scrolling up): the full HERMÈS PARIS
     // lockup file — carriage above, HERMÈS, PARIS below — centred, in the
     // colour matching the surface (white over the hero, black on white).
-    return <img src={light ? logoWhiteImg : logoBlackImg} alt={raw} className="h-[52px] w-auto object-contain" />;
+    return <img src={light ? logoWhiteImg : logoBlackImg} alt={raw} className="h-[60px] w-auto object-contain" />;
   }
   if (mode === "logo") {
     return <img src={light ? carriageWhiteImg : carriageBlackImg} alt={raw} className={variant === "brand" ? "h-10 w-auto object-contain" : "h-12 w-auto object-contain"} />;
@@ -386,21 +386,21 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, portrait }: { p: Pro
         // Category tile, as on hermes.com: the colour is appended to the
         // name ("Le Petit Sac bag, Beige/Natural"), the price sits below,
         // and a Quick buy bag button (sneaker pages) ends the text row.
-        <div className="mt-3 flex items-start justify-between gap-2">
+        <div className="mt-2 flex items-start justify-between gap-2">
           <div>
-            <p className="product-name text-left text-sm text-[var(--text)]">{p.name}{p.colors[0] ? `, ${p.colors[0].name}` : ""}</p>
-            <p className="mt-0.5 text-left text-sm text-[var(--text)]">{priceText(p)}</p>
+            <p className="product-name px-2 text-left text-xs leading-5 text-[var(--text)]">{p.name}{p.colors[0] ? <span className="sr-only">, {p.colors[0].name}</span> : ""}</p>
+            <p className="mt-0.5 px-2 text-left text-xs leading-5 text-[var(--text)]">{priceText(p)}</p>
           </div>
           {onQuickBuy && p.status === "available" && (
-            <button aria-label={`Quick buy ${p.name}`} className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center border border-black/25 bg-white transition hover:bg-black hover:text-white"
+            <button aria-label={`Quick buy ${p.name}`} className="mt-[5px] flex h-9 w-9 shrink-0 items-center justify-center border border-black/25 bg-white transition hover:bg-black hover:text-white"
               onClick={(e) => { e.stopPropagation(); onQuickBuy(p); }}>{bagIcon}</button>
           )}
         </div>
       ) : (
         <>
-          <p className={`product-name mt-3 text-left ${portrait ? "px-2 text-[13px] leading-snug sm:px-0 sm:text-sm" : "text-sm"} text-[var(--text)]`}>{p.name}</p>
-          {p.colors[0] && <p className={`mt-0.5 text-left ${portrait ? "px-2 text-[11px] sm:px-0 sm:text-xs" : "text-xs"} text-neutral-500`}>{p.colors[0].name}</p>}
-          <p className={`mt-0.5 text-left ${portrait ? "px-2 text-[13px] sm:px-0 sm:text-sm" : "text-sm"} text-[var(--text)]`}>{priceText(p)}</p>
+          <p className="product-name mt-2 px-2 text-left text-xs leading-5 text-[var(--text)]">{p.name}</p>
+          {p.colors[0] && <p className="sr-only">{p.colors[0].name}</p>}
+          <p className="mt-0.5 px-2 text-left text-xs leading-5 text-[var(--text)]">{priceText(p)}</p>
           {onQuickBuy && p.status === "available" && (
             <button aria-label={`Quick buy ${p.name}`} className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-base shadow transition hover:bg-black hover:text-white"
               onClick={(e) => { e.stopPropagation(); onQuickBuy(p); }}>{bagIcon}</button>
@@ -584,12 +584,12 @@ export function App() {
             is gone on DESKTOP — only the nav board below remains. On mobile the
             slim carriage header IS the board, so the row stays at every width
             below lg. */}
-        <div className={`mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-2 pb-1.5 pt-2 sm:px-6 lg:pb-0 lg:pt-3 ${slim ? "lg:hidden" : ""}`}>
+        <div className={`mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-2 pb-1.5 pt-1 sm:px-6 lg:pb-0 lg:pt-[7px] ${slim ? "lg:hidden" : ""}`}>
           <div className="flex items-center">
             <button aria-label="Open menu" className="flex h-9 w-9 items-center justify-center lg:hidden" onClick={() => setMobileNav(true)}>
               <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.5" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
             </button>
-            <button aria-label="Search for an article" className="hidden items-center gap-2 pl-1 text-sm lg:flex" onClick={() => setSearchOpen(true)}>
+            <button aria-label="Search for an article" className="hidden items-center gap-2 pl-1 text-xs lg:flex" onClick={() => setSearchOpen(true)}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>
               <span className="pb-0.5" style={{ borderBottom: `1px solid ${onHero ? "rgba(255,255,255,.7)" : "rgba(0,0,0,.6)"}`, color: onHero ? "#fff" : "#525252" }}>Search</span>
             </button>
@@ -597,7 +597,7 @@ export function App() {
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>
             </button>
           </div>
-          <button aria-label="Hermès Paris home" className="justify-self-center text-center" onClick={() => go({ t: "home" })}>
+          <button aria-label="Hermès Paris home" className="translate-x-[5px] justify-self-center text-center" onClick={() => go({ t: "home" })}>
             {/* Desktop full header: the full HERMÈS PARIS lockup centred.
                 Mobile: ONLY the small carriage emblem, as in the user's video. */}
             <span className="hidden lg:block"><HermesLogo settings={settings} light={onHero} variant="headerfull" /></span>
@@ -620,11 +620,11 @@ export function App() {
             </button>
           </div>
         </div>
-        <nav aria-label="Main navigation" className={`relative mx-auto hidden max-w-7xl items-center justify-center gap-5 px-4 pb-0 lg:flex ${slim ? "pt-0" : "pt-2"}`} onMouseLeave={() => setMenuCat(null)}>
+        <nav aria-label="Main navigation" className={`relative mx-auto hidden max-w-7xl items-center justify-center gap-0 px-4 pb-0 pt-0 lg:flex`} onMouseLeave={() => setMenuCat(null)}>
           {mega.map((n) => (
             <div key={n.key} className="flex items-center" onMouseEnter={() => setMenuCat(n.key)}>
-              {n.key === "about" && <span aria-hidden="true" className="mr-5 block h-4 w-px" style={{ background: onHero ? "rgba(255,255,255,.55)" : "rgba(0,0,0,.3)" }} />}
-              <button aria-label={`Open ${n.label} menu`} aria-expanded={menuCat === n.key} aria-haspopup="true" className={`whitespace-nowrap ${slim ? "py-[14px]" : "pb-3"} text-[11px] font-medium uppercase tracking-[0.14em] ${menuCat === n.key ? "underline underline-offset-8 decoration-1" : "hover:underline underline-offset-4"}`} onClick={() => { if (menuCat === n.key) { if (n.key === "about") go({ t: "about" }); else go({ t: "category", cat: navOverrides[n.key]?.dest || n.key }); } else setMenuCat(n.key); }}>{n.label}</button>
+              {n.key === "about" && <span aria-hidden="true" className="mr-3 block h-4 w-px" style={{ background: onHero ? "rgba(255,255,255,.55)" : "rgba(0,0,0,.3)" }} />}
+              <button aria-label={`Open ${n.label} menu`} aria-expanded={menuCat === n.key} aria-haspopup="true" className={`whitespace-nowrap px-3 ${slim ? "py-[14px]" : "pb-3"} text-[10px] font-bold uppercase tracking-[1px] ${menuCat === n.key ? "underline underline-offset-8 decoration-1" : "hover:underline underline-offset-4"}`} onClick={() => { if (menuCat === n.key) { if (n.key === "about") go({ t: "about" }); else go({ t: "category", cat: navOverrides[n.key]?.dest || n.key }); } else setMenuCat(n.key); }}>{n.label}</button>
             </div>
           ))}
           {menuCat && (() => { const entry = mega.find(e => e.key === menuCat); if (!entry) return null; const cols = entry.key === "women" ? MEGA_DESKTOP_WOMEN : entry.columns; return (
@@ -856,11 +856,11 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           <source media="(max-width: 640px)" srcSet={heroBenchImgMobile} />
           <img src={heroBenchImg} alt="Blue patterned blanket folded on a black-and-white triangular tiled bench against a beige stone wall" className="h-[70vh] w-full object-cover object-center sm:h-screen" />
         </picture>
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent pb-8 pt-24 text-white sm:pb-10">
-          <div className="mx-auto max-w-7xl px-5 text-center sm:px-6 lg:px-10 lg:text-left">
-            <h1 className="font-serif-d text-[32px] italic leading-tight sm:text-5xl"><span className="lg:block">{heroFirst}</span> {heroRest}</h1>
-            <p className="mx-auto mt-3 w-full max-w-full break-words font-serif-d text-[13px] italic leading-[1.75] sm:max-w-xl sm:text-sm lg:mx-0">{heroText}</p>
-            <button aria-label="Discover the blanket collection" className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] underline underline-offset-8" onClick={() => go({ t: "category", cat: "home", sub: "Blankets and pillows" })}>Discover</button>
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent pb-6 pt-6 text-white sm:pb-8 sm:pt-8">
+          <div className="mx-auto max-w-[629px] px-[15px] text-center">
+            <h1 className="font-serif-d text-[34px] italic leading-tight"><span>{heroFirst}</span> {heroRest}</h1>
+            <p className="mx-auto mt-1 w-full max-w-full break-words font-serif-d text-[20px] italic leading-normal">{heroText}</p>
+            <button aria-label="Discover the blanket collection" className="font-mono-d mt-4 text-[11px] uppercase tracking-[1px] underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "home", sub: "Blankets and pillows" })}>Discover</button>
           </div>
         </div>
       </section>
@@ -868,18 +868,18 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
       {/* BOARDS b)+c) DISCOVER CAROUSEL + PRODUCTS FOR THE THEME — one warm
           cream board, no divider between carousel and theme products */}
       <section className="w-full" style={{ background: settings.bgColor || "#f7f2ec" }}>
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:py-16">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:pb-12 lg:pt-16">
         {/* Mobile heading — centred, two lines, as in the user's video */}
-        <h2 className="font-serif-d text-center text-[28px] italic leading-snug lg:hidden">Discover the world <span className="block">of Hermès</span></h2>
+        <h2 className="font-serif-d text-center text-[34px] italic leading-snug lg:hidden">Discover the world <span className="block">of Hermès</span></h2>
         {/* Desktop heading — top-left, as verified on hermes.com */}
         <div className="hidden lg:block">
-          <div className="flex items-start justify-between gap-6">
-            <div>
+          <div className="relative">
+            <div className="mx-auto max-w-[629px] text-center">
               <p className="font-serif-d text-lg" style={{ color: "#5b6b7c" }}>Discover the world of Hermès</p>
-              <h2 className="font-serif-d mt-1 text-4xl italic">Everything within reach</h2>
-              <button aria-label={`Discover the theme ${theme}`} className="mt-3 text-[11px] font-semibold uppercase tracking-[0.25em] underline underline-offset-8" onClick={() => go(themeDest(theme))}>Discover the theme</button>
+              <h2 className="font-serif-d mt-1 text-[34px] italic">Everything within reach</h2>
+              <button aria-label={`Discover the theme ${theme}`} className="font-mono-d mt-3 text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => go(themeDest(theme))}>Discover the theme</button>
             </div>
-            <div className="flex items-center gap-3 pt-2" aria-label="Theme position">
+            <div className="absolute right-0 top-2 flex items-center gap-3" aria-label="Theme position">
               <button aria-label="Previous theme" className="flex h-9 w-9 items-center justify-center border border-black/25 hover:border-black" onClick={() => centerSlide(activeIdx - 1)}>‹</button>
               <span className="text-sm tabular-nums" aria-live="polite">{activeIdx + 1} / {CAROUSEL_THEMES.length}</span>
               <button aria-label="Next theme" className="flex h-9 w-9 items-center justify-center border border-black/25 hover:border-black" onClick={() => centerSlide(activeIdx + 1)}>›</button>
@@ -887,7 +887,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           </div>
         </div>
         {/* Swipe carousel — one large central image, neighbours peeking at the edges */}
-        <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[12%] pb-1 sm:px-[18%] lg:px-[31%]" role="tablist" aria-label="Discover themes">
+        <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[12%] pb-1 sm:px-[18%] lg:mt-8 lg:px-[31%]" role="tablist" aria-label="Discover themes">
           {CAROUSEL_THEMES.map((t, i) => {
             const ed = CAROUSEL_EDITORIAL[t];
             if (!ed) return null;
@@ -895,12 +895,12 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
               <button key={`${t}-${i}`} data-slide role="tab" aria-selected={activeIdx === i} aria-label={`Theme ${t}, ${i + 1} of ${CAROUSEL_THEMES.length}`} onClick={() => centerSlide(i)}
                 className={`relative aspect-[4/5] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 lg:aspect-[3/4] ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
                 <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
-                <span className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-6 py-2.5 text-xs font-medium uppercase tracking-[0.2em] text-black shadow">{t}</span>
+                <span className="font-mono-d absolute bottom-4 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-[2px] bg-white px-8 text-xs font-medium uppercase text-black shadow lg:bottom-8">{t}</span>
               </button>
             );
           })}
         </div>
-        <div className="mx-auto mt-4 h-[2px] w-44 bg-black/15" aria-hidden="true">
+        <div className="mx-auto mt-6 h-px w-[120px] bg-black/15 lg:mt-8" aria-hidden="true">
           <div className="h-full bg-black transition-transform duration-300" style={{ width: `${100 / CAROUSEL_THEMES.length}%`, transform: `translateX(${activeIdx * 100}%)` }} />
         </div>
         {/* No counter/arrows on mobile — the original's mobile carousel has only
@@ -912,7 +912,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             products below ARE visible on the original, so only the heading
             is hidden, not the products. */}
         <h2 className="sr-only">Products for the theme {theme}</h2>
-        <div key={theme} className="-mx-4 mt-5 grid grid-cols-2 gap-x-[3px] gap-y-10 sm:mx-0 sm:gap-5 lg:grid-cols-4">
+        <div key={theme} className="-mx-4 mt-6 grid grid-cols-2 gap-x-[2px] gap-y-8 sm:mx-0 lg:mt-8 lg:grid-cols-4 lg:gap-[2px]">
           {shown.map((p) => <ProductCard key={p.id} p={p} portrait onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
         </div>
       </div>
@@ -921,7 +921,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
       {/* BOARD d) VIDEO — full-bleed BLACK board, no gap from the cream board
           above. Video frame on top (white square controls bottom-right);
           title, sub-text and Discover link centred on black BELOW the frame. */}
-      <section ref={vidRef} className="relative overflow-hidden bg-black" aria-label="The great outdoors in stereo video">
+      <section ref={vidRef} className="relative mb-12 overflow-hidden bg-black lg:mb-16" aria-label="The great outdoors in stereo video">
         <div className="relative overflow-hidden">
         <ProductVideo src={baladeurSrc} poster={baladeurPoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[62vh] w-full object-cover" />
         <div className="absolute bottom-4 right-4 z-10 flex gap-2">
@@ -937,10 +937,10 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           </button>
         </div>
         </div>
-        <div className="bg-black px-4 py-12 text-center text-white">
-          <h2 className="font-serif-d text-3xl italic sm:text-4xl">The great outdoors in stereo</h2>
-          <p className="font-serif-d mx-auto mt-3 max-w-lg text-base italic">Ride lightly, listen largely. The Hermès sound comes where the road begins.</p>
-          <button aria-label="Discover the equestrian collection" className="mt-5 text-xs font-semibold uppercase tracking-[0.3em] underline underline-offset-8" onClick={() => go({ t: "category", cat: "equestrian" })}>Discover the collection</button>
+        <div className="bg-black px-[15px] pb-14 pt-6 text-center text-white sm:px-0 sm:pt-8">
+          <h2 className="font-serif-d text-[30px] italic">The great outdoors in stereo</h2>
+          <p className="font-serif-d mx-auto mt-1 max-w-lg text-[20px] italic">Ride lightly, listen largely. The Hermès sound comes where the road begins.</p>
+          <button aria-label="Discover the equestrian collection" className="font-mono-d mt-4 text-xs font-medium uppercase tracking-normal underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "equestrian" })}>Discover the collection</button>
         </div>
       </section>
 
@@ -965,16 +965,16 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           (~0.05em; measured 181px wide — the old 0.3em rendered ~253px).
           DESKTOP is untouched: natural 16:9, 28px text, no gradient,
           live-verified 2026-11-10. */}
-      <section className="relative cursor-pointer overflow-hidden" style={{ background: "#2e1c11" }} onClick={() => go({ t: "category", cat: "jewelry" })} aria-label="The Kelly story — discover the collection">
+      <section className="relative mb-12 cursor-pointer overflow-hidden lg:mb-16" style={{ background: "#2e1c11" }} onClick={() => go({ t: "category", cat: "jewelry" })} aria-label="The Kelly story — discover the collection">
         <div className="relative aspect-[720/1369] overflow-hidden sm:aspect-auto">
           <picture>
             <source media="(max-width: 640px)" srcSet={kellyRingsImgMobile} />
             <img src={kellyRingsImg} alt="Two gold Kelly rings, one pavé-set with diamonds, on an orange background" className="absolute bottom-[-0.7%] left-1/2 block w-[115.3%] max-w-none -translate-x-1/2 sm:static sm:bottom-auto sm:w-full sm:max-w-full sm:translate-x-0" />
           </picture>
-          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/75 to-transparent sm:hidden" />
-          <div className="absolute inset-x-0 bottom-0 pb-4 pt-8 text-center text-white sm:pb-12">
-            <p className="font-serif-d mx-auto max-w-3xl px-4 text-[18px] italic leading-[31px] sm:text-[28px] sm:leading-snug">With each new collection, the Kelly story reinvents itself and reveals new depths. A legendary design, constantly in motion.</p>
-            <button aria-label="Discover the Kelly collection" className="mt-4 text-xs font-semibold uppercase tracking-[0.05em] underline underline-offset-8 sm:tracking-[0.3em]" onClick={() => go({ t: "category", cat: "jewelry" })}>Discover the collection</button>
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/75 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 pb-6 pt-6 text-center text-white sm:pb-8 sm:pt-8">
+            <p className="font-serif-d mx-auto max-w-3xl px-4 text-[20px] italic leading-[28px]">With each new collection, the Kelly story reinvents itself and reveals new depths. A legendary design, constantly in motion.</p>
+            <button aria-label="Discover the Kelly collection" className="font-mono-d mt-4 text-xs font-medium uppercase tracking-normal underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "jewelry" })}>Discover the collection</button>
           </div>
         </div>
       </section>
@@ -1339,8 +1339,8 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Plain-text breadcrumb (not links), then the title with its count
           attached directly — no description text at the top. */}
-      <p className="text-[11px] uppercase tracking-[0.25em] text-neutral-500">{crumbTop}</p>
-      <h1 className="font-serif-d mt-2 text-3xl">{titleText}<span className="text-xl text-neutral-500"> {displayCount}products</span></h1>
+      <p className="font-mono-d text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500">{crumbTop}</p>
+      <h1 className="mt-2 text-[24px] leading-[34px]">{titleText}<span className="sr-only"> {displayCount}products</span></h1>
 
       {/* Sticky sub-nav row: siblings (current underlined) + FILTER button +
           Product/Mosaic view toggle — pinned under the header on scroll.
@@ -1357,7 +1357,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
             ))}
           </nav>
           <div className="ml-auto flex shrink-0 items-center gap-4">
-            <button aria-label={totalSel ? `Open filters, ${totalSel} selected` : "Open filters"} className="hidden items-center gap-2 py-1 text-[12px] font-semibold uppercase tracking-[0.2em] lg:flex" onClick={() => setFOpen(true)}>
+            <button aria-label={totalSel ? `Open filters, ${totalSel} selected` : "Open filters"} className="font-mono-d hidden items-center gap-2 py-1 text-xs font-medium uppercase tracking-normal lg:flex" onClick={() => setFOpen(true)}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 6h12M19 6h2M3 12h4M11 12h10M3 18h9M16 18h5" /><circle cx="17" cy="6" r="2" /><circle cx="9" cy="12" r="2" /><circle cx="14" cy="18" r="2" /></svg>
               FILTER{totalSel > 0 ? ` (${totalSel})` : ""}
             </button>
@@ -1387,7 +1387,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
       {filtered.length === 0 && <p className="py-16 text-center text-sm text-neutral-600">{sub ? `No articles in “${sub}” in this store yet.` : "No articles match these filters. Clear a filter to see more."}</p>}
 
       {!mosaic ? (
-        <div className="mt-8 grid grid-cols-2 gap-5 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-2 gap-[2px] lg:grid-cols-4">
           {gridItems.map((it) => it.kind === "product" ? (
             <ProductCard key={it.p.id} p={it.p} colourInName onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
           ) : it.kind === "text" ? (
@@ -1422,23 +1422,23 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
       {loadingMore && <LoadingVeil leaving={moreLeaving} ms={2200} />}
       {!mosaic && visible < filtered.length && (
         <div className="mt-12 text-center">
-          <button aria-label={loadingMore ? "Loading, please wait." : "See more products"} disabled={loadingMore} className="border border-black px-10 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] disabled:opacity-60" onClick={() => { setLoadingMore(true); setMoreLeaving(false); setTimeout(() => setMoreLeaving(true), 100); setTimeout(() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadingMore(false); setMoreLeaving(false); setLoadedMsg(`${added} products added. ${next} out of ${filtered.length} displayed`); }, 2200); }}>SEE MORE PRODUCTS</button>
-          <div className="mx-auto mt-5 h-px w-64 bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${filtered.length ? (Math.min(visible, filtered.length) / filtered.length) * 100 : 0}%` }} /></div>
-          <p className="mt-2 text-xs text-neutral-500">{Math.min(visible, filtered.length)} products viewed</p>
+          <p className="text-xs text-neutral-500">{Math.min(visible, filtered.length)} products viewed out of {filtered.length}</p>
+          <div className="mx-auto mt-4 h-px w-[120px] bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${filtered.length ? (Math.min(visible, filtered.length) / filtered.length) * 100 : 0}%` }} /></div>
+          <button aria-label={loadingMore ? "Loading, please wait." : "See more products"} disabled={loadingMore} className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal disabled:opacity-60" onClick={() => { setLoadingMore(true); setMoreLeaving(false); setTimeout(() => setMoreLeaving(true), 100); setTimeout(() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadingMore(false); setMoreLeaving(false); setLoadedMsg(`${added} products added. ${next} out of ${filtered.length} displayed`); }, 2200); }}>SEE MORE PRODUCTS</button>
           {loadedMsg && <p className="mt-1 text-xs text-neutral-500" role="status">{loadedMsg}</p>}
         </div>
       )}
       {!mosaic && visible >= filtered.length && filtered.length > 40 && (
         <div className="mt-12 text-center">
-          <div className="mx-auto h-px w-64 bg-black" />
-          <p className="mt-2 text-xs text-neutral-500">{filtered.length} products viewed out of {filtered.length}</p>
+          <p className="text-xs text-neutral-500">{filtered.length} products viewed out of {filtered.length}</p>
+          <div className="mx-auto mt-4 h-px w-[120px] bg-black" />
           {loadedMsg && <p className="mt-1 text-xs text-neutral-500" role="status">{loadedMsg}</p>}
         </div>
       )}
 
       {/* Below the grid: linked breadcrumb → Product theme carousel →
           (women's bags only) category description → service strip/footer. */}
-      <nav aria-label="Breadcrumb" className="mt-16 border-t border-black/10 pt-5 text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+      <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat })}>{label}</button>
         {sub && (
           <>
@@ -1456,7 +1456,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
           with NO visible heading, NO counter and NO arrow buttons (verified
           in hermes.com's rendered category HTML: no "Product theme" heading
           text, no "/15" counter anywhere — swipe-only). */}
-      <section className="mt-12" aria-label="Product theme carousel">
+      <section className="mt-12 lg:mt-10" aria-label="Product theme carousel">
         <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
           {THEME_CARDS.map((card) => {
             const rep = products.find((p) => p.category === (card.view.t === "category" ? card.view.cat : ""));
@@ -1477,7 +1477,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
         </section>
       )}
 
-      <button aria-label="Filter and sort products" className="fixed bottom-5 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 bg-white px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] shadow-lg ring-1 ring-black/10 lg:hidden" onClick={() => setFOpen(true)}>
+      <button aria-label="Filter and sort products" className="font-mono-d fixed bottom-4 left-1/2 z-40 flex h-12 -translate-x-1/2 items-center gap-2 bg-white px-8 text-xs font-medium uppercase tracking-normal shadow-lg ring-1 ring-black/10 lg:hidden" onClick={() => setFOpen(true)}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2.2" /><circle cx="10" cy="17" r="2.2" /></svg>
         Filter &amp; Sort
       </button>
@@ -1516,22 +1516,22 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   );
 }
 
-function RelatedRow({ title, items, go }: { title: string; items: Product[]; go: (v: View) => void }) {
+function RelatedRow({ title, items, go, mt }: { title: string; items: Product[]; go: (v: View) => void; mt?: string }) {
   if (items.length === 0) return null;
   return (
-    <section className="mx-auto mt-14 max-w-5xl px-4 sm:px-6">
+    <section className={`mx-auto ${mt ?? "mt-12 lg:mt-20"} max-w-5xl px-4 sm:px-6`}>
       {/* Heading as in the user's video: large italic serif, centred
           ("The Perfect Partner"). Tiles are LARGE on mobile — a 2-column
           grid of big photos, nearly full-width halves — and a 4-across
           horizontal row on desktop. */}
-      <h2 className="font-serif-d text-center text-[26px] italic leading-snug sm:text-[30px]">{title}</h2>
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-5 lg:flex lg:overflow-x-auto lg:pb-1">
+      <h2 className="font-serif-d text-center text-[30px] italic leading-snug">{title}</h2>
+      <div className="mt-8 grid grid-cols-2 gap-[2px] lg:flex lg:overflow-x-auto lg:pb-1">
         {items.map((x) => (
           <div key={x.id} className="cursor-pointer lg:w-[220px] lg:shrink-0" role="link" aria-label={`${x.name}, ${priceText(x)}`} tabIndex={0} onClick={() => go({ t: "product", id: x.id })} onKeyDown={(e) => { if (e.key === "Enter") go({ t: "product", id: x.id }); }}>
             <div className="aspect-square overflow-hidden"><ProductVisual p={x} /></div>
-            <p className="mt-3 text-sm">{x.name}</p>
-            {x.colors[0] && <p className="mt-0.5 text-xs text-neutral-500">Color: {x.colors[0].name}</p>}
-            <p className="mt-0.5 text-sm">{priceText(x)}</p>
+            <p className="mt-2 px-2 text-xs leading-5">{x.name}</p>
+            {x.colors[0] && <p className="sr-only">Color: {x.colors[0].name}</p>}
+            <p className="mt-0.5 px-2 text-xs leading-5">{priceText(x)}</p>
           </div>
         ))}
       </div>
@@ -1668,7 +1668,6 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
       {descLines.map((l) => <p key={l} className="mt-1.5">{l}</p>)}
       {p.modelSize && <p className="mt-1.5">Model size: {p.modelSize}</p>}
       {p.metallicFinish && <p className="mt-1.5">Finish: {p.metallicFinish}</p>}
-      {p.madeIn && <p className="mt-1.5">Made in {p.madeIn}</p>}
       {descLines.length === 0 && !p.material && <p>See the product description for this article's details.</p>}
     </>) },
     { title: "CARE", content: <>Preserve the original qualities of this article by avoiding contact with water, perfume and cosmetics. Store it in its original case, away from direct light and heat, and entrust maintenance to a Hermès boutique.</> },
@@ -1688,7 +1687,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
   ];
   return (
     <div className="pb-24 lg:pb-6">
-      <p className="mx-auto max-w-7xl px-4 pt-8 text-[11px] uppercase tracking-[0.25em] text-neutral-500 sm:px-6">
+      <p className="font-mono-d mx-auto max-w-7xl px-4 pt-8 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 sm:px-6">
         <button aria-label="Back to category" className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category })}>{(NAV.find((n) => n.key === p.category)?.label ?? p.category.toUpperCase())}</button> &gt; <button aria-label={`Back to ${p.subcategory}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: p.subcategory })}>{p.subcategory}</button>
       </p>
       <div className="relative mt-4">
@@ -1732,20 +1731,20 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
         {/* Buy box — a WHITE CARD floating over the BOTTOM-RIGHT of the
             gallery on desktop; below the gallery on mobile, as in the
             user's phone videos of hermes.com. */}
-        <div className="relative z-10 mx-4 mt-4 border border-black/10 bg-white p-6 shadow-xl lg:absolute lg:bottom-6 lg:right-6 lg:mx-0 lg:mt-0 lg:w-[380px]">
-          <h1 className="font-serif-d text-[24px] leading-snug">{p.name}</h1>
-          <div className="mt-3 flex items-baseline justify-between">
+        <div className="relative z-10 border border-black/10 bg-white px-[15px] pb-6 pt-4 shadow-xl lg:absolute lg:bottom-6 lg:right-6 lg:w-[380px] lg:p-[15px]">
+          <h1 className="text-base leading-6">{p.name}</h1>
+          <div className="mt-2 flex items-baseline justify-between">
             <span className="text-sm text-neutral-600">Price</span>
-            <span className="text-base">{priceText(p)}</span>
+            <span className="text-sm leading-[22px]">{priceText(p)}</span>
           </div>
           {p.colors.length > 0 && color && (
             <>
-              <p className="mt-5 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Color</p>
+              <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Color</p>
               <p className="mt-1 text-sm font-medium underline underline-offset-4">{color.name}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
                 {(showAllColors ? p.colors : p.colors.slice(0, 6)).map((c, i) => (
                   <button key={c.name} aria-label={`Colour ${c.name}${c.available && p.status === "available" ? "" : " (unavailable)"}`} disabled={!c.available || p.status !== "available"} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
-                    className={`relative h-9 w-9 rounded-full border-2 ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || p.status !== "available" ? "opacity-40" : ""}`} style={{ background: c.hex }}>
+                    className={`relative h-9 w-9 rounded-full border-2 lg:h-[59px] lg:w-[59px] ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || p.status !== "available" ? "opacity-40" : ""}`} style={{ background: c.hex }}>
                     {(!c.available || p.status !== "available") && <span className="absolute inset-0 flex items-center justify-center text-white">✕</span>}
                   </button>
                 ))}
@@ -1758,18 +1757,18 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
           )}
           {finishOptions.length > 0 && (
             <>
-              <p className="mt-5 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Finish</p>
+              <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Finish</p>
               <p className="mt-1 text-sm font-medium underline underline-offset-4">{finishSel}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
                 {finishOptions.map((f, i) => (
-                  <button key={f} aria-label={`Finish ${f}`} aria-pressed={i === finishIdx} onClick={() => setFinishIdx(i)} className={`h-9 w-9 rounded-full border-2 ${i === finishIdx ? "border-black" : "border-black/20"}`} style={{ background: finishHex(f) }} />
+                  <button key={f} aria-label={`Finish ${f}`} aria-pressed={i === finishIdx} onClick={() => setFinishIdx(i)} className={`h-9 w-9 rounded-full border-2 lg:h-[59px] lg:w-[59px] ${i === finishIdx ? "border-black" : "border-black/20"}`} style={{ background: finishHex(f) }} />
                 ))}
               </div>
             </>
           )}
           {p.status === "available" && needsSize && (
-            <div className="mt-5">
-              <button aria-label="Select a size" className="flex w-full items-center justify-between border border-black/40 px-4 py-3 text-sm" onClick={() => setSizeDrawer(true)}>
+            <div className="mt-4">
+              <button aria-label="Select a size" className="flex min-h-[46px] w-full items-center justify-between border-b border-[#919191] px-4 py-3 text-sm" onClick={() => setSizeDrawer(true)}>
                 <span className="flex items-center gap-2.5">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21l-4-4Z" /><path d="M8 16l1.5 1.5M11 13l1.5 1.5M14 10l1.5 1.5" /></svg>
                   {selSize ? `Size — ${selSize}` : "Select a size"}
@@ -1781,18 +1780,18 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
             </div>
           )}
           {p.status === "available" ? (
-            <div className="mt-5">
+            <div className="mt-4">
               <div className="flex">
-                {p.applePay && <button aria-label="Buy with Apple Pay" disabled={!canAdd} className={`flex flex-1 items-center justify-center gap-1.5 border py-3.5 text-[13px] font-semibold ${canAdd ? "border-black bg-white text-black" : "cursor-not-allowed border-black/20 bg-neutral-100 text-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}><span className="text-[11px] font-medium uppercase tracking-[0.08em]">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
-                <button aria-label="Add to cart" disabled={!canAdd} className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white ${canAdd ? "bg-black" : "cursor-not-allowed bg-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
+                {p.applePay && <button aria-label="Buy with Apple Pay" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border text-xs font-medium uppercase ${canAdd ? "border-black bg-white text-black" : "cursor-not-allowed border-black/20 bg-neutral-100 text-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}><span className="text-xs font-medium uppercase tracking-normal">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
+                <button aria-label="Add to cart" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-2 text-xs font-medium uppercase tracking-normal text-white ${canAdd ? "bg-black" : "cursor-not-allowed bg-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
               </div>
               {p.shippingDelay && <p className="mt-2 text-xs text-neutral-500">{p.shippingDelay}.</p>}
               <div className="mt-3">{user ? <button aria-label="Add to wishlist" className="text-xs uppercase tracking-[0.18em] underline" onClick={() => wishMut.mutate()}>♡ Add to wishlist</button> : <button aria-label="Sign in for wishlist" className="text-xs uppercase tracking-[0.18em] underline" onClick={() => go({ t: "account" })}>♡ Sign in to add to wishlist</button>}{wishMsg && <p className="mt-1 text-xs" role="status">{wishMsg}</p>}</div>
             </div>
           ) : p.status === "in_store_only" ? (
-            <p className="mt-5 border border-black/20 p-3 text-sm">This article is available in store only. Please visit a boutique or call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a>.</p>
+            <p className="mt-4 border border-black/20 p-3 text-sm">This article is available in store only. Please visit a boutique or call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a>.</p>
           ) : (
-            <div className="mt-5">
+            <div className="mt-4">
               <p className="text-sm">We will notify you when this product is back in stock</p>
               {notified ? <p className="mt-3 text-sm font-medium" role="status">{notified}</p> : notifyOpen ? (
                 <div className="mt-3 flex gap-2">
@@ -1815,27 +1814,28 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
           RIGHT: exactly PRODUCT DETAILS / CARE / DELIVERY & RETURNS /
           GIFTING (the user's 8 Nov 2026 phone video restored PRODUCT
           DETAILS), all closed by default, only one open at a time. */}
-      <div className="mx-auto mt-12 grid max-w-5xl gap-12 px-4 sm:px-6 lg:grid-cols-2">
+      <div className="mx-auto mt-0 grid max-w-5xl gap-6 px-4 sm:px-6 lg:mt-12 lg:grid-cols-2">
         <section>
-          <h3 className="text-[12px] font-semibold uppercase tracking-[0.25em]">Product description</h3>
-          <p className="mt-4 text-sm leading-7 text-neutral-800">{p.description}</p>
-          {editorial && <p className="font-serif-d mt-4 text-[17px] italic leading-7">{editorial}</p>}
+          <h3 className="sr-only">Product description</h3>
+          <p className="mt-2.5 text-xs leading-5 text-neutral-800">{p.description}</p>
+          {editorial && <p className="font-serif-d mt-2.5 text-base italic leading-6">{editorial}</p>}
           {descLines.length > 0 && (
-            <div className="mt-4 space-y-1 text-sm leading-6 text-neutral-700">
+            <div className="mt-2.5 space-y-2.5 text-xs leading-5 text-neutral-700">
               {descLines.map((l) => <p key={l}>{l}</p>)}
             </div>
           )}
-          {p.refCode && <p className="mt-4 text-xs text-neutral-500">Product reference: {p.refCode}</p>}
+          {p.madeIn && <p className="mt-2.5 text-xs leading-5 text-neutral-800">Made in {p.madeIn}</p>}
+          {p.refCode && <p className="mt-4 text-xs text-[#696969]">Product reference: {p.refCode}</p>}
           <p className="mt-4 text-sm">Like to know more? <button aria-label="Contact Customer Service" className="underline underline-offset-4" onClick={() => go({ t: "page", page: "contact" })}>Contact Customer Service</button></p>
         </section>
-        <div>
+        <div className="mb-[15px] pt-2.5">
           {accItems.map((it, i) => (
             <div key={it.title} className="border-t border-black/10 last:border-b">
-              <button aria-label={`${it.title} section`} aria-expanded={accOpen === i} className="flex w-full items-center justify-between py-4 text-left text-[11px] font-semibold uppercase tracking-[0.22em]" onClick={() => setAccOpen(accOpen === i ? -1 : i)}>
+              <button aria-label={`${it.title} section`} aria-expanded={accOpen === i} className="font-mono-d flex w-full items-center justify-between pb-[5px] pt-[23px] text-left text-xs uppercase tracking-normal" onClick={() => setAccOpen(accOpen === i ? -1 : i)}>
                 {it.title}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true" className={accOpen === i ? "rotate-180 transition-transform" : "transition-transform"}><path d="m5 9 7 7 7-7" /></svg>
               </button>
-              {accOpen === i && <div className="pb-5 text-sm leading-6 text-neutral-700">{it.content}</div>}
+              {accOpen === i && <div className="pb-6 text-xs leading-5 text-neutral-700">{it.content}</div>}
             </div>
           ))}
         </div>
@@ -1876,9 +1876,9 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
 
       <RelatedRow title="The Perfect Partner" items={partners} go={go} />
       <RelatedRow title="Keep exploring" items={explore} go={go} />
-      <RelatedRow title="Last viewed products" items={lastViewed} go={go} />
+      <RelatedRow title="Last viewed products" items={lastViewed} go={go} mt="mt-20 lg:mt-28" />
 
-      <nav aria-label="Breadcrumb" className="mx-auto mt-14 max-w-5xl border-t border-black/10 px-4 pt-5 text-[11px] uppercase tracking-[0.2em] text-neutral-500 sm:px-6">
+      <nav aria-label="Breadcrumb" className="font-mono-d mx-auto mt-14 max-w-5xl border-t border-black/10 px-4 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 sm:px-6">
         <button aria-label={`Breadcrumb ${NAV.find((n) => n.key === p.category)?.label ?? p.category}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category })}>{NAV.find((n) => n.key === p.category)?.label ?? p.category.toUpperCase()}</button>
         {" > "}
         <button aria-label={`Breadcrumb ${p.subcategory}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: p.subcategory })}>{p.subcategory}</button>
@@ -2226,7 +2226,7 @@ function CartPage({ cart, setCart, settings, go, total, count }: { cart: CartIte
             </div>
             <aside className="h-fit border border-black/10 p-5">
               <div className="mt-4 flex justify-between border-t border-black/10 pt-4 text-sm font-semibold uppercase tracking-[0.15em]"><span>Total</span><span>{fmt2(total)}</span></div>
-              <button aria-label="Checkout from cart" className="mt-5 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "checkout" })}>Checkout</button>
+              <button aria-label="Checkout from cart" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => go({ t: "checkout" })}>Checkout</button>
               <button aria-label="Buy with Apple Pay from cart" className="mt-2 w-full border border-black bg-white py-3.5 text-sm font-semibold" onClick={() => go({ t: "checkout" })}>Buy with Apple Pay</button>
               <div className="mt-6 border-t border-black/10 pt-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.25em]">The Orange Box</p>
@@ -2287,7 +2287,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
     </>
   ) : (
     <>
-      <button aria-label="Subscribe to the newsletter" className="mt-3 text-[11px] font-semibold uppercase tracking-[0.25em] underline underline-offset-8" onClick={() => setSubOpen(!subOpen)}>Subscribe to the newsletter</button>
+      <button aria-label="Subscribe to the newsletter" className="font-mono-d mt-2 text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => setSubOpen(!subOpen)}>Subscribe to the newsletter</button>
       {subOpen && (
         <div className="mt-3">
           <input aria-label="Newsletter email" type="email" className="w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -2306,21 +2306,21 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
           real site. Desktop: all four at once in four columns, thin line
           icons, no arrows, no carousel. */}
       <div className="border-y border-black/15" style={{ background: "#fcf7f1" }}>
-      <div className="relative px-12 py-10 text-center lg:hidden">
+      <div className="relative px-12 py-4 text-center lg:hidden">
         <button aria-label="Previous service" className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-xl text-neutral-700" onClick={() => setSvcIdx((svcIdx + services.length - 1) % services.length)}>‹</button>
         <div key={svc.title} className="cursor-pointer" onClick={() => go({ t: "page", page: svc.page })}>
           <span className="flex justify-center">{serviceIcons[svc.title]}</span>
-          <button aria-label={`Service ${svc.title}`} className="mt-2.5 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: svc.page }); }}>{svc.title}</button>
-          <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-neutral-600">{svc.body}</p>
+          <button aria-label={`Service ${svc.title}`} className="font-mono-d mt-1 text-xs font-light uppercase tracking-normal sm:mt-4" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: svc.page }); }}>{svc.title}</button>
+          <p className="mx-auto mt-1 max-w-xs text-[11px] leading-[18px] text-black">{svc.body}</p>
         </div>
         <button aria-label="Next service" className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-xl text-neutral-700" onClick={() => setSvcIdx((svcIdx + 1) % services.length)}>›</button>
       </div>
-      <div className="mx-auto hidden max-w-7xl gap-8 px-4 py-10 text-center sm:px-6 lg:grid lg:grid-cols-4 lg:text-left">
+      <div className="mx-auto hidden max-w-7xl gap-10 px-4 py-8 text-center sm:px-6 lg:grid lg:grid-cols-4 lg:text-left">
         {services.map((s) => (
           <div key={s.title} className="cursor-pointer" onClick={() => go({ t: "page", page: s.page })}>
             <span className="flex justify-center lg:justify-start">{serviceIcons[s.title]}</span>
-            <button aria-label={`Service ${s.title}`} className="mt-2.5 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: s.page }); }}>{s.title}</button>
-            <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-neutral-600 lg:mx-0">{s.body}</p>
+            <button aria-label={`Service ${s.title}`} className="font-mono-d mt-1 text-xs font-light uppercase tracking-normal sm:mt-4" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: s.page }); }}>{s.title}</button>
+            <p className="mx-auto mt-2 max-w-xs text-[11px] leading-[18px] text-black lg:mx-0">{s.body}</p>
           </div>
         ))}
       </div>
@@ -2338,18 +2338,18 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
             const cols = isServices ? [...FOOTER_COLS[0]!.links] : c.links;
             return (
               <div key={c.title} className="border-b border-black/10 last:border-b-0">
-                <button aria-label={`Footer section ${c.title}`} aria-expanded={open} className="flex w-full items-center justify-between py-4 text-left text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => setOpenCol(open ? null : c.title)}>
+                <button aria-label={`Footer section ${c.title}`} aria-expanded={open} className="font-mono-d flex w-full items-center justify-between py-4 text-left text-xs font-light uppercase tracking-normal" onClick={() => setOpenCol(open ? null : c.title)}>
                   {c.title}<span aria-hidden="true" className="text-base">{open ? "−" : "+"}</span>
                 </button>
                 {open && (c.title === "LEGAL" ? (
                   <div className="pb-4 leading-7">
                     {cols.map(([l, pg], i) => (
-                      <span key={l}>{i > 0 && <span aria-hidden="true" className="mx-2 text-neutral-400">|</span>}<button aria-label={`Footer ${l}`} className="py-1 text-left text-[13px] leading-5 text-neutral-700" onClick={() => go({ t: "page", page: pg })}>{l}</button></span>
+                      <span key={l}>{i > 0 && <span aria-hidden="true" className="mx-2 text-neutral-400">|</span>}<button aria-label={`Footer ${l}`} className="py-1 text-left text-[11px] leading-[18px] text-black" onClick={() => go({ t: "page", page: pg })}>{l}</button></span>
                     ))}
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-x-4 pb-4">
-                    {cols.map(([l, pg]) => <button key={l} aria-label={`Footer ${l}`} className="py-1.5 text-left text-[13px] leading-5 text-neutral-700" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
+                    {cols.map(([l, pg]) => <button key={l} aria-label={`Footer ${l}`} className="py-1 text-left text-[11px] leading-[18px] text-black" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
                   </div>
                 ))}
               </div>
@@ -2357,10 +2357,10 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
           })}
         </div>
         <div className="border-t border-black/10 px-4 py-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.25em]">Newsletter</p>
-          <p className="mt-2 text-sm leading-6 text-neutral-600">Receive our newsletter and discover our stories, collections, and surprises.</p>
+          <p className="font-mono-d text-xs font-light uppercase tracking-normal">Newsletter</p>
+          <p className="mt-4 text-[11px] leading-[18px] text-black">Receive our newsletter and discover our stories, collections, and surprises.</p>
           {newsletterForm(false)}
-          <p className="mt-7 text-[11px] font-semibold uppercase tracking-[0.25em]">Follow us</p>
+          <p className="font-mono-d mt-8 text-xs font-light uppercase tracking-normal">Follow us</p>
           <div className="mt-3"><SocialCircles /></div>
           <label className="mt-7 flex items-center gap-2 border-t border-black/10 pt-5 text-xs text-neutral-700">SHIP TO :
             <select aria-label="Ship to country selector" className="max-w-[55vw] appearance-none bg-transparent py-1 font-medium uppercase underline underline-offset-4" value={ship} onChange={(e) => setShip(e.target.value)}>
@@ -2374,24 +2374,24 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
       </div>
       {/* Desktop — five open columns on #f6f1eb, as verified on hermes.com */}
       <div className="hidden lg:block" style={{ background: "#f6f1eb" }}>
-        <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 lg:grid-cols-5">
+        <div className="mx-auto grid max-w-7xl gap-12 px-6 py-16 lg:grid-cols-5">
           {FOOTER_COLS.map((c) => (
             <div key={c.title}>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.25em]">{c.title}</p>
-              {c.links.map(([l, pg]) => <button key={l} aria-label={`Footer ${l}`} className="block py-1.5 text-left text-sm text-neutral-700 hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
+              <p className="font-mono-d pb-2.5 text-xs font-light uppercase tracking-normal">{c.title}</p>
+              {c.links.map(([l, pg]) => <button key={l} aria-label={`Footer ${l}`} className="block py-1 text-left text-[11px] leading-[18px] text-black hover:text-[#696969] hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
             </div>
           ))}
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.25em]">Newsletter</p>
-            <p className="mt-2 text-sm leading-6 text-neutral-600">Receive our newsletter and discover our stories, collections, and surprises.</p>
+            <p className="font-mono-d text-xs font-light uppercase tracking-normal">Newsletter</p>
+            <p className="mt-4 text-[11px] leading-[18px] text-black">Receive our newsletter and discover our stories, collections, and surprises.</p>
             {newsletterForm(false)}
-            <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.25em]">Follow us</p>
+            <p className="font-mono-d mt-8 text-xs font-light uppercase tracking-normal">Follow us</p>
             <div className="mt-3"><SocialCircles /></div>
           </div>
         </div>
       </div>
       <div className="hidden border-t border-black/10 lg:block" style={{ background: "#f6f1eb" }}>
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-5 text-xs text-neutral-600">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-neutral-600">
           <label className="flex items-center gap-2 uppercase tracking-wider">Ship to :
             <select aria-label="Ship to country selector" className="appearance-none bg-transparent py-1 font-medium uppercase underline underline-offset-4" value={ship} onChange={(e) => setShip(e.target.value)}>
               {["UNITED STATES", "UNITED KINGDOM", "FRANCE", "PAKISTAN", "UNITED ARAB EMIRATES", "INDIA"].map((c) => <option key={c} value={c}>{c}</option>)}
@@ -2507,7 +2507,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   if (authMode === "login") {
     return (
       <div className="mx-4 my-10 max-w-md bg-white px-6 py-10 sm:mx-auto sm:px-8">
-        <h1 className="text-center text-[13px] uppercase tracking-[0.3em] [font-family:ui-monospace,Menlo,monospace]">Sign in</h1>
+        <h1 className="font-mono-d text-center text-xs font-medium uppercase tracking-normal">Sign in</h1>
         <p className="mt-4 text-center text-sm leading-6 text-neutral-700">{emailStep ? "Please enter your email below to sign in to your account." : `Welcome back — please enter your password for ${liEmail}.`}</p>
         <div className="mt-6 space-y-4">
           <label className={lab}>E-mail *
@@ -2525,9 +2525,9 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
         </div>
         {liMsg && <p className="mt-3 text-sm text-red-700" role="status">{liMsg}</p>}
         {emailStep ? (
-          <button aria-label="Continue with email" className="mt-5 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => { if (!liEmail.includes("@")) { setLiMsg("Please enter a valid email address."); return; } setLiMsg(""); setEmailStep(false); }}>Continue</button>
+          <button aria-label="Continue with email" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!liEmail.includes("@")) { setLiMsg("Please enter a valid email address."); return; } setLiMsg(""); setEmailStep(false); }}>Continue</button>
         ) : (
-          <button aria-label="Sign in button" className="mt-5 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => login.mutate()}>Sign in</button>
+          <button aria-label="Sign in button" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => login.mutate()}>Sign in</button>
         )}
         <button aria-label="Forgot password" className="mt-4 w-full text-center text-xs uppercase tracking-[0.2em] underline" onClick={() => setForgotMsg("This standalone build has no email service, so password reset is unavailable — please create a new account or contact customer service.")}>Forgot your password?</button>
         {forgotMsg && <p className="mt-3 text-center text-xs leading-5 text-neutral-600" role="status">{forgotMsg}</p>}
@@ -2614,7 +2614,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
 }
 
 const US_STATES = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"];
-const CO_HEAD = "text-[13px] uppercase tracking-[0.28em] [font-family:ui-monospace,SFMono-Regular,Menlo,monospace]";
+const CO_HEAD = "font-mono-d text-xs font-medium uppercase tracking-normal";
 
 function CheckoutProgress({ step, nextStep }: { step: 1 | 2 | 3; nextStep?: boolean }) {
   const labels = ["Cart", "Checkout", "Confirmation"];
@@ -2631,7 +2631,7 @@ function CheckoutProgress({ step, nextStep }: { step: 1 | 2 | 3; nextStep?: bool
             return (
               <span key={l} className="flex w-20 flex-col items-center gap-2">
                 <span className={`flex h-[15px] w-[15px] items-center justify-center rounded-full text-[8px] ${done || current ? "bg-black text-white" : "border border-black/50 bg-[#f7f2ec] text-transparent"}`}>{done ? "✓" : "•"}</span>
-                <span className={`text-[10px] uppercase tracking-[0.22em] [font-family:ui-monospace,Menlo,monospace] ${current || done ? "text-black" : "text-neutral-500"}`}>{l}</span>
+                <span className={`font-mono-d text-[10px] font-medium uppercase tracking-normal ${current || done ? "text-black" : "text-neutral-500"}`}>{l}</span>
                 {nextStep && !done && !current && <span className="text-[8px] uppercase tracking-[0.18em] text-neutral-400">Next step</span>}
               </span>
             );
@@ -2918,7 +2918,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
             </div>
             <p className="mt-3 text-xs leading-5 text-neutral-500">Demo checkout only — selecting a method records it on the order; no card is charged and no card details are collected.</p>
             {order.isError && <p className="mt-2 text-sm text-red-700" role="status">The order could not be placed. Please check your details and try again.</p>}
-            <button aria-label="Place order" disabled={order.isPending || accountEdit} className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white disabled:bg-neutral-400" onClick={() => order.mutate()}>{order.isPending ? "Placing order…" : `Place order — ${fmt2(total)}`}</button>
+            <button aria-label="Place order" disabled={order.isPending || accountEdit} className="font-mono-d mt-4 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white disabled:bg-neutral-400" onClick={() => order.mutate()}>{order.isPending ? "Placing order…" : `Place order — ${fmt2(total)}`}</button>
             {accountEdit && <p className="mt-2 text-xs text-neutral-500">Confirm your email in the Account section above before placing the order.</p>}
           </div>
         )}
