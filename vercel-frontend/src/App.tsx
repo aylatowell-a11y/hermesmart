@@ -1606,18 +1606,19 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
       {descLines.map((l) => <p key={l} className="mt-1.5">{l}</p>)}
       {p.modelSize && <p className="mt-1.5">Model size: {p.modelSize}</p>}
       {p.metallicFinish && <p className="mt-1.5">Finish: {p.metallicFinish}</p>}
+      {p.madeIn && <p className="mt-1.5">Made in {p.madeIn}</p>}
       {descLines.length === 0 && !p.material && <p>See the product description for this article's details.</p>}
     </>) },
     { title: "CARE", content: <>Preserve the original qualities of this article by avoiding contact with water, perfume and cosmetics. Store it in its original case, away from direct light and heat, and entrust maintenance to a Hermès boutique.</> },
     { title: "DELIVERY & RETURNS", content: (<>
       <p className="font-semibold text-black">Shipping</p>
-      <p className="mt-1">Complimentary ground shipping (1–10 business days) for items up to $2,000; express delivery is required for orders over $2,000, and white-glove delivery for orders over $25,000. Every order is delivered in the orange box tied with Bolduc ribbon. See our <button aria-label="Delivery FAQs" className="underline underline-offset-2" onClick={() => go({ t: "page", page: "faq" })}>FAQs</button> for more.</p>
+      <p className="mt-1">Complimentary ground shipping within 1 to 10 business days for items up to $2,000. Ship to a store for collection with 2 Day delivery. Express delivery is required for orders greater than $2,000. Items greater than $25,000 require white glove delivery. Purchases are delivered in an orange box tied with a Bolduc ribbon, with the exception of certain items. Select items require ground shipping. See the delivery <button aria-label="Delivery FAQs" className="underline underline-offset-2" onClick={() => go({ t: "page", page: "faq" })}>FAQs</button> for details on shipping methods, costs and delivery times.</p>
       <p className="mt-4 font-semibold text-black">Payment methods</p>
-      <p className="mt-1">Visa, MasterCard, American Express, Discover, Diners Club, JCB and China Union Pay. PayPal and Apple Pay are available for select products. Payment is debited immediately for personalized products.</p>
+      <p className="mt-1">By card: Visa®, MasterCard®, American Express®, Discover®, Diners Club®, JCB® and China Union Pay®. By PayPal® and Apple Pay®. Payment is debited immediately for personalized product.</p>
       <p className="mt-4 font-semibold text-black">Returns and exchanges</p>
-      <p className="mt-1">Returns and exchanges are easy and complimentary within 30 days of delivery. Shoes must be tried on non-abrasive, carpeted surfaces, and the Hermès Sellier tag must be intact. Personalized products cannot be refunded or exchanged.</p>
+      <p className="mt-1">Easy and complimentary, within 30 days. We recommend that you try your shoes on non-abrasive or carpeted surfaces. We will not be able to accept your return if the sole is damaged or marked. The Hermès Sellier tag must be intact, attached, and free of any alteration or damage. Personalized product cannot be refunded or exchanged. See conditions and procedure in our return FAQs.</p>
     </>) },
-    { title: "GIFTING", content: <>Every order is delivered in the orange box tied with Bolduc ribbon. A gift message can be added at checkout; prices are never shown on the delivery note.</> },
+    { title: "GIFTING", content: <>Your purchases are delivered in an orange box tied with a Bolduc ribbon, with the exception of fragrances, makeup and beauty products, books, certain equestrian and bulky items. During checkout, you can include one card with a personalized message and a priceless invoice. The gift recipient can exchange a gift. For more details, please contact Customer Service.</> },
     // USER GUIDE — only the Arceau watch carries it on hermes.com (the
     // product's own accordions list in data.ts proves it: Arceau Petite
     // Lune, id 53). Content is the watch user guide already in this file.
