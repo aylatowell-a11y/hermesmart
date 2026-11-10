@@ -302,14 +302,14 @@ function HermesLogo({ settings, light, variant = "full" }: { settings: Settings;
     // Desktop full header (top of page / scrolling up): the full HERMÈS PARIS
     // lockup file — carriage above, HERMÈS, PARIS below — centred, in the
     // colour matching the surface (white over the hero, black on white).
-    return <img src={light ? logoWhiteImg : logoBlackImg} alt={raw} className="h-[60px] w-auto object-contain" />;
+    return <img src={light ? logoWhiteImg : logoBlackImg} alt={raw} className="h-[48px] w-auto object-contain" />;
   }
   if (mode === "logo") {
     return <img src={light ? carriageWhiteImg : carriageBlackImg} alt={raw} className={variant === "brand" ? "h-10 w-auto object-contain" : "h-12 w-auto object-contain"} />;
   }
   // "brand" (cart page top) and "full" (footer bottom): the full lockup file —
   // carriage above, HERMÈS, PARIS below — in the colour matching the surface.
-  return <img src={light ? logoWhiteImg : logoBlackImg} alt={raw} className={variant === "brand" ? "h-[68px] w-auto object-contain" : "h-24 w-auto object-contain sm:h-28"} />;
+  return <img src={light ? logoWhiteImg : logoBlackImg} alt={raw} className={variant === "brand" ? "h-[48px] w-auto object-contain" : "h-[58px] w-auto object-contain"} />;
 }
 
 function load<T>(k: string, fb: T): T { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fb; } catch { return fb; } }
@@ -2664,7 +2664,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
           #fcf7f1 (the same pale cream as the service strip, sampled on
           hermes.com — NOT pure white) with the black HERMÈS PARIS lockup
           centred in it. Nothing follows it; this is the page bottom. */}
-      <div className="flex justify-center py-16 sm:py-20" style={{ background: "#fcf7f1" }}>
+      <div className="flex justify-center py-[120px]" style={{ background: "#fcf7f1" }}>
         <HermesLogo settings={settings} variant="full" />
       </div>
     </footer>
