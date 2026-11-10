@@ -431,7 +431,11 @@ export const PRODUCT_IMAGES: Record<string, string> = {
     "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-contour-bracelet--123405B%2000-front-wm-2-0-0-1000-1000_g.jpg", // V, ref H123405Bv00, $5,400
   "Colliers et Laisses pour Chiens scarf 90": scarf90V2,
   "Turf Les Courses Twilly": twillyTurf,
-  "Casaque Jumping scarf": casaqueJumpingScarf,
+  // Original Hermes photo, hotlinked (CDN probe 2026-11-10, spaced ID
+  // 251526S 02). No flat front view exists on the CDN — the tile is the
+  // worn_1 model shot (verified: beige/brown striped stole).
+  "Casaque Jumping scarf":
+    "https://assets.hermes.com/is/image/hermesproduct/251526S%2002_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H251526Sv02, $1,050 (REPLACE generated casaqueJumpingScarf)
   "Palonniers scarf 45": palonniersScarf45,
   "La Nature en Voyage scarf 90": laNatureScarf90,
   "Rouge Hermès gift set, Lip care": rougeLipCareSet,
@@ -439,7 +443,10 @@ export const PRODUCT_IMAGES: Record<string, string> = {
     "https://assets.hermes.com/is/image/hermesproduct/60875PV007_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60875PV007, $121 (REPLACE generated ombresEyeShadow)
   "Les Mains Hermès, Nail polish, Or Rose":
     "https://assets.hermes.com/is/image/hermesproduct/60861VV050_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60861VV050, $66 (REPLACE generated nailPolishOrRose)
-  "Bride-a-Brac Sellier case, large model": brideABracCase,
+  // Original Hermes photo, hotlinked (CDN probe 2026-11-10, spaced ID
+  // 104951M 01). Verified: tan case, red strap + striped band.
+  "Bride-a-Brac Sellier case, large model":
+    "https://assets.hermes.com/is/image/hermesproduct/104951M%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H104951Mv01, $1,050 (REPLACE generated brideABracCase)
   "Matte lipstick, Rose Boisé":
     "https://assets.hermes.com/is/image/hermesproduct/60001MV048_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60001MV048, $86 (REPLACE generated matteLipstickRoseBoise)
   "Musc Pallida, Eau de parfum, 3.4 fl.oz":
@@ -565,6 +572,52 @@ export const PRODUCT_IMAGES: Record<string, string> = {
     "https://assets.hermes.com/is/image/hermesproduct/043001P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043001P, $215
   "A Walk in the Garden tray, small model":
     "https://assets.hermes.com/is/image/hermesproduct/043089P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043089P, $275
+  // Original Hermes photos, hotlinked (CDN probe 2026-11-10, spaced ID
+  // form: refs with "v" resolve as "{base} {digits}", e.g. H251526Sv02
+  // -> 251526S 02; H800336Ev3340 -> 800336E 33). Scarves: only model-worn
+  // views exist on the CDN (no flat front view, except the Jockey scarf
+  // ring); the tile is the worn_1 model shot. Blankets / pillows: flat
+  // front_wm_101 tile. Every URL verified (HTTP 200 + visual check).
+  "Petite Casaque Lettres Equestres scarf":
+    "https://assets.hermes.com/is/image/hermesproduct/254039S%2001_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H254039Sv01, $570
+  "Colliers de Chiens scarf":
+    "https://assets.hermes.com/is/image/hermesproduct/392770T%2001_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H392770Tv01, $510
+  "Double Face stole":
+    "https://assets.hermes.com/is/image/hermesproduct/259130S%2017_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H259130Sv17, $1,625
+  "Petite Casaque Parthenon scarf":
+    "https://assets.hermes.com/is/image/hermesproduct/259171S%2001_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H259171Sv01, $570
+  "Champ de Courses a Chantilly triangle":
+    "https://assets.hermes.com/is/image/hermesproduct/361173S%2006_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H361173Sv06, $1,100
+  "Cinetique scarf":
+    "https://assets.hermes.com/is/image/hermesproduct/269172S%2001_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H269172Sv01, $900
+  "Carreaux scarf 80":
+    "https://assets.hermes.com/is/image/hermesproduct/219153S%2001_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H219153Sv01, $680
+  "Les Leopards triangle":
+    "https://assets.hermes.com/is/image/hermesproduct/362953S%2001_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H362953Sv01, $1,100
+  "Exceptional embroidered double-faced Twilly":
+    "https://assets.hermes.com/is/image/hermesproduct/851517S%2001_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H851517Sv01, $3,000
+  "Boucles et Maillons Twilly":
+    "https://assets.hermes.com/is/image/hermesproduct/064367S%2004_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H064367Sv04, $260
+  "Jockey long Twilly":
+    "https://assets.hermes.com/is/image/hermesproduct/851592S%2002_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H851592Sv02, $420
+  "Jockey scarf ring":
+    "https://assets.hermes.com/is/image/hermesproduct/604023S%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H604023Sv01, $455
+  "Summer Dye blanket":
+    "https://assets.hermes.com/is/image/hermesproduct/104841M%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H104841Mv01, $4,550
+  "Avalon III throw blanket":
+    "https://assets.hermes.com/is/image/hermesproduct/102665M%2060_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H102665Mv60, $2,050
+  "Optimist 24 blanket":
+    "https://assets.hermes.com/is/image/hermesproduct/104848M%2003_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H104848Mv03, $2,075
+  "Les 6 Pas du Cheval blanket":
+    "https://assets.hermes.com/is/image/hermesproduct/104837M%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H104837Mv01, $3,250
+  "Avalon III pillow, small model":
+    "https://assets.hermes.com/is/image/hermesproduct/102666M%2055_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H102666Mv55, $900 (v54 did NOT resolve)
+  "Avalon pillow, large model":
+    "https://assets.hermes.com/is/image/hermesproduct/102669M%2053_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H102669Mv53, $1,300
+  "H Horizon pillow, medium model":
+    "https://assets.hermes.com/is/image/hermesproduct/103942M%2004_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H103942Mv04 (blue), $900
+  "H Horizon pillow":
+    "https://assets.hermes.com/is/image/hermesproduct/103942M%2005_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H103942Mv05 (red), $900
   "Chevaux a la Couverture set of 2 mugs (n°1 and 2)":
     "https://assets.hermes.com/is/image/hermesproduct/081031P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P081031P (mug n°1), $500
   "Chevaux a la Couverture mug n°3":

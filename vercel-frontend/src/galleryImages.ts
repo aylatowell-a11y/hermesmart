@@ -1681,6 +1681,98 @@ const ETRIVIERE38_SET = [
 const ETRIERS38_SET = [
   V("Front", "https://assets.hermes.com/is/image/hermesproduct/beltkits-38-f34?$leatherstrap=077971CAME_composite_103&$buckle=081753CIJ3_composite_103&extend=0,0,0,0&align=0,0&wid=750&hei=1000&fit=fit&$product_default_bg$"),
 ];
+// Spaced-ID finds — ORIGINAL Hermes photos, hotlinked (CDN probe
+// 2026-11-10, batch 16/17). Refs with "v" resolve as "{base} {digits}"
+// (space in the image ID, e.g. H251526Sv02 -> 251526S 02). Scarves have
+// only model-worn views on the CDN (no flat front view, except the
+// Jockey scarf ring); near-duplicates are NOT wired: Avalon III blanket
+// worn_1/2/3 mirror front_wm_101/102/103; Boucles Twilly worn_2 mirrors
+// worn_102; Summer Dye worn_2 mirrors worn_102; Les 6 Pas worn_2 mirrors
+// front_wm_102; Avalon pillows front_wm_103 / worn_1 / worn_3 mirror
+// front_wm_101; Avalon large worn_2 mirrors front_wm_102.
+const CASAQUE_SCARF_SET = [
+  V("Worn", HERMES_IMG + "251526S%2002_worn_1" + HERMES_Q),
+  V("Worn", HERMES_IMG + "251526S%2002_worn_102" + HERMES_Q),
+  V("Worn", HERMES_IMG + "251526S%2002_worn_2" + HERMES_Q),
+];
+const LETTRES_SCARF_SET = [
+  V("Worn", HERMES_IMG + "254039S%2001_worn_1" + HERMES_Q),
+  V("Worn", HERMES_IMG + "254039S%2001_worn_102" + HERMES_Q),
+  V("Worn", HERMES_IMG + "254039S%2001_worn_2" + HERMES_Q),
+];
+const COLLIERS_SCARF_SET = [
+  V("Worn", HERMES_IMG + "392770T%2001_worn_1" + HERMES_Q),
+];
+const DOUBLE_FACE_STOLE_SET = [
+  V("Worn", HERMES_IMG + "259130S%2017_worn_1" + HERMES_Q),
+];
+const PARTHENON_SCARF_SET = [
+  V("Worn", HERMES_IMG + "259171S%2001_worn_1" + HERMES_Q),
+];
+const CHANTILLY_TRI_SET = [
+  V("Worn", HERMES_IMG + "361173S%2006_worn_1" + HERMES_Q),
+];
+const CINETIQUE_SCARF_SET = [
+  V("Worn", HERMES_IMG + "269172S%2001_worn_1" + HERMES_Q),
+];
+const CARREAUX_SCARF_SET = [
+  V("Worn", HERMES_IMG + "219153S%2001_worn_1" + HERMES_Q),
+];
+const LEOPARDS_TRI_SET = [
+  V("Worn", HERMES_IMG + "362953S%2001_worn_1" + HERMES_Q),
+];
+const EXCEPTIONAL_TWILLY_SET = [
+  V("Worn", HERMES_IMG + "851517S%2001_worn_1" + HERMES_Q),
+];
+const BOUCLES_TWILLY_SET = [
+  V("Worn", HERMES_IMG + "064367S%2004_worn_1" + HERMES_Q),
+  V("Worn", HERMES_IMG + "064367S%2004_worn_102" + HERMES_Q),
+];
+const JOCKEY_LONG_TWILLY_SET = [
+  V("Worn", HERMES_IMG + "851592S%2002_worn_1" + HERMES_Q),
+];
+const JOCKEY_RING_SET = [
+  V("Front", HERMES_IMG + "604023S%2001_front_wm_101" + HERMES_Q),
+];
+const SUMMER_DYE_BLANKET_SET = [
+  V("Front", HERMES_IMG + "104841M%2001_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "104841M%2001_worn_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "104841M%2001_back_wm_105" + HERMES_Q),
+];
+const AVALON_III_BLANKET_SET = [
+  V("Front", HERMES_IMG + "102665M%2060_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "102665M%2060_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "102665M%2060_front_wm_103" + HERMES_Q),
+];
+const OPTIMIST_BLANKET_SET = [
+  V("Front", HERMES_IMG + "104848M%2003_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "104848M%2003_back_wm_105" + HERMES_Q),
+];
+const PAS_CHEVAL_BLANKET_SET = [
+  V("Front", HERMES_IMG + "104837M%2001_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "104837M%2001_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "104837M%2001_back_wm_105" + HERMES_Q),
+];
+const AVALON_III_PILLOW_SET = [
+  V("Front", HERMES_IMG + "102666M%2055_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "102666M%2055_front_wm_102" + HERMES_Q),
+  V("In situ", HERMES_IMG + "102666M%2055_worn_2" + HERMES_Q),
+];
+const AVALON_PILLOW_SET = [
+  V("Front", HERMES_IMG + "102669M%2053_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "102669M%2053_front_wm_102" + HERMES_Q),
+];
+const H_HORIZON_MEDIUM_SET = [
+  V("Front", HERMES_IMG + "103942M%2004_front_wm_101" + HERMES_Q),
+];
+const H_HORIZON_SET = [
+  V("Front", HERMES_IMG + "103942M%2005_front_wm_101" + HERMES_Q),
+];
+const BRIDE_A_BRAC_SET = [
+  V("Front", HERMES_IMG + "104951M%2001_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "104951M%2001_front_wm_102" + HERMES_Q),
+  V("In situ", HERMES_IMG + "104951M%2001_worn_2" + HERMES_Q),
+];
 const MUG_N1_SET = [ V("Front", HERMES_IMG + "081031P_front_wm_101" + HERMES_Q) ];
 const MUG_N3_SET = [ V("Front", HERMES_IMG + "081231P_front_wm_101" + HERMES_Q) ];
 const MUG_SET3_SET = [ V("Front", HERMES_IMG + "081431P_front_wm_101" + HERMES_Q) ];
@@ -1943,6 +2035,49 @@ export function galleryForProduct(
     set = GARDEN_DINNER_PLATE_SET;
   } else if (name === "A Walk in the Garden tray, small model") {
     set = GARDEN_TRAY_SET;
+
+  } else if (name === "Casaque Jumping scarf") {
+    set = CASAQUE_SCARF_SET;
+  } else if (name === "Petite Casaque Lettres Equestres scarf") {
+    set = LETTRES_SCARF_SET;
+  } else if (name === "Colliers de Chiens scarf") {
+    set = COLLIERS_SCARF_SET;
+  } else if (name === "Double Face stole") {
+    set = DOUBLE_FACE_STOLE_SET;
+  } else if (name === "Petite Casaque Parthenon scarf") {
+    set = PARTHENON_SCARF_SET;
+  } else if (name === "Champ de Courses a Chantilly triangle") {
+    set = CHANTILLY_TRI_SET;
+  } else if (name === "Cinetique scarf") {
+    set = CINETIQUE_SCARF_SET;
+  } else if (name === "Carreaux scarf 80") {
+    set = CARREAUX_SCARF_SET;
+  } else if (name === "Les Leopards triangle") {
+    set = LEOPARDS_TRI_SET;
+  } else if (name === "Exceptional embroidered double-faced Twilly") {
+    set = EXCEPTIONAL_TWILLY_SET;
+  } else if (name === "Boucles et Maillons Twilly") {
+    set = BOUCLES_TWILLY_SET;
+  } else if (name === "Jockey long Twilly") {
+    set = JOCKEY_LONG_TWILLY_SET;
+  } else if (name === "Jockey scarf ring") {
+    set = JOCKEY_RING_SET;
+  } else if (name === "Summer Dye blanket") {
+    set = SUMMER_DYE_BLANKET_SET;
+  } else if (name === "Avalon III throw blanket") {
+    set = AVALON_III_BLANKET_SET;
+  } else if (name === "Optimist 24 blanket") {
+    set = OPTIMIST_BLANKET_SET;
+  } else if (name === "Les 6 Pas du Cheval blanket") {
+    set = PAS_CHEVAL_BLANKET_SET;
+  } else if (name === "Avalon III pillow, small model") {
+    set = AVALON_III_PILLOW_SET;
+  } else if (name === "Avalon pillow, large model") {
+    set = AVALON_PILLOW_SET;
+  } else if (name === "H Horizon pillow, medium model") {
+    set = H_HORIZON_MEDIUM_SET;
+  } else if (name === "H Horizon pillow") {
+    set = H_HORIZON_SET;
   } else if (name === "Chevaux a la Couverture set of 2 mugs (n°1 and 2)") {
     set = MUG_N1_SET;
   } else if (name === "Chevaux a la Couverture mug n°3") {
@@ -1964,9 +2099,9 @@ export function galleryForProduct(
     // care set. Single generated view, same asset as the tile.
     set = FH_LIP_CARE_SET;
   } else if (name === "Bride-a-Brac Sellier case, large model") {
-    // Fallback served generated bag photos (BAG_SET) for a case. Single
-    // generated view, same asset as the tile.
-    set = FH_BRIDE_A_BRAC;
+    // ORIGINAL Hermes photos, hotlinked (CDN probe 2026-11-10, spaced ID
+    // 104951M 01, ref H104951Mv01). Front + two In situ stool shots.
+    set = BRIDE_A_BRAC_SET;
   } else if (name === "Bouncing sneaker") {
     if (/blanc|white/.test(colorName)) set = SHOE_BOUNCING_1275_BLANC;
     else if (/noir|black/.test(colorName)) set = SHOE_BOUNCING_1275_NOIR;
