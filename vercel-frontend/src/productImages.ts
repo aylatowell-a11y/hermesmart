@@ -445,6 +445,10 @@ export const PRODUCT_IMAGES: Record<string, string> = {
     "https://assets.hermes.com/is/image/hermesproduct/251526S%2002_worn_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref H251526Sv02, $1,050 (REPLACE generated casaqueJumpingScarf)
   "Palonniers scarf 45": palonniersScarf45,
   "La Nature en Voyage scarf 90": laNatureScarf90,
+  // Original Hermes photo, hotlinked (live extraction 2026-11-10 §B; verified HTTP 200).
+  // Le Philateliste du Faubourg scarf 90, ref H004205S 12, $660 — tile is the Flat view.
+  "Le Philateliste du Faubourg scarf 90":
+    "https://assets.hermes.com/is/image/hermesproduct/004205S%2012_flat_wm_103?$product_default_bg$",
   "Rouge Hermès gift set, Lip care": rougeLipCareSet,
   "Ombres d'Hermès, Eye shadow quartet, Ombres Sables":
     "https://assets.hermes.com/is/image/hermesproduct/60875PV007_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60875PV007, $121 (REPLACE generated ombresEyeShadow)

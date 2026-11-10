@@ -59,9 +59,6 @@ import picFront from "./assets/gallery/picotin-front.webp";
 import picSide from "./assets/gallery/picotin-side.webp";
 import picAbove from "./assets/gallery/picotin-above.webp";
 import picBack from "./assets/gallery/picotin-back.webp";
-import phFlat from "./assets/gallery/philateliste-flat.webp";
-import phWorn from "./assets/gallery/philateliste-worn.webp";
-import phDetail from "./assets/gallery/philateliste-detail.webp";
 import embFront from "./assets/gallery/embroidered-front.webp";
 import embSide from "./assets/gallery/embroidered-side.webp";
 import embBack from "./assets/gallery/embroidered-back.webp";
@@ -1870,7 +1867,13 @@ export function galleryForProduct(
   } else if (name === "Long sleeveless dress") {
     set = LONG_SET;
   } else if (name === "Le Philateliste du Faubourg scarf 90") {
-    set = [V("Flat", phFlat), V("Worn", phWorn), V("Detail", phDetail)];
+    // Original Hermes photos, hotlinked (live extraction 2026-11-10 §B; each URL verified HTTP 200).
+    // Ref H004205S 12, $660. Replaces the generated phFlat/phWorn/phDetail set.
+    set = [
+      V("Flat", "https://assets.hermes.com/is/image/hermesproduct/004205S%2012_flat_wm_103?$product_default_bg$"),
+      V("Worn", "https://assets.hermes.com/is/image/hermesproduct/004205S%2012_worn_104?$product_default_bg$"),
+      V("Detail", "https://assets.hermes.com/is/image/hermesproduct/004205S%2012_detail_wm_105?$product_default_bg$"),
+    ];
   } else if (name === "Embroidered pocket dress") {
     set = [V("Front", embFront), V("Side", embSide), V("Back", embBack), V("Detail", embDetail)];
   } else if (name === "Izmir sandal") {
