@@ -158,6 +158,26 @@ const THEMES = ["Silk", "Beauty", "Belts", "Men's Shoes", "Fashion Jewelry", "Fr
 // Every repeat shows the SAME products at the SAME prices — no extra themes.
 const CAROUSEL_BASE_THEMES = ["Belts", "Men's Shoes", "Fashion Jewelry", "Silk", "Beauty"];
 const CAROUSEL_THEMES: string[] = Array.from({ length: 15 }, (_, i) => CAROUSEL_BASE_THEMES[i % CAROUSEL_BASE_THEMES.length] ?? "Belts");
+// Discover carousel editorial photos — the ORIGINAL hermes.com homepage
+// (block_fetish, NOV_PHASE_1, re-verified 2026-11-10 via the translate
+// proxy): one editorial/MODEL photo per theme, NOT a product photo. The
+// homepage JSON holds exactly 5 slides; the original's counter runs
+// 1/15–15/15 because the 5 themes repeat 3× (slides 1/6/11 Belts,
+// 2/7/12 Men's shoes, …), exactly as CAROUSEL_THEMES repeats them —
+// nothing extra added, nothing invented. All 10 URLs below were fetched
+// (HTTP 200) and VIEWED: the 3x4 portrait crop is the original's mobile
+// editorial image and is used on every breakpoint because our slides are
+// portrait (4/5 mobile, 3/4 desktop); the original's desktop 16:9 crops
+// are the same scenes in landscape (Fashion jewelry desktop is 9:16, the
+// same face/bracelets close-up, even tighter). The 4 products shown under
+// each theme are unchanged (THEME_GRID_ORDER).
+const CAROUSEL_EDITORIAL: Record<string, { img: string; alt: string }> = {
+  "Belts": { img: "https://assets.hermes.com/is/image/hermesedito/WOMEN_BELT_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing the Kelly Pocket 18 belt" },
+  "Men's Shoes": { img: "https://assets.hermes.com/is/image/hermesedito/SHOES_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing brown leather loafers" },
+  "Fashion Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/FASHION_JEWELRY_BELT_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Close-up of a model wearing Kelly bracelets" },
+  "Silk": { img: "https://assets.hermes.com/is/image/hermesedito/SILK_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing a patterned silk scarf" },
+  "Beauty": { img: "https://assets.hermes.com/is/image/hermesedito/MAKEUP_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Close-up of a model wearing red lipstick" },
+};
 // Verified theme grids on hermes.com (7 Nov 2026): the exact four products, in
 // this order, shown under each carousel theme. Names match this store's catalog
 // rows exactly, so repeats (1/6/11, 2/7/12, …) render identical products/prices.
@@ -869,12 +889,12 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         {/* Swipe carousel — one large central image, neighbours peeking at the edges */}
         <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[12%] pb-1 sm:px-[18%] lg:px-[31%]" role="tablist" aria-label="Discover themes">
           {CAROUSEL_THEMES.map((t, i) => {
-            const rep = products.find((p) => p.theme === t) ?? products[0];
-            if (!rep) return null;
+            const ed = CAROUSEL_EDITORIAL[t];
+            if (!ed) return null;
             return (
               <button key={`${t}-${i}`} data-slide role="tab" aria-selected={activeIdx === i} aria-label={`Theme ${t}, ${i + 1} of ${CAROUSEL_THEMES.length}`} onClick={() => centerSlide(i)}
                 className={`relative aspect-[4/5] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 lg:aspect-[3/4] ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
-                <ProductVisual p={rep} large />
+                <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
                 <span className="absolute bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-6 py-2.5 text-xs font-medium uppercase tracking-[0.2em] text-black shadow">{t}</span>
               </button>
             );
@@ -924,22 +944,35 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
       {/* BOARD e) KELLY EDITORIAL — full-bleed photographic board, as on
           hermes.com: two stacked gold Kelly RINGS (one plain, one pavé-set
           with diamonds) on an orange background; the whole image is a link
-          to Jewelry, as on the original. The image is shown at its natural
-          aspect ratio (9:16 mobile / 16:9 desktop) — NO fixed height, NO
-          object-cover crop — so the rings sit in the middle of the frame
-          and the text sits BELOW them on the plain orange background at
-          the bottom, exactly as on the original. A fixed height (e.g.
-          h-[62vh]) crops the image and pushes the rings down into the
-          text. The text is NOT given a dark gradient: the original puts
-          white text straight on the orange image. */}
+          to Jewelry, as on the original. PHONE measurements (user's
+          screenshot of hermes.com, 720×1640, photo 174–1543px — all four
+          gold edges fit within 2px): the original does NOT show the 9:16
+          file at natural size — it shows the centre ~87% zoomed ~1.15×,
+          bottom-anchored (top ~6.7% cropped, bottom ~0.6%, sides ~6.7%),
+          in a container ~1.90× as tall as wide (720×1369), so the rings
+          render ~15% larger and sit at ~27–64% of the height. The text is
+          3 lines at ~18px Playfair italic (measured with the real font:
+          18px gives the original's exact line breaks at 306/315/299px;
+          the old 24px wrapped to 4 lines and crept up to the rings), line
+          height ~31px, first line top at ~81% of the height, with a clear
+          ~17% gap below the rings. The bottom ~38% carries a dark
+          gradient (measured: ~0% at 65% height → ~77% black at the very
+          bottom) — the rendered original is much darker at the bottom
+          than the raw file. The CTA is ~12px with tight tracking
+          (~0.05em; measured 181px wide — the old 0.3em rendered ~253px).
+          DESKTOP is untouched: natural 16:9, 28px text, no gradient,
+          live-verified 2026-11-10. */}
       <section className="relative cursor-pointer overflow-hidden" style={{ background: "#2e1c11" }} onClick={() => go({ t: "category", cat: "jewelry" })} aria-label="The Kelly story — discover the collection">
-        <picture>
-          <source media="(max-width: 640px)" srcSet={kellyRingsImgMobile} />
-          <img src={kellyRingsImg} alt="Two gold Kelly rings, one pavé-set with diamonds, on an orange background" className="block w-full" />
-        </picture>
-        <div className="absolute inset-x-0 bottom-0 pb-10 pt-8 text-center text-white sm:pb-12">
-          <p className="font-serif-d mx-auto max-w-3xl px-4 text-2xl italic leading-snug sm:text-[28px]">With each new collection, the Kelly story reinvents itself and reveals new depths. A legendary design, constantly in motion.</p>
-          <button aria-label="Discover the Kelly collection" className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] underline underline-offset-8" onClick={() => go({ t: "category", cat: "jewelry" })}>Discover the collection</button>
+        <div className="relative aspect-[720/1369] overflow-hidden sm:aspect-auto">
+          <picture>
+            <source media="(max-width: 640px)" srcSet={kellyRingsImgMobile} />
+            <img src={kellyRingsImg} alt="Two gold Kelly rings, one pavé-set with diamonds, on an orange background" className="absolute bottom-[-0.7%] left-1/2 block w-[115.3%] max-w-none -translate-x-1/2 sm:static sm:bottom-auto sm:w-full sm:max-w-full sm:translate-x-0" />
+          </picture>
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/75 to-transparent sm:hidden" />
+          <div className="absolute inset-x-0 bottom-0 pb-4 pt-8 text-center text-white sm:pb-12">
+            <p className="font-serif-d mx-auto max-w-3xl px-4 text-[18px] italic leading-[31px] sm:text-[28px] sm:leading-snug">With each new collection, the Kelly story reinvents itself and reveals new depths. A legendary design, constantly in motion.</p>
+            <button aria-label="Discover the Kelly collection" className="mt-4 text-xs font-semibold uppercase tracking-[0.05em] underline underline-offset-8 sm:tracking-[0.3em]" onClick={() => go({ t: "category", cat: "jewelry" })}>Discover the collection</button>
+          </div>
         </div>
       </section>
     </div>
