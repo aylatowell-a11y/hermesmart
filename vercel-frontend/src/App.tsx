@@ -903,11 +903,9 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         <div className="mx-auto mt-4 h-[2px] w-44 bg-black/15" aria-hidden="true">
           <div className="h-full bg-black transition-transform duration-300" style={{ width: `${100 / CAROUSEL_THEMES.length}%`, transform: `translateX(${activeIdx * 100}%)` }} />
         </div>
-        <div className="mt-5 flex items-center justify-center gap-3 lg:hidden" aria-label="Theme position">
-          <button aria-label="Previous theme" className="flex h-8 w-8 items-center justify-center border border-black/25" onClick={() => centerSlide(activeIdx - 1)}>‹</button>
-          <span className="text-xs tabular-nums">{activeIdx + 1} / {CAROUSEL_THEMES.length}</span>
-          <button aria-label="Next theme" className="flex h-8 w-8 items-center justify-center border border-black/25" onClick={() => centerSlide(activeIdx + 1)}>›</button>
-        </div>
+        {/* No counter/arrows on mobile — the original's mobile carousel has only
+            the progress line above (verified on hermes.com, phone). The 1/15
+            counter + arrows live only in the desktop heading above (hidden lg:block). */}
         <h3 className="mt-10 text-center text-[11px] font-semibold uppercase tracking-[0.25em] lg:text-left">Products for the theme {theme}</h3>
         <div key={theme} className="-mx-4 mt-5 grid grid-cols-2 gap-x-[3px] gap-y-10 sm:mx-0 sm:gap-5 lg:grid-cols-4">
           {shown.map((p) => <ProductCard key={p.id} p={p} portrait onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
