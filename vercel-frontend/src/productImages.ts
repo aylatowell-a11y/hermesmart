@@ -136,12 +136,48 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   "Neo Double Sens 35 bicolor bag":
     "https://assets.hermes.com/is/image/hermesproduct/089099CAAD_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   "Kelly Pocket 18 belt": kellyPocket18Belt,
-  "Collier de Chien 50 belt": collierDeChien50Belt,
-  "Elan Pocket 24 reversible belt": elanPocket24Belt,
+  // Original Hermes photo, hotlinked (user instruction 2026-11-09; CDN probe
+  // 2026-11-10). Collier de Chien 50 belt, Rouge H, ref H010439CK55080
+  // (US $4,975) — verified: red Box-calfskin strap, palladium CDC hardware.
+  // NOTE: data.ts says Alligator/Gold — the US $4,975 Rouge H listing is Box
+  // calfskin + Palladium; the alligator ref H060651UK10080 is NOT addressable
+  // (0 hits on every probed form). Correct the material/finish fields in
+  // data.ts or keep the photo + ref only — see cdn-probe.md §5.
+  "Collier de Chien 50 belt":
+    "https://assets.hermes.com/is/image/hermesproduct/010439CK55_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked (CDN probe 2026-11-10). Elan Pocket 24
+  // reversible belt, Beige / Natural, ref H011790UCAAXS — verified: tan +
+  // canvas belt bag, gold H buckle, model-worn shot. NOTE: data.ts says
+  // Palladium — the beige variant on hermes.com is gold-plated (UCAA); the
+  // palladium variant (UKAB) is the BLACK bag. Correct the finish in data.ts
+  // or keep the photo + ref only — see cdn-probe.md §5.
+  "Elan Pocket 24 reversible belt":
+    "https://assets.hermes.com/is/image/hermesproduct/011790UCAA_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Serif 32 mm: NOT wired — the exact Red composite was not found (see
+  // cdn-probe.md §5). The gold Serif buckle alone is verified
+  // (011892UQ53_front_1) but shows no strap, so the generated tile stays.
   "Serif belt buckle & Reversible leather strap 32 mm": serifBelt32,
-  "H belt buckle & Reversible leather strap 38 mm": hBelt38,
-  "Etriviere belt buckle & Reversible leather strap 38 mm": etriviereBelt38,
-  "Etriers belt buckle & Reversible leather strap 38 mm": etriersBelt38,
+  // Original Hermes photo, hotlinked (CDN probe 2026-11-10). H belt buckle
+  // & Reversible leather strap 38 mm, Black / Gris Foncé — belt-kit
+  // composite (strap 077971CAAJ + plain-H buckle 064544CK05, palladium),
+  // rendered at 750x1000 and visually verified. NOTE: data.ts lists no
+  // finish; the gold variant (buckle 064544CM2M) is also verified — see
+  // cdn-probe.md §5.
+  "H belt buckle & Reversible leather strap 38 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/beltkits-38-f34?$leatherstrap=077971CAAJ_composite_103&$buckle=064544CK05_composite_103&extend=0,0,0,0&align=0,0&wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked (CDN probe 2026-11-10). Etriviere belt
+  // buckle & Reversible leather strap 38 mm, Black / Blue Lin — belt-kit
+  // composite (strap 077971CAAJ + Etriviere buckle 077931CP2K, gold),
+  // rendered at 750x1000 and visually verified (black strap, dark-blue
+  // reverse, gold stirrup buckle).
+  "Etriviere belt buckle & Reversible leather strap 38 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/beltkits-38-f34?$leatherstrap=077971CAAJ_composite_103&$buckle=077931CP2K_composite_103&extend=0,0,0,0&align=0,0&wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // Original Hermes photo, hotlinked (CDN probe 2026-11-10). Etriers belt
+  // buckle & Reversible leather strap 38 mm, Blue Moyen — belt-kit composite
+  // (strap 077971CAME + Etriers buckle 081753CIJ3, palladium), rendered at
+  // 750x1000 and visually verified (navy-blue strap, silver stirrup buckle).
+  "Etriers belt buckle & Reversible leather strap 38 mm":
+    "https://assets.hermes.com/is/image/hermesproduct/beltkits-38-f34?$leatherstrap=077971CAME_composite_103&$buckle=081753CIJ3_composite_103&extend=0,0,0,0&align=0,0&wid=750&hei=1000&fit=fit&$product_default_bg$",
   // Original Hermes photo, hotlinked from assets.hermes.com (user
   // instruction 2026-11-09). Bouncing sneaker, ref H242810ZH90, $1,275 —
   // verified to load and to show the white Bouncing sneaker (Blanc, the
@@ -490,8 +526,45 @@ export const PRODUCT_IMAGES: Record<string, string> = {
     "https://assets.hermes.com/is/image/hermesproduct/118249V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V118249V0, $240 (4×15 ml: Musc Pallida EDP, Oud Alezan EDP, Rose Ikebana EDT, Ambre Narguile EDT)
   "Twilly d'Hermès eau de parfum gift set – The fragrance ritual":
     "https://assets.hermes.com/is/image/hermesproduct/110983V0_front_wm_1?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V110983V0, $264 (85 ml + 15 ml + lotion; tile is front_wm_1 — no 101 exists)
+  // Original Hermes photos, hotlinked (CDN probe 2026-11-10). Plain Twilly
+  // EDP (NOT Tutti Twilly / Eau Ginger — different products), Bleue EDT and
+  // Epice Marine EDT — refs found on hermes.com product pages, every URL
+  // verified (HTTP 200 + visual check). Twilly + Bleue have NO front_wm_101
+  // — the tile is front_wm_102 (bottle front).
+  "Twilly d'Hermès Eau de parfum":
+    "https://assets.hermes.com/is/image/hermesproduct/107263V0_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V107263V0, $105 (30 ml)
+  "Eau des Merveilles Bleue Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/107179V0_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V107179V0, $92 — NOTE: V107179V0 is the 100 ml listing; store $92 is the 30 ml size (same bottle design). See cdn-probe.md §5.
+  "Epice Marine Eau de toilette":
+    "https://assets.hermes.com/is/image/hermesproduct/113486V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V113486V0, $385
   "A Walk in the Garden teapot":
     "https://assets.hermes.com/is/image/hermesproduct/043018P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043018P, $1,370
+  // Original Hermes photos, hotlinked (CDN probe 2026-11-10). A Walk in the
+  // Garden tableware — all 10 remaining pieces; refs found on hermes.com
+  // product pages, every URL verified (HTTP 200 + visual check). Duplicate
+  // names share one key (one colourway per name): tea cup and saucer =
+  // P043016P (green grid); a second variant P043116P (yellow grid) exists
+  // but is not mapped to a store row — see cdn-probe.md §5.
+  "A Walk in the Garden bowl, large model":
+    "https://assets.hermes.com/is/image/hermesproduct/043285P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043285P, $415
+  "A Walk in the Garden salad bowl":
+    "https://assets.hermes.com/is/image/hermesproduct/043036P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043036P, $705
+  "A Walk in the Garden bread and butter plate":
+    "https://assets.hermes.com/is/image/hermesproduct/043212P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043212P, $135
+  "A Walk in the Garden dessert plate":
+    "https://assets.hermes.com/is/image/hermesproduct/043107P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043107P, $180
+  "A Walk in the Garden tart platter":
+    "https://assets.hermes.com/is/image/hermesproduct/043022P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043022P, $515
+  "A Walk in the Garden tea cup and saucer":
+    "https://assets.hermes.com/is/image/hermesproduct/043016P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043016P, $265
+  "A Walk in the Garden Mug":
+    "https://assets.hermes.com/is/image/hermesproduct/043031P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043031P, $230
+  "A Walk in the Garden hollow dish":
+    "https://assets.hermes.com/is/image/hermesproduct/043013P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043013P, $240
+  "A Walk in the Garden dinner plate":
+    "https://assets.hermes.com/is/image/hermesproduct/043001P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043001P, $215
+  "A Walk in the Garden tray, small model":
+    "https://assets.hermes.com/is/image/hermesproduct/043089P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P043089P, $275
   "Chevaux a la Couverture set of 2 mugs (n°1 and 2)":
     "https://assets.hermes.com/is/image/hermesproduct/081031P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref P081031P (mug n°1), $500
   "Chevaux a la Couverture mug n°3":

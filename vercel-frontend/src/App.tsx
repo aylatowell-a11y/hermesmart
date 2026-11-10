@@ -261,13 +261,20 @@ function HermesLogo({ settings, light, variant = "full" }: { settings: Settings;
 function load<T>(k: string, fb: T): T { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fb; } catch { return fb; } }
 function save(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } }
 
-export function ProductVisual({ p, large: _large }: { p: Product; large?: boolean }) {
+export function ProductVisual({ p, large: _large, altSrc, altActive }: { p: Product; large?: boolean; altSrc?: string; altActive?: boolean }) {
   // Real studio product photo for every product (assets/products/), filling
   // the tile with object-cover — no glyph/emoji placeholders on the storefront.
   const img = productImageFor(p);
   return (
     <div className="relative h-full w-full overflow-hidden" style={{ background: p.tone }} aria-label={p.name}>
       <img src={img} alt={p.name} loading="lazy" className="h-full w-full object-cover" />
+      {/* Hover alternate (hermes.com): a second photo of the same product,
+          stacked over the tile photo and cross-faded in (300 ms) while the
+          tile is hovered / swiped. Mounted only once armed so listing pages
+          don't double their image requests. */}
+      {altSrc && (
+        <img src={altSrc} alt="" aria-hidden="true" loading="lazy" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${altActive ? "opacity-100" : "opacity-0"}`} />
+      )}
       {p.status === "available_soon" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">Available soon</span>}
       {p.status === "in_store_only" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">In store only</span>}
       {p.status === "out_of_stock" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">Out of stock</span>}
@@ -277,10 +284,62 @@ export function ProductVisual({ p, large: _large }: { p: Product; large?: boolea
 
 function ProductCard({ p, onOpen, onQuickBuy, colourInName }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean }) {
   const bagIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>;
+  // Tile alternate views (hermes.com parity): the tile photo swaps on hover
+  // (desktop) and cycles on horizontal swipe (touch) through the product's
+  // gallery views — without opening the product page. The alternate is the
+  // product's 2nd gallery view first (galleryForProduct, default colourway),
+  // skipping Video views and any view that duplicates the tile photo.
+  // Single-view products (e.g. Milo hat, Rider jacket) have no alternate.
+  // CAVEAT: gallery views are mostly generated type-set photos, not the
+  // original Hermes second view — the mechanism is exact, the imagery is
+  // approximate until original second-view URLs are extracted live.
+  const tileSrc = productImageFor(p);
+  const altViews = useMemo(() => {
+    const views = galleryForProduct(p, 0);
+    const afterFirst = views.filter((v, i) => i >= 1 && !v.video && v.src !== tileSrc).map((v) => v.src);
+    const first = views.filter((v) => !v.video && v.src !== tileSrc).map((v) => v.src);
+    return [...new Set([...afterFirst, ...first])];
+  }, [p, tileSrc]);
+  const [altIdx, setAltIdx] = useState<number | null>(null);
+  const [altArmed, setAltArmed] = useState(false);
+  // Hover exists on laptop, not on mobile: only arm the hover swap on a
+  // fine pointer, so touch taps never get a stuck hover state.
+  const finePointer = useMemo(() => typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches, []);
+  const touchRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressClickRef = useRef(false);
+  const onHoverStart = () => {
+    if (!finePointer || altViews.length === 0) return;
+    setAltArmed(true);
+    setAltIdx(0);
+  };
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchRef.current = t ? { x: t.clientX, y: t.clientY } : null;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touchRef.current; touchRef.current = null;
+    const t = e.changedTouches[0];
+    if (!start || !t || altViews.length === 0) return;
+    const dx = t.clientX - start.x; const dy = t.clientY - start.y;
+    // Sideways swipe only: horizontal movement must dominate, so vertical
+    // page scrolling never changes the photo. A swipe never opens the
+    // product — the tap that follows it is suppressed once.
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      setAltArmed(true);
+      setAltIdx((i) => {
+        if (i === null) return dx < 0 ? 0 : altViews.length - 1;
+        const next = dx < 0 ? i + 1 : i - 1;
+        return ((next % altViews.length) + altViews.length) % altViews.length;
+      });
+      suppressClickRef.current = true;
+    }
+  };
   return (
     <div className="group relative cursor-pointer" role="link" aria-label={`${p.name}, ${priceText(p)}`} tabIndex={0}
-      onClick={() => onOpen(p.id)} onKeyDown={(e) => { if (e.key === "Enter") onOpen(p.id); }}>
-      <div className="aspect-square overflow-hidden transition-transform duration-300 group-hover:scale-[1.015]"><ProductVisual p={p} /></div>
+      onClick={() => { if (suppressClickRef.current) { suppressClickRef.current = false; return; } onOpen(p.id); }} onKeyDown={(e) => { if (e.key === "Enter") onOpen(p.id); }}
+      onMouseEnter={onHoverStart} onMouseLeave={() => setAltIdx(null)}
+      onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <div className="aspect-square overflow-hidden transition-transform duration-300 group-hover:scale-[1.015]"><ProductVisual p={p} altSrc={altIdx !== null ? altViews[altIdx] : (altArmed ? altViews[0] : undefined)} altActive={altIdx !== null} /></div>
       {colourInName ? (
         // Category tile, as on hermes.com: the colour is appended to the
         // name ("Le Petit Sac bag, Beige/Natural"), the price sits below,
@@ -420,7 +479,7 @@ export function App() {
   useEffect(() => { save("hlx-cart", cart); }, [cart]);
   useEffect(() => { save("hlx-user", user); }, [user]);
   useEffect(() => { try { let k = localStorage.getItem("hlx-visitor"); if (!k) { k = "v-" + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("hlx-visitor", k); } const day = new Date().toISOString().slice(0, 10); const flag = `hlx-visit-${day}`; if (!localStorage.getItem(flag)) { localStorage.setItem(flag, "1"); api.recordVisit({ visitorKey: k, day }).catch(() => {}); } } catch { /* ignore */ } }, []);
-  const go = (v: View) => { setView(v); setMobileNav(false); setMenuCat(null); topRef.current?.scrollIntoView(); window.scrollTo({ top: 0 }); };
+  const go = (v: View) => { if (v.t === "category") pulse(2200); setView(v); setMobileNav(false); setMenuCat(null); topRef.current?.scrollIntoView(); window.scrollTo({ top: 0 }); };
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const cartTotal = cart.reduce((s, i) => s + i.qty * i.price, 0);
 
@@ -1111,7 +1170,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   else { pushSec(secCategory); pushSec(secLine); pushSec(secMaterial); pushSec(secModelSize); pushSec(secSize); pushSec(secFinish); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
   const openSection = sections.some((s) => s.key === openKey) ? openKey : (sections[0]?.key ?? "");
 
-  const quickBuyOn = !isBagsPage && !isRTWPage && (cat === "men" || cat === "home" || cat === "fragrances" || isShoesPage || /scarf|silk|twilly/i.test(subLow));
+  const quickBuyOn = isSneakersPage;
 
   // Editorial tiles interleaved in the unfiltered grid, as on hermes.com.
   const edText = isBagsPage
@@ -1296,10 +1355,10 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
         </div>
       )}
 
-      {loadingMore && <LoadingVeil leaving={moreLeaving} ms={400} />}
+      {loadingMore && <LoadingVeil leaving={moreLeaving} ms={2200} />}
       {!mosaic && visible < filtered.length && (
         <div className="mt-12 text-center">
-          <button aria-label={loadingMore ? "Loading, please wait." : "See more products"} disabled={loadingMore} className="border border-black px-10 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] disabled:opacity-60" onClick={() => { setLoadingMore(true); setMoreLeaving(false); setTimeout(() => setMoreLeaving(true), 100); setTimeout(() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadingMore(false); setMoreLeaving(false); setLoadedMsg(`${added} products added. ${next} out of ${filtered.length} displayed`); }, 400); }}>SEE MORE PRODUCTS</button>
+          <button aria-label={loadingMore ? "Loading, please wait." : "See more products"} disabled={loadingMore} className="border border-black px-10 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] disabled:opacity-60" onClick={() => { setLoadingMore(true); setMoreLeaving(false); setTimeout(() => setMoreLeaving(true), 100); setTimeout(() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadingMore(false); setMoreLeaving(false); setLoadedMsg(`${added} products added. ${next} out of ${filtered.length} displayed`); }, 2200); }}>SEE MORE PRODUCTS</button>
           <div className="mx-auto mt-5 h-px w-64 bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${filtered.length ? (Math.min(visible, filtered.length) / filtered.length) * 100 : 0}%` }} /></div>
           <p className="mt-2 text-xs text-neutral-500">{Math.min(visible, filtered.length)} products viewed</p>
           {loadedMsg && <p className="mt-1 text-xs text-neutral-500" role="status">{loadedMsg}</p>}
@@ -1559,6 +1618,10 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
       <p className="mt-1">Returns and exchanges are easy and complimentary within 30 days of delivery. Shoes must be tried on non-abrasive, carpeted surfaces, and the Hermès Sellier tag must be intact. Personalized products cannot be refunded or exchanged.</p>
     </>) },
     { title: "GIFTING", content: <>Every order is delivered in the orange box tied with Bolduc ribbon. A gift message can be added at checkout; prices are never shown on the delivery note.</> },
+    // USER GUIDE — only the Arceau watch carries it on hermes.com (the
+    // product's own accordions list in data.ts proves it: Arceau Petite
+    // Lune, id 53). Content is the watch user guide already in this file.
+    ...(p.accordions?.includes("USER GUIDE") ? [{ title: "USER GUIDE", content: <>Watch user guide: pull the crown to set the time; keep away from magnetic fields; service every 3–5 years.</> }] : []),
   ];
   return (
     <div className="pb-24 lg:pb-6">
@@ -1618,9 +1681,9 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
               <p className="mt-1 text-sm font-medium underline underline-offset-4">{color.name}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 {(showAllColors ? p.colors : p.colors.slice(0, 6)).map((c, i) => (
-                  <button key={c.name} aria-label={`Colour ${c.name}${c.available ? "" : " (unavailable)"}`} disabled={!c.available} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
-                    className={`relative h-9 w-9 rounded-full border-2 ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available ? "opacity-40" : ""}`} style={{ background: c.hex }}>
-                    {!c.available && <span className="absolute inset-0 flex items-center justify-center text-white">✕</span>}
+                  <button key={c.name} aria-label={`Colour ${c.name}${c.available && p.status === "available" ? "" : " (unavailable)"}`} disabled={!c.available || p.status !== "available"} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
+                    className={`relative h-9 w-9 rounded-full border-2 ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || p.status !== "available" ? "opacity-40" : ""}`} style={{ background: c.hex }}>
+                    {(!c.available || p.status !== "available") && <span className="absolute inset-0 flex items-center justify-center text-white">✕</span>}
                   </button>
                 ))}
                 {!showAllColors && (p.colors.length > 6 || moreColors) && (
@@ -1963,11 +2026,12 @@ function TrackOrders({ user, go }: { settings: Settings; user: { name: string; e
   const [trackMsg, setTrackMsg] = useState("");
   const q = useQuery({ queryKey: ["track", sent], queryFn: () => api.myOrders({ email: sent }), enabled: sent.includes("@") });
   const doTrack = async () => {
+    const em = user?.email ?? email;
     if (orderId.trim()) {
-      const r = await api.trackOrder({ orderId: Number(orderId), email });
-      if (r.found && r.order) { setTracked({ id: r.order.id, status: r.order.status }); setTrackMsg(""); setSent(email); }
+      const r = await api.trackOrder({ orderId: Number(orderId), email: em });
+      if (r.found && r.order) { setTracked({ id: r.order.id, status: r.order.status }); setTrackMsg(""); setSent(em); }
       else { setTracked(null); setTrackMsg("No order found with that number and email."); }
-    } else setSent(email);
+    } else setSent(em);
   };
   const steps = ["Pending", "Processing", "Shipped", "Delivered"];
   const shown = tracked ? (q.data?.orders.filter(o => o.id === tracked.id) ?? []) : (q.data?.orders ?? []);
@@ -2098,12 +2162,9 @@ function CartPage({ cart, setCart, settings, go, total, count }: { cart: CartIte
               </div>
             </div>
             <aside className="h-fit border border-black/10 p-5">
-              <div className="flex justify-between text-sm"><span>Subtotal</span><span>{fmt2(total)}</span></div>
-              <div className="mt-2 flex justify-between text-sm"><span>Shipping</span><span className="text-right text-xs text-neutral-500">Shipping costs will be calculated during checkout</span></div>
-              <div className="mt-2 flex justify-between text-sm"><span>Taxes</span><span className="text-right text-xs text-neutral-500">Taxes will be calculated during checkout</span></div>
               <div className="mt-4 flex justify-between border-t border-black/10 pt-4 text-sm font-semibold uppercase tracking-[0.15em]"><span>Total</span><span>{fmt2(total)}</span></div>
               <button aria-label="Checkout from cart" className="mt-5 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "checkout" })}>Checkout</button>
-              <button aria-label="Buy with Apple Pay from cart" className="mt-2 w-full border border-black bg-white py-3.5 text-sm font-semibold" onClick={() => go({ t: "checkout" })}> Buy with Apple Pay</button>
+              <button aria-label="Buy with Apple Pay from cart" className="mt-2 w-full border border-black bg-white py-3.5 text-sm font-semibold" onClick={() => go({ t: "checkout" })}>Buy with Apple Pay</button>
               <div className="mt-6 border-t border-black/10 pt-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.25em]">The Orange Box</p>
                 <p className="mt-2 text-sm leading-6 text-neutral-600">Every order is delivered in the orange box tied with Bolduc ribbon.</p>
@@ -2163,7 +2224,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
     </>
   ) : (
     <>
-      <button aria-label="Subscribe to the newsletter" className="mt-3 text-[11px] font-semibold uppercase tracking-[0.25em] underline underline-offset-8" onClick={() => setSubOpen(!subOpen)}>Subscribe</button>
+      <button aria-label="Subscribe to the newsletter" className="mt-3 text-[11px] font-semibold uppercase tracking-[0.25em] underline underline-offset-8" onClick={() => setSubOpen(!subOpen)}>Subscribe to the newsletter</button>
       {subOpen && (
         <div className="mt-3">
           <input aria-label="Newsletter email" type="email" className="w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -2298,7 +2359,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   // option, "login" otherwise. The visitor can switch inside the page.
   const [authMode, setAuthMode] = useState<"login" | "signup">(mode ?? "login");
   // Sign-in form.
-  const [liEmail, setLiEmail] = useState(""); const [liPw, setLiPw] = useState(""); const [liMsg, setLiMsg] = useState("");
+  const [liEmail, setLiEmail] = useState(""); const [liPw, setLiPw] = useState(""); const [liMsg, setLiMsg] = useState(""); const [emailStep, setEmailStep] = useState(true);
   const [forgotMsg, setForgotMsg] = useState("");
   // Create-account form (Hermes create-account page layout).
   const [suTitle, setSuTitle] = useState(""); const [suFirst, setSuFirst] = useState(""); const [suLast, setSuLast] = useState("");
@@ -2384,21 +2445,30 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     return (
       <div className="mx-4 my-10 max-w-md bg-white px-6 py-10 sm:mx-auto sm:px-8">
         <h1 className="text-center text-[13px] uppercase tracking-[0.3em] [font-family:ui-monospace,Menlo,monospace]">Sign in</h1>
-        <p className="mt-4 text-center text-sm leading-6 text-neutral-700">Please sign in with your email and password to access your account.</p>
+        <p className="mt-4 text-center text-sm leading-6 text-neutral-700">{emailStep ? "Please enter your email below to sign in to your account." : `Welcome back — please enter your password for ${liEmail}.`}</p>
         <div className="mt-6 space-y-4">
           <label className={lab}>E-mail *
-            <input aria-label="Sign in email" type="email" className={underline} value={liEmail} onChange={(e) => setLiEmail(e.target.value)} />
+            <input aria-label="Sign in email" type="email" className={underline} value={liEmail} disabled={!emailStep} onChange={(e) => setLiEmail(e.target.value)} />
             <span className={hint}>Expected format: yourname@domain.com</span>
           </label>
-          <label className={lab}>Password *
-            <input aria-label="Sign in password" type="password" className={underline} value={liPw} onChange={(e) => setLiPw(e.target.value)} />
-          </label>
+          {!emailStep && (
+            <>
+              <button aria-label="Use a different email" className="block text-xs uppercase tracking-[0.2em] underline" onClick={() => { setEmailStep(true); setLiPw(""); setLiMsg(""); }}>Use a different email</button>
+              <label className={lab}>Password *
+                <input aria-label="Sign in password" type="password" className={underline} value={liPw} onChange={(e) => setLiPw(e.target.value)} />
+              </label>
+            </>
+          )}
         </div>
         {liMsg && <p className="mt-3 text-sm text-red-700" role="status">{liMsg}</p>}
-        <button aria-label="Sign in button" className="mt-5 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => login.mutate()}>Sign in</button>
+        {emailStep ? (
+          <button aria-label="Continue with email" className="mt-5 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => { if (!liEmail.includes("@")) { setLiMsg("Please enter a valid email address."); return; } setLiMsg(""); setEmailStep(false); }}>Continue</button>
+        ) : (
+          <button aria-label="Sign in button" className="mt-5 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => login.mutate()}>Sign in</button>
+        )}
         <button aria-label="Forgot password" className="mt-4 w-full text-center text-xs uppercase tracking-[0.2em] underline" onClick={() => setForgotMsg("This standalone build has no email service, so password reset is unavailable — please create a new account or contact customer service.")}>Forgot your password?</button>
         {forgotMsg && <p className="mt-3 text-center text-xs leading-5 text-neutral-600" role="status">{forgotMsg}</p>}
-        <p className="mt-6 text-center text-sm text-neutral-700">New to Hermès? <button aria-label="Go to create account" className="underline" onClick={() => { setAuthMode("signup"); setLiMsg(""); setForgotMsg(""); }}>Create an account</button></p>
+        <p className="mt-6 text-center text-sm text-neutral-700">New to Hermès? <button aria-label="Go to create account" className="underline" onClick={() => { setAuthMode("signup"); setLiMsg(""); setForgotMsg(""); setEmailStep(true); }}>Create an account</button></p>
         <p className="mt-8 border-t border-black/10 pt-4 text-center text-xs text-neutral-500">Store admin? <button aria-label="Sign in to Admin Panel" className="underline" onClick={() => go({ t: "admin" })}>Sign in to Admin Panel</button></p>
       </div>
     );
@@ -2446,7 +2516,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
           <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Personal information</h2>
           <label className={`${lab} mt-5`}>Title *
             <select aria-label="Title" className={underline} value={suTitle} onChange={(e) => setSuTitle(e.target.value)}>
-              <option value="">Select</option><option value="Mr">Mr</option><option value="Mrs">Mrs</option><option value="Ms">Ms</option><option value="Dr">Dr</option>
+              <option value="">Select</option><option value="Mr">Mr</option><option value="Mrs">Mrs</option><option value="Miss">Miss</option><option value="Ms">Ms</option><option value="Dr">Dr</option>
             </select>
           </label>
           <label className={`${lab} mt-5`}>First name *
@@ -2473,7 +2543,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
       </div>
       {suMsg && <p className="mt-6 text-sm text-red-700" role="status">{suMsg}</p>}
       <button aria-label="Create my account" className="mt-8 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white sm:mx-auto sm:block sm:w-80" onClick={submitSignup}>Create my account</button>
-      <p className="mt-6 text-center text-sm text-neutral-700">Already have an account? <button aria-label="Go to sign in" className="underline" onClick={() => { setAuthMode("login"); setSuMsg(""); }}>Sign in</button></p>
+      <p className="mt-6 text-center text-sm text-neutral-700">Already have an account? <button aria-label="Go to sign in" className="underline" onClick={() => { setAuthMode("login"); setSuMsg(""); setEmailStep(true); }}>Sign in</button></p>
       <p className="mt-8 border-t border-black/10 pt-4 text-center text-xs text-neutral-500">Store admin? <button aria-label="Sign in to Admin Panel" className="underline" onClick={() => go({ t: "admin" })}>Sign in to Admin Panel</button></p>
     </div>
   );
@@ -2528,12 +2598,14 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
   const [chatOpen, setChatOpen] = useState(false);
   const mountCartCount = useRef(cart.length);
   useEffect(() => { if (mountCartCount.current === 0) go({ t: "cart" }); }, []);
-  const payMethods = ["Visa", "MasterCard", "American Express", "Discover", "Diners", "JCB", "China Union Pay", "PayPal", "Apple Pay"];
+  const payMethods = ["Visa", "MasterCard", "American Express", "Discover", "Diners Club", "JCB", "China Union Pay", "PayPal", "Apple Pay"];
   const order = useMutation({
     mutationFn: () => api.placeOrder({ customerName: `${f.first} ${f.last}`.trim() || (user?.name ?? "Customer"), email, address: tab === "collect" ? `Collect in store — ${storePicked}` : `${f.address}${f.address2 ? ", " + f.address2 : ""}, ${f.city}, ${f.state} ${f.zip}`, paymentMethod: pay, deliveryOption: tab === "collect" ? "Collect in store" : "Ship to an address", items: cart.map((i) => ({ productId: i.productId, name: i.name, price: i.price, qty: i.qty, color: i.color, size: i.size })) }),
     onSuccess: (r) => { setPlacedTotal(total); setPlaced(r.orderId); setCart([]); window.scrollTo({ top: 0 }); },
   });
   const req = (v: string) => attempted && !v.trim();
+  const phoneDigits = f.phone.replace(/\D/g, "").replace(/^1/, "");
+  const phoneBad = attempted && !/^\d{10}$/.test(phoneDigits);
   const fieldErr = (bad: boolean) => bad ? <p className="mt-1 text-xs text-[#b3261e]">Required information</p> : null;
   const underline = "w-full border-0 border-b border-black/40 bg-transparent px-0 py-2 text-[15px] outline-none focus:border-black";
   const labelCls = "block text-[13px] text-neutral-500";
@@ -2649,11 +2721,11 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
       <section className="bg-[#fffdf9] px-5 py-5" aria-label="Delivery section">
         <h2 className={CO_HEAD}>Delivery</h2>
         <div className="mt-4 grid grid-cols-2" role="tablist" aria-label="Delivery method">
-          <button role="tab" aria-selected={tab === "ship"} aria-label="Ship to an address" className={`flex flex-col items-center gap-1.5 border-b-2 px-2 pb-3 pt-1 text-center text-[15px] ${tab === "ship" ? "border-black text-black" : "border-black/15 text-neutral-400"}`} onClick={() => setTab("ship")}>
+          <button role="tab" aria-selected={tab === "ship"} aria-label="Ship to an address" className={`flex flex-col items-center gap-1.5 border-b-2 px-2 pb-3 pt-1 text-center text-[15px] ${tab === "ship" ? "border-black text-black" : "border-black/15 text-neutral-400"}`} onClick={() => { setTab("ship"); setDeliverySaved(false); }}>
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2.5 6h12v10h-12zM14.5 9.5h3.6l3 3.4v3.1h-6.6" /><circle cx="6.5" cy="17.8" r="1.9" /><circle cx="17.3" cy="17.8" r="1.9" /></svg>
             Ship to an<br />address
           </button>
-          <button role="tab" aria-selected={tab === "collect"} aria-label="Collect in store" className={`flex flex-col items-center gap-1.5 border-b-2 px-2 pb-3 pt-1 text-center text-[15px] ${tab === "collect" ? "border-black text-black" : "border-black/15 text-neutral-400"}`} onClick={() => setTab("collect")}>
+          <button role="tab" aria-selected={tab === "collect"} aria-label="Collect in store" className={`flex flex-col items-center gap-1.5 border-b-2 px-2 pb-3 pt-1 text-center text-[15px] ${tab === "collect" ? "border-black text-black" : "border-black/15 text-neutral-400"}`} onClick={() => { setTab("collect"); setDeliverySaved(false); setStorePicked(""); }}>
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M4 9.5 5.5 4h13L20 9.5a2.8 2.8 0 0 1-5.5.5 2.9 2.9 0 0 1-5 0 2.8 2.8 0 0 1-5.5-.5Z" /><path d="M5.5 12.5V20h13v-7.5M9.5 20v-4.5h5V20" /></svg>
             Collect in store
           </button>
@@ -2688,14 +2760,13 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
                 <input aria-label="Last name" className={underline} value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
                 {fieldErr(req(f.last))}
               </label>
-              <label className={labelCls}>Company
+              <label className={labelCls}>Company (optional)
                 <input aria-label="Company" className={underline} value={f.company} onChange={(e) => setF({ ...f, company: e.target.value })} />
               </label>
               <div>
                 <label className={labelCls}>Address *
                   <input aria-label="Address" className={underline} value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} />
                 </label>
-                {f.address.trim().length >= 3 && <p className="bg-white px-3 py-2.5 text-sm shadow-sm">No suggestion</p>}
                 {fieldErr(req(f.address))}
               </div>
               <label className={labelCls}>Address continued
@@ -2736,13 +2807,13 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
                 </label>
               </div>
               <div>
-                {fieldErr(req(f.phone))}
+                {fieldErr(phoneBad)}
                 <p className="text-xs text-neutral-600">Expected format: phone number with 10 digits</p>
               </div>
             </div>
             <button aria-label="Save delivery address" className="mt-7 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => {
               setAttempted(true);
-              const ok = f.title && f.first.trim() && f.last.trim() && f.address.trim() && f.city.trim() && f.state && f.zip.trim() && f.phone.trim();
+              const ok = f.title && f.first.trim() && f.last.trim() && f.address.trim() && f.city.trim() && f.state && f.zip.trim() && /^\d{10}$/.test(phoneDigits);
               if (ok) { setDeliverySaved(true); }
             }}>Save</button>
             {deliverySaved && <p className="mt-3 text-sm font-medium" role="status">Delivery address saved — payment is now available below.</p>}

@@ -276,10 +276,15 @@ const DAY_SET = [
 ];
 // Match sneaker — ref H261863ZH01, $1,250 ($1,150 row uses the same set;
 // its own colourway ref was not found, price confirmed via US listing).
-// Views: 101 front, 102 worn.
+// Views: 101 front, 102 worn, 104 side, 105 back, 106 detail, 107 above
+// (CDN probe 2026-11-10; front_wm_1 and worn_2 are near-duplicates — not wired).
 const MATCH_SET = [
   V("Front", HERMES_IMG + "261863ZH01_front_wm_101" + HERMES_Q),
   V("Worn", HERMES_IMG + "261863ZH01_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "261863ZH01_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "261863ZH01_back_wm_105" + HERMES_Q),
+  V("Detail", HERMES_IMG + "261863ZH01_detail_wm_106" + HERMES_Q),
+  V("Above", HERMES_IMG + "261863ZH01_above_wm_107" + HERMES_Q),
 ];
 // Kid sneaker — ref H251929ZH01, $1,150. Views: 101 front, 102 worn.
 const KID_SET = [
@@ -372,10 +377,14 @@ const HONORE_SET = [
   V("Worn", HERMES_IMG + "232903ZANP_worn_102" + HERMES_Q),
 ];
 // Mind loafer — ref H261937ZAC9, $1,600 (also used for the $1,675 row, whose
-// own colourway ref was not found). Views: 101 front, 102 worn.
+// own colourway ref was not found). Views: 101 front, 102 worn, 104 side,
+// 105 back (CDN probe 2026-11-10; front_wm_1 and worn_2 are near-duplicates
+// — not wired).
 const MIND_SET = [
   V("Front", HERMES_IMG + "261937ZAC9_front_wm_101" + HERMES_Q),
   V("Worn", HERMES_IMG + "261937ZAC9_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "261937ZAC9_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "261937ZAC9_back_wm_105" + HERMES_Q),
 ];
 // Paris loafer — ref H172368ZA02, $1,450. Views: 101 front, 102 worn.
 const PARIS_SET = [
@@ -406,21 +415,33 @@ const LOW_SET = [
   V("Worn", HERMES_IMG + "252964ZAC9_worn_103" + HERMES_Q),
 ];
 // Noon mule — sibling colourway ref H262865ZHME (brown suede); the exact US
-// ref H262002ZvC9 has no locatable CDN images (see §5). Views: 101, 102 worn.
+// ref H262002ZvC9 has no locatable CDN images (see §5). Views: 101 front,
+// 102 worn, 104 side, 105 back (CDN probe 2026-11-10; front_wm_1 and worn_2
+// are near-duplicates — not wired).
 const NOON_SET = [
   V("Front", HERMES_IMG + "262865ZHME_front_wm_101" + HERMES_Q),
   V("Worn", HERMES_IMG + "262865ZHME_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "262865ZHME_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "262865ZHME_back_wm_105" + HERMES_Q),
 ];
-// Mix mule $1,150 — ref H27107HZHAB (SE-listed). Only ONE view exists for
-// this ref (101 front); no worn view exists on the CDN. Do not add a worn
-// view from the $1,425 Mix — it is a different (shearling) colourway.
+// Mix mule $1,150 — ref H27107HZHAB (SE-listed). Views: 101 front, 104 side,
+// 105 back (CDN probe 2026-11-10 — corrects the earlier "only 101 exists"
+// note: no WORN view exists on the CDN). Do not add a worn view from the
+// $1,425 Mix — it is a different (shearling) colourway.
 const MIX_1150_SET = [
   V("Front", HERMES_IMG + "27107HZHAB_front_wm_101" + HERMES_Q),
+  V("Side", HERMES_IMG + "27107HZHAB_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "27107HZHAB_back_wm_105" + HERMES_Q),
 ];
-// Mix mule $1,425 — ref H261950ZHME. Views: 101 front, 102 worn.
+// Mix mule $1,425 — ref H261950ZHME. Views: 101 front, 102 worn, 104 side,
+// 105 back, worn_2 second worn shot (CDN probe 2026-11-10; worn_2 is a
+// different seated shot, not a duplicate of worn_102; front_wm_1 is).
 const MIX_1425_SET = [
   V("Front", HERMES_IMG + "261950ZHME_front_wm_101" + HERMES_Q),
   V("Worn", HERMES_IMG + "261950ZHME_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "261950ZHME_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "261950ZHME_back_wm_105" + HERMES_Q),
+  V("Worn", HERMES_IMG + "261950ZHME_worn_2" + HERMES_Q),
 ];
 // Nick mule — ref H262937ZAC9, $1,375. Views: 101 front, 103 worn.
 const NICK_SET = [
@@ -1559,6 +1580,107 @@ const GARDEN_TEAPOT_SET = [
   V("In situ", HERMES_IMG + "043018P_front_wm_102" + HERMES_Q),
   V("Side", HERMES_IMG + "043018P_front_wm_103" + HERMES_Q),
 ];
+// A Walk in the Garden tableware — ORIGINAL Hermes photos, hotlinked (CDN
+// probe 2026-11-10; refs from hermes.com product pages, every URL HTTP 200 +
+// visually confirmed). The 102 "In situ" table-setting shot and worn_2 are
+// the SAME files reused across the Garden product pages (as on hermes.com) —
+// the tile is always 101. worn_1 / worn_3 are near-duplicates of 101 / 103
+// and are not wired.
+const GARDEN_BOWL_SET = [
+  V("Front", HERMES_IMG + "043285P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "043285P_front_wm_102" + HERMES_Q),
+];
+const GARDEN_SALAD_BOWL_SET = [
+  V("Front", HERMES_IMG + "043036P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "043036P_front_wm_102" + HERMES_Q),
+];
+const GARDEN_BREAD_PLATE_SET = [
+  V("Front", HERMES_IMG + "043212P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "043212P_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "043212P_front_wm_103" + HERMES_Q),
+];
+const GARDEN_DESSERT_PLATE_SET = [
+  V("Front", HERMES_IMG + "043107P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "043107P_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "043107P_front_wm_103" + HERMES_Q),
+];
+const GARDEN_TART_PLATTER_SET = [
+  V("Front", HERMES_IMG + "043022P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "043022P_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "043022P_front_wm_104" + HERMES_Q),
+];
+const GARDEN_TEA_CUP_SET = [
+  V("Front", HERMES_IMG + "043016P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "043016P_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "043016P_front_wm_103" + HERMES_Q),
+];
+const GARDEN_MUG_SET = [
+  V("Front", HERMES_IMG + "043031P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "043031P_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "043031P_front_wm_103" + HERMES_Q),
+];
+const GARDEN_HOLLOW_DISH_SET = [
+  V("Front", HERMES_IMG + "043013P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "043013P_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "043013P_front_wm_103" + HERMES_Q),
+];
+const GARDEN_DINNER_PLATE_SET = [
+  V("Front", HERMES_IMG + "043001P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "043001P_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "043001P_front_wm_103" + HERMES_Q),
+];
+const GARDEN_TRAY_SET = [
+  V("Front", HERMES_IMG + "043089P_front_wm_101" + HERMES_Q),
+  V("In situ", HERMES_IMG + "043089P_front_wm_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "043089P_front_wm_103" + HERMES_Q),
+];
+// Plain Twilly EDP / Bleue EDT / Epice Marine EDT — ORIGINAL Hermes photos,
+// hotlinked (CDN probe 2026-11-10). Twilly (V107263V0) and Bleue (V107179V0)
+// have NO front_wm_101 — the front view is front_wm_102. worn_2 / worn_3 are
+// near-duplicates of 102 / 103 and are not wired.
+const TWILLY_EDP_SET = [
+  V("Front", HERMES_IMG + "107263V0_front_wm_102" + HERMES_Q),
+  V("Bottle + box", HERMES_IMG + "107263V0_front_wm_103" + HERMES_Q),
+];
+const BLEUE_EDT_SET = [
+  V("Front", HERMES_IMG + "107179V0_front_wm_102" + HERMES_Q),
+  V("Bottle + box", HERMES_IMG + "107179V0_front_wm_103" + HERMES_Q),
+];
+const EPICE_MARINE_SET = [
+  V("Front", HERMES_IMG + "113486V0_front_wm_101" + HERMES_Q),
+  V("Bottle + box", HERMES_IMG + "113486V0_front_wm_102" + HERMES_Q),
+  V("Detail", HERMES_IMG + "113486V0_front_wm_103" + HERMES_Q),
+];
+// Belts — ORIGINAL Hermes photos, hotlinked (CDN probe 2026-11-10).
+// CDC 50 (Rouge H, ref H010439CK55080): 101 front + worn_102 (worn_2 is a
+// near-duplicate crop — not wired). Elan Pocket 24 (Beige/Natural, ref
+// H011790UCAAXS): 101 front + worn_2 model shot (front_wm_1 is a
+// near-duplicate — not wired).
+const CDC50_SET = [
+  V("Front", HERMES_IMG + "010439CK55_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "010439CK55_worn_102" + HERMES_Q),
+];
+const ELAN_SET = [
+  V("Front", HERMES_IMG + "011790UCAA_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "011790UCAA_worn_2" + HERMES_Q),
+];
+// Belt-kit composites: buckle + strap kits have NO {ref}_{view} URL — the
+// photo is a Scene7 composite, beltkits-{width}-f34?$leatherstrap={STRAP}
+// _composite_103&$buckle={BUCKLE}_composite_103. Only _composite_103 exists
+// (101/102 are 403). The sized form (&wid=750&hei=1000) returns a 750x1000
+// JPEG (verified 2026-11-10) and is what is wired below. H 38 mm: strap
+// 077971CAAJ + plain-H buckle 064544CK05 (palladium). Etriviere 38 mm: strap
+// 077971CAAJ + buckle 077931CP2K (gold stirrup). Etriers 38 mm: strap
+// 077971CAME + buckle 081753CIJ3 (palladium stirrup).
+const H38_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/beltkits-38-f34?$leatherstrap=077971CAAJ_composite_103&$buckle=064544CK05_composite_103&extend=0,0,0,0&align=0,0&wid=750&hei=1000&fit=fit&$product_default_bg$"),
+];
+const ETRIVIERE38_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/beltkits-38-f34?$leatherstrap=077971CAAJ_composite_103&$buckle=077931CP2K_composite_103&extend=0,0,0,0&align=0,0&wid=750&hei=1000&fit=fit&$product_default_bg$"),
+];
+const ETRIERS38_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/beltkits-38-f34?$leatherstrap=077971CAME_composite_103&$buckle=081753CIJ3_composite_103&extend=0,0,0,0&align=0,0&wid=750&hei=1000&fit=fit&$product_default_bg$"),
+];
 const MUG_N1_SET = [ V("Front", HERMES_IMG + "081031P_front_wm_101" + HERMES_Q) ];
 const MUG_N3_SET = [ V("Front", HERMES_IMG + "081231P_front_wm_101" + HERMES_Q) ];
 const MUG_SET3_SET = [ V("Front", HERMES_IMG + "081431P_front_wm_101" + HERMES_Q) ];
@@ -1628,6 +1750,16 @@ export function galleryForProduct(
     if (name === "Mid-length buttoned dress" && /blue/.test(colorName)) set = FH_MID_BLUE;
   } else if (name === "Kelly Pocket 18 belt") {
     set = /vert/.test(colorName) ? KELLY_VERT : /etoupe/.test(colorName) ? KELLY_ETOUPE : KELLY_NOIR;
+  } else if (name === "Collier de Chien 50 belt") {
+    set = CDC50_SET;
+  } else if (name === "Elan Pocket 24 reversible belt") {
+    set = ELAN_SET;
+  } else if (name === "H belt buckle & Reversible leather strap 38 mm") {
+    set = H38_SET;
+  } else if (name === "Etriviere belt buckle & Reversible leather strap 38 mm") {
+    set = ETRIVIERE38_SET;
+  } else if (name === "Etriers belt buckle & Reversible leather strap 38 mm") {
+    set = ETRIERS38_SET;
   } else if (name === "Bouncing sneaker, Blanc") {
     if (/noir|black/.test(colorName)) set = SHOE_BOUNCING_1125_NOIR;
     else set = BOUNCING_BLANC;
@@ -1705,6 +1837,12 @@ export function galleryForProduct(
     set = HERMESSENCE_LE_GIFT_SET;
   } else if (name === "Twilly d'Hermès eau de parfum gift set – The fragrance ritual") {
     set = TWILLY_GIFT_SET;
+  } else if (name === "Twilly d'Hermès Eau de parfum") {
+    set = TWILLY_EDP_SET;
+  } else if (name === "Eau des Merveilles Bleue Eau de toilette") {
+    set = BLEUE_EDT_SET;
+  } else if (name === "Epice Marine Eau de toilette") {
+    set = EPICE_MARINE_SET;
   } else if (name === "Ambre Narguile Eau de toilette refill") {
     set = AMBRE_REFILL_SET;
   } else if (name === "Cedre Sambac Eau de toilette refill") {
@@ -1785,6 +1923,26 @@ export function galleryForProduct(
     set = MOSAIQUE_PLATE_SET;
   } else if (name === "A Walk in the Garden teapot") {
     set = GARDEN_TEAPOT_SET;
+  } else if (name === "A Walk in the Garden bowl, large model") {
+    set = GARDEN_BOWL_SET;
+  } else if (name === "A Walk in the Garden salad bowl") {
+    set = GARDEN_SALAD_BOWL_SET;
+  } else if (name === "A Walk in the Garden bread and butter plate") {
+    set = GARDEN_BREAD_PLATE_SET;
+  } else if (name === "A Walk in the Garden dessert plate") {
+    set = GARDEN_DESSERT_PLATE_SET;
+  } else if (name === "A Walk in the Garden tart platter") {
+    set = GARDEN_TART_PLATTER_SET;
+  } else if (name === "A Walk in the Garden tea cup and saucer") {
+    set = GARDEN_TEA_CUP_SET;
+  } else if (name === "A Walk in the Garden Mug") {
+    set = GARDEN_MUG_SET;
+  } else if (name === "A Walk in the Garden hollow dish") {
+    set = GARDEN_HOLLOW_DISH_SET;
+  } else if (name === "A Walk in the Garden dinner plate") {
+    set = GARDEN_DINNER_PLATE_SET;
+  } else if (name === "A Walk in the Garden tray, small model") {
+    set = GARDEN_TRAY_SET;
   } else if (name === "Chevaux a la Couverture set of 2 mugs (n°1 and 2)") {
     set = MUG_N1_SET;
   } else if (name === "Chevaux a la Couverture mug n°3") {
