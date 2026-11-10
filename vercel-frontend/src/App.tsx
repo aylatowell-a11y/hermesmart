@@ -639,7 +639,6 @@ export function App() {
         <nav aria-label="Main navigation" className={`relative mx-auto hidden max-w-7xl items-center justify-center gap-0 px-4 pb-0 pt-0 lg:flex`} onMouseLeave={() => setMenuCat(null)}>
           {mega.map((n) => (
             <div key={n.key} className="flex items-center" onMouseEnter={() => setMenuCat(n.key)}>
-              {n.key === "about" && <span aria-hidden="true" className="mr-3 block h-4 w-px" style={{ background: onHero ? "rgba(255,255,255,.55)" : "rgba(0,0,0,.3)" }} />}
               <button aria-label={`Open ${n.label} menu`} aria-expanded={menuCat === n.key} aria-haspopup="true" className={`whitespace-nowrap px-3 ${slim ? "py-[14px]" : "pb-3"} text-[10px] font-bold uppercase tracking-[1px] ${menuCat === n.key ? "underline underline-offset-8 decoration-1" : "hover:underline underline-offset-4"}`} onClick={() => { if (menuCat === n.key) { if (n.key === "about") go({ t: "about" }); else go({ t: "category", cat: navOverrides[n.key]?.dest || n.key }); } else setMenuCat(n.key); }}>{n.label}</button>
             </div>
           ))}
@@ -884,7 +883,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent pb-6 pt-6 text-white sm:pb-8 sm:pt-8">
           <div className="mx-auto max-w-[629px] px-[15px] text-center">
             <h1 className="font-serif-d text-[34px] italic leading-tight"><span>{heroFirst}</span> {heroRest}</h1>
-            <p className="mx-auto mt-1 w-full max-w-full break-words font-serif-d text-[20px] italic leading-normal">{heroText}</p>
+            <p className="mx-auto mt-1 w-full max-w-[500px] break-words font-serif-d text-[16px] italic leading-[21px]">{heroText}</p>
             <button aria-label="Discover the blanket collection" className="font-mono-d mt-4 text-[11px] uppercase tracking-[1px] underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "home", sub: "Blankets and pillows" })}>Discover</button>
           </div>
         </div>
@@ -892,7 +891,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
 
       {/* BOARDS b)+c) DISCOVER CAROUSEL + PRODUCTS FOR THE THEME — one warm
           cream board, no divider between carousel and theme products */}
-      <section className="w-full" style={{ background: settings.bgColor || "#fcf7f1" }}>
+      <section className="group w-full" style={{ background: settings.bgColor || "#fcf7f1" }}>
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:pb-12 lg:pt-16">
         {/* Mobile heading — centred, two lines, as in the user's video */}
         <h2 className="font-serif-d text-center text-[34px] italic leading-snug lg:hidden">Discover the world <span className="block">of Hermès</span></h2>
@@ -900,11 +899,9 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         <div className="hidden lg:block">
           <div className="relative">
             <div className="mx-auto max-w-[629px] text-center">
-              <p className="font-serif-d text-lg" style={{ color: "#5b6b7c" }}>Discover the world of Hermès</p>
-              <h2 className="font-serif-d mt-1 text-[34px] italic">Everything within reach</h2>
-              <button aria-label={`Discover the theme ${theme}`} className="font-mono-d mt-3 text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => go(themeDest(theme))}>Discover the theme</button>
+              <h2 className="font-serif-d text-[34px] italic leading-snug">Discover the world of Hermès</h2>
             </div>
-            <div className="absolute right-0 top-2 flex items-center gap-3" aria-label="Theme position">
+            <div className="absolute right-0 top-2 flex items-center gap-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100" aria-label="Theme position">
               <button aria-label="Previous theme" className="flex h-9 w-9 items-center justify-center border border-black/25 hover:border-black" onClick={() => goToSlide(activeIdx - 1)}>‹</button>
               <span className="text-sm tabular-nums" aria-live="polite">{activeIdx + 1} / {CAROUSEL_THEMES.length}</span>
               <button aria-label="Next theme" className="flex h-9 w-9 items-center justify-center border border-black/25 hover:border-black" onClick={() => goToSlide(activeIdx + 1)}>›</button>
