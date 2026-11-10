@@ -74,6 +74,7 @@ type LocalOrder = { id: number; customerName: string; email: string; total: numb
 type LocalWish = { id: number; email: string; productId: number; productName: string };
 type LocalNotify = { id: number; productId: number; productName: string; email: string };
 type LocalReturn = { id: number; orderId: number; email: string; reason: string; status: string };
+export type LocalChat = { id: number; from: "customer" | "admin"; text: string; name: string; readByAdmin: number; createdAt: string };
 
 function parseArr<T>(raw: string | undefined, fallback: T[]): T[] {
   if (!raw) return fallback;
@@ -283,6 +284,42 @@ export const api = {
     returns.push({ id: nextId("next-return-id", 1), orderId: args.orderId, email: args.email, reason: args.reason, status: "Requested" });
     write("returns", returns);
     return { ok: true, message: "Return requested. Our customer service will contact you." };
+  },
+
+  // Chat (localStorage hv-chat — the same store the customer ChatBubble
+  // and the Admin Panel chat tab read, so both sides see one thread).
+  async getChatMessages(_args: Record<string, never>): Promise<{ messages: LocalChat[] }> {
+    return { messages: read<LocalChat[]>("chat", []) };
+  },
+
+  async sendChatMessage(args: { from: "customer" | "admin"; text: string; name?: string }): Promise<{ ok: boolean; id?: number }> {
+    const text = (args.text ?? "").trim();
+    if (!text) return { ok: false };
+    const msgs = read<LocalChat[]>("chat", []);
+    const id = nextId("next-chat-id", 1);
+    msgs.push({ id, from: args.from, text, name: args.name ?? "", readByAdmin: args.from === "admin" ? 1 : 0, createdAt: new Date().toISOString() });
+    write("chat", msgs);
+    return { ok: true, id };
+  },
+
+  async adminMarkChatRead(args: { email?: string; password: string }): Promise<{ ok: boolean }> {
+    if (!isAdmin(args.email, args.password)) return { ok: false };
+    const msgs = read<LocalChat[]>("chat", []);
+    msgs.forEach((m) => { m.readByAdmin = 1; });
+    write("chat", msgs);
+    return { ok: true };
+  },
+
+  async adminDeleteChatMessage(args: { email?: string; password: string; id: number }): Promise<{ ok: boolean }> {
+    if (!isAdmin(args.email, args.password)) return { ok: false };
+    write("chat", read<LocalChat[]>("chat", []).filter((m) => m.id !== args.id));
+    return { ok: true };
+  },
+
+  async adminClearChat(args: { email?: string; password: string }): Promise<{ ok: boolean }> {
+    if (!isAdmin(args.email, args.password)) return { ok: false };
+    write("chat", []);
+    return { ok: true };
   },
 
   async adminData(args: { email?: string; password: string }): Promise<{

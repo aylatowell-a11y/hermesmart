@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, type ApiResponse } from "./api";
+import { api, type ApiResponse, type LocalChat } from "./api";
 // Real photos: the image files are in ./assets/ (uploaded to the repo).
 import heroImg from "./assets/media-generation-hero-hands-blanket-0-42d3a746-833a-44bc-b0cb-99ad6e08730c.webp";
 // Original Hermes hero photo (hermes.com homepage, verified 2026-11-10):
@@ -434,7 +434,7 @@ export function App() {
   const qc = useQueryClient();
   const store = useQuery({ queryKey: ["storefront"], queryFn: () => api.getStorefront({}) });
   const products = useMemo(() => store.data?.products ?? [], [store.data]);
-  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "800-441-4488", heroTitle: "Threading ideas", heroText: "", shipTo: "UNITED STATES", deliveryText: "", returnsText: "", paymentMethods: "", bgColor: "#f7f2ec", serviceHours: "Monday to Saturday 10 AM - 9 PM", logoMode: "both", logoUrl: "" };
+  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "800-441-4488", heroTitle: "Threading ideas", heroText: "", shipTo: "UNITED STATES", deliveryText: "", returnsText: "", paymentMethods: "", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10 AM - 9 PM", logoMode: "both", logoUrl: "", flagshipStore: "691 Madison Avenue, New York", shipToCountries: "UNITED STATES, UNITED KINGDOM, FRANCE, PAKISTAN, UNITED ARAB EMIRATES, INDIA, CANADA", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. All rights reserved.", serviceDeliveryBody: "Free standard delivery. Herm\u00e8s offers several fast and secure delivery options.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
 
   const [view, setView] = useState<View>({ t: "home" });
   const [cart, setCart] = useState<CartItem[]>(() => load("hlx-cart", []));
@@ -577,11 +577,11 @@ export function App() {
     });
   }, [searchQ, products]);
 
-  if (store.isPending) return <div className="flex min-h-screen items-center justify-center" style={{ background: "#f7f2ec" }}><img src={carriageBlackImg} alt="Hermès Paris" className="h-10 w-auto object-contain" /></div>;
+  if (store.isPending) return <div className="flex min-h-screen items-center justify-center" style={{ background: "#fcf7f1" }}><img src={carriageBlackImg} alt="Hermès Paris" className="h-10 w-auto object-contain" /></div>;
   if (store.error) return <div className="p-8 text-center"><p>Failed to load the store.</p><button aria-label="Retry loading store" className="mt-4 border border-black px-6 py-2 text-xs uppercase tracking-widest" onClick={() => store.refetch()}>Retry</button></div>;
 
   return (
-    <div ref={topRef} className="relative min-h-screen" style={{ background: settings.bgColor || "#f7f2ec", color: "#191919" }}>
+    <div ref={topRef} className="relative min-h-screen" style={{ background: settings.bgColor || "#fcf7f1", color: "#000" }}>
       <div ref={sentinelRef} aria-hidden="true" className="pointer-events-none absolute left-0 top-0 h-2 w-px" />
       {/* HEADER — fixed and DIRECTION-AWARE, exactly like hermes.com.
           "top" (scroll 0, homepage): transparent over the hero, white logo + icons.
@@ -598,7 +598,7 @@ export function App() {
         const slim = headerMode === "slim";
         const ink = onHero ? "#ffffff" : "#191919";
         return (
-      <header ref={headerRef} className={`fixed inset-x-0 top-0 z-40 pt-safe transition-[background-color,border-color,color] duration-300 ${onHero ? "border-b border-transparent" : slim ? "border-b border-black" : "border-b border-black/10 shadow-[0_1px_0_rgba(0,0,0,0.02)]"}`} style={{ background: onHero ? "transparent" : "#ffffff", color: ink }}>
+      <header ref={headerRef} className={`fixed inset-x-0 top-0 z-40 pt-safe transition-[background-color,border-color,color] duration-300 ${onHero ? "border-b border-transparent" : slim ? "border-b border-black" : "border-b border-black/10 shadow-[0_1px_0_rgba(0,0,0,0.02)]"}`} style={{ background: onHero ? "transparent" : "#fcf7f1", color: ink }}>
         {/* Top row (logo / Search / Account / Cart). In the slim state this row
             is gone on DESKTOP — only the nav board below remains. On mobile the
             slim carriage header IS the board, so the row stays at every width
@@ -623,13 +623,10 @@ export function App() {
             <span className="lg:hidden"><HermesLogo settings={settings} light={onHero} variant="header" /></span>
           </button>
           <div className="flex items-center justify-end gap-0.5 sm:gap-2">
-            {/* Sign up / Login — visible text options in the header (desktop),
-                next to Account / Cart, in the Hermes small-uppercase style.
-                "Sign up" opens the create-account page, "Login" the sign-in
-                page. On mobile they are hidden; the Account icon opens the
-                account page there. */}
-            <button aria-label="Sign up" className="hidden px-2 text-[12px] font-semibold uppercase tracking-[0.18em] hover:underline lg:block" style={{ color: ink, textShadow: onHero ? "0 1px 2px rgba(0,0,0,.45)" : undefined }} onClick={() => go({ t: "account", mode: "signup" })}>Sign up</button>
-            <button aria-label="Login" className="hidden px-2 text-[12px] font-semibold uppercase tracking-[0.18em] hover:underline lg:block" style={{ color: ink, textShadow: onHero ? "0 1px 2px rgba(0,0,0,.45)" : undefined }} onClick={() => go({ t: "account", mode: "login" })}>Login</button>
+            {/* Header has Account + Cart icons only — hermes.com has NO
+                Sign up / Login text buttons (user-confirmed 2026-11-10 from
+                side-by-side screenshots). The Account icon opens the
+                account / sign-in page, where "Create an account" lives. */}
             <button aria-label="Account" className="flex h-9 w-9 items-center justify-center" onClick={() => go({ t: "account" })}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.6 4.2-5.2 7.5-5.2s6.1 1.6 7.5 5.2" /></svg>
             </button>
@@ -726,7 +723,7 @@ export function App() {
                 );
               })}
             </div>
-            <div className="px-5 py-4" style={{ background: "#f7f2ec" }}>
+            <div className="px-5 py-4" style={{ background: "#fcf7f1" }}>
               <button aria-label="Find a store" className="flex w-full items-center gap-3 py-2 text-left text-sm" onClick={() => go({ t: "page", page: "stores" })}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M12 21s-6.5-5.4-6.5-10.4A6.5 6.5 0 0 1 12 4.5a6.5 6.5 0 0 1 6.5 6.1C18.5 15.6 12 21 12 21Z" /><circle cx="12" cy="10.5" r="2.3" /></svg>
                 Find a store
@@ -745,7 +742,7 @@ export function App() {
       )}
 
       {searchOpen && (
-        <div className="fixed inset-0 z-50 bg-[#f7f2ec] fade-up overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-[#fcf7f1] fade-up overflow-y-auto">
           <div className="mx-auto max-w-5xl px-4 py-8">
             <div className="flex items-center gap-3 border-b border-black pb-3">
               <span className="text-xl">⌕</span>
@@ -782,10 +779,11 @@ export function App() {
       </main>
 
       {view.t !== "cart" && view.t !== "checkout" && <Footer settings={settings} go={go} />}
+      {view.t !== "checkout" && view.t !== "admin" && <ChatBubble settings={settings} go={go} view={view} />}
 
       {addedDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setAddedDialog("")}>
-          <div className="w-full max-w-md bg-[#fffdf9] p-7 text-center shadow-2xl fade-up" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Item added to cart">
+          <div className="w-full max-w-md bg-[#fffcf7] p-7 text-center fade-up" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Item added to cart">
             <p className="text-sm leading-6">This item has been added to the cart</p>
             <p className="mt-1 text-xs text-neutral-500">{addedDialog}</p>
             <div className="mt-5 flex gap-3">
@@ -797,7 +795,7 @@ export function App() {
       )}
 
       {cookie === null && (
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-black/20 bg-[#fffdf9] p-5 shadow-2xl">
+        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-black/20 bg-[#fffcf7] p-5">
           <div className="mx-auto max-w-4xl">
             <h2 className="text-xs font-semibold uppercase tracking-[0.25em]">Cookies Hermes.com</h2>
             <p className="mt-2 text-sm text-neutral-700">We use cookies to improve your experience, analyse traffic and personalise content. You may set your preferences, refuse all cookies, or accept all cookies.</p>
@@ -894,7 +892,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
 
       {/* BOARDS b)+c) DISCOVER CAROUSEL + PRODUCTS FOR THE THEME — one warm
           cream board, no divider between carousel and theme products */}
-      <section className="w-full" style={{ background: settings.bgColor || "#f7f2ec" }}>
+      <section className="w-full" style={{ background: settings.bgColor || "#fcf7f1" }}>
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:pb-12 lg:pt-16">
         {/* Mobile heading — centred, two lines, as in the user's video */}
         <h2 className="font-serif-d text-center text-[34px] italic leading-snug lg:hidden">Discover the world <span className="block">of Hermès</span></h2>
@@ -1161,7 +1159,6 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   const subLow = (sub ?? "").toLowerCase();
   const isMensBags = /men's bags/.test(subLow) && !/women's bags/.test(subLow);
   const isBagsPage = /bags and clutches/.test(subLow) || (cat === "women" && !sub);
-  const isWomensBags = isBagsPage && !isMensBags;
   const isSneakersPage = /sneaker/.test(subLow);
   const isDressesPage = /dress/.test(subLow);
   // Ready-to-Wear pages (Women): the dresses page AND the two season
@@ -1212,7 +1209,6 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreLeaving, setMoreLeaving] = useState(false);
   const [loadedMsg, setLoadedMsg] = useState("");
-  const [descOpen, setDescOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -1275,7 +1271,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   const countBy = (fn: (p: Product) => string) => {
     const m = new Map<string, number>();
     for (const p of base) { const v = fn(p); if (v) m.set(v, (m.get(v) ?? 0) + 1); }
-    return [...m.entries()].map(([value, count]) => ({ value, count })).sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+    return [...m.entries()].map(([value, count]) => ({ value, count })).sort((a, b) => a.value.localeCompare(b.value));
   };
   const sizeCount = new Map<string, number>();
   for (const p of base) for (const s of p.sizeOptions) sizeCount.set(s.label, (sizeCount.get(s.label) ?? 0) + 1);
@@ -1412,7 +1408,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
           items off), the view toggle stays at the right end of the same
           line, and FILTER lives in the floating FILTER & SORT pill instead;
           on desktop the row shows fully with its FILTER button. */}
-      <div className="sticky top-[61px] z-30 -mx-4 mt-4 bg-[#f7f2ec] px-4 py-3 sm:-mx-6 sm:px-6 lg:top-[141px]">
+      <div className="sticky top-[61px] z-30 -mx-4 mt-4 bg-[#fcf7f1] px-4 py-3 sm:-mx-6 sm:px-6 lg:top-[141px]">
         <div className="flex items-center gap-x-4 lg:gap-x-5">
           <nav ref={subNavRef} className="no-scrollbar flex min-w-0 flex-1 gap-5 overflow-x-auto whitespace-nowrap" aria-label="Subcategories">
             {siblings.map((s) => (
@@ -1533,12 +1529,6 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
         </div>
       </section>
 
-      {isWomensBags && (
-        <section className="mt-12 max-w-3xl">
-          <p className={`text-sm leading-7 text-neutral-700 ${descOpen ? "" : "line-clamp-2"}`}>From the Hermès Geta, with its distinctive H-shaped clasp, to the Neo Garden and its relaxed, generous silhouette, the women's bags and clutches collection is crafted in the Maison's workshops. Handbags, crossbody bags, totes and clutches in leather, canvas and silk — objects made to be carried every day, made to last, and made to be repaired.</p>
-          <button aria-label={descOpen ? "See less about the collection" : "See more about the collection"} className="mt-2 text-xs underline underline-offset-4" onClick={() => setDescOpen(!descOpen)}>{descOpen ? "See Less" : "See More"}</button>
-        </section>
-      )}
 
       <button aria-label="Filter and sort products" className="font-mono-d fixed bottom-4 left-1/2 z-40 flex h-12 -translate-x-1/2 items-center gap-2 bg-white px-8 text-xs font-medium uppercase tracking-normal shadow-lg ring-1 ring-black/10 lg:hidden" onClick={() => setFOpen(true)}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2.2" /><circle cx="10" cy="17" r="2.2" /></svg>
@@ -1547,7 +1537,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
 
       {fOpen && (
         <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setFOpen(false)}>
-          <div className="drawer-in absolute flex flex-col bg-white max-lg:inset-x-0 max-lg:bottom-0 max-lg:max-h-[88vh] lg:right-0 lg:top-0 lg:h-full lg:w-[33vw] lg:min-w-[380px] lg:max-w-[520px]" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Filter">
+          <div className="drawer-in absolute flex flex-col bg-[#fffcf7] max-lg:inset-x-0 max-lg:bottom-0 max-lg:max-h-[88vh] lg:right-0 lg:top-0 lg:h-full lg:w-[33vw] lg:min-w-[380px] lg:max-w-[520px]" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Filter">
             <div className="flex items-center justify-between px-6 pt-5">
               <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">FILTER</h2>
               <button aria-label="Close filters" className="flex items-center gap-1.5 py-1 text-sm" onClick={() => setFOpen(false)}>
@@ -1556,17 +1546,16 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
-              <p className="mt-3 text-xs leading-5 text-neutral-500">Selecting a filter will apply the update to the results you are currently visiting.</p>
+              <p className="mt-3 text-xs leading-5 text-neutral-500">Selecting a filter will apply the update to the products displayed on the page.</p>
+              {sections.map(renderSection)}
               <div className="mt-4 flex items-start justify-between gap-4 border-t border-black/10 pt-4">
                 <div>
                   <p className="text-sm font-medium">Available online</p>
-                  <p className="mt-0.5 text-xs text-neutral-500">Only view products which are available online</p>
                 </div>
                 <button type="button" role="switch" aria-checked={onlineOnly} aria-label="Available online" onClick={() => { setOnlineOnly(!onlineOnly); setVisible(40); setLoadedMsg(""); }} className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${onlineOnly ? "bg-black" : "bg-black/25"}`}>
                   <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${onlineOnly ? "left-[22px]" : "left-0.5"}`} />
                 </button>
               </div>
-              {sections.map(renderSection)}
             </div>
             <div className="border-t border-black/10 px-6 py-4">
               <button aria-label="Apply filters" className="w-full bg-black py-3.5 text-[12px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => setFOpen(false)}>APPLY</button>
@@ -1579,7 +1568,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   );
 }
 
-function RelatedRow({ title, items, go, mt }: { title: string; items: Product[]; go: (v: View) => void; mt?: string }) {
+function RelatedRow({ title, items, go, mt, onQuickBuy }: { title: string; items: Product[]; go: (v: View) => void; mt?: string; onQuickBuy?: (p: Product) => void }) {
   if (items.length === 0) return null;
   return (
     <section className={`mx-auto ${mt ?? "mt-12 lg:mt-20"} max-w-5xl px-4 sm:px-6`}>
@@ -1591,7 +1580,9 @@ function RelatedRow({ title, items, go, mt }: { title: string; items: Product[];
       <div className="mt-8 grid grid-cols-2 gap-[2px] lg:flex lg:overflow-x-auto lg:pb-1">
         {items.map((x) => (
           <div key={x.id} className="cursor-pointer lg:w-[220px] lg:shrink-0" role="link" aria-label={`${x.name}, ${priceText(x)}`} tabIndex={0} onClick={() => go({ t: "product", id: x.id })} onKeyDown={(e) => { if (e.key === "Enter") go({ t: "product", id: x.id }); }}>
-            <div className="aspect-square overflow-hidden"><ProductVisual p={x} /></div>
+            <div className="relative aspect-square overflow-hidden"><ProductVisual p={x} />{onQuickBuy && x.status === "available" && (
+              <button aria-label={`Quick buy ${x.name}`} className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#696969] shadow transition hover:bg-black hover:text-white" onClick={(e) => { e.stopPropagation(); onQuickBuy(x); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg></button>
+            )}</div>
             <p className="mt-2 px-2 text-xs leading-5">{x.name}</p>
             {x.colors[0] && <p className="sr-only">Color: {x.colors[0].name}</p>}
             <p className="mt-0.5 px-2 text-xs leading-5">{priceText(x)}</p>
@@ -1629,10 +1620,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
   // Finish options (e.g. the Kelly Pocket belt's Gold / Argenté buckle group)
   // ride in a detail line so no schema change is needed; the selected finish
   // is the product's metallicFinish.
-  const finishLine = p?.detailLines.find((l) => l.startsWith("Finish options:"));
-  const finishOptions = finishLine ? finishLine.replace("Finish options:", "").split(",").map((s) => s.trim()).filter(Boolean) : [];
   const [colorIdx, setColorIdx] = useState(0);
-  const [showAllColors, setShowAllColors] = useState(false);
   const [thumb, setThumb] = useState(0);
   const [vidPlaying, setVidPlaying] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
@@ -1640,7 +1628,6 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
   const [sizeDrawer, setSizeDrawer] = useState(false);
   const [selSize, setSelSize] = useState("");
   const [sizeGone, setSizeGone] = useState(false);
-  const [finishIdx, setFinishIdx] = useState(() => { const i = finishOptions.indexOf(p?.metallicFinish ?? ""); return i >= 0 ? i : 0; });
   const [notifyEmail, setNotifyEmail] = useState(user?.email ?? "");
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [notified, setNotified] = useState("");
@@ -1678,8 +1665,6 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
   useEffect(() => { if (!zoomOpen) return; const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setZoomOpen(false); }; document.addEventListener("keydown", onKey); return () => document.removeEventListener("keydown", onKey); }, [zoomOpen]);
   useEffect(() => { if (!tiePlaying) return; const t = window.setInterval(() => setTieProg((v) => (v + 1) % 101), 120); return () => window.clearInterval(t); }, [tiePlaying]);
   if (!p) return <p className="p-10 text-center">Product not found.</p>;
-  const moreMatch = p.detailLines.join(" ").match(/\+(\d+) more/);
-  const moreColors = moreMatch ? Number(moreMatch[1]) : null;
   const color = p.colors[colorIdx] ?? p.colors[0];
   const isShoe = p.subcategory === "Shoes" || /sneaker|boot|loafer/i.test(p.name);
   const isRTW = p.subcategory.toLowerCase().includes("ready") || p.subcategory === "Dresses and skirts" || (p.category === "equestrian" && /jacket/i.test(p.name));
@@ -1703,8 +1688,6 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
   // first view and any playing video stops.
   const galleryKey = views.map((v) => v.src).join("|");
   useEffect(() => { setThumb(0); setVidPlaying(false); stripRef.current?.scrollTo({ left: 0 }); }, [galleryKey]);
-  const finishHex = (f: string) => (/argent|silver|palladium/i.test(f) ? "#c9c9c9" : /pink|rose/i.test(f) ? "#e0a899" : "#c9a227");
-  const finishSel = finishOptions[finishIdx] ?? finishOptions[0] ?? "";
   const descLines = p.detailLines.filter((l) => !l.startsWith("Finish options:") && !/\+\d+ more/.test(l) && !l.startsWith("Also available as"));
   const editorial = p.story && !p.story.startsWith("The story behind") ? p.story : "";
   const isScarfStory = p.name.includes("Philateliste");
@@ -1743,15 +1726,16 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
       <p className="mt-1">Easy and complimentary, within 30 days. We recommend that you try your shoes on non-abrasive or carpeted surfaces. We will not be able to accept your return if the sole is damaged or marked. The Hermès Sellier tag must be intact, attached, and free of any alteration or damage. Personalized product cannot be refunded or exchanged. See conditions and procedure in our return FAQs.</p>
     </>) },
     { title: "GIFTING", content: <>Your purchases are delivered in an orange box tied with a Bolduc ribbon, with the exception of fragrances, makeup and beauty products, books, certain equestrian and bulky items. During checkout, you can include one card with a personalized message and a priceless invoice. The gift recipient can exchange a gift. For more details, please contact Customer Service.</> },
-    // USER GUIDE — only the Arceau watch carries it on hermes.com (the
-    // product's own accordions list in data.ts proves it: Arceau Petite
-    // Lune, id 53). Content is the watch user guide already in this file.
-    ...(p.accordions?.includes("USER GUIDE") ? [{ title: "USER GUIDE", content: <>Watch user guide: pull the crown to set the time; keep away from magnetic fields; service every 3–5 years.</> }] : []),
+    // USER GUIDE (Arceau id 53) is NOT rendered yet: the original's
+    // USER GUIDE is a PDF link ("Open PDF … (Open in a new tab)") and
+    // the PDF URL is not in any saved source. Restore it as a link row
+    // once the real PDF URL is read from the live product page — the
+    // invented watch-care sentences above were removed 2026-11-10.
   ];
   return (
     <div className="pb-24 lg:pb-6">
       <p className="font-mono-d mx-auto max-w-7xl px-4 pt-8 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 sm:px-6">
-        <button aria-label="Back to category" className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category })}>{(NAV.find((n) => n.key === p.category)?.label ?? p.category.toUpperCase())}</button> &gt; <button aria-label={`Back to ${p.subcategory}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: p.subcategory })}>{p.subcategory}</button>
+        <button aria-label="Back to category" className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category })}>{(NAV.find((n) => n.key === p.category)?.label ?? p.category.toUpperCase())}</button><span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" /><button aria-label={`Back to ${p.subcategory}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: p.subcategory })}>{p.subcategory}</button>
       </p>
       <div className="relative mt-4">
         {/* Gallery — a wide horizontal strip of large panels, nearly
@@ -1791,10 +1775,10 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
             {views.map((v, i) => thumbBtn(v, i))}
           </div>
         </div>
-        {/* Buy box — a WHITE CARD floating over the BOTTOM-RIGHT of the
+        {/* Buy box — a panel floating over the BOTTOM-RIGHT of the
             gallery on desktop; below the gallery on mobile, as in the
             user's phone videos of hermes.com. */}
-        <div className="relative z-10 border border-black/10 bg-white px-[15px] pb-6 pt-4 shadow-xl lg:absolute lg:bottom-6 lg:right-6 lg:w-[380px] lg:p-[15px]">
+        <div className="relative z-10 border border-black/10 bg-[#fffcf7] px-[15px] pb-6 pt-4 lg:absolute lg:bottom-6 lg:right-6 lg:w-[380px] lg:p-[15px]">
           <h1 className="text-base leading-6">{p.name}</h1>
           <div className="mt-2 flex items-baseline justify-between">
             <span className="text-sm text-neutral-600">Price</span>
@@ -1805,26 +1789,11 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
               <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Color</p>
               <p className="mt-1 text-sm font-medium underline underline-offset-4">{color.name}</p>
               <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
-                {(showAllColors ? p.colors : p.colors.slice(0, 6)).map((c, i) => (
+                {p.colors.map((c, i) => (
                   <button key={c.name} aria-label={`Colour ${c.name}${c.available && p.status === "available" ? "" : " (unavailable)"}`} disabled={!c.available || p.status !== "available"} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
-                    className={`relative h-9 w-9 rounded-full border-2 lg:h-[59px] lg:w-[59px] ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || p.status !== "available" ? "opacity-40" : ""}`} style={{ background: c.hex }}>
+                    className={`relative h-9 w-9 border-2 lg:h-[59px] lg:w-[59px] ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || p.status !== "available" ? "opacity-40" : ""}`} style={{ background: c.hex }}>
                     {(!c.available || p.status !== "available") && <span className="absolute inset-0 flex items-center justify-center text-white">✕</span>}
                   </button>
-                ))}
-                {!showAllColors && (p.colors.length > 6 || moreColors) && (
-                  <button aria-label={moreColors ? `${moreColors} more colors, show all` : "Show all colors"} className="flex h-9 min-w-9 items-center justify-center bg-neutral-800 px-2 text-[11px] font-semibold text-white" onClick={() => setShowAllColors(true)}>+{moreColors ?? (p.colors.length - 6)}</button>
-                )}
-                {showAllColors && moreColors && <span className="text-[11px] text-neutral-500">{moreColors} more colors available in store</span>}
-              </div>
-            </>
-          )}
-          {finishOptions.length > 0 && (
-            <>
-              <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Finish</p>
-              <p className="mt-1 text-sm font-medium underline underline-offset-4">{finishSel}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
-                {finishOptions.map((f, i) => (
-                  <button key={f} aria-label={`Finish ${f}`} aria-pressed={i === finishIdx} onClick={() => setFinishIdx(i)} className={`h-9 w-9 rounded-full border-2 lg:h-[59px] lg:w-[59px] ${i === finishIdx ? "border-black" : "border-black/20"}`} style={{ background: finishHex(f) }} />
                 ))}
               </div>
             </>
@@ -1845,7 +1814,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
           {p.status === "available" ? (
             <div className="mt-4">
               <div className="flex">
-                {p.applePay && <button aria-label="Buy with Apple Pay" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border text-xs font-medium uppercase ${canAdd ? "border-black bg-white text-black" : "cursor-not-allowed border-black/20 bg-neutral-100 text-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}><span className="text-xs font-medium uppercase tracking-normal">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
+                {p.applePay && <button aria-label="Buy with Apple Pay" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border text-xs font-medium uppercase ${canAdd ? "border-black text-black" : "cursor-not-allowed border-black/20 bg-neutral-100 text-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}><span className="text-xs font-medium uppercase tracking-normal">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
                 <button aria-label="Add to cart" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-2 text-xs font-medium uppercase tracking-normal text-white ${canAdd ? "bg-black" : "cursor-not-allowed bg-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
               </div>
               {p.shippingDelay && <p className="mt-2 text-xs text-neutral-500">{p.shippingDelay}.</p>}
@@ -1878,27 +1847,27 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
           GIFTING (the user's 8 Nov 2026 phone video restored PRODUCT
           DETAILS), all closed by default, only one open at a time. */}
       <div className="mx-auto mt-0 grid max-w-5xl gap-6 px-4 sm:px-6 lg:mt-12 lg:grid-cols-2">
-        <section>
+        <section className="bg-[#fffcf7] p-5">
           <h3 className="sr-only">Product description</h3>
-          <p className="mt-2.5 text-xs leading-5 text-neutral-800">{p.description}</p>
+          <p className="mt-2.5 text-xs leading-5 text-black">{p.description}</p>
           {editorial && <p className="font-serif-d mt-2.5 text-base italic leading-6">{editorial}</p>}
           {descLines.length > 0 && (
-            <div className="mt-2.5 space-y-2.5 text-xs leading-5 text-neutral-700">
+            <div className="mt-2.5 space-y-2.5 text-xs leading-5 text-black">
               {descLines.map((l) => <p key={l}>{l}</p>)}
             </div>
           )}
-          {p.madeIn && <p className="mt-2.5 text-xs leading-5 text-neutral-800">Made in {p.madeIn}</p>}
+          {p.madeIn && <p className="mt-2.5 text-xs leading-5 text-black">Made in {p.madeIn}</p>}
           {p.refCode && <p className="mt-4 text-xs text-[#696969]">Product reference: {p.refCode}</p>}
-          <p className="mt-4 text-sm">Like to know more? <button aria-label="Contact Customer Service" className="underline underline-offset-4" onClick={() => go({ t: "page", page: "contact" })}>Contact Customer Service</button></p>
+          <p className="mt-4 text-xs text-[#696969]">Like to know more? <button aria-label="Contact Customer Service" className="underline underline-offset-4" onClick={() => go({ t: "page", page: "contact" })}>Contact Customer Service</button></p>
         </section>
-        <div className="mb-[15px] pt-2.5">
+        <div className="mb-[15px] bg-[#fffcf7e6] px-4 py-2">
           {accItems.map((it, i) => (
-            <div key={it.title} className="border-t border-black/10 last:border-b">
+            <div key={it.title} className="border-t border-[#f6f1eb] last:border-b">
               <button aria-label={`${it.title} section`} aria-expanded={accOpen === i} className="font-mono-d flex w-full items-center justify-between pb-[5px] pt-[23px] text-left text-xs uppercase tracking-normal" onClick={() => setAccOpen(accOpen === i ? -1 : i)}>
                 {it.title}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true" className={accOpen === i ? "rotate-180 transition-transform" : "transition-transform"}><path d="m5 9 7 7 7-7" /></svg>
               </button>
-              {accOpen === i && <div className="pb-6 text-xs leading-5 text-neutral-700">{it.content}</div>}
+              {accOpen === i && <div className="pb-6 text-xs leading-5 text-black">{it.content}</div>}
             </div>
           ))}
         </div>
@@ -1937,15 +1906,15 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
         </section>
       )}
 
-      <RelatedRow title="The Perfect Partner" items={partners} go={go} />
-      <RelatedRow title="Keep exploring" items={explore} go={go} />
-      <RelatedRow title="Last viewed products" items={lastViewed} go={go} mt="mt-20 lg:mt-28" />
+      <RelatedRow title="The Perfect Partner" items={partners} go={go} onQuickBuy={(p) => addToCart(p)} />
+      <RelatedRow title="Keep exploring" items={explore} go={go} onQuickBuy={(p) => addToCart(p)} />
+      <RelatedRow title="Last viewed products" items={lastViewed} go={go} mt="mt-20 lg:mt-28" onQuickBuy={(p) => addToCart(p)} />
 
       <nav aria-label="Breadcrumb" className="font-mono-d mx-auto mt-14 max-w-5xl border-t border-black/10 px-4 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 sm:px-6">
         <button aria-label={`Breadcrumb ${NAV.find((n) => n.key === p.category)?.label ?? p.category}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category })}>{NAV.find((n) => n.key === p.category)?.label ?? p.category.toUpperCase()}</button>
-        {" > "}
+        <span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" />
         <button aria-label={`Breadcrumb ${p.subcategory}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: p.subcategory })}>{p.subcategory}</button>
-        {" > "}
+        <span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" />
         <span className="text-black">{p.name}</span>
       </nav>
 
@@ -1953,7 +1922,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
           Zoom in / Zoom out buttons and a ZOOM slider (default 2), an image
           counter, and the same thumbnail strip at the bottom-left. */}
       {zoomOpen && curView && (
-        <div className="fixed inset-0 z-[80] flex flex-col" style={{ background: "#f7f2ec" }} role="dialog" aria-label="Image gallery">
+        <div className="fixed inset-0 z-[80] flex flex-col" style={{ background: "#fcf7f1" }} role="dialog" aria-label="Image gallery">
           <div className="flex items-center justify-between px-5 py-4">
             <span className="text-[11px] font-semibold uppercase tracking-[0.3em]">Image Gallery</span>
             <button aria-label="Close image gallery" className="flex h-10 w-10 items-center justify-center" onClick={() => setZoomOpen(false)}>
@@ -1995,26 +1964,27 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
       {sizeDrawer && (
         <div className="fixed inset-0 z-[60]" role="dialog" aria-label="Select a size">
           <button aria-label="Close size selector" className="absolute inset-0 h-full w-full bg-black/30" onClick={() => setSizeDrawer(false)} />
-          <div className="drawer-in absolute right-0 top-0 flex h-full w-[340px] max-w-[88vw] flex-col bg-white shadow-2xl">
+          <div className="drawer-in absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col bg-[#fffcf7] shadow-2xl lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-0 lg:h-full lg:w-[340px] lg:max-w-[88vw]">
             <div className="flex items-center justify-between border-b border-black/10 px-5 py-4">
               <span className="text-[12px] font-semibold uppercase tracking-[0.25em]">Select a size</span>
               <button aria-label="Close size selector" className="flex h-9 w-9 items-center justify-center" onClick={() => setSizeDrawer(false)}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-3">
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              <div className="flex flex-wrap gap-2">
               {sizeList.map((opt) => opt.available ? (
-                <button key={opt.label} aria-label={`Size ${opt.label}`} aria-pressed={selSize === opt.label} className={`flex w-full items-center justify-between border-b border-black/10 py-3.5 text-left text-sm ${selSize === opt.label ? "font-semibold" : ""}`} onClick={() => { setSelSize(opt.label); setSizeGone(false); setSizeDrawer(false); }}>
-                  {opt.label}{selSize === opt.label && <span aria-hidden="true">✓</span>}
+                <button key={opt.label} aria-label={`Size ${opt.label}`} aria-pressed={selSize === opt.label} className={`font-mono-d inline-flex h-[34px] min-w-[52px] items-center justify-center rounded-[24px] border px-4 text-[10px] font-medium uppercase ${selSize === opt.label ? "border-black bg-black text-white" : "border-black/40 bg-transparent text-black"}`} onClick={() => { setSelSize(opt.label); setSizeGone(false); }}>
+                  {opt.label}
                 </button>
               ) : (
-                <div key={opt.label} className="flex w-full items-center justify-between border-b border-black/10 py-3.5 text-sm text-neutral-400" aria-label={`Size ${opt.label} unavailable`}>
-                  <span className="line-through">{opt.label}</span><span className="text-xs uppercase tracking-wider">Unavailable</span>
-                </div>
+                <span key={opt.label} className="font-mono-d inline-flex h-[34px] min-w-[52px] items-center justify-center rounded-[24px] bg-[#f6f1eb] px-4 text-[10px] font-medium uppercase text-[#696969] line-through" aria-label={`Size ${opt.label} unavailable`}>{opt.label}</span>
               ))}
+              </div>
             </div>
-            <div className="border-t border-black/10 px-5 py-4">
-              <button aria-label="Open size guide" className="text-xs uppercase tracking-[0.18em] underline" onClick={() => { setSizeDrawer(false); go({ t: "page", page: "guides" }); }}>Size guide</button>
+            <div className="border-t border-[#f6f1eb] px-5 py-4">
+              <button aria-label="Continue with selected size" className="font-mono-d flex h-12 w-full items-center justify-center border border-black text-xs font-medium uppercase tracking-normal" onClick={() => setSizeDrawer(false)}>Continue</button>
+              <button aria-label="Open size guide" className="mt-3 block w-full text-center text-xs uppercase tracking-[0.18em] underline" onClick={() => { setSizeDrawer(false); go({ t: "page", page: "guides" }); }}>Size guide</button>
             </div>
           </div>
         </div>
@@ -2054,14 +2024,14 @@ const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
   { title: "LEGAL", links: [["Terms and conditions", "terms"], ["Privacy & cookies", "privacy"], ["Binding Corporate Rules (BCRs)", "bcr"], ["California Transparency in Supply Chain Act", "california"], ["Transparency in coverage", "coverage"], ["Do Not Sell/Share My Personal Information", "donotsell"], ["Legal issues", "legal"], ["Accessibility", "accessibility"], ["Hermès Sitemap", "sitemap"]] },
 ];
 const PAGES: Record<string, { title: string; body: string[] }> = {
-  contact: { title: "Contact us", body: ["Our customer service is at your disposal Monday to Saturday, 10 AM – 9 PM EST.", "By phone: 800-441-4488."] },
+  contact: { title: "Customer Service", body: ["Monday to Saturday 10am - 9pm EST: 800-441-4488.", "The answer to your question can certainly be found in the FAQs.", "You can also contact us outside public holidays:"] },
   faq: { title: "FAQ", body: ["How long is delivery? Complimentary Ground delivery applies to orders up to $2,000; Express 2 day $35, Standard Overnight $60, Priority Overnight $70, Saturday Delivery $85, White Glove $500. Express is required over $2,000 and White Glove over $25,000.", "Can I return an article? Yes — free returns within 30 days of delivery, in its original condition and packaging.", "Which payment methods are accepted? MasterCard, Visa, American Express, Diners Club, Carte Blanche, JCB, Discover, Accel, Pulse, Nyce, Star and China Union Pay; PayPal and Apple Pay for select products.", "Are Birkin and Kelly quota bags sold online? No. These articles are offered in store only."] },
   stores: { title: "Find a store", body: ["Hermès boutiques welcome you across the United States. Flagship: 691 Madison Avenue, New York — Monday to Saturday 10 AM – 9 PM.", "Beauty products and Apple Watch Hermès are available in selected boutiques; please call 800-441-4488 to confirm availability before your visit."] },
   gifting: { title: "Gifting", body: ["Every order arrives in the orange box tied with Bolduc ribbon. Add a gift message at checkout; the delivery note never shows prices. Gift cards are available under Gifts → Gift cards."] },
   measure: { title: "Made to measure", body: ["The Sur Mesure atelier creates pieces measured, cut and finished for one person only. Appointments are arranged in boutique or by phone at 800-441-4488."] },
   maintenance: { title: "Maintenance and repair", body: ["Hermès artisans restore leather goods, silk, watches and jewelry in the Maison's workshops. Bring your article to any boutique for an assessment; a quotation is provided before any work begins."] },
   guides: { title: "User guides", body: ["Watch user guide: pull the crown to set the time; keep away from magnetic fields; service every 3–5 years.", "Scarf guide: your scarf 90 can be worn around the neck, as a top, a belt or on a bag handle. Dry clean only.", "Leather guide: wipe with a soft dry cloth and store in the dust bag provided.", "Wrist size guide: measure around your wrist and choose the closest size between 5.5\" and 6.5\" for Petite Lune straps."] },
-  payment: { title: "Payment", body: ["We accept MasterCard, Visa, American Express, Diners Club, Carte Blanche, JCB, Discover, Accel, Pulse, Nyce, Star and China Union Pay. PayPal and Apple Pay are available for select products.", "All transactions made on this store are secured with encrypted payment processing."] },
+  payment: { title: "Payment", body: ["We accept MasterCard, Visa, American Express, Diners Club, Carte Blanche, JCB, Discover, Accel, Pulse, Nyce, Star and China Union Pay. PayPal and Apple Pay are available for select products.", "All the transactions made on the Hermes.com website are secure."] },
   shipping: { title: "Shipping", body: ["Complimentary Ground delivery for orders up to $2,000. Express 2 day $35; Standard Overnight $60; Priority Overnight $70; Saturday Delivery $85; White Glove $500. Furniture transport is 6% of the order, up to a maximum of $5,000.", "Express delivery is required for orders over $2,000; White Glove delivery is required over $25,000. Every parcel is delivered in the orange box tied with Bolduc ribbon, with signature required for high-value orders."] },
   collect: { title: "Collect in store", body: ["Select articles can be reserved online and collected in boutique. Bring your order confirmation and an ID; your article will be held for 48 hours."] },
   track: { title: "Track orders", body: ["Order tracking is available from your account after sign-in."] },
@@ -2081,14 +2051,14 @@ const PAGES: Record<string, { title: string; body: string[] }> = {
   accessibility: { title: "Accessibility", body: ["We aim to make this store usable by everyone: full keyboard navigation, labelled controls and text alternatives for imagery. Tell us at 800-441-4488 if any page is difficult to use."] },
 };
 
-function ContactForm({ settings }: { settings: Settings }) {
-  const [f, setF] = useState({ first: "", last: "", email: "", phone: "", subject: "Order enquiry", message: "" });
+function ContactForm({ settings, go }: { settings: Settings; go: (v: View) => void }) {
+  const [f, setF] = useState({ first: "", last: "", email: "", phone: "", subject: "", message: "" });
   const [sent, setSent] = useState("");
   const [err, setErr] = useState("");
   const inputCls = "w-full border border-black/30 px-3 py-3 text-sm";
-  if (sent) return <p className="mt-6 border border-black/15 bg-[#fffdf9] p-5 text-sm" role="status">{sent}</p>;
+  if (sent) return <p className="mt-6 border border-black/15 bg-[#fffcf7] p-5 text-sm" role="status">{sent}</p>;
   return (
-    <form className="mt-6 space-y-3" onSubmit={(e) => { e.preventDefault(); if (!f.first || !f.last || !f.email.includes("@") || !/^\d{10}$/.test(f.phone.replace(/\D/g, "").replace(/^1/, "")) || !f.message) { setErr("Please complete all fields — the telephone must be a US number (+1 followed by 10 digits)."); return; } setErr(""); setSent(`Thank you, ${f.first}. Your message about “${f.subject}” has been sent — customer service will reply to ${f.email} within one business day.`); }}>
+    <form className="mt-6 space-y-3" onSubmit={(e) => { e.preventDefault(); if (!f.first || !f.last || !f.email.includes("@") || !/^\d{10}$/.test(f.phone.replace(/\D/g, "").replace(/^1/, "")) || !f.message || !f.subject) { setErr("Please complete all fields — the telephone must be a US number (+1 followed by 10 digits)."); return; } setErr(""); setSent(`Thank you, ${f.first}. Your message about “${f.subject}” has been sent — customer service will reply to ${f.email}.`); }}>
       <div className="grid gap-3 sm:grid-cols-2">
         <input aria-label="Contact first name" className={inputCls} placeholder="First name *" value={f.first} onChange={(e) => setF({ ...f, first: e.target.value })} />
         <input aria-label="Contact last name" className={inputCls} placeholder="Last name *" value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
@@ -2096,11 +2066,11 @@ function ContactForm({ settings }: { settings: Settings }) {
       <input aria-label="Contact email" type="email" className={inputCls} placeholder="E-mail *" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
       <input aria-label="Contact telephone" className={inputCls} placeholder="Telephone (+1, 10 digits) *" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
       <select aria-label="Contact subject" className={inputCls} value={f.subject} onChange={(e) => setF({ ...f, subject: e.target.value })}>
-        {["Order enquiry", "Delivery", "Returns and exchanges", "Product information", "Account", "Other"].map((s) => <option key={s} value={s}>{s}</option>)}
+        <option value="">Please select a subject</option>{["Order enquiry", "Delivery", "Returns and exchanges", "Product information", "Account", "Other"].map((s) => <option key={s} value={s}>{s}</option>)}
       </select>
       <textarea aria-label="Contact message" className={inputCls} rows={5} placeholder="Your message *" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} />
       {err && <p className="text-sm text-red-700" role="status">{err}</p>}
-      <p className="text-xs text-neutral-500">Customer service: {settings.phone} — {settings.serviceHours}.</p>
+      <p className="text-xs leading-5 text-neutral-600">By sending your message, you agree to accept the <button type="button" aria-label="General Terms and Conditions of Use" className="underline" onClick={() => go({ t: "page", page: "terms" })}>General Terms and Conditions of Use</button> and that your data will be processed in compliance with the <button type="button" aria-label="Privacy Policy" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button> of Hermès.</p>
       <button aria-label="Send contact message" type="submit" className="w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white">Send</button>
     </form>
   );
@@ -2137,7 +2107,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="font-serif-d text-3xl italic">{data.title}</h1>
       {data.body.map((b, i) => <p key={i} className="mt-4 text-sm leading-7 text-neutral-700">{b}</p>)}
-      {page === "contact" && <ContactForm settings={settings} />}
+      {page === "contact" && <ContactForm settings={settings} go={go} />}
       {(page === "donotsell" || page === "legal") && <p className="mt-4 text-sm">Customer service: <a aria-label="Call customer service" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a> — {settings.serviceHours}.</p>}
       <button aria-label="Continue shopping" className="mt-8 border border-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => go({ t: "home" })}>Continue shopping</button>
     </div>
@@ -2184,7 +2154,7 @@ function TrackOrders({ user, go }: { settings: Settings; user: { name: string; e
         const idx = steps.indexOf(norm);
         let items: { name: string; qty: number; price: number }[] = []; try { items = JSON.parse(o.items) as typeof items; } catch { items = []; }
         return (
-        <div key={o.id} className="mt-4 border border-black/10 bg-[#fffdf9] p-4">
+        <div key={o.id} className="mt-4 border border-black/10 bg-[#fffcf7] p-4">
           <p className="text-sm font-medium">Order #{o.id} — {fmt(o.total)} — <span className="uppercase tracking-wider">{o.status}</span></p>
           <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString()}{o.paymentMethod ? ` · Paid with ${o.paymentMethod} (demo)` : ""}{o.deliveryOption ? ` · ${o.deliveryOption}` : ""}</p>
           {items.map((it, i) => <p key={i} className="mt-1 text-sm text-neutral-700">{it.qty} × {it.name} — {fmt(it.price * it.qty)}</p>)}
@@ -2220,11 +2190,11 @@ function CartPage({ cart, setCart, settings, go, total, count }: { cart: CartIte
   const [giftOpen, setGiftOpen] = useState(false);
   const [gift, setGift] = useState(false);
   return (
-    <div className="min-h-screen bg-[#fffdf9]">
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <div className="min-h-screen bg-[#fcf7f1]">
+      <div className="mx-auto max-w-[1290px] px-4 py-6 sm:px-6">
         <div className="relative flex items-start">
           <button aria-label="Back to store from cart" className="flex h-10 items-center gap-1.5 text-sm" onClick={() => go({ t: "home" })}>
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg> Back
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg><span className="hidden sm:inline">Back</span>
           </button>
           <span className="absolute left-1/2 top-0 -translate-x-1/2"><HermesLogo settings={settings} variant="brand" /></span>
           <span className="w-10" />
@@ -2232,23 +2202,23 @@ function CartPage({ cart, setCart, settings, go, total, count }: { cart: CartIte
         <div className="mt-2"><CheckoutProgress step={1} nextStep /></div>
         {cart.length === 0 ? (
           <div className="mt-8">
-            <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-              <div className="flex flex-col items-center bg-white px-6 py-16 text-center">
+            <div className="grid gap-6 lg:grid-cols-[1fr_463px]">
+              <div className="flex flex-col items-center bg-[#fffcf7] px-6 py-16 text-center">
                 <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>
                 <h1 className="mt-5 text-lg">Your cart is empty</h1>
                 <button aria-label="Continue shopping from empty cart" className="mt-6 bg-black px-10 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "home" })}>Continue shopping</button>
               </div>
               <div className="space-y-6">
-                <section className="bg-white px-5 py-5" aria-label="The orange box section">
-                  <h2 className={CO_HEAD}>The Orange Box</h2>
-                  <div className="mt-4 flex items-center gap-4">
-                    <span className="relative block h-16 w-16 shrink-0 overflow-hidden" style={{ background: "#e85d1f" }} aria-hidden="true"><span className="absolute left-1/2 top-0 h-full w-[6px] -translate-x-1/2 bg-[#5a2d16]" /><span className="absolute left-0 top-1/2 h-[6px] w-full -translate-y-1/2 bg-[#5a2d16]" /><span className="absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-[#5a2d16]" /></span>
-                    <p className="text-sm leading-6 text-neutral-800">All orders are delivered in an orange box tied with a Bolduc ribbon, with the exception of <button aria-label="Certain items exceptions from cart" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certain items</button></p>
+                <section className="bg-[#fffcf7] px-5 py-5" aria-label="The orange box section">
+                  <div className="border-b border-[#f6f1eb] pb-4"><h2 className={CO_HEAD_LG}>The Orange Box</h2></div>
+                  <div className="flex items-center gap-4 py-4">
+                    <img src="/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
+                    <p className="text-xs leading-5 text-black">All orders are delivered in an orange box tied with a Bolduc ribbon, with the exception of <button aria-label="Certain items exceptions from cart" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certain items</button></p>
                   </div>
                 </section>
-                <section className="bg-white px-5 py-5" aria-label="Customer service section">
+                <section className="bg-[#fffcf7] px-5 py-5" aria-label="Customer service section">
                   <h2 className={CO_HEAD}>Customer Service</h2>
-                  <p className="mt-4 text-sm text-neutral-600">Monday to Saturday 10am - 9pm EST :</p>
+                  <p className="mt-4 text-sm text-neutral-600">{settings.serviceHours}</p>
                   <p className="mt-1 text-sm"><a aria-label="Call customer service from cart" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
                   <div className="mt-5 grid grid-cols-2 gap-4 text-center">
                     <button aria-label="Returns and exchanges from cart" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "returns" })}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M7 8h11l-3-3M17 16H6l3 3" /></svg>Returns &amp; exchanges</button>
@@ -2257,13 +2227,13 @@ function CartPage({ cart, setCart, settings, go, total, count }: { cart: CartIte
                 </section>
               </div>
             </div>
-            <div className="mt-10 space-y-2 text-[13px] text-neutral-600">
-              {([["Terms and conditions", "terms"], ["Privacy & cookies", "privacy"], ["Legal issues", "legal"], ["Accessibility", "accessibility"], ["Site map", "sitemap"]] as [string, string][]).map(([l, pg]) => <button key={l} aria-label={`Cart footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
+            <div className="mt-10 space-y-2 border-t border-[#f6f1eb] bg-[#fffcf7] px-5 py-5 text-[13px] text-neutral-600">
+              {parseLegalLinks(settings).map(([l, pg]) => <button key={l} aria-label={`Cart footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
               <p className="pt-1">© Hermès 2026. All rights reserved.</p>
             </div>
           </div>
         ) : (
-          <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_320px]">
+          <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_463px]">
             <div>
               <h1 className="text-xs font-semibold uppercase tracking-[0.25em]">You have {count} item{count === 1 ? "" : "s"} in your cart</h1>
               {cart.map((i) => (
@@ -2287,15 +2257,15 @@ function CartPage({ cart, setCart, settings, go, total, count }: { cart: CartIte
                 {giftOpen && <label className="flex items-center gap-2 px-4 pb-4 text-sm"><input type="checkbox" aria-label="This is a gift" checked={gift} onChange={(e) => setGift(e.target.checked)} className="accent-black" /> This is a gift — deliver in the orange box with a gift message and no prices on the delivery note.</label>}
               </div>
             </div>
-            <aside className="h-fit border border-black/10 p-5">
-              <div className="mt-4 flex justify-between border-t border-black/10 pt-4 text-sm font-semibold uppercase tracking-[0.15em]"><span>Total</span><span>{fmt2(total)}</span></div>
+            <aside className="h-fit border border-[#f6f1eb] bg-[#fffcf7] p-5 lg:sticky lg:bottom-0">
+              <div className="mt-4 flex justify-between border-t border-[#f6f1eb] pt-4 text-sm font-semibold uppercase tracking-[0.15em]"><span>Total</span><span>{fmt2(total)}</span></div>
               <button aria-label="Checkout from cart" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => go({ t: "checkout" })}>Checkout</button>
-              <button aria-label="Buy with Apple Pay from cart" className="mt-2 w-full border border-black bg-white py-3.5 text-sm font-semibold" onClick={() => go({ t: "checkout" })}>Buy with Apple Pay</button>
-              <div className="mt-6 border-t border-black/10 pt-5">
+              <button aria-label="Buy with Apple Pay from cart" className="mt-2 w-full border border-black py-3.5 text-sm font-semibold" onClick={() => go({ t: "checkout" })}>Buy with Apple Pay</button>
+              <div className="mt-6 border-t border-[#f6f1eb] pt-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.25em]">The Orange Box</p>
                 <p className="mt-2 text-sm leading-6 text-neutral-600">Every order is delivered in the orange box tied with Bolduc ribbon.</p>
                 <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.25em]">Customer service</p>
-                <p className="mt-2 text-sm leading-6 text-neutral-600">Monday to Saturday 10 AM – 9 PM EST<br /><a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
+                <p className="mt-2 text-sm leading-6 text-neutral-600">{settings.serviceHours}<br /><a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
               </div>
             </aside>
           </div>
@@ -2306,18 +2276,76 @@ function CartPage({ cart, setCart, settings, go, total, count }: { cart: CartIte
 }
 
 function SocialCircles() {
-  const cls = "flex h-10 w-10 items-center justify-center rounded-full bg-black text-white";
+  const cls = "flex h-6 w-6 items-center justify-center rounded-full bg-black text-white lg:h-4 lg:w-4";
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-4">
       <a aria-label="Hermès on Facebook" href="https://www.facebook.com/Hermes" target="_blank" rel="noreferrer" className={cls}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.2 21v-7.2h2.4l.4-2.8h-2.8V9.2c0-.8.2-1.4 1.4-1.4h1.5V5.3c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2H8.8v2.8h2.4V21h3Z" /></svg>
+        <svg className="h-4 w-4 lg:h-3 lg:w-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.2 21v-7.2h2.4l.4-2.8h-2.8V9.2c0-.8.2-1.4 1.4-1.4h1.5V5.3c-.3 0-1.2-.1-2.2-.1-2.2 0-3.7 1.3-3.7 3.8v2H8.8v2.8h2.4V21h3Z" /></svg>
       </a>
       <a aria-label="Hermès on Instagram" href="https://www.instagram.com/hermes" target="_blank" rel="noreferrer" className={cls}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5" /><circle cx="12" cy="12" r="3.8" /><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" /></svg>
+        <svg className="h-4 w-4 lg:h-3 lg:w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5" /><circle cx="12" cy="12" r="3.8" /><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" /></svg>
       </a>
       <a aria-label="Hermès on YouTube" href="https://www.youtube.com/@HermesParis" target="_blank" rel="noreferrer" className={cls}>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8ZM10 15.2V8.8L15.5 12 10 15.2Z" /></svg>
+        <svg className="h-4 w-4 lg:h-3 lg:w-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8ZM10 15.2V8.8L15.5 12 10 15.2Z" /></svg>
       </a>
+    </div>
+  );
+}
+
+// Floating chat bubble — bottom-right on every page except checkout (which
+// keeps its own bubble) and admin, as on hermes.com: a 48px white circle
+// with the two-line speech-bubble glyph, bottom-5 right-5. The opened panel
+// shows Customer service hours + phone, a message thread (localStorage
+// hv-chat — the same store the Admin Panel chat tab reads), the original
+// Live Chat privacy text, a message input + Send, and a Contact us button.
+// The opened panel on hermes.com itself could not be observed (live chat is
+// JS-driven and hermes.com is Cloudflare-blocked for automated checks), so
+// the panel reuses the checkout Customer Service popover content — do not
+// treat its layout as a verified copy of the original panel. On mobile
+// product pages the bubble sits above the sticky ADD TO CART bar.
+function ChatBubble({ settings, go, view }: { settings: Settings; go: (v: View) => void; view: View }) {
+  const [open, setOpen] = useState(false);
+  const [msgs, setMsgs] = useState<LocalChat[]>([]);
+  const [draft, setDraft] = useState("");
+  const [sent, setSent] = useState(false);
+  if (!settings.chatEnabled) return null;
+  const load = () => { void api.getChatMessages({}).then((r) => setMsgs(r.messages)); };
+  const toggle = () => { const n = !open; setOpen(n); if (n) load(); };
+  const send = async () => {
+    const t = draft.trim();
+    if (!t) return;
+    const r = await api.sendChatMessage({ from: "customer", text: t });
+    if (r.ok) { setDraft(""); setSent(true); load(); }
+  };
+  return (
+    <div className={`fixed z-40 flex flex-col items-end gap-2 ${view.t === "product" ? "bottom-[calc(76px+env(safe-area-inset-bottom))] right-5 lg:bottom-5" : "bottom-5 right-5"}`}>
+      {open && (
+        <div className="w-[320px] max-w-[calc(100vw-40px)] bg-[#fffcf7] p-4 shadow-xl ring-1 ring-black/10" role="dialog" aria-label="Customer service chat">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em]">Customer service</p>
+            <button aria-label="Close chat" className="flex h-8 w-8 items-center justify-center text-lg leading-none text-neutral-600" onClick={() => setOpen(false)}>×</button>
+          </div>
+          {settings.chatWelcome ? <p className="mt-2 text-sm leading-6">{settings.chatWelcome}</p> : null}
+          <p className="mt-2 text-sm leading-6 text-neutral-700">{settings.serviceHours}<br /><a aria-label="Call customer service from chat" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
+          {msgs.length > 0 && (
+            <div className="mt-3 max-h-48 space-y-2 overflow-y-auto border-t border-[#f6f1eb] pt-3">
+              {msgs.map((m) => (
+                <p key={m.id} className={`max-w-[85%] px-3 py-2 text-sm leading-5 ${m.from === "customer" ? "ml-auto bg-black text-white" : "bg-[#f6f1eb] text-black"}`}>{m.text}</p>
+              ))}
+            </div>
+          )}
+          <p className="mt-3 text-[11px] leading-5 text-neutral-600">By using our Live Chat, you accept the use of your personal data by Hermès of Paris in order to respond to your requests about a product or service and to enhance the customer experience. To find out more about the management of your personal data and your rights, please see our <button type="button" aria-label="Privacy Policy" className="underline" onClick={() => { setOpen(false); go({ t: "page", page: "privacy" }); }}>Privacy Policy</button>.</p>
+          <div className="mt-3 flex gap-2">
+            <input aria-label="Type your message" className="min-w-0 flex-1 border border-black/20 bg-white px-3 py-2.5 text-sm outline-none" placeholder="Type your message" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void send(); }} />
+            <button aria-label="Send chat message" className="bg-black px-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => void send()}>Send</button>
+          </div>
+          {sent && <p className="mt-2 text-xs text-neutral-600" role="status">Thank you — your message has been sent.</p>}
+          <button aria-label="Contact us from chat" className="mt-3 w-full bg-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => { setOpen(false); go({ t: "page", page: "contact" }); }}>Contact us</button>
+        </div>
+      )}
+      <button aria-label="Customer service chat" aria-expanded={open} className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-black/10" onClick={toggle}>
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5Z" /><path d="M8 10.5h8M8 13.5h5" /></svg>
+      </button>
     </div>
   );
 }
@@ -2326,35 +2354,35 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
   const [email, setEmail] = useState("");
   const [done, setDone] = useState("");
   const [ship, setShip] = useState(settings.shipTo);
-  const [openCol, setOpenCol] = useState<string | null>("LEGAL");
+  const [openCol, setOpenCol] = useState<string | null>(null);
   const [subOpen, setSubOpen] = useState(false);
   const [svcIdx, setSvcIdx] = useState(0);
   const sub = useMutation({ mutationFn: () => api.subscribeNewsletter({ email }), onSuccess: () => { setDone("Thank you — you are subscribed to the newsletter."); setEmail(""); } });
   useEffect(() => { setShip(settings.shipTo); }, [settings.shipTo]);
   const serviceIcons: Record<string, React.ReactNode> = {
-    "STANDARD DELIVERY": <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2.5 6h12v10h-12zM14.5 9.5h3.6l3 3.4v3.1h-6.6" /><circle cx="6.5" cy="17.8" r="1.9" /><circle cx="17.3" cy="17.8" r="1.9" /></svg>,
-    "RETURNS": <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M8.5 5.5 4 10l4.5 4.5M4 10h10a6 6 0 0 1 0 12h-3" /></svg>,
-    "CUSTOMER SERVICE": <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M5 3.5h4l1.5 4.5L8 10a13 13 0 0 0 6 6l2-2.5 4.5 1.5v4a2 2 0 0 1-2.2 2A18.5 18.5 0 0 1 3 5.7a2 2 0 0 1 2-2.2Z" /></svg>,
-    "SECURED PAYMENT": <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><rect x="2.5" y="6" width="15" height="11" rx="1.5" /><path d="M2.5 9.8h15" /><rect x="15.8" y="13.2" width="5.7" height="5" rx="0.8" /><path d="M17.2 13.2v-1.4a1.5 1.5 0 0 1 3 0v1.4" /></svg>,
+    "STANDARD DELIVERY": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2.5 6h12v10h-12zM14.5 9.5h3.6l3 3.4v3.1h-6.6" /><circle cx="6.5" cy="17.8" r="1.9" /><circle cx="17.3" cy="17.8" r="1.9" /></svg>,
+    "RETURNS": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M8.5 5.5 4 10l4.5 4.5M4 10h10a6 6 0 0 1 0 12h-3" /></svg>,
+    "CUSTOMER SERVICE": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M5 3.5h4l1.5 4.5L8 10a13 13 0 0 0 6 6l2-2.5 4.5 1.5v4a2 2 0 0 1-2.2 2A18.5 18.5 0 0 1 3 5.7a2 2 0 0 1 2-2.2Z" /></svg>,
+    "SECURED PAYMENT": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><rect x="2.5" y="6" width="15" height="11" rx="1.5" /><path d="M2.5 9.8h15" /><rect x="15.8" y="13.2" width="5.7" height="5" rx="0.8" /><path d="M17.2 13.2v-1.4a1.5 1.5 0 0 1 3 0v1.4" /></svg>,
   };
   const services: { title: string; body: React.ReactNode; page: string }[] = [
     { title: "STANDARD DELIVERY", page: "shipping", body: <>Free standard delivery. Hermès offers several fast and secure delivery options.</> },
     { title: "RETURNS", page: "returns", body: <>Free returns within 30 days. See conditions and procedure in our <button aria-label="Return FAQs" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "returns" }); }}>return FAQs</button>.</> },
-    { title: "CUSTOMER SERVICE", page: "contact", body: <>{settings.serviceHours}, <a aria-label="Call Hermès customer service" className="underline underline-offset-2" href={`tel:${settings.phone}`} onClick={(e) => e.stopPropagation()}>{settings.phone}</a> | <button aria-label="Contact us from footer" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Contact us</button></> },
+    { title: "CUSTOMER SERVICE", page: "contact", body: <>{settings.serviceHours}<br /><a aria-label="Call Hermès customer service" className="underline underline-offset-2" href={`tel:${settings.phone}`} onClick={(e) => e.stopPropagation()}>{settings.phone}</a> | <button aria-label="Contact us from footer" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Contact us</button></> },
     { title: "SECURED PAYMENT", page: "payment", body: <>All the transactions made on Hermes.com are secured</> },
   ];
   const newsletterForm = (boxed: boolean) => done ? <p className="mt-3 text-sm font-medium" role="status">{done}</p> : boxed ? (
     <>
       <input aria-label="Newsletter email" type="email" className="mt-3 w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <button aria-label="Subscribe to the newsletter" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (email.includes("@")) sub.mutate(); }}>Subscribe to the newsletter</button>
+      <button aria-label="Subscribe to the newsletter" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (email.includes("@")) sub.mutate(); }}>Subscribe<span className="sr-only"> to the Newsletter</span></button>
     </>
   ) : (
     <>
-      <button aria-label="Subscribe to the newsletter" className="font-mono-d mt-2 text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => setSubOpen(!subOpen)}>Subscribe to the newsletter</button>
+      <button aria-label="Subscribe to the newsletter" className="font-mono-d mt-2 text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => setSubOpen(!subOpen)}>Subscribe<span className="sr-only"> to the Newsletter</span></button>
       {subOpen && (
         <div className="mt-3">
           <input aria-label="Newsletter email" type="email" className="w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button aria-label="Confirm newsletter subscription" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (email.includes("@")) sub.mutate(); }}>Subscribe to the newsletter</button>
+          <button aria-label="Confirm newsletter subscription" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (email.includes("@")) sub.mutate(); }}>Subscribe<span className="sr-only"> to the Newsletter</span></button>
         </div>
       )}
     </>
@@ -2368,15 +2396,15 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
           a time, centred, with < > arrows on the sides — exactly as on the
           real site. Desktop: all four at once in four columns, thin line
           icons, no arrows, no carousel. */}
-      <div className="border-y border-black/15" style={{ background: "#fcf7f1" }}>
+      <div style={{ background: "#fcf7f1" }}>
       <div className="relative px-12 py-4 text-center lg:hidden">
-        <button aria-label="Previous service" className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-xl text-neutral-700" onClick={() => setSvcIdx((svcIdx + services.length - 1) % services.length)}>‹</button>
+        <button aria-label="Previous image" className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-neutral-700" onClick={() => setSvcIdx((svcIdx + services.length - 1) % services.length)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg></button>
         <div key={svc.title} className="cursor-pointer" onClick={() => go({ t: "page", page: svc.page })}>
           <span className="flex justify-center">{serviceIcons[svc.title]}</span>
           <button aria-label={`Service ${svc.title}`} className="font-mono-d mt-1 text-xs font-light uppercase tracking-normal sm:mt-4" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: svc.page }); }}>{svc.title}</button>
           <p className="mx-auto mt-1 max-w-xs text-[11px] leading-[18px] text-black">{svc.body}</p>
         </div>
-        <button aria-label="Next service" className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-xl text-neutral-700" onClick={() => setSvcIdx((svcIdx + 1) % services.length)}>›</button>
+        <button aria-label="Next image" className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-neutral-700" onClick={() => setSvcIdx((svcIdx + 1) % services.length)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg></button>
       </div>
       <div className="mx-auto hidden max-w-7xl gap-10 px-4 py-8 text-center sm:px-6 lg:grid lg:grid-cols-4 lg:text-left">
         {services.map((s) => (
@@ -2404,17 +2432,13 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
                 <button aria-label={`Footer section ${c.title}`} aria-expanded={open} className="font-mono-d flex w-full items-center justify-between py-4 text-left text-xs font-light uppercase tracking-normal" onClick={() => setOpenCol(open ? null : c.title)}>
                   {c.title}<span aria-hidden="true" className="text-base">{open ? "−" : "+"}</span>
                 </button>
-                {open && (c.title === "LEGAL" ? (
+                {open && (
                   <div className="pb-4 leading-7">
                     {cols.map(([l, pg], i) => (
                       <span key={l}>{i > 0 && <span aria-hidden="true" className="mx-2 text-neutral-400">|</span>}<button aria-label={`Footer ${l}`} className="py-1 text-left text-[11px] leading-[18px] text-black" onClick={() => go({ t: "page", page: pg })}>{l}</button></span>
                     ))}
                   </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-x-4 pb-4">
-                    {cols.map(([l, pg]) => <button key={l} aria-label={`Footer ${l}`} className="py-1 text-left text-[11px] leading-[18px] text-black" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
-                  </div>
-                ))}
+                )}
               </div>
             );
           })}
@@ -2453,7 +2477,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
           </div>
         </div>
       </div>
-      <div className="hidden border-t border-black/10 lg:block" style={{ background: "#f6f1eb" }}>
+      <div className="hidden border-t border-[#e2d8ce] lg:block" style={{ background: "#f6f1eb" }}>
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-neutral-600">
           <label className="flex items-center gap-2 uppercase tracking-wider">Ship to :
             <select aria-label="Ship to country selector" className="appearance-none bg-transparent py-1 font-medium uppercase underline underline-offset-4" value={ship} onChange={(e) => setShip(e.target.value)}>
@@ -2471,11 +2495,6 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
         <HermesLogo settings={settings} variant="full" />
       </div>
     </footer>
-    {/* Floating chat bubble — mobile only, bottom-right, as on hermes.com.
-        Opens Contact us. Desktop has no floating bubble. */}
-    <button aria-label="Customer service chat" className="fixed bottom-5 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-black/10 lg:hidden" onClick={() => go({ t: "page", page: "contact" })}>
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5Z" /><path d="M8 10.5h8M8 13.5h5" /></svg>
-    </button>
     </>
   );
 }
@@ -2509,7 +2528,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
           let items: { name: string; qty: number; price: number }[] = [];
           try { items = JSON.parse(o.items) as typeof items; } catch { items = []; }
           return (
-            <div key={o.id} className="mt-3 border border-black/10 bg-[#fffdf9] p-4">
+            <div key={o.id} className="mt-3 border border-black/10 bg-[#fffcf7] p-4">
               <p className="text-sm font-medium">Order #{o.id} — {fmt(o.total)} — <span className="uppercase tracking-wider">{o.status}</span></p>
               <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString()}</p>
               {items.map((it, i) => <p key={i} className="mt-1 text-sm text-neutral-700">{it.qty} × {it.name} — {fmt(it.price * it.qty)}</p>)}
@@ -2569,7 +2588,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   const hint = "mt-1 block text-xs text-neutral-500";
   if (authMode === "login") {
     return (
-      <div className="mx-4 my-10 max-w-md bg-white px-6 py-10 sm:mx-auto sm:px-8">
+      <div className="mx-4 my-10 max-w-md bg-[#fffcf7] px-6 py-10 sm:mx-auto sm:px-8">
         <h1 className="font-mono-d text-center text-xs font-medium uppercase tracking-normal">Sign in</h1>
         <p className="mt-4 text-center text-sm leading-6 text-neutral-700">{emailStep ? "Please enter your email below to sign in to your account." : `Welcome back — please enter your password for ${liEmail}.`}</p>
         <div className="mt-6 space-y-4">
@@ -2603,7 +2622,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   // intro + "* Required information", then two columns (Login information |
   // Personal information), then the create button.
   return (
-    <div className="mx-4 my-10 max-w-4xl bg-white px-6 py-10 sm:mx-auto sm:px-8">
+    <div className="mx-4 my-10 max-w-4xl bg-[#fffcf7] px-6 py-10 sm:mx-auto sm:px-8">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <p className="max-w-2xl text-sm leading-6 text-neutral-700">By creating an account, you agree to accept the <button aria-label="General Terms and Conditions of Use" className="underline" onClick={() => go({ t: "page", page: "terms" })}>General Terms and Conditions of Use</button> and that your data will be processed in compliance with the <button aria-label="Privacy Policy" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button> of Hermès.</p>
         <p className="shrink-0 text-xs text-neutral-500">* Required information</p>
@@ -2618,7 +2637,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
             </span>
             <span className={hint}>Expected format: yourname@domain.com</span>
           </label>
-          {sentCode && <p className="mt-3 border border-amber-700/30 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900" role="status">Demo code — this standalone build has no email service, so no email is sent. Your code is <strong>{sentCode}</strong>; enter it in Verification code below.</p>}
+          {sentCode && <p className="mt-3 border border-black/15 bg-[#f6f1eb] px-3 py-2 text-xs leading-5 text-neutral-800" role="status">Demo code — this standalone build has no email service, so no email is sent. Your code is <strong>{sentCode}</strong>; enter it in Verification code below.</p>}
           <label className={`${lab} mt-5`}>Verification code *
             <input aria-label="Verification code" type={suShowCode ? "text" : "password"} inputMode="numeric" className={underline} value={suCode} onChange={(e) => setSuCode(e.target.value)} />
             <span className={hint}>Expected format: 123456</span>
@@ -2627,7 +2646,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
           <label className={`${lab} mt-5`}>Password *
             <input aria-label="Create account password" type="password" className={underline} value={suPw} onChange={(e) => setSuPw(e.target.value)} />
           </label>
-          <div className="mt-3 bg-[#f5f1ea] px-4 py-3">
+          <div className="mt-3 bg-[#f6f1eb] px-4 py-3">
             <p className="text-xs leading-5 text-neutral-700">For your security, we invite you to fill your password according to the following criteria:</p>
             <ul className="mt-2 space-y-1 text-xs text-neutral-700">
               <li><span className={crit.len ? "font-bold text-green-700" : "text-neutral-400"}>{crit.len ? "✓" : "•"}</span> At least 10 characters</li>
@@ -2678,13 +2697,24 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
 
 const US_STATES = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"];
 const CO_HEAD = "font-mono-d text-xs font-medium uppercase tracking-normal";
+// Orange Box heading on the original: Overpass Mono 16px/24px/300
+// (cart shell CSS .orange-box-title), not the 12px/500 section head.
+const CO_HEAD_LG = "font-mono-d text-base font-light uppercase tracking-normal";
+// Legal footer links (cart / checkout / account footers): the original
+// lists General Terms and Conditions of Sale + of Use first, verbatim
+// from the served cart HTML. Admin-editable via settings.legalLinksJson.
+const DEFAULT_LEGAL_LINKS: [string, string][] = [["General Terms and Conditions of Sale", "terms"], ["General Terms and Conditions of Use", "terms"], ["Terms and conditions", "terms"], ["Privacy & cookies", "privacy"], ["Legal issues", "legal"], ["Accessibility", "accessibility"], ["Site map", "sitemap"]];
+function parseLegalLinks(s: Settings): [string, string][] {
+  try { const v = JSON.parse(s.legalLinksJson || "") as unknown; if (Array.isArray(v) && v.length) return v as [string, string][]; } catch { /* fall through */ }
+  return DEFAULT_LEGAL_LINKS;
+}
 
 function CheckoutProgress({ step, nextStep }: { step: 1 | 2 | 3; nextStep?: boolean }) {
   const labels = ["Cart", "Checkout", "Confirmation"];
   return (
-    <div className="px-2 pt-5" aria-label="Checkout progress">
+    <div className="px-2 pb-[15px] pt-6 lg:pb-6 lg:pt-8" aria-label="Checkout progress">
       <div className="relative mx-6">
-        <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-black/25" aria-hidden="true" />
+        <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[#919191]" aria-hidden="true" />
         <span className="absolute left-0 top-1/2 h-[2px] -translate-y-1/2 bg-black" style={{ width: step === 1 ? "0%" : step === 2 ? "50%" : "100%" }} aria-hidden="true" />
         <div className="relative flex justify-between">
           {labels.map((l, i) => {
@@ -2693,7 +2723,7 @@ function CheckoutProgress({ step, nextStep }: { step: 1 | 2 | 3; nextStep?: bool
             const current = n === step;
             return (
               <span key={l} className="flex w-20 flex-col items-center gap-2">
-                <span className={`flex h-[15px] w-[15px] items-center justify-center rounded-full text-[8px] ${done || current ? "bg-black text-white" : "border border-black/50 bg-[#f7f2ec] text-transparent"}`}>{done ? "✓" : "•"}</span>
+                <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] ${done || current ? "bg-black text-white" : "border border-black/50 bg-[#fcf7f1] text-transparent"}`}>{done ? "✓" : "•"}</span>
                 <span className={`font-mono-d text-[10px] font-medium uppercase tracking-normal ${current || done ? "text-black" : "text-neutral-500"}`}>{l}</span>
                 {nextStep && !done && !current && <span className="text-[8px] uppercase tracking-[0.18em] text-neutral-400">Next step</span>}
               </span>
@@ -2710,6 +2740,9 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
   const [email, setEmail] = useState(user?.email ?? "");
   const [accountEdit, setAccountEdit] = useState(!user);
   const [agree, setAgree] = useState(true);
+  const [termsAgree, setTermsAgree] = useState(false);
+  const [bankAgree, setBankAgree] = useState(false);
+  const [termsErr, setTermsErr] = useState("");
   const [emailErr, setEmailErr] = useState("");
   const [tab, setTab] = useState<"ship" | "collect">("ship");
   const [f, setF] = useState({ location: "United States", title: "", first: user?.name.split(" ")[0] ?? "", last: user?.name.split(" ").slice(1).join(" ") ?? "", company: "", address: "", address2: "", city: "", state: "", zip: "", zipPlus: "", area: "US +1", phone: "" });
@@ -2724,7 +2757,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
   const [chatOpen, setChatOpen] = useState(false);
   const mountCartCount = useRef(cart.length);
   useEffect(() => { if (mountCartCount.current === 0) go({ t: "cart" }); }, []);
-  const payMethods = ["Visa", "MasterCard", "American Express", "Discover", "Diners Club", "JCB", "China Union Pay", "PayPal", "Apple Pay"];
+  const payMethods = ["Visa", "MasterCard", "American Express", "Discover", "Diners Club", "JCB", "China Union Pay", "Carte Blanche", "Accel", "Pulse", "Nyce", "Star", "PayPal", "Apple Pay"];
   const order = useMutation({
     mutationFn: () => api.placeOrder({ customerName: `${f.first} ${f.last}`.trim() || (user?.name ?? "Customer"), email, address: tab === "collect" ? `Collect in store — ${storePicked}` : `${f.address}${f.address2 ? ", " + f.address2 : ""}, ${f.city}, ${f.state} ${f.zip}`, paymentMethod: pay, deliveryOption: tab === "collect" ? "Collect in store" : "Ship to an address", items: cart.map((i) => ({ productId: i.productId, name: i.name, price: i.price, qty: i.qty, color: i.color, size: i.size })) }),
     onSuccess: (r) => { setPlacedTotal(total); setPlaced(r.orderId); setCart([]); window.scrollTo({ top: 0 }); },
@@ -2735,14 +2768,14 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
   const fieldErr = (bad: boolean) => bad ? <p className="mt-1 text-xs text-[#b3261e]">Required information</p> : null;
   const underline = "w-full border-0 border-b border-black/40 bg-transparent px-0 py-2 text-[15px] outline-none focus:border-black";
   const labelCls = "block text-[13px] text-neutral-500";
-  const footerLinks: [string, string][] = [["Terms and conditions", "terms"], ["Privacy & cookies", "privacy"], ["Legal issues", "legal"], ["Accessibility", "accessibility"], ["Site map", "sitemap"]];
+  const footerLinks: [string, string][] = parseLegalLinks(settings);
 
   const shell = (children: React.ReactNode, step: 1 | 2 | 3) => (
-    <div className="min-h-screen" style={{ background: "#f7f2ec" }}>
+    <div className="min-h-screen" style={{ background: "#fcf7f1" }}>
       <div className="mx-auto max-w-3xl px-4 pb-24 pt-4 sm:px-6">
         <div className="relative flex items-start">
-          <button aria-label={step === 3 ? "Back to store from confirmation" : "Back to cart from checkout"} className="flex h-10 w-10 items-center justify-center" onClick={() => go(step === 3 ? { t: "home" } : { t: "cart" })}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg>
+          <button aria-label={step === 3 ? "Back to store from confirmation" : "Back to cart from checkout"} className="flex h-10 items-center justify-center gap-1 text-sm" onClick={() => go(step === 3 ? { t: "home" } : { t: "cart" })}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg><span className="hidden lg:inline">Back</span>
           </button>
           <span className="absolute left-1/2 top-1 -translate-x-1/2"><HermesLogo settings={settings} variant="compact" /></span>
           <span className="w-10" />
@@ -2750,23 +2783,23 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
         <CheckoutProgress step={step} />
         {children}
       </div>
-      <div className="fixed bottom-5 right-4 z-40 flex flex-col items-end gap-2">
+      <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2">
         {chatOpen && (
-          <div className="w-64 bg-white p-4 shadow-xl" role="dialog" aria-label="Customer service help">
+          <div className="w-64 bg-[#fffcf7] p-4 shadow-xl" role="dialog" aria-label="Customer service help">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em]">Customer service</p>
-            <p className="mt-2 text-sm leading-6 text-neutral-700">Monday to Saturday 10am - 9pm EST<br /><a aria-label="Call customer service from chat" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
+            <p className="mt-2 text-sm leading-6 text-neutral-700">{settings.serviceHours}<br /><a aria-label="Call customer service from chat" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
             <button aria-label="Contact us from chat" className="mt-3 w-full bg-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => go({ t: "page", page: "contact" })}>Contact us</button>
           </div>
         )}
         <button aria-label="Customer service chat" aria-expanded={chatOpen} className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-black/10" onClick={() => setChatOpen(!chatOpen)}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.9A8 8 0 1 1 21 12Z" /><path d="M8.5 12h.01M12 12h.01M15.5 12h.01" strokeWidth="2.6" strokeLinecap="round" /></svg>
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5Z" /><path d="M8 10.5h8M8 13.5h5" /></svg>
         </button>
       </div>
     </div>
   );
 
   if (placed) return shell(
-    <div className="mt-8 bg-[#fffdf9] px-5 py-10 text-center sm:px-8">
+    <div className="mt-8 bg-[#fffcf7] px-5 py-10 text-center sm:px-8">
       <p className="font-serif-d text-4xl italic">Merci</p>
       <h1 className="font-serif-d mt-3 text-3xl italic">Thank you — order #{placed} confirmed</h1>
       <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-neutral-700">Total: {fmt2(placedTotal)} (demo checkout — no real charge). A confirmation will be sent to {email}. Your order will be delivered in the orange box tied with Bolduc ribbon.</p>
@@ -2778,7 +2811,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
     </div>, 3);
 
   if (cart.length === 0) return shell(
-    <div className="mt-8 bg-[#fffdf9] px-5 py-16 text-center">
+    <div className="mt-8 bg-[#fffcf7] px-5 py-16 text-center">
       <h1 className="font-serif-d text-3xl italic">Your cart is empty</h1>
       <button aria-label="Shop from empty checkout" className="mt-6 border border-black px-10 py-3 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => go({ t: "home" })}>Discover the collections</button>
     </div>, 2);
@@ -2786,33 +2819,33 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
   return shell(
     <div className="mt-6 space-y-4">
       {/* SUMMARY */}
-      <section className="bg-[#fffdf9]" aria-label="Order summary section">
-        <button aria-label="Checkout summary" aria-expanded={summaryOpen} className="flex w-full items-center px-5 py-5 text-left" onClick={() => setSummaryOpen(!summaryOpen)}>
+      <section className="bg-[#fffcf7] px-4 lg:px-6" aria-label="Order summary section">
+        <button aria-label="Checkout summary" aria-expanded={summaryOpen} className="flex min-h-[56px] w-full items-center border-b border-[#f6f1eb] text-left" onClick={() => setSummaryOpen(!summaryOpen)}>
           <span className={CO_HEAD}>Summary</span>
           <span className="ml-6 text-[15px] text-neutral-600">{fmt2(total)}</span>
           <span className="ml-auto text-lg" aria-hidden="true">{summaryOpen ? "⌃" : "⌄"}</span>
         </button>
         {summaryOpen && (
-          <div className="px-5 pb-5">
+          <div className="pb-5">
             {cart.map((i) => (
-              <div key={i.key} className="flex items-center gap-3 border-t border-black/10 py-3">
+              <div key={i.key} className="flex items-center gap-3 border-t border-[#f6f1eb] py-3">
                 <span className="h-14 w-14 shrink-0 overflow-hidden" aria-hidden="true"><img src={productImageFor({ name: i.name, price: i.price })} alt="" className="h-full w-full object-cover" /></span>
                 <span className="min-w-0 flex-1 text-sm">{i.name}<span className="block text-xs text-neutral-500">{i.color}{i.size ? ` · ${i.size}` : ""} · Qty {i.qty}</span></span>
                 <span className="text-sm">{fmt2(i.price * i.qty)}</span>
               </div>
             ))}
-            <div className="flex justify-between border-t border-black/10 pt-3 text-sm"><span>Shipping</span><span className="text-xs text-neutral-500">Calculated at delivery step</span></div>
+            <div className="flex justify-between border-t border-[#f6f1eb] pt-3 text-sm"><span>Shipping</span><span className="text-xs text-neutral-500">Calculated at delivery step</span></div>
             <div className="mt-1 flex justify-between text-sm font-medium"><span>Total</span><span>{fmt2(total)}</span></div>
           </div>
         )}
       </section>
 
       {/* ACCOUNT */}
-      <section className="bg-[#fffdf9] px-5 py-5" aria-label="Account section">
-        <div className="flex items-center justify-between">
+      <section className="bg-[#fffcf7] px-4 pb-5 pt-0 lg:px-6" aria-label="Account section">
+        <div className="flex min-h-[56px] items-center justify-between border-b border-[#f6f1eb]">
           <h2 className={CO_HEAD}>Account</h2>
           {!accountEdit && (
-            <button aria-label="Edit account email" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f1ece3]" onClick={() => setAccountEdit(true)}>
+            <button aria-label="Edit account email" className="flex h-10 w-10 items-center justify-center rounded-full" onClick={() => setAccountEdit(true)}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4.2 1.2L5 16 16.5 4.5Z" /></svg>
             </button>
           )}
@@ -2824,10 +2857,10 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
             <p className="text-sm leading-6 text-neutral-800">This email address will be associated with the account being created for you, and where you will receive your order confirmation.</p>
             <label className="mt-5 block">
               <span className="text-[13px] text-neutral-500">E-mail *</span>
-              <input aria-label="Checkout email" type="email" className="mt-1 w-full bg-[#eef3f1] px-3 py-3 text-[15px] outline-none" value={email} onChange={(e) => { setEmail(e.target.value); setEmailErr(""); }} />
+              <input aria-label="Checkout email" type="email" className="mt-1 w-full px-3 py-3 text-[15px] outline-none" value={email} onChange={(e) => { setEmail(e.target.value); setEmailErr(""); }} />
             </label>
             {emailErr && <p className="mt-1 text-xs text-[#b3261e]" role="status">{emailErr}</p>}
-            <label className="mt-4 flex cursor-pointer items-start gap-3 bg-[#f7f2ec] p-4 text-sm leading-6 text-neutral-800">
+            <label className="mt-4 flex cursor-pointer items-start gap-3 p-4 text-sm leading-6 text-neutral-800">
               <input type="checkbox" aria-label="Agree to receive information about offers" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-black" />
               <span>I agree to receive information about offers, services, products and events from <span className="underline">Hermès Seller</span> and other <span className="underline">Hermès group companies</span> via phone, email, instant messaging, and mail, in accordance with the <button type="button" aria-label="Privacy Policy from account consent" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button>.</span>
             </label>
@@ -2835,7 +2868,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
             <button aria-label="Use another email address" className="mt-3 text-sm underline underline-offset-4" onClick={() => { setEmail(""); setEmailErr(""); }}>Use another email address</button>
             <p className="mt-5 text-[13px] leading-5 text-neutral-600">By clicking on &quot;Continue&quot;, you agree that your information will be processed by Hermès International, Hermès Seller and their service providers, in accordance with the <button type="button" aria-label="Privacy Policy from continue text" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button>.</p>
             <button aria-label="Continue from account step" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => { if (!email.includes("@")) { setEmailErr("Please enter a valid email address."); return; } setAccountEdit(false); }}>Continue</button>
-            <div className="mt-6 space-y-2 border-t border-black/10 pt-4 text-[13px] text-neutral-600">
+            <div className="mt-6 space-y-2 border-t border-[#f6f1eb] pt-4 text-[13px] text-neutral-600">
               {footerLinks.map(([l, pg]) => <button key={l} aria-label={`Account footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
               <p className="pt-1">© Hermès 2026. All rights reserved.</p>
             </div>
@@ -2844,15 +2877,15 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
       </section>
 
       {/* DELIVERY */}
-      <section className="bg-[#fffdf9] px-5 py-5" aria-label="Delivery section">
-        <h2 className={CO_HEAD}>Delivery</h2>
+      <section className="bg-[#fffcf7] px-4 pb-5 pt-0 lg:px-6" aria-label="Delivery section">
+        <div className="flex min-h-[56px] items-center border-b border-[#f6f1eb]"><h2 className={CO_HEAD}>Delivery</h2></div>
         <div className="mt-4 grid grid-cols-2" role="tablist" aria-label="Delivery method">
           <button role="tab" aria-selected={tab === "ship"} aria-label="Ship to an address" className={`flex flex-col items-center gap-1.5 border-b-2 px-2 pb-3 pt-1 text-center text-[15px] ${tab === "ship" ? "border-black text-black" : "border-black/15 text-neutral-400"}`} onClick={() => { setTab("ship"); setDeliverySaved(false); }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2.5 6h12v10h-12zM14.5 9.5h3.6l3 3.4v3.1h-6.6" /><circle cx="6.5" cy="17.8" r="1.9" /><circle cx="17.3" cy="17.8" r="1.9" /></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2.5 6h12v10h-12zM14.5 9.5h3.6l3 3.4v3.1h-6.6" /><circle cx="6.5" cy="17.8" r="1.9" /><circle cx="17.3" cy="17.8" r="1.9" /></svg>
             Ship to an<br />address
           </button>
           <button role="tab" aria-selected={tab === "collect"} aria-label="Collect in store" className={`flex flex-col items-center gap-1.5 border-b-2 px-2 pb-3 pt-1 text-center text-[15px] ${tab === "collect" ? "border-black text-black" : "border-black/15 text-neutral-400"}`} onClick={() => { setTab("collect"); setDeliverySaved(false); setStorePicked(""); }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M4 9.5 5.5 4h13L20 9.5a2.8 2.8 0 0 1-5.5.5 2.9 2.9 0 0 1-5 0 2.8 2.8 0 0 1-5.5-.5Z" /><path d="M5.5 12.5V20h13v-7.5M9.5 20v-4.5h5V20" /></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M4 9.5 5.5 4h13L20 9.5a2.8 2.8 0 0 1-5.5.5 2.9 2.9 0 0 1-5 0 2.8 2.8 0 0 1-5.5-.5Z" /><path d="M5.5 12.5V20h13v-7.5M9.5 20v-4.5h5V20" /></svg>
             Collect in store
           </button>
         </div>
@@ -2962,7 +2995,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
             {storePicked && (
               <div className="mt-4 border border-black/15 p-4" role="status">
                 <p className="text-sm font-medium">{storePicked}</p>
-                <p className="mt-1 text-sm text-neutral-600">Selected for collection — Monday to Saturday 10 AM – 9 PM. Payment is now available below.</p>
+                <p className="mt-1 text-sm text-neutral-600">Selected for collection — {settings.serviceHours}. Payment is now available below.</p>
               </div>
             )}
           </div>
@@ -2970,8 +3003,8 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
       </section>
 
       {/* PAYMENT */}
-      <section className="bg-[#fffdf9] px-5 py-5" aria-label="Payment section">
-        <h2 className={CO_HEAD}>Payment</h2>
+      <section className="bg-[#fffcf7] px-4 pb-5 pt-0 lg:px-6" aria-label="Payment section">
+        <div className="flex min-h-[56px] items-center border-b border-[#f6f1eb]"><h2 className={CO_HEAD}>Payment</h2></div>
         {!deliverySaved ? (
           <p className="mt-3 text-sm leading-6 text-neutral-500">Payment will be available once your delivery information above is saved.</p>
         ) : (
@@ -2980,30 +3013,35 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
               {payMethods.map((m) => <button key={m} aria-label={`Pay with ${m}`} className={`border px-3 py-3 text-sm ${pay === m ? "border-black bg-black text-white" : "border-black/30"}`} onClick={() => setPay(m)}>{m}</button>)}
             </div>
             <p className="mt-3 text-xs leading-5 text-neutral-500">Demo checkout only — selecting a method records it on the order; no card is charged and no card details are collected.</p>
+            <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm leading-6 text-neutral-800">
+              <input type="checkbox" aria-label="Agree to the General Terms and Conditions of Use" checked={termsAgree} onChange={(e) => { setTermsAgree(e.target.checked); setTermsErr(""); }} className="mt-1 h-4 w-4 shrink-0 accent-black" />
+              <span>I agree to the Hermès <button type="button" aria-label="General Terms and Conditions of Use" className="underline" onClick={() => go({ t: "page", page: "terms" })}>General Terms and Conditions of Use</button>. I also agree to the creation of a customer account (if I do not have one yet) and to the processing of my data in compliance with Hermès <button type="button" aria-label="Privacy Policy from payment consent" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button>.</span>
+            </label>
+            <label className="mt-3 flex cursor-pointer items-start gap-3 text-sm leading-6 text-neutral-800">
+              <input type="checkbox" aria-label="Accept that Hermès keeps my bank details until my account is debited" checked={bankAgree} onChange={(e) => setBankAgree(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-black" />
+              <span>I accept that Hermès keeps my bank details until my account is debited, which will happen when my order is dispatched.</span>
+            </label>
+            {termsErr && <p className="mt-2 text-xs text-[#b3261e]" role="status">{termsErr}</p>}
             {order.isError && <p className="mt-2 text-sm text-red-700" role="status">The order could not be placed. Please check your details and try again.</p>}
-            <button aria-label="Place order" disabled={order.isPending || accountEdit} className="font-mono-d mt-4 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white disabled:bg-neutral-400" onClick={() => order.mutate()}>{order.isPending ? "Placing order…" : `Place order — ${fmt2(total)}`}</button>
+            <button aria-label="Place order" disabled={order.isPending || accountEdit} className="font-mono-d mt-4 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white disabled:bg-neutral-400" onClick={() => { if (!termsAgree) { setTermsErr("Please accept our Terms & Conditions"); return; } order.mutate(); }}>{order.isPending ? "Placing order…" : `Place order — ${fmt2(total)}`}</button>
             {accountEdit && <p className="mt-2 text-xs text-neutral-500">Confirm your email in the Account section above before placing the order.</p>}
           </div>
         )}
       </section>
 
       {/* THE ORANGE BOX */}
-      <section className="bg-[#fffdf9] px-5 py-5" aria-label="The orange box section">
-        <h2 className={CO_HEAD}>The Orange Box</h2>
-        <div className="mt-4 flex items-center gap-4">
-          <span className="relative block h-20 w-20 shrink-0 overflow-hidden" style={{ background: "#e85d1f" }} aria-hidden="true">
-            <span className="absolute left-1/2 top-0 h-full w-[7px] -translate-x-1/2 bg-[#5a2d16]" />
-            <span className="absolute left-0 top-1/2 h-[7px] w-full -translate-y-1/2 bg-[#5a2d16]" />
-            <span className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-[#5a2d16]" />
-          </span>
-          <p className="text-sm leading-6 text-neutral-800">All orders are delivered in an orange box tied with a Bolduc ribbon, with the exception of <button aria-label="Certain items exceptions" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certain items</button></p>
+      <section className="bg-[#fffcf7] px-4 pt-0 lg:px-6" aria-label="The orange box section">
+        <div className="flex min-h-[56px] items-center border-b border-[#f6f1eb]"><h2 className={CO_HEAD_LG}>The Orange Box</h2></div>
+        <div className="flex items-center gap-4 py-4">
+          <img src="/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
+          <p className="text-xs leading-5 text-black">All orders are delivered in an orange box tied with a Bolduc ribbon, with the exception of <button aria-label="Certain items exceptions" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certain items</button></p>
         </div>
       </section>
 
       {/* CUSTOMER SERVICE */}
-      <section className="bg-[#fffdf9] px-5 py-5" aria-label="Customer service section">
-        <h2 className={CO_HEAD}>Customer Service</h2>
-        <p className="mt-4 text-sm text-neutral-600">Monday to Saturday 10am - 9pm EST :</p>
+      <section className="bg-[#fffcf7] px-4 pb-5 pt-0 lg:px-6" aria-label="Customer service section">
+        <div className="flex min-h-[56px] items-center border-b border-[#f6f1eb]"><h2 className={CO_HEAD}>Customer Service</h2></div>
+        <p className="mt-4 text-sm text-neutral-600">{settings.serviceHours}</p>
         <p className="mt-1 text-sm"><a aria-label="Call customer service from checkout" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
         <div className="mt-6 grid grid-cols-2 gap-4 text-center">
           <button aria-label="Returns and exchanges from checkout" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "returns" })}>
@@ -3015,7 +3053,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
             Shop securely
           </button>
         </div>
-        <div className="mt-8 space-y-2 border-t border-black/10 pt-4 text-[13px] text-neutral-600">
+        <div className="mt-8 space-y-2 border-t border-[#f6f1eb] pt-4 text-[13px] text-neutral-600">
           {footerLinks.map(([l, pg]) => <button key={l} aria-label={`Checkout footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
           <p className="pt-1">© Hermès 2026. All rights reserved.</p>
         </div>
@@ -3243,7 +3281,7 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
             <p className="text-xs font-semibold uppercase tracking-[0.22em]">Logo</p>
             <p className="mt-1 text-sm text-neutral-600">The header shows the carriage emblem + store name by default. Upload your own logo image to replace the emblem, and choose what the header displays. Changes go live on the storefront as soon as you save.</p>
             <div className="mt-3 flex flex-wrap items-center gap-4">
-              <div className="flex h-20 min-w-36 items-center justify-center border border-black/15 bg-[#f7f2ec] px-3">
+              <div className="flex h-20 min-w-36 items-center justify-center border border-black/15 bg-[#fcf7f1] px-3">
                 {stg.logoUrl ? <img src={stg.logoUrl} alt="Current store logo" className="max-h-16 w-auto object-contain" /> : <HermesLogo settings={stg} variant="compact" />}
               </div>
               <div className="space-y-2">
