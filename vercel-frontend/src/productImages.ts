@@ -114,7 +114,11 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   "Bolide Plume 45 bag": bolidePlume45,
   "Zipengo So Kelly pouch": zipengoSoKelly,
   "Box bag": boxBag,
-  "Kelly Messenger bag": kellyMessenger,
+  // Original Hermes photo, hotlinked (user instruction 2026-11-09).
+  // Kelly Messenger bag, ref H085671CK89, PM Togo, Noir — verified to show
+  // the black Kelly Messenger (flap + turnlock + strap). Default colour.
+  "Kelly Messenger bag":
+    "https://assets.hermes.com/is/image/hermesproduct/085671CK89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   // Original Hermes photo, hotlinked (user instruction 2026-11-09).
   // Bolide 1923 mini bag, ref H075180CK18, Etoupe Evercolor, $7,300 —
   // verified. NOTE: this changes the tile colour from the current pink
@@ -139,10 +143,12 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   "Etriviere belt buckle & Reversible leather strap 38 mm": etriviereBelt38,
   "Etriers belt buckle & Reversible leather strap 38 mm": etriersBelt38,
   // Original Hermes photo, hotlinked from assets.hermes.com (user
-  // instruction 2026-11-09). Bouncing sneaker, ref H252782ZHF7, $1,275 —
-  // verified to load and to show the brown suede Bouncing sneaker.
+  // instruction 2026-11-09). Bouncing sneaker, ref H242810ZH90, $1,275 —
+  // verified to load and to show the white Bouncing sneaker (Blanc, the
+  // default colour). Ref H252782ZHF7 is the Ecorce (brown suede)
+  // colourway, not Blanc/Noir.
   "Bouncing sneaker":
-    "https://assets.hermes.com/is/image/hermesproduct/252782ZHF7_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+    "https://assets.hermes.com/is/image/hermesproduct/242810ZH90_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   // Original Hermes photo, hotlinked from assets.hermes.com (user
   // instruction 2026-11-09). Jet sneaker, ref H261807ZHAF, $1,300 —
   // verified to load and to show the rust suede/fabric Jet sneaker.
@@ -371,12 +377,14 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   // verified to load and to show the black Nobu sneaker.
   "Nobu sneaker":
     "https://assets.hermes.com/is/image/hermesproduct/262888ZH01_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  "Chaine d'ancre necklace, small model": chaineDancreNecklace,
+  "Chaine d'ancre necklace, small model":
+    "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-necklace--101503B%2000-front-wm-2-0-0-1000-1000_g.jpg", // V, ref H101503Bv00, sterling silver
   "Clic Clac H bracelet":
-    "https://assets.hermes.com/is/image/hermesproduct/clic-clac-h-bracelet--300001FO31-front-wm-1-0-0-1000-1000_g.jpg", // V, ref H300001FO31, white enamel / rose gold, $960
-  "Chaine d'ancre earrings": chaineDancreEarrings,
+    "https://assets.hermes.com/is/image/hermesproduct/clic-clac-h-bracelet--300001F%2001-worn-1-0-0-1000-1000_g.jpg", // V, ref H300001F 01, black enamel / YELLOW GOLD, $960 (default Noir)
+  "Chaine d'ancre earrings":
+    "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-enchainee-earrings-small-model--109510B%2000-front-wm-2-0-0-1000-1000_g.jpg", // V, ref H109510Bv00, sterling silver
   "Mini Thalassa bracelet":
-    "https://assets.hermes.com/is/image/hermesproduct/mini-thalassa-bracelet--500522FC37-front-wm-2-0-0-1000-1000_g.jpg", // V, ref 500522FC37, tan Swift / gold, $580
+    "https://assets.hermes.com/is/image/hermesproduct/mini-thalassa-bracelet--500522FK18-front-wm-2-0-0-1000-1000_g.jpg", // V, ref H500522FK18, Etoupe Swift / palladium, $580
   // Original Hermes photos, hotlinked from assets.hermes.com (user
   // instruction 2026-11-09). Jewelry & watches audit 2026-11-10: each URL
   // below returned HTTP 200 with Referer https://hermesmart.vercel.app/.
@@ -405,15 +413,17 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   "Hermessence, Eau de toilette": hermessenceEdt,
   "Hermessence Essence, Eau de parfum": hermessenceEssence,
   "Cape Cod watch, Large model, 37 mm":
-    "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-large-model-37mm--403352WW00-front-wm-1-0-0-1000-1000_g.jpg", // V, ref W403352WW00, $3,950
+    "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-large-model-37mm--043651WW00-front-1-300-0-800-800_g.jpg", // V, ref W043651WW00, Etoupe strap, $3,950 (403352WW00 was the Automatique — wrong model)
   "Cape Cod watch, Small model, 31 mm":
     "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-small-model-31mm--060115WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W060115WW00, $3,825
   "Hermès H08 watch, 42 mm":
-    "https://assets.hermes.com/is/image/hermesproduct/hermes-h08-watch-42mm--402990WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W402990WW00 candidate (US page), $8,600
+    "https://assets.hermes.com/is/image/hermesproduct/hermes-h08-watch-42mm--408230WW00-front-wm-1-0-0-1000-1000_g.jpg", // V, ref W408230WW00, titanium / grey dial / dark grey strap, $8,600 (402990WW00 was blue rubber strap, composite case)
   "Hermès Cut watch, Large model, 36 mm":
     "https://assets.hermes.com/is/image/hermesproduct/hermes-cut-watch-large-model-36mm--403190WW00-front-wm-1-0-0-1000-1000_g.jpg", // ref W403190WW00 candidate, $7,125
-  "Kelly watch, Mini model, 16 mm, Grey": kellyWatchMiniGrey,
-  "Kelly watch, Mini model, 16 mm, Pink gold": kellyWatchMiniPink,
+  "Kelly watch, Mini model, 16 mm, Grey":
+    "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--408477WW00-front-wm-1-0-0-1000-1000_g.jpg", // V, ref W408477WW00, steel / copper-rose dial
+  "Kelly watch, Mini model, 16 mm, Pink gold":
+    "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--056854WW00-front-wm-1-0-0-1000-1000_g.jpg", // V, ref W056854WW00, rose gold / white MOP dial
   "Arceau Petite Lune watch, Large model, 38 mm":
     "https://assets.hermes.com/is/image/hermesproduct/arceau-petite-lune-watch-large-model-38mm--403043WW00-front-1-300-0-800-800_g.jpg", // V, ref W403043WW00, $20,800
   "Avalon throw blanket":
@@ -546,7 +556,11 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   "Long sleeveless dress": longSleevelessDressModel,
   "Embroidered pocket dress": embroideredPocketDress,
   "\"H\" jogging pants": hJoggingPants,
-  "Kelly 18 belt": kelly18Belt,
+  // Original Hermes photo, hotlinked (user instruction 2026-11-09).
+  // Kelly 18 belt, ref H069853CD10, Craie Epsom, rose-gold Kelly buckle —
+  // verified to show the off-white/cream belt.
+  "Kelly 18 belt":
+    "https://assets.hermes.com/is/image/hermesproduct/069853CD10_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   "Rouge Hermès Nourishing lip care mask":
     "https://assets.hermes.com/is/image/hermesproduct/60855BV000_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60855BV000, $100 (REPLACE generated lipCareMask)
   "Milo L'Aventure bucket hat": bucketHat,

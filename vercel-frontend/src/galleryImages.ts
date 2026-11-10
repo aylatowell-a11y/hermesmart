@@ -43,12 +43,6 @@ import bSide from "./assets/gallery/bouncing-side.webp";
 import bBack from "./assets/gallery/bouncing-back.webp";
 import bDetail from "./assets/gallery/bouncing-detail.webp";
 import bAbove from "./assets/gallery/bouncing-above.webp";
-import bNoirFront from "./assets/gallery/bouncing-noir-front.webp";
-import bNoirBack from "./assets/gallery/bouncing-noir-back.webp";
-import bNoirAbove from "./assets/gallery/bouncing-noir-above.webp";
-import bBlueFront from "./assets/gallery/bouncing-blue-front.webp";
-import bBlueBack from "./assets/gallery/bouncing-blue-back.webp";
-import bBlueAbove from "./assets/gallery/bouncing-blue-above.webp";
 import midFront from "./assets/gallery/mid-dress-front.webp";
 import midCloseup from "./assets/gallery/mid-dress-closeup.webp";
 import midBack from "./assets/gallery/mid-dress-back.webp";
@@ -110,6 +104,10 @@ import blanketFlat from "./assets/gallery/blanket-flat.webp";
 import blanketFolded from "./assets/gallery/blanket-folded.webp";
 import blanketInSitu from "./assets/gallery/blanket-insitu.webp";
 import blanketDetail from "./assets/gallery/blanket-detail.webp";
+import bucketHat from "./assets/products/media-generation-bucket-hat-0-7948e42f-bff2-45fe-a622-9d13b7feaeaa.webp";
+import riderJacket from "./assets/products/rider-jacket.webp";
+import rougeLipCareSet from "./assets/products/rouge-lip-care-set.webp";
+import brideABracCase from "./assets/products/bride-a-brac-case.webp";
 
 export type GalleryProduct = {
   name: string;
@@ -131,10 +129,16 @@ const HERMES_IMG = "https://assets.hermes.com/is/image/hermesproduct/";
 const HERMES_Q = "?wid=750&hei=1000&fit=fit&$product_default_bg$";
 // Bouncing sneaker, Blanc — ORIGINAL Hermes photos, hotlinked (user
 // instruction 2026-11-09). Ref H262850ZH90, $1,125. Views: 101 front, 102 worn.
-const BOUNCING_BLANC = [V("Front", HERMES_IMG + "262850ZH90_front_wm_101" + HERMES_Q), V("Worn", HERMES_IMG + "262850ZH90_worn_102" + HERMES_Q)];
+const BOUNCING_BLANC = [
+  V("Front", HERMES_IMG + "262850ZH90_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262850ZH90_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "262850ZH90_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "262850ZH90_back_wm_105" + HERMES_Q),
+  V("Detail", HERMES_IMG + "262850ZH90_detail_wm_106" + HERMES_Q),
+  V("Above", HERMES_IMG + "262850ZH90_above_wm_107" + HERMES_Q),
+];
 // Colourways that have their own shot set get exactly their own photos —
 // never another colourway's photos mixed in.
-const bouncingAlt = (front: string, back: string, above: string) => [V("Front", front), V("Back", back), V("Above", above)];
 
 // Original Hermes product videos, downloaded and hosted on the store
 // itself (user instruction 2026-11-09/10 — use the original video wherever
@@ -191,17 +195,59 @@ const JACKSON_SET = [
   V("Front", HERMES_IMG + "242948ZHC9_front_wm_101" + HERMES_Q),
   V("Worn", HERMES_IMG + "242948ZHC9_worn_103" + HERMES_Q),
 ];
+// Bouncing sneaker $1,275, Blanc — ref H242810ZH90. Views: 101 front,
+// 103 worn (worn_102 does NOT exist), 104 side, 105 back, 106 detail,
+// 107 above. All six visually confirmed: white Bouncing, black "H" heel.
+const SHOE_BOUNCING_1275_BLANC = [
+  V("Front", HERMES_IMG + "242810ZH90_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "242810ZH90_worn_103" + HERMES_Q),
+  V("Side", HERMES_IMG + "242810ZH90_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "242810ZH90_back_wm_105" + HERMES_Q),
+  V("Detail", HERMES_IMG + "242810ZH90_detail_wm_106" + HERMES_Q),
+  V("Above", HERMES_IMG + "242810ZH90_above_wm_107" + HERMES_Q),
+];
+// Bouncing sneaker $1,275, Noir — ref H242810ZH02. Views: 101 front,
+// 104 side, 105 back, 106 detail, 107 above. NO worn view exists
+// (worn_102 and worn_103 both 403). All five visually confirmed: black
+// Bouncing, white sole.
+const SHOE_BOUNCING_1275_NOIR = [
+  V("Front", HERMES_IMG + "242810ZH02_front_wm_101" + HERMES_Q),
+  V("Side", HERMES_IMG + "242810ZH02_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "242810ZH02_back_wm_105" + HERMES_Q),
+  V("Detail", HERMES_IMG + "242810ZH02_detail_wm_106" + HERMES_Q),
+  V("Above", HERMES_IMG + "242810ZH02_above_wm_107" + HERMES_Q),
+];
+// Bouncing sneaker $1,125, Noir — ref H262850ZH01. Replaces the GENERATED
+// bouncing-noir webp photos. Views: 101 front, 102 worn, 104 side,
+// 105 back, 106 detail, 107 above. All six visually confirmed: all-black
+// technical-mesh Bouncing, black sole.
+const SHOE_BOUNCING_1125_NOIR = [
+  V("Front", HERMES_IMG + "262850ZH01_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "262850ZH01_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "262850ZH01_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "262850ZH01_back_wm_105" + HERMES_Q),
+  V("Detail", HERMES_IMG + "262850ZH01_detail_wm_106" + HERMES_Q),
+  V("Above", HERMES_IMG + "262850ZH01_above_wm_107" + HERMES_Q),
+];
 
 // Bouncing sneaker — ORIGINAL Hermes photos, hotlinked (user instruction
 // 2026-11-09). Ref H252782ZHF7, $1,275. Views: 101 front, 102 worn.
 const BOUNCING_SET = [
   V("Front", HERMES_IMG + "252782ZHF7_front_wm_101" + HERMES_Q),
   V("Worn", HERMES_IMG + "252782ZHF7_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "252782ZHF7_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "252782ZHF7_back_wm_105" + HERMES_Q),
+  V("Detail", HERMES_IMG + "252782ZHF7_detail_wm_106" + HERMES_Q),
+  V("Above", HERMES_IMG + "252782ZHF7_above_wm_107" + HERMES_Q),
 ];
 // Jet sneaker — ref H261807ZHAF, $1,300. Views: 101 front, 102 worn.
 const JET_SET = [
   V("Front", HERMES_IMG + "261807ZHAF_front_wm_101" + HERMES_Q),
   V("Worn", HERMES_IMG + "261807ZHAF_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "261807ZHAF_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "261807ZHAF_back_wm_105" + HERMES_Q),
+  V("Detail", HERMES_IMG + "261807ZHAF_detail_wm_106" + HERMES_Q),
+  V("Above", HERMES_IMG + "261807ZHAF_above_wm_107" + HERMES_Q),
 ];
 // Neon sneaker — ref H262898ZH01, $1,350. Views: 101 front, 102 worn.
 const NEON_SET = [
@@ -287,6 +333,8 @@ const QUICKER_SET = [
 const NINE_SET = [
   V("Front", HERMES_IMG + "262820ZHNL_front_wm_101" + HERMES_Q),
   V("Worn", HERMES_IMG + "262820ZHNL_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "262820ZHNL_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "262820ZHNL_back_wm_105" + HERMES_Q),
 ];
 // Nathan ankle boot — ref H262901ZH01 (BE-listed), $1,600. Views: 101, 102 worn.
 const NATHAN_SET = [
@@ -309,6 +357,8 @@ const JEFF_SET = [
 const NOE_SET = [
   V("Front", HERMES_IMG + "262834ZAAC_front_wm_101" + HERMES_Q),
   V("Worn", HERMES_IMG + "262834ZAAC_worn_102" + HERMES_Q),
+  V("Side", HERMES_IMG + "262834ZAAC_side_wm_104" + HERMES_Q),
+  V("Back", HERMES_IMG + "262834ZAAC_back_wm_105" + HERMES_Q),
 ];
 // Newton loafer — ref H262941ZAGN, $1,400. Views: 101 front, 102 worn.
 const NEWTON_SET = [
@@ -449,6 +499,39 @@ const VIDEPOCHES_SET = [
 ];
 const NEO_DOUBLE_SENS_SET = [
   V("Front", HERMES_IMG + "089099CAAD_front_wm_101" + HERMES_Q),
+];
+// Kelly Messenger bag, Noir — ORIGINAL Hermes photos, hotlinked. Ref
+// H085671CK89, PM Togo calfskin, $14,700 InStock on hermes.com US
+// ("Kelly Messenger PM bag - Black"). Front: black Kelly Messenger,
+// flap + turnlock + strap. Worn: man carrying the black bag.
+const BAGS_KELLY_MESSENGER_NOIR = [
+  V("Front", HERMES_IMG + "085671CK89_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "085671CK89_worn_102" + HERMES_Q),
+];
+// Kelly Messenger bag, Etoupe — ORIGINAL Hermes photos, hotlinked. Ref
+// H085671CK18, PM Togo calfskin. Front: grey-taupe Kelly Messenger,
+// palladium turnlock. Worn: same male model/pose as Noir, dark grey-taupe.
+const BAGS_KELLY_MESSENGER_ETOUPE = [
+  V("Front", HERMES_IMG + "085671CK18_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "085671CK18_worn_102" + HERMES_Q),
+];
+// Bolide 1923 mini bag, Jaune Citron — ORIGINAL Hermes photos, hotlinked.
+// Ref H075180CK9O, Evercolor calfskin, $7,300. Front: bright yellow dome
+// mini, gold hardware. Detail: close-up of yellow zip and handle. Side:
+// side/profile angle of the yellow dome. (Resale listings quote "9N" but
+// the CDN proves 9O — H075180CK9N is 403.)
+const BAGS_BOLIDE_1923_MINI_JAUNE_CITRON = [
+  V("Front", HERMES_IMG + "075180CK9O_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "075180CK9O_front_wm_104" + HERMES_Q),
+  V("Side", HERMES_IMG + "075180CK9O_front_wm_105" + HERMES_Q),
+];
+// Kelly 18 belt, Blanc Craie — ORIGINAL Hermes photos, hotlinked. Ref
+// H069853CD10, Epsom calfskin, rose-gold Kelly buckle. Front: off-white /
+// cream belt coiled, rose-gold buckle, tan reverse visible. Worn: woman
+// in navy wearing the cream belt.
+const BAGS_KELLY_18_BELT = [
+  V("Front", HERMES_IMG + "069853CD10_front_wm_101" + HERMES_Q),
+  V("Worn", HERMES_IMG + "069853CD10_worn_102" + HERMES_Q),
 ];
 const NEO_GARDEN_BREDIES_SET = [
   V("Front", HERMES_IMG + "087934CKAB_front_wm_101" + HERMES_Q),
@@ -621,6 +704,80 @@ const H08_SET = [
 ];
 const CUT_SET = [
   V("Front", "https://assets.hermes.com/is/image/hermesproduct/hermes-cut-watch-large-model-36mm--403190WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/hermes-cut-watch-large-model-36mm--403190WW00-worn-2-300-0-800-800_g.jpg"),
+];
+// Clic Clac H bracelet, Noir — YELLOW-GOLD hardware. Ref H300001F 01.
+// Gold hardware has no front-wm views; studio front is worn-1, worn-3 is
+// the on-wrist shot. Both visually confirmed.
+const JW_CLIC_CLAC_NOIR = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/clic-clac-h-bracelet--300001F%2001-worn-1-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/clic-clac-h-bracelet--300001F%2001-worn-3-300-0-800-800_g.jpg"),
+];
+// Clic Clac H bracelet, Blanc — YELLOW-GOLD hardware. Ref H300001F 31.
+const JW_CLIC_CLAC_BLANC = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/clic-clac-h-bracelet--300001F%2031-worn-1-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/clic-clac-h-bracelet--300001F%2031-worn-3-300-0-800-800_g.jpg"),
+];
+// Clic Clac H bracelet, Rouge — YELLOW-GOLD hardware. Ref H300001F 94.
+// Only ONE view exists for gold hardware (front-1). Its swatch is
+// unavailable in data.ts, so this set is unreachable until Rouge is
+// made selectable — wired now so the branch is complete.
+const JW_CLIC_CLAC_ROUGE = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/clic-clac-h-bracelet--300001F%2094-front-1-300-0-800-800_g.jpg"),
+];
+// Cape Cod watch, Large model, 37 mm, Etoupe strap — ref W043651WW00.
+// Quartz, opaline silvered dial with Arabic numerals, date at 3, short
+// double tour strap in etoupe Swift calfskin. US page confirms $3,950.
+const JW_CAPECOD_LARGE_ETOUPE = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-large-model-37mm--043651WW00-front-1-300-0-800-800_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-large-model-37mm--043651WW00-worn-2-300-0-800-800_g.jpg"),
+];
+// Cape Cod watch, Large model, 37 mm, Noir strap — ref W056579WW00.
+// Black double-tour strap + same opaline Arabic dial as the Etoupe twin.
+const JW_CAPECOD_LARGE_NOIR = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-large-model-37mm--056579WW00-front-1-300-0-800-800_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-large-model-37mm--056579WW00-front-3-300-0-800-800_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/cape-cod-watch-large-model-37mm--056579WW00-worn-2-300-0-800-800_g.jpg"),
+];
+// Mini Thalassa bracelet — ETOUPE Swift strap + PALLADIUM clasp.
+// Ref H500522FK18. (data.ts listed "Bleu" — wrong; see data fix.)
+const JW_THALASSA_ETOUPE = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/mini-thalassa-bracelet--500522FK18-front-wm-2-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/mini-thalassa-bracelet--500522FK18-worn-3-300-0-800-800_g.jpg"),
+];
+// Chaine d'ancre necklace, small model — sterling silver. Ref H101503Bv00.
+const JW_CHAINE_ANCRE_NECKLACE = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-necklace--101503B%2000-front-wm-2-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-necklace--101503B%2000-worn-3-300-0-800-800_g.jpg"),
+];
+// Chaine d'ancre earrings — "Chaine d'ancre Enchainee earrings, small
+// model", sterling silver. Ref H109510Bv00.
+const JW_CHAINE_ANCRE_EARRINGS = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-enchainee-earrings-small-model--109510B%2000-front-wm-2-0-0-1000-1000_g.jpg"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/chaine-d-ancre-enchainee-earrings-small-model--109510B%2000-worn-3-300-0-800-800_g.jpg"),
+];
+// Hermes H08 watch, 42 mm — TITANIUM case, grained grey dial, dark grey
+// rubber strap. Ref W408230WW00. US page confirms $8,600.
+const JW_H08_TITANIUM = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/hermes-h08-watch-42mm--408230WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/hermes-h08-watch-42mm--408230WW00-worn-2-300-0-800-800_g.jpg"),
+];
+// Kelly watch, Mini model, 16 mm, Grey — steel, copper rose-tinted
+// stamped dial, diamond-set case sides. Ref W408477WW00. (Dial is
+// copper-rose, not grey — "Gris" most plausibly = the steel-grey overall
+// look; name left as-is.)
+const JW_KELLY_MINI_GREY = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--408477WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--408477WW00-front-wm-4-0-0-1000-1000_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--408477WW00-worn-2-300-0-800-800_g.jpg"),
+];
+// Kelly watch, Mini model, 16 mm, Pink gold — rose gold, white
+// mother-of-pearl dial, 43-diamond case, 221-diamond plate. Ref
+// W056854WW00. NOT W056853WW00 (that is id 260, $97,400).
+const JW_KELLY_MINI_PINKGOLD = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--056854WW00-front-wm-1-0-0-1000-1000_g.jpg"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--056854WW00-front-wm-4-0-0-1000-1000_g.jpg"),
+  V("Worn on wrist", "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--056854WW00-worn-2-300-0-800-800_g.jpg"),
 ];
 const KELLY_WATCH_MINI_SET = [
   V("Front", "https://assets.hermes.com/is/image/hermesproduct/kelly-watch-mini-model-16mm--056853WW00-front-wm-1-0-0-1000-1000_g.jpg"),
@@ -1409,6 +1566,52 @@ const ISKENDER_SET = [
   V("Front", HERMES_IMG + "010108P_front_wm_101" + HERMES_Q),
   V("In situ", HERMES_IMG + "010108P_front_wm_102" + HERMES_Q),
 ];
+// Matte lipstick, Rose Velours — shade 78, ref V60001MV078 ($86).
+// Views mirror MATTE_LIPSTICK_SET (048): 101 front, 102 bullet close-up,
+// 103 medallion end, 104 case + orange box, worn_105/106 models.
+// Visually confirmed: raspberry-pink bullet, distinct from 048 (dusty
+// rose/mauve) and 033 (bright orange).
+const FH_LIP_ROSE_VELOURS = [
+  V("Front", HERMES_IMG + "60001MV078_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60001MV078_front_wm_102" + HERMES_Q),
+  V("Open", HERMES_IMG + "60001MV078_front_wm_103" + HERMES_Q),
+  V("Case", HERMES_IMG + "60001MV078_front_wm_104" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60001MV078_worn_105" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60001MV078_worn_106" + HERMES_Q),
+];
+// Matte lipstick, Orange Boite — shade 33, ref V60001MV033 ($86).
+// Only 5 views exist: worn_105 is 403 for this ref. Visually confirmed:
+// bright orange bullet, distinct from 048 and 078.
+const FH_LIP_ORANGE_BOITE = [
+  V("Front", HERMES_IMG + "60001MV033_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60001MV033_front_wm_102" + HERMES_Q),
+  V("Open", HERMES_IMG + "60001MV033_front_wm_103" + HERMES_Q),
+  V("Case", HERMES_IMG + "60001MV033_front_wm_104" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60001MV033_worn_106" + HERMES_Q),
+];
+// Mid-length buttoned dress, Gorgeous Blue — GENERATED photos (pre-existing
+// MID_BLUE assets). No Video view on purpose: the only available clip
+// (MID_DRESS_VIDEO) shows the NOIR dress, so playing it on the blue
+// colourway would show the wrong colour. The original blue colourway's
+// photos were not found (ref unknown; needs a live-browser read).
+const FH_MID_BLUE = [
+  V("Worn", dBlueFront),
+  V("Worn", dBlueBack),
+  V("Worn", dBlueSide),
+];
+// Milo L'Aventure bucket hat, Blanc — GENERATED single view (same asset as
+// the tile). No original Blanc photo exists: the only verified original
+// is the PINK colourway — do NOT wire it here.
+const FH_MILO_HAT = [V("Front", bucketHat)];
+// Rider jacket, Marine — GENERATED single view (same asset as the tile).
+// Product is INVENTED (no hermes.com original exists).
+const FH_RIDER_JACKET = [V("Front", riderJacket)];
+// Rouge Hermes gift set, Lip care — GENERATED single view (same asset as
+// the tile). Bundle ref VP25SETD25BUNDLE returns 403 on every probed view.
+const FH_LIP_CARE_SET = [V("Front", rougeLipCareSet)];
+// Bride-a-Brac Sellier case, large model, Naturel — GENERATED single view
+// (same asset as the tile). Full CDN scan of 104951M01 = 0 hits.
+const FH_BRIDE_A_BRAC = [V("Front", brideABracCase)];
 
 export function galleryForProduct(
   p: GalleryProduct & { galleryViews?: string[] },
@@ -1422,11 +1625,11 @@ export function galleryForProduct(
     // Original Hermes gallery for audited ready-to-wear (id-keyed: colourways share names).
     set = RTW_GALLERY[p.id];
     if (name === "Long sleeveless dress" && /noir|black/.test(colorName)) set = LONG_NOIR;
+    if (name === "Mid-length buttoned dress" && /blue/.test(colorName)) set = FH_MID_BLUE;
   } else if (name === "Kelly Pocket 18 belt") {
     set = /vert/.test(colorName) ? KELLY_VERT : /etoupe/.test(colorName) ? KELLY_ETOUPE : KELLY_NOIR;
   } else if (name === "Bouncing sneaker, Blanc") {
-    if (/noir|black/.test(colorName)) set = bouncingAlt(bNoirFront, bNoirBack, bNoirAbove);
-    else if (/bleu|blue/.test(colorName)) set = bouncingAlt(bBlueFront, bBlueBack, bBlueAbove);
+    if (/noir|black/.test(colorName)) set = SHOE_BOUNCING_1125_NOIR;
     else set = BOUNCING_BLANC;
   } else if (name === "Mid-length buttoned dress") {
     set = /blue/.test(colorName) ? MID_BLUE : MID_NOIR;
@@ -1525,7 +1728,15 @@ export function galleryForProduct(
   } else if (name === "L'Ambre des Merveilles Eau de parfum") {
     set = LAMBRE_SET;
   } else if (name === "Matte lipstick, Rose Boisé") {
-    set = MATTE_LIPSTICK_SET;
+    // Per-shade galleries: each shade is its own hermes.com product/ref.
+    // 48 Rose Boisé (V60001MV048) is the default; 78 Rose Velours
+    // (V60001MV078) and 33 Orange Boîte (V60001MV033) have verified
+    // original photos. Rouge Amarante and Corail Tempête have NO matching
+    // matte lipstick on hermes.com — they fall through to the 48 set
+    // (right product, wrong shade) until data.ts is corrected.
+    if (/78|rose velours/.test(colorName)) set = FH_LIP_ROSE_VELOURS;
+    else if (/33|orange bo/.test(colorName)) set = FH_LIP_ORANGE_BOITE;
+    else set = MATTE_LIPSTICK_SET;
   } else if (name === "Ombres d'Hermès, Eye shadow quartet, Ombres Sables") {
     set = OMBRES_SABLES_SET;
   } else if (name === "Les Mains Hermès, Nail polish, Or Rose") {
@@ -1563,7 +1774,13 @@ export function galleryForProduct(
   } else if (name === "Chevaux a la Couverture mug n°2") {
     set = MUG_N2_SET;
   } else if (name === "Avalon throw blanket") {
-    set = AVALON_SET;
+    // Per-colourway: only Vert Cèdre has original Hermes photos
+    // (H102668M 59, single view worn_102). Ecru / Camel (H102668M 52) and
+    // Ecru / Gris foncé (H102668M 53) return 403 on EVERY probed view —
+    // no original photos addressable — so leave `set` unset for those
+    // colours and let the type-set fallback serve the generated
+    // ecru/camel blanket photos (BLANKET_SET).
+    if (/vert/.test(colorName)) set = AVALON_SET;
   } else if (name === "Mosaique au 24 dinner plate, set of 2") {
     set = MOSAIQUE_PLATE_SET;
   } else if (name === "A Walk in the Garden teapot") {
@@ -1576,8 +1793,26 @@ export function galleryForProduct(
     set = MUG_SET3_SET;
   } else if (name === "Iskender white wine glass") {
     set = ISKENDER_SET;
+  } else if (name === "Milo L'Aventure bucket hat") {
+    // Fallback served long-dress photos (RTW_SET) for a hat. Single
+    // generated view, same asset as the tile.
+    set = FH_MILO_HAT;
+  } else if (name === "Rider jacket") {
+    // Fallback served long-dress photos (RTW_SET) for a jacket. Single
+    // generated view, same asset as the tile. Product is INVENTED.
+    set = FH_RIDER_JACKET;
+  } else if (name === "Rouge Hermès gift set, Lip care") {
+    // Fallback served generic still-life (bag + blanket) photos for a lip
+    // care set. Single generated view, same asset as the tile.
+    set = FH_LIP_CARE_SET;
+  } else if (name === "Bride-a-Brac Sellier case, large model") {
+    // Fallback served generated bag photos (BAG_SET) for a case. Single
+    // generated view, same asset as the tile.
+    set = FH_BRIDE_A_BRAC;
   } else if (name === "Bouncing sneaker") {
-    set = BOUNCING_SET;
+    if (/blanc|white/.test(colorName)) set = SHOE_BOUNCING_1275_BLANC;
+    else if (/noir|black/.test(colorName)) set = SHOE_BOUNCING_1275_NOIR;
+    else set = BOUNCING_SET;
   } else if (name === "Jet sneaker") {
     set = JET_SET;
   } else if (name === "Neon sneaker") {
@@ -1663,7 +1898,11 @@ export function galleryForProduct(
   } else if (name === "Tablier Sellier bag") {
     set = TABLIER_SET;
   } else if (name === "Bolide 1923 mini bag") {
-    set = BOLIDE_1923_MINI_SET;
+    set = /jaune/.test(colorName) ? BAGS_BOLIDE_1923_MINI_JAUNE_CITRON : BOLIDE_1923_MINI_SET;
+  } else if (name === "Kelly Messenger bag") {
+    set = /etoupe/.test(colorName) ? BAGS_KELLY_MESSENGER_ETOUPE : BAGS_KELLY_MESSENGER_NOIR;
+  } else if (name === "Kelly 18 belt") {
+    set = BAGS_KELLY_18_BELT;
   } else if (name === "Videpoches bag") {
     set = VIDEPOCHES_SET;
   } else if (name === "Neo Double Sens 35 bicolor bag") {
@@ -1718,10 +1957,16 @@ export function galleryForProduct(
     set = HALZAN_25_SET;
   } else if (name === "Chaine d'ancre Contour bracelet, white gold") {
     set = CONTOUR_BRACELET_SET;
+  } else if (name === "Chaine d'ancre necklace, small model") {
+    set = JW_CHAINE_ANCRE_NECKLACE;
+  } else if (name === "Chaine d'ancre earrings") {
+    set = JW_CHAINE_ANCRE_EARRINGS;
   } else if (name === "Clic Clac H bracelet") {
-    set = CLICCLAC_SET;
+    if (/rouge/.test(colorName)) set = JW_CLIC_CLAC_ROUGE;
+    else if (/blanc/.test(colorName)) set = JW_CLIC_CLAC_BLANC;
+    else set = JW_CLIC_CLAC_NOIR; // default = Noir (colors[0])
   } else if (name === "Mini Thalassa bracelet") {
-    set = THALASSA_SET;
+    set = JW_THALASSA_ETOUPE;
   } else if (name === "Kelly Chaine bracelet, small model") {
     set = KELLY_CHAINE_BRACELET_SET;
   } else if (name === "Kelly Gourmette bracelet, very small model") {
@@ -1747,15 +1992,20 @@ export function galleryForProduct(
   } else if (name === "Kelly Cadenas double bracelet, small model") {
     set = KELLY_CADENAS_SET;
   } else if (name === "Cape Cod watch, Large model, 37 mm") {
-    set = CAPECOD_LARGE_SET;
+    if (/noir/.test(colorName)) set = JW_CAPECOD_LARGE_NOIR;
+    else set = JW_CAPECOD_LARGE_ETOUPE; // default = Etoupe strap (colors[0])
   } else if (name === "Cape Cod watch, Small model, 31 mm") {
     set = CAPECOD_SMALL_SET;
   } else if (name === "Hermès H08 watch, 42 mm") {
-    set = H08_SET;
+    set = JW_H08_TITANIUM;
   } else if (name === "Hermès Cut watch, Large model, 36 mm") {
     set = CUT_SET;
   } else if (name === "Kelly watch, Mini model, 16 mm") {
     set = KELLY_WATCH_MINI_SET;
+  } else if (name === "Kelly watch, Mini model, 16 mm, Grey") {
+    set = JW_KELLY_MINI_GREY;
+  } else if (name === "Kelly watch, Mini model, 16 mm, Pink gold") {
+    set = JW_KELLY_MINI_PINKGOLD;
   } else if (name === "Arceau Petite Lune watch, Large model, 38 mm") {
     set = ARCEAU_LUNE_SET;
   } else if (name === "Arceau Chronographe watch, 42 mm") {
