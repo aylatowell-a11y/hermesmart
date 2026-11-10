@@ -766,7 +766,7 @@ export function App() {
 
       <main className={view.t === "home" || view.t === "cart" || view.t === "checkout" ? "" : "pt-[62px] lg:pt-[142px]"}>
         {view.t === "home" && <HomeView settings={settings} products={products} themeIdx={themeIdx} setThemeIdx={setThemeIdx} go={go} addToCart={addToCart} pulse={pulse} />}
-        {view.t === "cart" && <CartPage cart={cart} setCart={setCart} settings={settings} go={go} total={cartTotal} count={cartCount} />}
+        {view.t === "cart" && <CartPage cart={cart} setCart={setCart} settings={settings} go={go} total={cartTotal} count={cartCount} products={products} />}
         {view.t === "category" && view.cat === "about" && <AboutPage go={go} />}
         {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} />}
         {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} />}
@@ -781,15 +781,16 @@ export function App() {
       {view.t !== "checkout" && view.t !== "admin" && <ChatBubble settings={settings} go={go} view={view} />}
 
       {addedDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setAddedDialog("")}>
-          <div className="w-full max-w-md bg-[#fffcf7] p-7 text-center fade-up" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Item added to cart">
-            <p className="text-sm leading-6">This item has been added to the cart</p>
-            <p className="mt-1 text-xs text-neutral-500">{addedDialog}</p>
-            <div className="mt-5 flex gap-3">
-              <button aria-label="Close added to cart dialog" className="flex-1 border border-black py-3 text-[11px] uppercase tracking-[0.2em]" onClick={() => setAddedDialog("")}>Close</button>
-              <button aria-label="View cart" className="flex-1 bg-black py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => { setAddedDialog(""); go({ t: "cart" }); }}>View cart</button>
+        <div className="fixed right-4 top-4 z-50 w-[320px] max-w-[calc(100vw-32px)] bg-[#fffcf7] p-5 shadow-xl ring-1 ring-black/10 fade-up" role="dialog" aria-label="Item added to cart">
+          <button aria-label="Close added to cart dialog" className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center text-lg leading-none text-neutral-600" onClick={() => setAddedDialog("")}>×</button>
+          <div className="flex items-start gap-3 pr-6">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="mt-0.5 shrink-0"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>
+            <div>
+              <p className="text-sm leading-6">This item has been added to the cart</p>
+              <p className="mt-1 text-xs text-neutral-500">{addedDialog}</p>
             </div>
           </div>
+          <button aria-label="View cart" className="mt-4 w-full bg-black py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => { setAddedDialog(""); go({ t: "cart" }); }}>View cart</button>
         </div>
       )}
 
@@ -900,11 +901,6 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           <div className="relative">
             <div className="mx-auto max-w-[629px] text-center">
               <h2 className="font-serif-d text-[34px] italic leading-snug">Discover the world of Hermès</h2>
-            </div>
-            <div className="absolute right-0 top-2 flex items-center gap-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-within:opacity-100" aria-label="Theme position">
-              <button aria-label="Previous theme" className="flex h-9 w-9 items-center justify-center border border-black/25 hover:border-black" onClick={() => goToSlide(activeIdx - 1)}>‹</button>
-              <span className="text-sm tabular-nums" aria-live="polite">{activeIdx + 1} / {CAROUSEL_THEMES.length}</span>
-              <button aria-label="Next theme" className="flex h-9 w-9 items-center justify-center border border-black/25 hover:border-black" onClick={() => goToSlide(activeIdx + 1)}>›</button>
             </div>
           </div>
         </div>
@@ -1305,7 +1301,12 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
   }
 
-  // ---- Filter state — selections apply IMMEDIATELY (as on hermes.com) -----
+  // ---- Filter state — selections are STAGED in the drawer (§F) and only
+  // applied to the grid when APPLY is clicked or the drawer is closed;
+  // they do NOT update the grid immediately. Applied state (sel /
+  // onlineOnly / sort / priceMin / priceMax) drives the grid; draft state
+  // (dSel / dOnline / dSort / dPriceMin / dPriceMax) is what the drawer
+  // edits. Opening the drawer snapshots the applied state into the draft.
   const [fOpen, setFOpen] = useState(false);
   const [mosaic, setMosaic] = useState(false);
   const [visible, setVisible] = useState(40);
@@ -1314,7 +1315,14 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   const [sort, setSort] = useState("relevance");
   const [priceMin, setPriceMin] = useState<number | null>(null);
   const [priceMax, setPriceMax] = useState<number | null>(null);
-  const [openKey, setOpenKey] = useState("");
+  const [dSel, setDSel] = useState<Record<FGroup, string[]>>(EMPTY_SEL);
+  const [dOnline, setDOnline] = useState(false);
+  const [dSort, setDSort] = useState("relevance");
+  const [dPriceMin, setDPriceMin] = useState<number | null>(null);
+  const [dPriceMax, setDPriceMax] = useState<number | null>(null);
+  // All sections collapsed by default, except men's shoes where LINE is
+  // expanded by default (§F).
+  const [openKey, setOpenKey] = useState(isMensShoesPage ? "line" : "");
   const [loadedMsg, setLoadedMsg] = useState("");
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
@@ -1339,24 +1347,31 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   const finishVal = (p: Product) => isBeltsPage ? finishFamily(p.metallicFinish) : p.metallicFinish;
   const matVal = (p: Product) => isMensShoesPage ? materialFamily(p.material) : p.material;
   const universeVal = (p: Product) => isBeltsPage ? beltUniverse(p) : isMensShoesPage ? shoeUniverse(p) : "";
+  const filterList = (s: Record<FGroup, string[]>, on: boolean, lo: number, hi: number) => base.filter((p) =>
+    (!on || p.status === "available") &&
+    (!s.category.length || s.category.includes(catVal(p))) &&
+    (!s.line.length || s.line.includes(p.line)) &&
+    (!s.material.length || s.material.includes(matVal(p))) &&
+    (!s.modelSize.length || s.modelSize.includes(p.modelSize)) &&
+    (!s.finish.length || s.finish.includes(finishVal(p))) &&
+    (!s.size.length || p.sizeOptions.some((sz) => s.size.includes(sz.label))) &&
+    (!s.color.length || p.colors.some((c) => s.color.includes(colorFamily(c.name)))) &&
+    (!s.width.length || s.width.includes(beltWidthBucket(p.modelSize))) &&
+    (!s.personalize.length || (isBeltKit(p) && s.personalize.includes("Yes"))) &&
+    (!s.universe.length || s.universe.includes(universeVal(p))) &&
+    p.price >= lo && p.price <= hi);
   const filtered = useMemo(() => {
-    let list = base.filter((p) =>
-      (!onlineOnly || p.status === "available") &&
-      (!sel.category.length || sel.category.includes(catVal(p))) &&
-      (!sel.line.length || sel.line.includes(p.line)) &&
-      (!sel.material.length || sel.material.includes(matVal(p))) &&
-      (!sel.modelSize.length || sel.modelSize.includes(p.modelSize)) &&
-      (!sel.finish.length || sel.finish.includes(finishVal(p))) &&
-      (!sel.size.length || p.sizeOptions.some((s) => sel.size.includes(s.label))) &&
-      (!sel.color.length || p.colors.some((c) => sel.color.includes(colorFamily(c.name)))) &&
-      (!sel.width.length || sel.width.includes(beltWidthBucket(p.modelSize))) &&
-      (!sel.personalize.length || (isBeltKit(p) && sel.personalize.includes("Yes"))) &&
-      (!sel.universe.length || sel.universe.includes(universeVal(p))) &&
-      p.price >= pMin && p.price <= pMax);
+    let list = filterList(sel, onlineOnly, pMin, pMax);
     if (sort === "low") list = [...list].sort((a, b) => a.price - b.price);
     if (sort === "high") list = [...list].sort((a, b) => b.price - a.price);
     return list;
   }, [base, sel, onlineOnly, sort, pMin, pMax]);
+  // How many of OUR products the staged draft selection would show — the
+  // number in the drawer's "APPLY Update {N} products" button (§F).
+  const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
+  const openDrawer = () => { setDSel(sel); setDOnline(onlineOnly); setDSort(sort); setDPriceMin(priceMin); setDPriceMax(priceMax); setFOpen(true); };
+  const applyDraft = () => { setSel(dSel); setOnlineOnly(dOnline); setSort(dSort); setPriceMin(dPriceMin); setPriceMax(dPriceMax); setVisible(40); setLoadedMsg(""); };
+  const closeDrawer = () => { applyDraft(); setFOpen(false); };
 
   const totalSel = (Object.keys(EMPTY_SEL) as FGroup[]).reduce((n, g) => n + sel[g].length, 0) + (onlineOnly ? 1 : 0) + (priceNarrowed ? 1 : 0);
   const filtersActive = totalSel > 0;
@@ -1364,9 +1379,10 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   // actually carries in this list (the filtered count while filters apply).
   const displayCount = filtersActive ? filtered.length : base.length;
 
+  // Drawer toggles edit the STAGED draft only — the grid is untouched until
+  // APPLY / drawer close commits the draft (§F).
   const toggle = (group: FGroup, val: string) => {
-    setSel((s) => ({ ...s, [group]: s[group].includes(val) ? s[group].filter((x) => x !== val) : [...s[group], val] }));
-    setVisible(40); setLoadedMsg("");
+    setDSel((s) => ({ ...s, [group]: s[group].includes(val) ? s[group].filter((x) => x !== val) : [...s[group], val] }));
   };
   const clearFilters = () => { setSel(EMPTY_SEL); setOnlineOnly(false); setSort("relevance"); setPriceMin(null); setPriceMax(null); setVisible(40); setLoadedMsg(""); };
 
@@ -1422,19 +1438,20 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   const secSort: FSection = { key: "sort", title: "Sort by", kind: "sort", options: [] };
   const sections: FSection[] = [];
   const pushSec = (s: FSection | null) => { if (s) sections.push(s); };
-  // Facet order per category — verified from hermes.com's served facet
-  // JSONs (belts: Category, Metallic finish, Width, Personalize, Color,
-  // Size, Price, Available online, Universe, Line; men's shoes: Line,
-  // Material, Size, Category, Universe, Color, Price, Available online).
-  // "Available online" is the switch rendered after the sections; Sort is
-  // our own control and stays last. Other pages keep their existing order.
+  // Facet order per category — live extraction §F (belts: Available
+  // online, Category, Metallic finish, Width, Personalize, Color, Size,
+  // Price, Universe, Line, Sort by; men's shoes: Line, Material, Size,
+  // Category, Universe, Color, Price, Sort by). "Available online" is the
+  // switch rendered at the very top of the drawer, before the sections;
+  // Sort by is a section inside the drawer and stays last. Other pages
+  // keep their existing order.
   if (isBeltsPage) { pushSec(secCategory); pushSec(secFinish); pushSec(secWidth); pushSec(secPersonalize); pushSec(secColor); pushSec(secSize); pushSec(secPrice); pushSec(secUniverse); pushSec(secLine); pushSec(secSort); }
   else if (isMensShoesPage) { pushSec(secLine); pushSec(secMaterial); pushSec(secSize); pushSec(secCategory); pushSec(secUniverse); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
   else if (isRTWPage) { pushSec(secLine); pushSec(secSize); pushSec(secCategory); pushSec(secMaterial); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
   else if (isBagsPage) { pushSec(secCategory); pushSec(secLine); pushSec(secMaterial); pushSec(secModelSize); pushSec(secFinish); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
   else if (isShoesPage) { pushSec(secLine); pushSec(secMaterial); pushSec(secSize); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
   else { pushSec(secCategory); pushSec(secLine); pushSec(secMaterial); pushSec(secModelSize); pushSec(secSize); pushSec(secFinish); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
-  const openSection = sections.some((s) => s.key === openKey) ? openKey : (sections[0]?.key ?? "");
+  const openSection = sections.some((s) => s.key === openKey) ? openKey : "";
 
   const quickBuyOn = isSneakersPage;
 
@@ -1459,8 +1476,10 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   const renderSection = (s: FSection) => {
     const isOpen = openSection === s.key;
     const group = s.group;
-    const selCount = group ? sel[group].length : 0;
+    const selCount = group ? dSel[group].length : 0;
     const span = priceHi - priceLo;
+    const dpMin = dPriceMin ?? priceLo;
+    const dpMax = dPriceMax ?? priceHi;
     return (
       <div key={s.key} className="border-t border-black/10">
         <button aria-label={`${s.title} filter section`} aria-expanded={isOpen} className="flex w-full items-center justify-between py-4 text-left" onClick={() => setOpenKey(isOpen ? "" : s.key)}>
@@ -1471,18 +1490,17 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
           <div className="pb-5">
             {s.kind === "checks" && group && s.options.map((o) => (
               <label key={o.value} className="flex cursor-pointer items-center gap-2.5 py-1.5 text-sm">
-                <input type="checkbox" aria-label={`${s.title} ${o.value}`} checked={sel[group].includes(o.value)} onChange={() => toggle(group, o.value)} className="h-4 w-4 shrink-0 accent-black" />
+                <input type="checkbox" aria-label={`${s.title} ${o.value}`} checked={dSel[group].includes(o.value)} onChange={() => toggle(group, o.value)} className="h-4 w-4 shrink-0 accent-black" />
                 <span>{o.value} <span className="text-neutral-500">({o.count})</span></span>
               </label>
             ))}
             {s.kind === "color" && group && (
               <div className="grid grid-cols-6 gap-x-1 gap-y-3">
                 {s.options.map((o) => {
-                  const on = sel[group].includes(o.value);
-                  const tile = colorMainUrl(o.value);
+                  const on = dSel[group].includes(o.value);
                   return (
                     <button key={o.value} aria-label={`Color ${o.value} (${o.count})`} aria-pressed={on} className="flex flex-col items-center gap-1" onClick={() => toggle(group, o.value)}>
-                      <span className={`${on ? "ring-2 ring-black ring-offset-2" : "ring-1 ring-black/20"} h-8 w-8`} style={tile ? { backgroundImage: `url(${tile})`, backgroundSize: "cover", backgroundColor: o.hex ?? "#cccccc" } : { background: o.hex ?? "#cccccc" }} />
+                      <span className="h-8 w-8 rounded-full ring-1 ring-black/20" style={{ background: o.hex ?? "#cccccc", boxShadow: on ? "0 0 0 2px #fffcf7, 0 0 0 4px #000" : undefined }} />
                       <span className="text-center text-[10px] leading-tight">{o.value}</span>
                       <span className="text-[10px] leading-tight text-neutral-500">({o.count})</span>
                     </button>
@@ -1493,7 +1511,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
             {s.kind === "size" && group && (
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                 {s.options.map((o) => {
-                  const on = sel[group].includes(o.value);
+                  const on = dSel[group].includes(o.value);
                   return (
                     <button key={o.value} aria-label={`Size ${o.value}, ${o.count} items`} aria-pressed={on} className={`border px-1 py-2 text-center ${on ? "border-black bg-black text-white" : "border-black/25 hover:border-black"}`} onClick={() => toggle(group, o.value)}>
                       <span className="block text-sm font-medium">{o.value}</span>
@@ -1507,16 +1525,16 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
               <div className="px-1 pt-2">
                 <div className="relative h-6">
                   <div className="absolute inset-x-0 top-1/2 h-[2px] -translate-y-1/2 bg-black/15" />
-                  <div className="absolute top-1/2 h-[2px] -translate-y-1/2 bg-black" style={{ left: `${span > 0 ? ((pMin - priceLo) / span) * 100 : 0}%`, width: `${span > 0 ? ((pMax - pMin) / span) * 100 : 100}%` }} />
-                  <input type="range" aria-label="Minimum price" min={priceLo} max={priceHi} step={50} value={pMin} onChange={(e) => { setPriceMin(Math.min(Number(e.target.value), pMax)); setVisible(40); setLoadedMsg(""); }} className="pointer-events-none absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:bg-black [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-black" />
-                  <input type="range" aria-label="Maximum price" min={priceLo} max={priceHi} step={50} value={pMax} onChange={(e) => { setPriceMax(Math.max(Number(e.target.value), pMin)); setVisible(40); setLoadedMsg(""); }} className="pointer-events-none absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:bg-black [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-black" />
+                  <div className="absolute top-1/2 h-[2px] -translate-y-1/2 bg-black" style={{ left: `${span > 0 ? ((dpMin - priceLo) / span) * 100 : 0}%`, width: `${span > 0 ? ((dpMax - dpMin) / span) * 100 : 100}%` }} />
+                  <input type="range" aria-label="Minimum price" min={priceLo} max={priceHi} step={50} value={dpMin} onChange={(e) => { setDPriceMin(Math.min(Number(e.target.value), dpMax)); }} className="pointer-events-none absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:bg-black [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-black" />
+                  <input type="range" aria-label="Maximum price" min={priceLo} max={priceHi} step={50} value={dpMax} onChange={(e) => { setDPriceMax(Math.max(Number(e.target.value), dpMin)); }} className="pointer-events-none absolute inset-x-0 top-1/2 h-6 w-full -translate-y-1/2 appearance-none bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:bg-black [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-black" />
                 </div>
-                <div className="mt-1 flex justify-between text-xs text-neutral-600"><span>{fmt(pMin)}</span><span>{fmt(pMax)}</span></div>
+                <div className="mt-1 flex justify-between text-xs text-neutral-600"><span>{fmt(dpMin)}</span><span>{fmt(dpMax)}</span></div>
               </div>
             )}
             {s.kind === "sort" && [["relevance", "Relevance"], ["low", "Lowest price"], ["high", "Highest price"]].map(([v = "relevance", l = ""]) => (
               <label key={v} className="flex cursor-pointer items-center gap-2.5 py-1.5 text-sm">
-                <input type="radio" name="catsort" aria-label={`Sort by ${l}`} checked={sort === v} onChange={() => { setSort(v); setVisible(40); setLoadedMsg(""); }} className="h-4 w-4 accent-black" />{l}
+                <input type="radio" name="catsort" aria-label={`Sort by ${l}`} checked={dSort === v} onChange={() => { setDSort(v); }} className="h-4 w-4 accent-black" />{l}
               </label>
             ))}
           </div>
@@ -1547,7 +1565,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
             ))}
           </nav>
           <div className="ml-auto flex shrink-0 items-center gap-4">
-            <button aria-label={totalSel ? `Open filters, ${totalSel} selected` : "Open filters"} className="font-mono-d hidden items-center gap-2 py-1 text-xs font-medium uppercase tracking-normal lg:flex" onClick={() => setFOpen(true)}>
+            <button aria-label={totalSel ? `Open filters, ${totalSel} selected` : "Open filters"} className={`font-mono-d hidden items-center gap-2 py-1 text-xs font-medium uppercase tracking-normal lg:flex ${totalSel > 0 ? "bg-black px-3 text-white" : ""}`} onClick={openDrawer}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 6h12M19 6h2M3 12h4M11 12h10M3 18h9M16 18h5" /><circle cx="17" cy="6" r="2" /><circle cx="9" cy="12" r="2" /><circle cx="14" cy="18" r="2" /></svg>
               FILTER{totalSel > 0 ? ` (${totalSel})` : ""}
             </button>
@@ -1563,13 +1581,13 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
         </div>
         {filtersActive && (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-black/10 pt-3">
-            <span className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Selected filters</span>
+            <span className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Selected filters:</span>
             {pills.map((pl) => (
-              <button key={`${pl.group}-${pl.value}`} aria-label={`Remove this filter ${pl.label}`} className="flex items-center gap-1.5 border border-black/40 bg-white px-2.5 py-1 text-xs" onClick={() => removePill(pl)}>
-                {pl.label}<span aria-hidden="true">✕</span>
+              <button key={`${pl.group}-${pl.value}`} aria-label={`Remove this filter ${pl.label}`} className="flex items-center gap-1.5 bg-black px-2.5 py-1 text-xs uppercase text-white" onClick={() => removePill(pl)}>
+                {pl.label}<span aria-hidden="true">×</span>
               </button>
             ))}
-            <button aria-label="Clear filters applied" className="text-xs underline underline-offset-4" onClick={clearFilters}>Clear filters applied</button>
+            <button aria-label="Clear filters" className="ml-auto text-xs underline underline-offset-4" onClick={clearFilters}>Clear</button>
           </div>
         )}
       </div>
@@ -1677,36 +1695,35 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
       </section>
 
 
-      <button aria-label="Filter and sort products" className="font-mono-d fixed bottom-4 left-1/2 z-40 flex h-12 -translate-x-1/2 items-center gap-2 bg-white px-8 text-xs font-medium uppercase tracking-normal shadow-lg ring-1 ring-black/10 lg:hidden" onClick={() => setFOpen(true)}>
+      <button aria-label="Filter and sort products" className={`font-mono-d fixed bottom-4 left-1/2 z-40 flex h-12 -translate-x-1/2 items-center gap-2 px-8 text-xs font-medium uppercase tracking-normal shadow-lg ring-1 ring-black/10 lg:hidden ${totalSel > 0 ? "bg-black text-white" : "bg-white"}`} onClick={openDrawer}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2.2" /><circle cx="10" cy="17" r="2.2" /></svg>
-        Filter &amp; Sort
+        Filter{totalSel > 0 ? ` (${totalSel})` : ""}
       </button>
 
       {fOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40" onClick={() => setFOpen(false)}>
+        <div className="fixed inset-0 z-50 bg-black/40" onClick={closeDrawer}>
           <div className="drawer-in absolute flex flex-col bg-[#fffcf7] max-lg:inset-x-0 max-lg:bottom-0 max-lg:max-h-[88vh] lg:right-0 lg:top-0 lg:h-full lg:w-[33vw] lg:min-w-[380px] lg:max-w-[520px]" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Filter">
             <div className="flex items-center justify-between px-6 pt-5">
               <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">FILTER</h2>
-              <button aria-label="Close filters" className="flex items-center gap-1.5 py-1 text-sm" onClick={() => setFOpen(false)}>
+              <button aria-label="Close filters" className="flex items-center gap-1.5 py-1 text-sm" onClick={closeDrawer}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
                 Close
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
-              <p className="mt-3 text-xs leading-5 text-neutral-500">Selecting a filter will apply the update to the products displayed on the page.</p>
-              {sections.map(renderSection)}
+              <p className="mt-3 text-xs leading-5 text-neutral-500">Selecting a filter will apply the update to products count based on selection</p>
               <div className="mt-4 flex items-start justify-between gap-4 border-t border-black/10 pt-4">
                 <div>
                   <p className="text-sm font-medium">Available online</p>
                 </div>
-                <button type="button" role="switch" aria-checked={onlineOnly} aria-label="Available online" onClick={() => { setOnlineOnly(!onlineOnly); setVisible(40); setLoadedMsg(""); }} className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${onlineOnly ? "bg-black" : "bg-black/25"}`}>
-                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${onlineOnly ? "left-[22px]" : "left-0.5"}`} />
+                <button type="button" role="switch" aria-checked={dOnline} aria-label="Available online" onClick={() => { setDOnline(!dOnline); }} className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${dOnline ? "bg-black" : "bg-black/25"}`}>
+                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${dOnline ? "left-[22px]" : "left-0.5"}`} />
                 </button>
               </div>
+              {sections.map(renderSection)}
             </div>
             <div className="border-t border-black/10 px-6 py-4">
-              <button aria-label="Apply filters" className="w-full bg-black py-3.5 text-[12px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => setFOpen(false)}>APPLY</button>
-              {totalSel > 0 && <button aria-label="Clear filters" className="mt-3 w-full py-1 text-center text-[12px] uppercase tracking-[0.2em] underline underline-offset-4" onClick={clearFilters}>CLEAR</button>}
+              <button aria-label={`Apply filters, update ${draftCount} products`} className="w-full bg-black py-3.5 text-[12px] font-semibold uppercase tracking-[0.25em] text-white" onClick={closeDrawer}>APPLY Update {draftCount} products</button>
             </div>
           </div>
         </div>
@@ -2341,9 +2358,55 @@ function AboutPage({ go }: { go: (v: View) => void }) {
 
 const fmt2 = (n: number) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-function CartPage({ cart, setCart, settings, go, total, count }: { cart: CartItem[]; setCart: (c: CartItem[]) => void; settings: Settings; go: (v: View) => void; total: number; count: number }) {
+function CartPage({ cart, setCart, settings, go, total, count, products }: { cart: CartItem[]; setCart: (c: CartItem[]) => void; settings: Settings; go: (v: View) => void; total: number; count: number; products: Product[] }) {
   const [giftOpen, setGiftOpen] = useState(false);
-  const [gift, setGift] = useState(false);
+  const [giftCard, setGiftCard] = useState<"blank" | "personal">("blank");
+  const [giftMsg, setGiftMsg] = useState("");
+  const [hidePrice, setHidePrice] = useState(false);
+  // The cart page shows NO payment details/methods or card fields (verified
+  // live on hermes.com §E) — only the BUY WITH APPLE PAY button below.
+  const delayFor = (i: CartItem) => products.find((p) => p.id === i.productId)?.shippingDelay ?? "";
+  // Right column (shared by the filled and empty cart): Orange Box,
+  // Customer Service, Reinsurance — in that order, as on hermes.com (§E).
+  const rightCol = (
+    <div className="space-y-6">
+      <section className="bg-[#fffcf7] px-5 py-5" aria-label="The orange box section">
+        <div className="border-b border-[#f6f1eb] pb-4"><h2 className={CO_HEAD_LG}>The Orange Box</h2></div>
+        <div className="flex items-center gap-4 py-4">
+          <img src="/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
+          <p className="text-xs leading-5 text-black">All orders are delivered in an orange box tied with a Bolduc ribbon, with the exception of <button aria-label="Certain items exceptions from cart" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certain items</button></p>
+        </div>
+      </section>
+      <section className="bg-[#fffcf7] px-5 py-5" aria-label="Customer service section">
+        <h2 className={CO_HEAD}>Customer Service</h2>
+        <p className="mt-4 text-sm text-neutral-600">Monday to Saturday 10am - 9pm EST :</p>
+        <p className="mt-1 text-sm"><a aria-label="Call customer service from cart" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
+      </section>
+      <section className="bg-[#fffcf7] px-5 py-5" aria-label="Reinsurance section">
+        <h2 className={CO_HEAD}>Reinsurance</h2>
+        <div className="mt-5 grid grid-cols-2 gap-4 text-center">
+          <button aria-label="Returns and exchanges from cart" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "returns" })}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M7 8h11l-3-3M17 16H6l3 3" /></svg>Returns &amp; exchanges</button>
+          <button aria-label="Shop securely from cart" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "payment" })}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="1" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>Shop securely</button>
+        </div>
+      </section>
+    </div>
+  );
+  // Minimal cart-page footer (§E): four links + copyright only — no
+  // newsletter / footer services block on the cart page.
+  const cartFooter = (
+    <div className="mt-10 border-t border-[#f6f1eb] bg-[#fffcf7] px-5 py-5 text-[13px] text-neutral-600">
+      <p>
+        <button aria-label="Cart footer Terms and Conditions" className="hover:underline" onClick={() => go({ t: "page", page: "terms" })}>Terms and Conditions</button>
+        {" | "}
+        <button aria-label="Cart footer Privacy" className="hover:underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy</button>
+        {" | "}
+        <button aria-label="Cart footer Legal and Accessibility" className="hover:underline" onClick={() => go({ t: "page", page: "legal" })}>Legal &amp; Accessibility</button>
+        {" | "}
+        <button aria-label="Cart footer Site map" className="hover:underline" onClick={() => go({ t: "page", page: "sitemap" })}>Site map</button>
+      </p>
+      <p className="pt-1">{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
+    </div>
+  );
   return (
     <div className="min-h-screen bg-[#fcf7f1]">
       <div className="mx-auto max-w-[1290px] px-4 py-6 sm:px-6">
@@ -2363,66 +2426,83 @@ function CartPage({ cart, setCart, settings, go, total, count }: { cart: CartIte
                 <h1 className="mt-5 text-lg">Your cart is empty</h1>
                 <button aria-label="Continue shopping from empty cart" className="mt-6 bg-black px-10 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "home" })}>Continue shopping</button>
               </div>
-              <div className="space-y-6">
-                <section className="bg-[#fffcf7] px-5 py-5" aria-label="The orange box section">
-                  <div className="border-b border-[#f6f1eb] pb-4"><h2 className={CO_HEAD_LG}>The Orange Box</h2></div>
-                  <div className="flex items-center gap-4 py-4">
-                    <img src="/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
-                    <p className="text-xs leading-5 text-black">All orders are delivered in an orange box tied with a Bolduc ribbon, with the exception of <button aria-label="Certain items exceptions from cart" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certain items</button></p>
-                  </div>
-                </section>
-                <section className="bg-[#fffcf7] px-5 py-5" aria-label="Customer service section">
-                  <h2 className={CO_HEAD}>Customer Service</h2>
-                  <p className="mt-4 text-sm text-neutral-600">{settings.serviceHours}</p>
-                  <p className="mt-1 text-sm"><a aria-label="Call customer service from cart" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
-                  <div className="mt-5 grid grid-cols-2 gap-4 text-center">
-                    <button aria-label="Returns and exchanges from cart" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "returns" })}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M7 8h11l-3-3M17 16H6l3 3" /></svg>Returns &amp; exchanges</button>
-                    <button aria-label="Shop securely from cart" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "payment" })}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="1" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>Shop securely</button>
-                  </div>
-                </section>
-              </div>
+              {rightCol}
             </div>
-            <div className="mt-10 space-y-2 border-t border-[#f6f1eb] bg-[#fffcf7] px-5 py-5 text-[13px] text-neutral-600">
-              {parseLegalLinks(settings).map(([l, pg]) => <button key={l} aria-label={`Cart footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
-              <p className="pt-1">{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
-            </div>
+            {cartFooter}
           </div>
         ) : (
-          <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_463px]">
-            <div>
-              <h1 className="text-xs font-semibold uppercase tracking-[0.25em]">You have {count} item{count === 1 ? "" : "s"} in your cart</h1>
-              {cart.map((i) => (
-                <div key={i.key} className="mt-5 flex gap-4 border-b border-black/10 pb-5">
-                  <button aria-label={`Open ${i.name}`} className="h-24 w-24 shrink-0 overflow-hidden" onClick={() => go({ t: "product", id: i.productId })}><img src={productImageFor({ name: i.name, price: i.price })} alt={i.name} className="h-full w-full object-cover" /></button>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm">{i.name}</p>
-                    <p className="mt-0.5 text-xs text-neutral-500">{i.color ? `Colour: ${i.color}` : ""}{i.size ? ` · Size: ${i.size}` : ""}{i.refCode ? <><br />Ref: {i.refCode}</> : null}</p>
-                    <div className="mt-2.5 flex items-center gap-3">
-                      <button aria-label={`Decrease quantity of ${i.name}`} disabled={i.qty <= 1} className="h-7 w-7 border border-black/30 disabled:cursor-not-allowed disabled:opacity-30" onClick={() => setCart(cart.map((x) => x.key === i.key ? { ...x, qty: Math.max(1, x.qty - 1) } : x))}>−</button>
-                      <span aria-label={`Quantity of ${i.name}`}>{i.qty}</span>
-                      <button aria-label={`Increase quantity of ${i.name}`} className="h-7 w-7 border border-black/30" onClick={() => setCart(cart.map((x) => x.key === i.key ? { ...x, qty: x.qty + 1 } : x))}>+</button>
-                      <button aria-label={`Remove ${i.name} from cart`} className="ml-2 text-xs underline" onClick={() => setCart(cart.filter((x) => x.key !== i.key))}>Remove</button>
+          <div>
+            <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_463px]">
+              <div>
+                <h3 className="font-mono-d text-center text-xs font-medium uppercase tracking-normal">You have {count} item{count === 1 ? "" : "s"} in your cart.</h3>
+                {cart.map((i) => {
+                  const delay = delayFor(i);
+                  const delayText = delay ? (delay.endsWith(".") ? delay : `${delay}.`) : "";
+                  return (
+                    <div key={i.key} className="mt-5 flex gap-4 border-b border-black/10 pb-5">
+                      <div className="w-24 shrink-0 sm:w-[172px]">
+                        <button aria-label={`Open ${i.name}`} className="block w-full overflow-hidden" onClick={() => go({ t: "product", id: i.productId })}><img src={productImageFor({ name: i.name, price: i.price })} alt={i.name} className="w-full object-cover" /></button>
+                        <div className="mt-2 flex items-center justify-center gap-2">
+                          <button aria-label={`Decrease quantity of ${i.name}`} disabled={i.qty <= 1} className="h-7 w-7 border border-black/30 disabled:cursor-not-allowed disabled:opacity-30" onClick={() => setCart(cart.map((x) => x.key === i.key ? { ...x, qty: Math.max(1, x.qty - 1) } : x))}>−</button>
+                          <span aria-label={`Quantity of ${i.name}`}>{i.qty}</span>
+                          <button aria-label={`Increase quantity of ${i.name}`} className="h-7 w-7 border border-black/30" onClick={() => setCart(cart.map((x) => x.key === i.key ? { ...x, qty: x.qty + 1 } : x))}>+</button>
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <button aria-label={`Open ${i.name}`} className="text-left text-sm underline-offset-4 hover:underline" onClick={() => go({ t: "product", id: i.productId })}>{i.name}</button>
+                        {i.color ? <p className="mt-1 text-xs text-neutral-600">Color: {i.color}</p> : null}
+                        {i.size ? <p className="text-xs text-neutral-600">Size: {i.size}</p> : null}
+                        {i.refCode ? <p className="text-xs text-neutral-600">Ref: {i.refCode}</p> : null}
+                        {delayText ? <p className="mt-2 flex items-start gap-1.5 text-xs text-neutral-600"><span aria-hidden="true">ⓘ</span><span>{delayText}</span></p> : null}
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <button aria-label={`Remove ${i.name} from cart`} className="text-xs underline" onClick={() => setCart(cart.filter((x) => x.key !== i.key))}>Remove</button>
+                        <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Price</p>
+                        <p className="text-sm">{fmt2(i.price * i.qty)}</p>
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-sm">{fmt2(i.price * i.qty)}</p>
+                  );
+                })}
+                <div className="mt-6 space-y-3 border-t border-black/10 pt-5 text-sm">
+                  <div className="flex justify-between"><span>Subtotal</span><span>{fmt2(total)}</span></div>
+                  <div className="flex justify-between"><span>Shipping</span><span>-</span></div>
+                  <p className="-mt-1 text-xs text-neutral-500">Shipping costs will be calculated during checkout</p>
+                  <div className="flex justify-between"><span>Taxes</span><span>-</span></div>
+                  <p className="-mt-1 text-xs text-neutral-500">Taxes will be calculated during checkout</p>
+                  <div className="flex justify-between border-t border-black/10 pt-3 text-sm font-semibold uppercase tracking-[0.15em]"><span>Total</span><span>{fmt2(total)}</span></div>
                 </div>
-              ))}
-              <div className="mt-5 border border-black/10">
-                <button aria-label="Toggle gifting options" aria-expanded={giftOpen} className="flex w-full items-center justify-between px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.22em]" onClick={() => setGiftOpen(!giftOpen)}>Gifting <span>{giftOpen ? "−" : "+"}</span></button>
-                {giftOpen && <label className="flex items-center gap-2 px-4 pb-4 text-sm"><input type="checkbox" aria-label="This is a gift" checked={gift} onChange={(e) => setGift(e.target.checked)} className="accent-black" /> This is a gift — deliver in the orange box with a gift message and no prices on the delivery note.</label>}
+                <div className="mt-6 border border-black/10">
+                  <label className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.22em]">
+                    Gifting
+                    <input type="checkbox" aria-label="Gifting" checked={giftOpen} onChange={(e) => setGiftOpen(e.target.checked)} className="h-4 w-4 shrink-0 accent-black" />
+                  </label>
+                  {giftOpen && (
+                    <div className="border-t border-black/10 px-4 py-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em]">You can define a personal message</p>
+                      <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm">
+                        <input type="radio" name="giftcard" aria-label="Blank card" checked={giftCard === "blank"} onChange={() => setGiftCard("blank")} className="h-4 w-4 accent-black" /> Blank card
+                      </label>
+                      <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
+                        <input type="radio" name="giftcard" aria-label="Personal message" checked={giftCard === "personal"} onChange={() => setGiftCard("personal")} className="h-4 w-4 accent-black" /> Personal message
+                      </label>
+                      {giftCard === "personal" && (
+                        <textarea aria-label="Your personal gift message" className="mt-3 w-full border border-black/25 bg-white px-3 py-2.5 text-sm outline-none" rows={3} placeholder="Write your message" value={giftMsg} onChange={(e) => setGiftMsg(e.target.value)} />
+                      )}
+                      <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.22em]">You can hide price on invoice</p>
+                      <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm">
+                        <input type="checkbox" aria-label="Hide price on invoice" checked={hidePrice} onChange={(e) => setHidePrice(e.target.checked)} className="h-4 w-4 accent-black" /> Hide price on invoice
+                      </label>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-6 flex gap-3">
+                  <button aria-label="Checkout from cart" className="font-mono-d flex h-12 flex-1 items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => go({ t: "checkout" })}>Checkout</button>
+                  <button aria-label="Buy with Apple Pay from cart" className="flex h-12 flex-1 items-center justify-center border border-black bg-white text-sm font-semibold" onClick={() => go({ t: "checkout" })}>Buy with Apple Pay</button>
+                </div>
               </div>
+              <aside className="h-fit lg:sticky lg:bottom-0">{rightCol}</aside>
             </div>
-            <aside className="h-fit border border-[#f6f1eb] bg-[#fffcf7] p-5 lg:sticky lg:bottom-0">
-              <div className="mt-4 flex justify-between border-t border-[#f6f1eb] pt-4 text-sm font-semibold uppercase tracking-[0.15em]"><span>Total</span><span>{fmt2(total)}</span></div>
-              <button aria-label="Checkout from cart" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => go({ t: "checkout" })}>Checkout</button>
-              <button aria-label="Buy with Apple Pay from cart" className="mt-2 w-full border border-black py-3.5 text-sm font-semibold" onClick={() => go({ t: "checkout" })}>Buy with Apple Pay</button>
-              <div className="mt-6 border-t border-[#f6f1eb] pt-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.25em]">The Orange Box</p>
-                <p className="mt-2 text-sm leading-6 text-neutral-600">Every order is delivered in the orange box tied with Bolduc ribbon.</p>
-                <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.25em]">Customer service</p>
-                <p className="mt-2 text-sm leading-6 text-neutral-600">{settings.serviceHours}<br /><a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
-              </div>
-            </aside>
+            {cartFooter}
           </div>
         )}
       </div>
@@ -2449,58 +2529,103 @@ function SocialCircles() {
 
 // Floating chat bubble — bottom-right on every page except checkout (which
 // keeps its own bubble) and admin, as on hermes.com: a 48px white circle
-// with the two-line speech-bubble glyph, bottom-5 right-5. The opened panel
-// shows Customer service hours + phone, a message thread (localStorage
-// hv-chat — the same store the Admin Panel chat tab reads), the original
-// Live Chat privacy text, a message input + Send, and a Contact us button.
-// The opened panel on hermes.com itself could not be observed (live chat is
-// JS-driven and hermes.com is Cloudflare-blocked for automated checks), so
-// the panel reuses the checkout Customer Service popover content — do not
-// treat its layout as a verified copy of the original panel. On mobile
-// product pages the bubble sits above the sticky ADD TO CART bar.
+// with the speech-bubble glyph, bottom-5 right-5, accessible name "Open a
+// Live Chat with an advisor". Opening it first shows the Live Chat consent
+// dialog (§G, verbatim text + Privacy Policy link + CONTINUE), then a
+// brief loading spinner, then the chat with the verbatim welcome message
+// and a generic "Client Specialist" greeting — no real advisor is named.
+// The thread itself is localStorage hv-chat (api.getChatMessages /
+// sendChatMessage), the same store the Admin Panel chat tab reads, so the
+// store's replies appear in the same thread. On mobile product pages the
+// bubble sits above the sticky ADD TO CART bar.
 function ChatBubble({ settings, go, view }: { settings: Settings; go: (v: View) => void; view: View }) {
   const [open, setOpen] = useState(false);
+  const [stage, setStage] = useState<"consent" | "loading" | "chat">("consent");
   const [msgs, setMsgs] = useState<LocalChat[]>([]);
   const [draft, setDraft] = useState("");
-  const [sent, setSent] = useState(false);
+  const [chatOpenedAt, setChatOpenedAt] = useState("");
+  const [closedNote, setClosedNote] = useState<"closed" | "new" | null>(null);
   if (!settings.chatEnabled) return null;
   const load = () => { void api.getChatMessages({}).then((r) => setMsgs(r.messages)); };
-  const toggle = () => { const n = !open; setOpen(n); if (n) load(); };
+  const fmtTime = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? "" : d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); };
+  const nowTime = () => new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const hasAdvisorMsg = msgs.some((m) => m.from !== "customer");
+  const openPanel = () => { setOpen(true); setStage("consent"); setClosedNote(null); load(); };
+  const closePanel = () => { const wasChat = stage === "chat"; setOpen(false); if (wasChat) setClosedNote(hasAdvisorMsg ? "new" : "closed"); };
+  const continueChat = () => { setStage("loading"); setChatOpenedAt(nowTime()); window.setTimeout(() => setStage("chat"), 900); };
   const send = async () => {
     const t = draft.trim();
     if (!t) return;
     const r = await api.sendChatMessage({ from: "customer", text: t });
-    if (r.ok) { setDraft(""); setSent(true); load(); }
+    if (r.ok) { setDraft(""); load(); }
   };
   return (
     <div className={`fixed z-40 flex flex-col items-end gap-2 ${view.t === "product" ? "bottom-[calc(76px+env(safe-area-inset-bottom))] right-5 lg:bottom-5" : "bottom-5 right-5"}`}>
       {open && (
-        <div className="w-[320px] max-w-[calc(100vw-40px)] bg-[#fffcf7] p-4 shadow-xl ring-1 ring-black/10" role="dialog" aria-label="Customer service chat">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em]">Customer service</p>
-            <button aria-label="Close chat" className="flex h-8 w-8 items-center justify-center text-lg leading-none text-neutral-600" onClick={() => setOpen(false)}>×</button>
-          </div>
-          {settings.chatWelcome ? <p className="mt-2 text-sm leading-6">{settings.chatWelcome}</p> : null}
-          <p className="mt-2 text-sm leading-6 text-neutral-700">{settings.serviceHours}<br /><a aria-label="Call customer service from chat" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
-          {msgs.length > 0 && (
-            <div className="mt-3 max-h-48 space-y-2 overflow-y-auto border-t border-[#f6f1eb] pt-3">
-              {msgs.map((m) => (
-                <p key={m.id} className={`max-w-[85%] px-3 py-2 text-sm leading-5 ${m.from === "customer" ? "ml-auto bg-black text-white" : "bg-[#f6f1eb] text-black"}`}>{m.text}</p>
-              ))}
+        <>
+          <button aria-label="Close the live chat with an advisor" className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-lg leading-none text-neutral-600 shadow-lg ring-1 ring-black/10" onClick={closePanel}>×</button>
+          <div className="w-[390px] max-w-[calc(100vw-40px)] bg-white p-4 shadow-xl ring-1 ring-black/10" role="dialog" aria-label="Message">
+            <div className="flex items-center justify-between">
+              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em]">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5Z" /><path d="M8 10.5h8M8 13.5h5" /></svg>
+                Message
+              </p>
+              <button aria-label="Collapse live chat" className="flex h-8 w-8 items-center justify-center text-neutral-600" onClick={closePanel}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+              </button>
             </div>
-          )}
-          <p className="mt-3 text-[11px] leading-5 text-neutral-600">By using our Live Chat, you accept the use of your personal data by Hermès of Paris in order to respond to your requests about a product or service and to enhance the customer experience. To find out more about the management of your personal data and your rights, please see our <button type="button" aria-label="Privacy Policy" className="underline" onClick={() => { setOpen(false); go({ t: "page", page: "privacy" }); }}>Privacy Policy</button>.</p>
-          <div className="mt-3 flex gap-2">
-            <input aria-label="Type your message" className="min-w-0 flex-1 border border-black/20 bg-white px-3 py-2.5 text-sm outline-none" placeholder="Type your message" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void send(); }} />
-            <button aria-label="Send chat message" className="bg-black px-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => void send()}>Send</button>
+            {stage === "consent" && (
+              <div role="alertdialog" aria-label="Live chat consent">
+                <p className="mt-2 text-sm leading-6 text-neutral-700">By using our Live Chat, you accept the use of your personal data by Hermès of Paris in order to respond to your requests about a product or service and to enhance the customer experience. To find out more about the management of your personal data and your rights, please see our <button type="button" aria-label="Privacy Policy" className="underline" onClick={() => { closePanel(); go({ t: "page", page: "privacy" }); }}>Privacy Policy</button>.</p>
+                <button aria-label="Continue to live chat" className="mx-auto mt-5 block border border-black px-8 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={continueChat}>Continue</button>
+              </div>
+            )}
+            {stage === "loading" && (
+              <div className="flex items-center justify-center py-16" aria-label="Loading live chat">
+                <span className="h-8 w-8 animate-spin rounded-full border-2 border-black/15 border-t-black" aria-hidden="true" />
+              </div>
+            )}
+            {stage === "chat" && (
+              <>
+                <div className="mt-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-neutral-500"><span className="h-px flex-1 bg-black/10" aria-hidden="true" />Today<span className="h-px flex-1 bg-black/10" aria-hidden="true" /></div>
+                <div className="mt-3 max-h-[50vh] space-y-2 overflow-y-auto">
+                  <div className="max-w-[85%] bg-[#f6f1eb] px-3 py-2 text-sm leading-5">
+                    Welcome to Hermès.com Live Chat! We are delighted to assist you and a Client Specialist will be with you shortly.
+                    <p className="mt-1 text-right text-[10px] text-neutral-500">{chatOpenedAt}</p>
+                  </div>
+                  <div className="max-w-[85%] bg-[#f6f1eb] px-3 py-2 text-sm leading-5">
+                    Thank you for visiting Hermes.com! How may I assist you today?
+                    <p className="mt-1 text-right text-[10px] text-neutral-500">{chatOpenedAt}</p>
+                  </div>
+                  {msgs.map((m) => m.from === "customer" ? (
+                    <div key={m.id} className="ml-auto max-w-[85%] text-right">
+                      <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-500">You</p>
+                      <p className="bg-black px-3 py-2 text-left text-sm leading-5 text-white">{m.text}</p>
+                      <p className="mt-0.5 text-[10px] text-neutral-500">{fmtTime(m.createdAt)}</p>
+                    </div>
+                  ) : (
+                    <div key={m.id} className="max-w-[85%] bg-[#f6f1eb] px-3 py-2 text-sm leading-5">
+                      {m.text}
+                      <p className="mt-1 text-right text-[10px] text-neutral-500">{fmtTime(m.createdAt)}</p>
+                    </div>
+                  ))}
+                </div>
+                <form aria-label="Send a message to an advisor" className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); void send(); }}>
+                  <input aria-label="Your message" required className="min-w-0 flex-1 border border-black/20 bg-white px-3 py-2.5 text-sm outline-none" placeholder="Your message" value={draft} onChange={(e) => setDraft(e.target.value)} />
+                  <button aria-label="Send" type="submit" className="flex w-11 shrink-0 items-center justify-center bg-black text-white">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M21 3 10.5 13.5M21 3l-7 18-3.5-7.5L3 10l18-7Z" /></svg>
+                  </button>
+                </form>
+              </>
+            )}
           </div>
-          {sent && <p className="mt-2 text-xs text-neutral-600" role="status">Thank you — your message has been sent.</p>}
-          <button aria-label="Contact us from chat" className="mt-3 w-full bg-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => { setOpen(false); go({ t: "page", page: "contact" }); }}>Contact us</button>
-        </div>
+        </>
       )}
-      <button aria-label="Customer service chat" aria-expanded={open} className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-black/10" onClick={toggle}>
+      <button aria-label="Open a Live Chat with an advisor" aria-expanded={open} className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-black/10" onClick={() => { if (open) closePanel(); else openPanel(); }}>
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5Z" /><path d="M8 10.5h8M8 13.5h5" /></svg>
       </button>
+      {!open && closedNote === "closed" && <p className="text-[11px] text-neutral-600">Live chat support closed</p>}
+      {!open && closedNote === "new" && <p className="text-[11px] text-neutral-600">New message from Live chat support</p>}
     </div>
   );
 }
@@ -2682,48 +2807,109 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   // Create-account form (Hermes create-account page layout).
   const [suTitle, setSuTitle] = useState(""); const [suFirst, setSuFirst] = useState(""); const [suLast, setSuLast] = useState("");
   const [suEmail, setSuEmail] = useState(""); const [suCode, setSuCode] = useState(""); const [suShowCode, setSuShowCode] = useState(false);
-  const [suPw, setSuPw] = useState(""); const [suArea, setSuArea] = useState("US +1"); const [suPhone, setSuPhone] = useState(""); const [suDob, setSuDob] = useState("");
+  const [suPw, setSuPw] = useState(""); const [suShowPw, setSuShowPw] = useState(false); const [suArea, setSuArea] = useState("US +1"); const [suPhone, setSuPhone] = useState(""); const [suDobMonth, setSuDobMonth] = useState(""); const [suDobDay, setSuDobDay] = useState(""); const [suDobYear, setSuDobYear] = useState(""); const [suMarketing, setSuMarketing] = useState(false);
   const [suMsg, setSuMsg] = useState(""); const [sentCode, setSentCode] = useState("");
   const login = useMutation({ mutationFn: () => api.loginUser({ email: liEmail, password: liPw }), onSuccess: (r) => { setLiMsg(r.message); if (r.ok) setUser({ name: r.name, email: liEmail }); } });
-  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) setUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail }); } });
+  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobDisplay = suDobMonth && suDobDay && suDobYear ? `${monthNames[Number(suDobMonth) - 1] ?? ""} ${Number(suDobDay)}, ${suDobYear}` : ""; save("hlx-profile", { phone: `${areaDigits} ${digits}`, dob: dobDisplay }); setUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail }); } } });
   const ordersQ = useQuery({ queryKey: ["myorders", user?.email], queryFn: () => api.myOrders({ email: user?.email ?? "" }), enabled: !!user });
-  const extrasQ = useQuery({ queryKey: ["myextras", user?.email], queryFn: () => api.myExtras({ email: user?.email ?? "" }), enabled: !!user });
-  const [retMsg, setRetMsg] = useState("");
-  const retMut = useMutation({ mutationFn: (oid: number) => api.requestReturn({ orderId: oid, email: user?.email ?? "", reason: "Return requested from My Orders" }), onSuccess: (r) => { setRetMsg(r.message); extrasQ.refetch(); } });
+  // Signed-in account tabs (§D addendum): exactly five, in this order.
+  const [acctTab, setAcctTab] = useState<"orders" | "profile" | "addresses" | "payments" | "reservations">("orders");
+  const [acctNote, setAcctNote] = useState("");
   if (user) {
+    // Phone / date of birth entered at sign-up (saved locally on
+    // registration — the clone's account record holds name + email only).
+    const savedProfile = load<{ phone?: string; dob?: string }>("hlx-profile", {});
+    const savedAddresses = [...new Set((ordersQ.data?.orders ?? []).map((o) => o.address).filter(Boolean))];
+    const tabs: { key: typeof acctTab; label: string }[] = [
+      { key: "orders", label: "Order history" },
+      { key: "profile", label: "Profile information" },
+      { key: "addresses", label: "Address book" },
+      { key: "payments", label: "Payments" },
+      { key: "reservations", label: "E-reservations" },
+    ];
     return (
-      <div className="mx-auto max-w-3xl px-4 py-12">
-        <h1 className="font-serif-d text-3xl italic">Welcome, {user.name}</h1>
-        <p className="mt-2 text-sm text-neutral-600">{user.email}</p>
-        <h2 className="mt-8 text-xs font-semibold uppercase tracking-[0.25em]">Your orders</h2>
-        {ordersQ.data?.orders.length === 0 && <p className="mt-3 text-sm text-neutral-600">No orders yet. Your order history will appear here.</p>}
-        {ordersQ.data?.orders.map((o) => {
-          let items: { name: string; qty: number; price: number }[] = [];
-          try { items = JSON.parse(o.items) as typeof items; } catch { items = []; }
-          return (
-            <div key={o.id} className="mt-3 border border-black/10 bg-[#fffcf7] p-4">
-              <p className="text-sm font-medium">Order #{o.id} — {fmt(o.total)} — <span className="uppercase tracking-wider">{o.status}</span></p>
-              <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString()}</p>
-              {items.map((it, i) => <p key={i} className="mt-1 text-sm text-neutral-700">{it.qty} × {it.name} — {fmt(it.price * it.qty)}</p>)}
-              {o.status !== "Cancelled" && <button aria-label={`Request return for order ${o.id}`} className="mt-2 text-xs uppercase tracking-[0.18em] underline" onClick={() => retMut.mutate(o.id)}>Request return</button>}
-            </div>
-          );
-        })}
-        {retMsg && <p className="mt-4 text-sm" role="status">{retMsg}</p>}
-        <h2 className="mt-10 text-xs font-semibold uppercase tracking-[0.25em]">Profile & addresses</h2>
-        <p className="mt-2 text-sm text-neutral-700">{user.name} — {user.email}</p>
-        {[...new Set((ordersQ.data?.orders ?? []).map(o => o.address).filter(Boolean))].map((a, i) => <p key={i} className="mt-1 text-sm text-neutral-600">Saved address: {a}</p>)}
-        {[...new Set((ordersQ.data?.orders ?? []).map(o => o.address).filter(Boolean))].length === 0 && <p className="mt-1 text-sm text-neutral-600">No saved address yet — your checkout address will appear here.</p>}
-        <h2 className="mt-10 text-xs font-semibold uppercase tracking-[0.25em]">Wishlist</h2>
-        {(extrasQ.data?.wishlist.length ?? 0) === 0 && <p className="mt-2 text-sm text-neutral-600">Your wishlist is empty. Use “Add to wishlist” on a product page.</p>}
-        {extrasQ.data?.wishlist.map(w => <button key={w.id} aria-label={`Wishlist ${w.productName}`} className="mt-1 block text-sm underline" onClick={() => go({ t: "product", id: w.productId })}>{w.productName}</button>)}
-        <h2 className="mt-10 text-xs font-semibold uppercase tracking-[0.25em]">Notify Me list</h2>
-        {(extrasQ.data?.notify.length ?? 0) === 0 && <p className="mt-2 text-sm text-neutral-600">No Notify Me requests yet.</p>}
-        {extrasQ.data?.notify.map(n => <p key={n.id} className="mt-1 text-sm text-neutral-700">{n.productName}</p>)}
-        {(extrasQ.data?.returns.length ?? 0) > 0 && <><h2 className="mt-10 text-xs font-semibold uppercase tracking-[0.25em]">Returns</h2>{extrasQ.data?.returns.map(r => <p key={r.id} className="mt-1 text-sm text-neutral-700">Order #{r.orderId} — {r.status}</p>)}</>}
-        <div className="mt-8 flex gap-3">
-          <button aria-label="Continue shopping from account" className="bg-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "home" })}>Continue shopping</button>
-          <button aria-label="Sign out" className="border border-black px-8 py-3 text-[11px] uppercase tracking-[0.25em]" onClick={() => setUser(null)}>Sign out</button>
+      <div className="mx-auto max-w-5xl px-4 py-12">
+        <h1 className="font-mono-d text-xs font-medium uppercase tracking-normal">Account</h1>
+        <div className="mt-8 grid gap-10 lg:grid-cols-[220px_1fr]">
+          <nav aria-label="Account">
+            <ul className="space-y-1">
+              {tabs.map((t) => (
+                <li key={t.key}>
+                  <button aria-label={`Account ${t.label}`} aria-current={acctTab === t.key || undefined} className={`w-full px-3 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.22em] ${acctTab === t.key ? "bg-black text-white" : "hover:bg-black/5"}`} onClick={() => { setAcctTab(t.key); setAcctNote(""); }}>{t.label}</button>
+                </li>
+              ))}
+            </ul>
+            <button aria-label="Sign out" className="mt-6 border border-black px-8 py-3 text-[11px] uppercase tracking-[0.25em]" onClick={() => setUser(null)}>Sign out</button>
+          </nav>
+          <div>
+            {acctTab === "orders" && (
+              <>
+                <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Order history</h2>
+                {(ordersQ.data?.orders.length ?? 0) === 0 ? (
+                  <>
+                    <p className="mt-4 text-sm text-neutral-700">Nothing&apos;s tickled your fancy yet?</p>
+                    <button aria-label="Continue shopping from account" className="mt-6 bg-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "home" })}>Continue shopping</button>
+                  </>
+                ) : (
+                  ordersQ.data?.orders.map((o) => {
+                    let items: { name: string; qty: number; price: number }[] = [];
+                    try { items = JSON.parse(o.items) as typeof items; } catch { items = []; }
+                    return (
+                      <div key={o.id} className="mt-3 border border-black/10 bg-[#fffcf7] p-4">
+                        <p className="text-sm font-medium">Order #{o.id} — {fmt(o.total)} — <span className="uppercase tracking-wider">{o.status}</span></p>
+                        <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString()}</p>
+                        {items.map((it, i) => <p key={i} className="mt-1 text-sm text-neutral-700">{it.qty} × {it.name} — {fmt(it.price * it.qty)}</p>)}
+                      </div>
+                    );
+                  })
+                )}
+              </>
+            )}
+            {acctTab === "profile" && (
+              <>
+                <div className="flex items-start justify-between gap-4">
+                  <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Profile information</h2>
+                  <button aria-label="Edit profile information" className="flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] underline" onClick={() => setAcctNote("Profile editing is not available in this demo — please contact customer service to update your details.")}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z" /></svg>
+                    Edit
+                  </button>
+                </div>
+                <dl className="mt-6 space-y-4 text-sm">
+                  <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Name</dt><dd className="mt-1">{user.name}</dd></div>
+                  <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">E-mail</dt><dd className="mt-1">{user.email}</dd></div>
+                  <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Telephone number</dt><dd className="mt-1">{savedProfile.phone || "Not provided"}</dd></div>
+                  <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Date of birth</dt><dd className="mt-1">{savedProfile.dob || "Not provided"}</dd></div>
+                  <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Password</dt><dd className="mt-1">*********</dd></div>
+                </dl>
+                <p className="mt-6 text-sm text-neutral-700">You are not subscribed to the Hermès newsletter.</p>
+                {acctNote && <p className="mt-4 text-sm text-neutral-600" role="status">{acctNote}</p>}
+              </>
+            )}
+            {acctTab === "addresses" && (
+              <>
+                <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Address book</h2>
+                {savedAddresses.length === 0 ? (
+                  <p className="mt-4 text-sm text-neutral-700">There is no address saved yet.</p>
+                ) : (
+                  savedAddresses.map((a, i) => <p key={i} className="mt-4 text-sm text-neutral-700">{a}</p>)
+                )}
+                <button aria-label="Add an address" className="mt-6 bg-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => setAcctNote("Add an address at checkout — your delivery address will be saved here.")}>Add an address</button>
+                {acctNote && <p className="mt-4 text-sm text-neutral-600" role="status">{acctNote}</p>}
+              </>
+            )}
+            {acctTab === "payments" && (
+              <>
+                <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Payments</h2>
+                <p className="mt-4 text-sm text-neutral-700">You did not store card information.</p>
+              </>
+            )}
+            {acctTab === "reservations" && (
+              <>
+                <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">E-reservations</h2>
+                <p className="mt-4 text-sm text-neutral-700">You do not have e-reservations in your account.</p>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -2753,6 +2939,10 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     if (!suFirst.trim() || !suLast.trim()) return setSuMsg("Please enter your first and last name.");
     const digits = suPhone.replace(/\D/g, "").replace(/^1/, "");
     if (!/^\d{10}$/.test(digits)) return setSuMsg("Please enter a 10-digit telephone number.");
+    const dobDate = new Date(Number(suDobYear), Number(suDobMonth) - 1, Number(suDobDay));
+    const dobValid = suDobMonth && suDobDay && suDobYear && dobDate.getFullYear() === Number(suDobYear) && dobDate.getMonth() === Number(suDobMonth) - 1 && dobDate.getDate() === Number(suDobDay);
+    const ageYears = dobValid ? (Date.now() - dobDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000) : 0;
+    if (!dobValid || ageYears < 18) return setSuMsg("Please enter a valid date of birth to confirm that you are at least 18 years of age.");
     setSuMsg("");
     reg.mutate();
   };
@@ -2762,8 +2952,9 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   if (authMode === "login") {
     return (
       <div className="mx-4 my-10 max-w-md bg-[#fffcf7] px-6 py-10 sm:mx-auto sm:px-8">
-        <h1 className="font-mono-d text-center text-xs font-medium uppercase tracking-normal">Sign in</h1>
-        <p className="mt-4 text-center text-sm leading-6 text-neutral-700">{emailStep ? "Please enter your email below to sign in to your account." : `Welcome back — please enter your password for ${liEmail}.`}</p>
+        <h1 className="font-mono-d text-center text-xs font-medium uppercase tracking-normal">Account</h1>
+        <p className="mt-4 text-center text-sm leading-6 text-neutral-700">Please enter your email below to access or create your account</p>
+        <p className="mt-2 text-center text-sm leading-6 text-neutral-700">Please insert your email to receive your order confirmation. If you have already registered with us, your password will be requested.</p>
         <div className="mt-6 space-y-4">
           <label className={lab}>E-mail *
             <input aria-label="Sign in email" type="email" className={underline} value={liEmail} disabled={!emailStep} onChange={(e) => setLiEmail(e.target.value)} />
@@ -2786,7 +2977,6 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
         )}
         <button aria-label="Forgot password" className="mt-4 w-full text-center text-xs uppercase tracking-[0.2em] underline" onClick={() => setForgotMsg("This standalone build has no email service, so password reset is unavailable — please create a new account or contact customer service.")}>Forgot your password?</button>
         {forgotMsg && <p className="mt-3 text-center text-xs leading-5 text-neutral-600" role="status">{forgotMsg}</p>}
-        <p className="mt-6 text-center text-sm text-neutral-700">New to Hermès? <button aria-label="Go to create account" className="underline" onClick={() => { setAuthMode("signup"); setLiMsg(""); setForgotMsg(""); setEmailStep(true); }}>Create an account</button></p>
         <p className="mt-8 border-t border-black/10 pt-4 text-center text-xs text-neutral-500">Store admin? <button aria-label="Sign in to Admin Panel" className="underline" onClick={() => go({ t: "admin" })}>Sign in to Admin Panel</button></p>
       </div>
     );
@@ -2796,6 +2986,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   // Personal information), then the create button.
   return (
     <div className="mx-4 my-10 max-w-4xl bg-[#fffcf7] px-6 py-10 sm:mx-auto sm:px-8">
+      <h1 className="font-mono-d mb-6 text-center text-xs font-medium uppercase tracking-normal">Create an account</h1>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <p className="max-w-2xl text-sm leading-6 text-neutral-700">By creating an account, you agree to accept the <button aria-label="General Terms and Conditions of Use" className="underline" onClick={() => go({ t: "page", page: "terms" })}>General Terms and Conditions of Use</button> and that your data will be processed in compliance with the <button aria-label="Privacy Policy" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button> of Hermès.</p>
         <p className="shrink-0 text-xs text-neutral-500">* Required information</p>
@@ -2812,13 +3003,14 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
           </label>
           {sentCode && <p className="mt-3 border border-black/15 bg-[#f6f1eb] px-3 py-2 text-xs leading-5 text-neutral-800" role="status">Demo code — this standalone build has no email service, so no email is sent. Your code is <strong>{sentCode}</strong>; enter it in Verification code below.</p>}
           <label className={`${lab} mt-5`}>Verification code *
-            <input aria-label="Verification code" type={suShowCode ? "text" : "password"} inputMode="numeric" className={underline} value={suCode} onChange={(e) => setSuCode(e.target.value)} />
+            <input aria-label="Verification code" type={suShowCode ? "text" : "password"} inputMode="numeric" className={underline} value={suCode} onChange={(e) => setSuCode(e.target.value)} disabled={!sentCode} />
             <span className={hint}>Expected format: 123456</span>
           </label>
           <button aria-label={suShowCode ? "Hide verification code" : "Show verification code"} type="button" className="mt-1 block w-full text-right text-xs uppercase tracking-[0.15em] underline" onClick={() => setSuShowCode(!suShowCode)}>{suShowCode ? "Hide" : "Show"}</button>
           <label className={`${lab} mt-5`}>Password *
-            <input aria-label="Create account password" type="password" className={underline} value={suPw} onChange={(e) => setSuPw(e.target.value)} />
+            <input aria-label="Create account password" type={suShowPw ? "text" : "password"} className={underline} value={suPw} onChange={(e) => setSuPw(e.target.value)} />
           </label>
+          <button aria-label={suShowPw ? "Hide password" : "Show password"} type="button" className="mt-1 block w-full text-right text-xs uppercase tracking-[0.15em] underline" onClick={() => setSuShowPw(!suShowPw)}>{suShowPw ? "Hide" : "Show"}</button>
           <div className="mt-3 bg-[#f6f1eb] px-4 py-3">
             <p className="text-xs leading-5 text-neutral-700">For your security, we invite you to fill your password according to the following criteria:</p>
             <ul className="mt-2 space-y-1 text-xs text-neutral-700">
@@ -2852,15 +3044,30 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
             <label className={`${lab} min-w-0 flex-1`}>Telephone number *
               <input aria-label="Telephone number" type="tel" className={underline} value={suPhone} onChange={(e) => setSuPhone(e.target.value)} />
               <span className={hint}>Expected format: phone number with 10 digits</span>
+              <span className={hint}>Minimum 10 numbers</span>
+              <span className={hint}>Numbers only</span>
             </label>
           </div>
-          <label className={`${lab} mt-5`}>Date of birth
-            <input aria-label="Date of birth" type="date" className={underline} value={suDob} onChange={(e) => setSuDob(e.target.value)} />
-          </label>
+          <div className="mt-5">
+            <span className={lab}>Date of birth *</span>
+            <span className="mt-1 flex gap-3">
+              <select aria-label="Birth month" className={`${underline} min-w-0 flex-1`} value={suDobMonth} onChange={(e) => setSuDobMonth(e.target.value)}>
+                <option value="">Month</option>
+                {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, i) => <option key={m} value={String(i + 1)}>{m}</option>)}
+              </select>
+              <input aria-label="Birth day" type="text" inputMode="numeric" placeholder="Day" className={`${underline} w-16`} value={suDobDay} onChange={(e) => setSuDobDay(e.target.value.replace(/\D/g, "").slice(0, 2))} />
+              <input aria-label="Birth year" type="text" inputMode="numeric" placeholder="Year" className={`${underline} w-20`} value={suDobYear} onChange={(e) => setSuDobYear(e.target.value.replace(/\D/g, "").slice(0, 4))} />
+            </span>
+            <span className={hint}>Please enter a valid date of birth to confirm that you are at least 18 years of age</span>
+          </div>
         </div>
       </div>
+      <label className="mt-8 flex cursor-pointer items-start gap-2.5 text-sm leading-6 text-neutral-700">
+        <input type="checkbox" aria-label="Receive marketing information from Hermès" checked={suMarketing} onChange={(e) => setSuMarketing(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-black" />
+        <span>I agree to receive information about offers, services, products and events from Hermès Sellier and other Hermès group companies via phone, email, instant messaging, and mail, in accordance with the Privacy Policy. I can update my communication preferences anytime through my customer account and opt out of commercial email messages by clicking the &ldquo;Unsubscribe&rdquo; link located at the bottom of each email.</span>
+      </label>
       {suMsg && <p className="mt-6 text-sm text-red-700" role="status">{suMsg}</p>}
-      <button aria-label="Create my account" className="mt-8 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white sm:mx-auto sm:block sm:w-80" onClick={submitSignup}>Create my account</button>
+      <button aria-label="Create an account" className="mt-8 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white sm:mx-auto sm:block sm:w-80" onClick={submitSignup}>Create an account</button>
       <p className="mt-6 text-center text-sm text-neutral-700">Already have an account? <button aria-label="Go to sign in" className="underline" onClick={() => { setAuthMode("login"); setSuMsg(""); setEmailStep(true); }}>Sign in</button></p>
       <p className="mt-8 border-t border-black/10 pt-4 text-center text-xs text-neutral-500">Store admin? <button aria-label="Sign in to Admin Panel" className="underline" onClick={() => go({ t: "admin" })}>Sign in to Admin Panel</button></p>
     </div>
