@@ -924,15 +924,22 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
       {/* BOARD e) KELLY EDITORIAL — full-bleed photographic board, as on
           hermes.com: two stacked gold Kelly RINGS (one plain, one pavé-set
           with diamonds) on an orange background; the whole image is a link
-          to Jewelry, as on the original. */}
+          to Jewelry, as on the original. The image is shown at its natural
+          aspect ratio (9:16 mobile / 16:9 desktop) — NO fixed height, NO
+          object-cover crop — so the rings sit in the middle of the frame
+          and the text sits BELOW them on the plain orange background at
+          the bottom, exactly as on the original. A fixed height (e.g.
+          h-[62vh]) crops the image and pushes the rings down into the
+          text. The text is NOT given a dark gradient: the original puts
+          white text straight on the orange image. */}
       <section className="relative cursor-pointer overflow-hidden" style={{ background: "#2e1c11" }} onClick={() => go({ t: "category", cat: "jewelry" })} aria-label="The Kelly story — discover the collection">
         <picture>
           <source media="(max-width: 640px)" srcSet={kellyRingsImgMobile} />
-          <img src={kellyRingsImg} alt="Two gold Kelly rings, one pavé-set with diamonds, on an orange background" className="h-[62vh] w-full object-cover" />
+          <img src={kellyRingsImg} alt="Two gold Kelly rings, one pavé-set with diamonds, on an orange background" className="block w-full" />
         </picture>
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent pb-12 pt-24 text-center text-white">
-          <p className="font-serif-d mx-auto max-w-2xl px-4 text-2xl italic leading-snug sm:text-3xl">With each new collection, the Kelly story reinvents itself and reveals new depths. A legendary design, constantly in motion.</p>
-          <button aria-label="Discover the Kelly collection" className="mt-5 text-xs font-semibold uppercase tracking-[0.3em] underline underline-offset-8" onClick={() => go({ t: "category", cat: "jewelry" })}>Discover the collection</button>
+        <div className="absolute inset-x-0 bottom-0 pb-10 pt-8 text-center text-white sm:pb-12">
+          <p className="font-serif-d mx-auto max-w-3xl px-4 text-2xl italic leading-snug sm:text-[28px]">With each new collection, the Kelly story reinvents itself and reveals new depths. A legendary design, constantly in motion.</p>
+          <button aria-label="Discover the Kelly collection" className="mt-4 text-xs font-semibold uppercase tracking-[0.3em] underline underline-offset-8" onClick={() => go({ t: "category", cat: "jewelry" })}>Discover the collection</button>
         </div>
       </section>
     </div>

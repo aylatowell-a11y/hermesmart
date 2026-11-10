@@ -135,7 +135,14 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   // or keep this key as-is until the rename is applied.)
   "Neo Double Sens 35 bicolor bag":
     "https://assets.hermes.com/is/image/hermesproduct/089099CAAD_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  "Kelly Pocket 18 belt": kellyPocket18Belt,
+  // Original Hermes photo, hotlinked (CDN probe 2026-11-10). Kelly Pocket 18
+  // belt, Noir, ref H081120CK89 ($2,150) — verified: black Epsom belt with
+  // pocket + silver Kelly clasp. The generated tile showed a coiled belt
+  // with a gold buckle and no pocket (wrong product). NOTE: data.ts
+  // description says "yellow gold plated band" but the ref's photo +
+  // metallicFinish are Argenté (silver) — copy flag, see id 13.
+  "Kelly Pocket 18 belt":
+    "https://assets.hermes.com/is/image/hermesproduct/081120CK89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   // Original Hermes photo, hotlinked (user instruction 2026-11-09; CDN probe
   // 2026-11-10). Collier de Chien 50 belt, Rouge H, ref H010439CK55080
   // (US $4,975) — verified: red Box-calfskin strap, palladium CDC hardware.

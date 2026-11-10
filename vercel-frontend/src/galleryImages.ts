@@ -25,10 +25,6 @@
 // Hermes HLS stream — the HLS hotlink froze on its poster in the browser,
 // so it was replaced 2026-11-10). Each clip's poster frame was visually
 // confirmed to show the correct dress.
-import kellyFront from "./assets/gallery/kelly-belt-front.webp";
-import kellyWorn from "./assets/gallery/kelly-belt-worn.webp";
-import kellyFront2 from "./assets/gallery/kelly-belt-front2.webp";
-import kellyDetail from "./assets/gallery/kelly-belt-detail.webp";
 import kellyVertFront from "./assets/gallery/kelly-belt-vert-front.webp";
 import kellyVertWorn from "./assets/gallery/kelly-belt-vert-worn.webp";
 import kellyVertFront2 from "./assets/gallery/kelly-belt-vert-front2.webp";
@@ -121,7 +117,20 @@ export type GalleryProduct = {
 const V = (label: string, src: string, videoSrc?: string) => ({ label, src, videoSrc });
 
 // Audited products — exact view sets from the verified per-view specs.
-const KELLY_NOIR = [V("Front", kellyFront), V("Worn", kellyWorn), V("Front", kellyFront2), V("Detail", kellyDetail)];
+// Kelly Pocket 18 belt, Noir — ORIGINAL Hermes photos, hotlinked. Ref
+// H081120CK89, Epsom calfskin, $2,150. All 4 views verified (HTTP 200 +
+// viewed 2026-11-10): Front = black belt with pocket + silver Kelly clasp;
+// Worn = model wearing it; Front = belt + detached pocket; Detail =
+// close-up of the silver clasp + HERMÈS engraving. Matches data.ts
+// galleryViews ["Front","Worn","Front","Detail"] exactly. Replaces the
+// generated kelly-belt-*.webp set (which showed a coiled belt with a gold
+// buckle and no pocket — wrong product).
+const KELLY_NOIR = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/081120CK89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/081120CK89_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/081120CK89_front_wm_103?wid=750&hei=1000&fit=fit&$product_default_bg$"),
+  V("Detail", "https://assets.hermes.com/is/image/hermesproduct/081120CK89_detail_wm_104?wid=750&hei=1000&fit=fit&$product_default_bg$"),
+];
 const KELLY_VERT = [V("Front", kellyVertFront), V("Worn", kellyVertWorn), V("Front", kellyVertFront2), V("Detail", kellyVertDetail)];
 const KELLY_ETOUPE = [V("Front", kellyEtoupeFront), V("Worn", kellyEtoupeWorn), V("Front", kellyEtoupeFront2), V("Detail", kellyEtoupeDetail)];
 
