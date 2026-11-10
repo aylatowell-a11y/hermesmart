@@ -643,7 +643,7 @@ export function App() {
             </div>
           ))}
           {menuCat && (() => { const entry = mega.find(e => e.key === menuCat); if (!entry) return null; const cols = entry.key === "women" ? MEGA_DESKTOP_WOMEN : entry.columns; return (
-            <div className="absolute inset-x-0 top-full z-50 border-t border-black/10 bg-white shadow-[0_24px_40px_rgba(0,0,0,0.12)]" role="menu" aria-label={`${entry.label} mega menu`} onMouseEnter={() => setMenuCat(entry.key)}>
+            <div className="absolute inset-x-0 top-full z-50 border-t border-black/10 bg-[#fffcf7] shadow-[0_24px_40px_rgba(0,0,0,0.12)]" role="menu" aria-label={`${entry.label} mega menu`} onMouseEnter={() => setMenuCat(entry.key)}>
               <div className="mx-auto flex max-w-7xl gap-10 px-6 py-8">
                 <button aria-label={`${entry.label} ${entry.caption}`} className="relative block h-[340px] w-[260px] shrink-0 overflow-hidden text-left" onClick={() => go(megaTarget(entry, navOverrides, entry.columns[0]?.[0]?.heading || "", entry.columns[0]?.[0]?.items[0]))}>
                   <img src={megaImage(entry)} alt={entry.caption} className="h-full w-full object-cover" />
@@ -671,7 +671,7 @@ export function App() {
 
       {mobileNav && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-label="Menu">
-          <div className="drawer-left flex h-full w-full flex-col overflow-y-auto bg-white">
+          <div className="drawer-left flex h-full w-full flex-col overflow-y-auto bg-[#fffcf7]">
             <div className="flex items-center justify-between px-5 pb-1 pt-5">
               <span className="text-xs uppercase tracking-[0.28em]">Menu</span>
               <button aria-label="Close menu" className="flex h-10 w-10 items-center justify-center" onClick={() => setMobileNav(false)}>
@@ -1060,6 +1060,89 @@ function colorFamily(name: string): string {
   return "Others";
 }
 
+// ---- Filter-facet derivations (verified from hermes.com's served facet
+// JSONs for women's belts + men's shoes, 2026-11-10; counts are always OUR
+// catalogue's, never the original's) ----
+// Belts Width buckets — the facet JSON's own value lists map the mm widths:
+// Extra narrow = extra_fin/13mm, Narrow = fin/24mm, Wide = large/32/38/40mm,
+// Extra wide = extra_large/50mm. 18mm (Kelly Pocket 18) is an extra-fine
+// width, so it joins Extra narrow.
+function beltWidthBucket(modelSize: string): string {
+  const m = parseInt(modelSize, 10);
+  if (Number.isNaN(m)) return "";
+  if (m <= 18) return "Extra narrow";
+  if (m <= 24) return "Narrow";
+  if (m <= 40) return "Wide";
+  return "Extra wide";
+}
+// A belt kit is a buckle + a strap sold together ("buckle & ... strap") —
+// the original's Customizable / Personalize: Yes products.
+function isBeltKit(p: { name: string }): boolean { return /buckle &/i.test(p.name); }
+// Belts Universe — kit belts by their width, complete belts under "Belts".
+// (Kit widths other than 13/24/32mm have no Universe option on the original;
+// those rows simply carry no Universe value, as on hermes.com.)
+function beltUniverse(p: { name: string; modelSize: string }): string {
+  if (!isBeltKit(p)) return "Belts";
+  const m = parseInt(p.modelSize, 10);
+  if (m === 13 || m === 24 || m === 32) return `${m} mm kit belt`;
+  return "";
+}
+// Men's-shoes type from the product name (the original's Category facet for
+// men's shoes is the shoe type, not our flat "Shoes" subcategory).
+function shoeType(p: { name: string }): string {
+  const n = p.name.toLowerCase();
+  if (/sneaker/.test(n)) return "Sneakers";
+  if (/sandal/.test(n)) return "Sandals";
+  if (/espadrille/.test(n)) return "Espadrilles";
+  if (/boot/.test(n)) return "Ankle boots";
+  if (/derby/.test(n)) return "Derbies";
+  if (/oxford/.test(n)) return "Oxford shoes";
+  if (/loafer/.test(n)) return "Loafers";
+  if (/mule/.test(n)) return "Mules";
+  return "Shoes";
+}
+// Men's-shoes Universe — the coarser grouping of the same types.
+function shoeUniverse(p: { name: string }): string {
+  const t = shoeType(p);
+  if (t === "Loafers" || t === "Mules") return "Loafers and mules";
+  if (t === "Derbies" || t === "Oxford shoes") return "Derbies and oxford shoes";
+  if (t === "Ankle boots") return "Boots and ankle boots";
+  return t;
+}
+// Metallic finish families — the original's facet groups finishes into
+// Silver / Yellow gold / Rose gold / Black.
+function finishFamily(f: string): string {
+  const v = (f || "").toLowerCase();
+  if (/argent|palladium|silver/.test(v)) return "Silver";
+  if (/gold plated|^gold$|yellow gold/.test(v)) return "Yellow gold";
+  if (/rose/.test(v)) return "Rose gold";
+  if (/black|noir/.test(v)) return "Black";
+  return f;
+}
+// Men's-shoes material families — the original's Material facet options.
+function materialFamily(m: string): string {
+  const v = (m || "").toLowerCase();
+  if (/shearling/.test(v)) return "Shearling";
+  if (/alligator|crocodile|python|ostrich|lizard|precious/.test(v)) return "Precious leather";
+  if (/suede/.test(v)) return "Suede leather";
+  if (/textile|canvas|fabric|twill|mesh/.test(v)) return "Textile";
+  if (/grain|textured|emboss/.test(v)) return "Textured leather";
+  return "Smooth leather";
+}
+// Colour-facet image tiles — the original's Color facet uses MAIN_COLOR_*
+// image tiles (verified HTTP 200, 2026-11-10), not flat hex circles.
+function colorMainUrl(family: string): string | null {
+  const map: Record<string, string> = {
+    "Black": "MAIN_COLOR_NOIR", "Beige/Natural": "MAIN_COLOR_BEIGE", "Red": "MAIN_COLOR_ROUGE",
+    "Brown": "MAIN_COLOR_MARRON", "Grey": "MAIN_COLOR_GRIS", "Pink": "MAIN_COLOR_ROSE",
+    "Purple": "MAIN_COLOR_VIOLET", "White": "MAIN_COLOR_BLANC", "Blue": "MAIN_COLOR_BLEU",
+    "Orange": "MAIN_COLOR_ORANGE", "Green": "MAIN_COLOR_VERT", "Yellow": "MAIN_COLOR_JAUNE",
+  };
+  const code = map[family];
+  if (!code) return null;
+  return `https://assets.hermes.com/is/image/hermesproduct/${code}?wid=100&hei=100&fit=fit`;
+}
+
 // "Product theme" carousel cards shown below every category grid, as on
 // hermes.com (15 themed link cards).
 const THEME_CARDS: { label: string; view: View }[] = [
@@ -1079,11 +1162,36 @@ const THEME_CARDS: { label: string; view: View }[] = [
   { label: "Women's watches", view: { t: "category", cat: "watches" } },
   { label: "Women's belts", view: { t: "category", cat: "women", sub: "Belts" } },
 ];
+// "Product theme" carousel — per-page themes, verified from hermes.com's
+// served category HTML (2026-11-10). The original shows 5 page-dependent
+// related categories x 3 repeats = 15 slides, each an EDITORIAL image
+// (hermesedito) with the overlay title bottom-right — NO heading, NO
+// counter, NO arrows, swipe-only. All 20 image URLs verified HTTP 200.
+// Only the two pages with verified data are mapped; other pages keep the
+// existing fixed 15-card list until their own data is fetched.
+const ED = (name: string) => `https://assets.hermes.com/is/image/hermesedito/${encodeURIComponent(name)}?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0`;
+type ThemeSlide = { label: string; imgMo: string; imgDesktop: string; view: View };
+const THEME_CAROUSEL_DATA: Record<string, ThemeSlide[]> = {
+  belts: [
+    { label: "Shoes", imgMo: ED("U_BELT_FEMME_LV2_P1_MO"), imgDesktop: ED("U_BELT_FEMME_LV2_P1_DESKTOP"), view: { t: "category", cat: "women", sub: "Shoes" } },
+    { label: "Scarves, shawls and stoles", imgMo: ED("U_BELT_FEMME_LV2_P2_MO"), imgDesktop: ED("U_BELT_FEMME_LV2_P2_DESKTOP"), view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" } },
+    { label: "Fashion jewelry", imgMo: ED("U_BELT_FEMME_LV2_P3_MO"), imgDesktop: ED("U_BELT_FEMME_LV2_P3_DESKTOP"), view: { t: "category", cat: "jewelry", sub: "Bracelets" } },
+    { label: "Ready-to-wear", imgMo: ED("U_BELT_FEMME_LV2_P4_MO"), imgDesktop: ED("U_BELT_FEMME_LV2_P4_DESKTOP"), view: { t: "category", cat: "women", sub: "Ready-to-Wear" } },
+    { label: "Small leather goods", imgMo: ED("U_BELT_FEMME_LV2_P5_MO"), imgDesktop: ED("U_BELT_FEMME_LV2_P5_DESKTOP"), view: { t: "category", cat: "leather", sub: "Small leather goods" } },
+  ],
+  menshoes: [
+    { label: "Jewelry", imgMo: ED("HSHOES-bij-homme-3_4 P1-1"), imgDesktop: ED("HSHOES-bij-homme-16_9_P1new"), view: { t: "category", cat: "jewelry" } },
+    { label: "Scarves", imgMo: ED("HSHOES-soie homme 34 P2-1"), imgDesktop: ED("HSHOES-soie homme 169 P2-1"), view: { t: "category", cat: "men", sub: "Scarves, shawls and stoles" } },
+    { label: "Ready-to-wear", imgMo: ED("HSHOES-Pap homme 34 P3-1"), imgDesktop: ED("HSHOES-Pap homme 169 P3-1"), view: { t: "category", cat: "men", sub: "Ready-to-Wear" } },
+    { label: "Timepieces", imgMo: ED("HSHOES-horlo-homme-3_4_P4-1"), imgDesktop: ED("HSHOES-horlo-homme-16_9_P4-1"), view: { t: "category", cat: "watches" } },
+    { label: "Hats and gloves", imgMo: ED("HSHOES-gants chapeaux homme 34 P5-1"), imgDesktop: ED("HSHOES-gants chapeaux homme 169 P5-1"), view: { t: "category", cat: "men", sub: "Hats and gloves" } },
+  ],
+};
 const MOSAIC_ASPECTS = ["aspect-[3/4]", "aspect-square", "aspect-[4/5]", "aspect-[4/3]", "aspect-[3/4]", "aspect-[5/6]", "aspect-square"];
 
-type FGroup = "category" | "line" | "material" | "modelSize" | "finish" | "size" | "color";
+type FGroup = "category" | "line" | "material" | "modelSize" | "finish" | "size" | "color" | "width" | "personalize" | "universe";
 type FSection = { key: string; title: string; kind: "checks" | "color" | "size" | "price" | "sort"; group?: FGroup; options: { value: string; count: number; hex?: string }[] };
-const EMPTY_SEL: Record<FGroup, string[]> = { category: [], line: [], material: [], modelSize: [], finish: [], size: [], color: [] };
+const EMPTY_SEL: Record<FGroup, string[]> = { category: [], line: [], material: [], modelSize: [], finish: [], size: [], color: [], width: [], personalize: [], universe: [] };
 
 function CategoryView({ products, cat, sub, go, addToCart }: { products: Product[]; cat: string; sub?: string; go: (v: View) => void; addToCart: (p: Product) => void }) {
   const nav = NAV.find((n) => n.key === cat);
@@ -1169,6 +1277,10 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   const isCollectionSub = subLow === "fall-winter 2026" || subLow === "spring-summer 2026";
   const isRTWPage = cat === "women" && (isDressesPage || isCollectionSub || RTW_SUBS.some((l) => l.toLowerCase() === subLow));
   const isShoesPage = isSneakersPage || /sandals|loafers|derbies|boots|shoes/.test(subLow) || (cat === "men" && !sub);
+  // Verified facet orders exist for these two pages only (served facet
+  // JSONs, 2026-11-10): women's belts and men's shoes.
+  const isBeltsPage = subLow === "belts";
+  const isMensShoesPage = cat === "men" && isShoesPage;
   const titleText = isCollectionSub && sub ? `${sub} Collection` : sub ?? (cat === "women" ? "Women's bags and clutches" : label.charAt(0) + label.slice(1).toLowerCase());
   const crumbTop = isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isRTWPage ? `${label} | READY-TO-WEAR` : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
@@ -1203,8 +1315,6 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   const [priceMin, setPriceMin] = useState<number | null>(null);
   const [priceMax, setPriceMax] = useState<number | null>(null);
   const [openKey, setOpenKey] = useState("");
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [moreLeaving, setMoreLeaving] = useState(false);
   const [loadedMsg, setLoadedMsg] = useState("");
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
@@ -1222,16 +1332,26 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   const pMax = priceMax ?? priceHi;
   const priceNarrowed = pMin > priceLo || pMax < priceHi;
 
+  // Per-page derived facet values (see the helpers above). On the belts
+  // page Category is kit-vs-complete and Finish is the family; on men's
+  // shoes Category is the shoe type and Material is the family.
+  const catVal = (p: Product) => isBeltsPage ? (isBeltKit(p) ? "Belt kits" : "Belts") : isMensShoesPage ? shoeType(p) : p.subcategory;
+  const finishVal = (p: Product) => isBeltsPage ? finishFamily(p.metallicFinish) : p.metallicFinish;
+  const matVal = (p: Product) => isMensShoesPage ? materialFamily(p.material) : p.material;
+  const universeVal = (p: Product) => isBeltsPage ? beltUniverse(p) : isMensShoesPage ? shoeUniverse(p) : "";
   const filtered = useMemo(() => {
     let list = base.filter((p) =>
       (!onlineOnly || p.status === "available") &&
-      (!sel.category.length || sel.category.includes(p.subcategory)) &&
+      (!sel.category.length || sel.category.includes(catVal(p))) &&
       (!sel.line.length || sel.line.includes(p.line)) &&
-      (!sel.material.length || sel.material.includes(p.material)) &&
+      (!sel.material.length || sel.material.includes(matVal(p))) &&
       (!sel.modelSize.length || sel.modelSize.includes(p.modelSize)) &&
-      (!sel.finish.length || sel.finish.includes(p.metallicFinish)) &&
+      (!sel.finish.length || sel.finish.includes(finishVal(p))) &&
       (!sel.size.length || p.sizeOptions.some((s) => sel.size.includes(s.label))) &&
       (!sel.color.length || p.colors.some((c) => sel.color.includes(colorFamily(c.name)))) &&
+      (!sel.width.length || sel.width.includes(beltWidthBucket(p.modelSize))) &&
+      (!sel.personalize.length || (isBeltKit(p) && sel.personalize.includes("Yes"))) &&
+      (!sel.universe.length || sel.universe.includes(universeVal(p))) &&
       p.price >= pMin && p.price <= pMax);
     if (sort === "low") list = [...list].sort((a, b) => a.price - b.price);
     if (sort === "high") list = [...list].sort((a, b) => b.price - a.price);
@@ -1286,18 +1406,31 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   }
   const colorOpts = [...famMap.entries()].map(([value, e]) => ({ value, count: e.count, hex: e.hex })).sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
 
-  const secCategory: FSection | null = base.length ? { key: "category", title: "Category", kind: "checks", group: "category", options: countBy((p) => p.subcategory) } : null;
+  const secCategory: FSection | null = base.length ? { key: "category", title: "Category", kind: "checks", group: "category", options: countBy((p) => catVal(p)) } : null;
   const secLine: FSection | null = countBy((p) => p.line).length ? { key: "line", title: isRTWPage ? "Collection" : "Line", kind: "checks", group: "line", options: countBy((p) => p.line) } : null;
-  const secMaterial: FSection | null = countBy((p) => p.material).length ? { key: "material", title: "Material", kind: "checks", group: "material", options: countBy((p) => p.material) } : null;
+  const secMaterial: FSection | null = countBy((p) => matVal(p)).length ? { key: "material", title: "Material", kind: "checks", group: "material", options: countBy((p) => matVal(p)) } : null;
   const secModelSize: FSection | null = countBy((p) => p.modelSize).length ? { key: "modelsize", title: "Model size", kind: "checks", group: "modelSize", options: countBy((p) => p.modelSize) } : null;
-  const secFinish: FSection | null = countBy((p) => p.metallicFinish).length ? { key: "finish", title: "Metallic finish", kind: "checks", group: "finish", options: countBy((p) => p.metallicFinish) } : null;
+  const secFinish: FSection | null = countBy((p) => finishVal(p)).length ? { key: "finish", title: "Metallic finish", kind: "checks", group: "finish", options: countBy((p) => finishVal(p)) } : null;
   const secSize: FSection | null = sizeOpts.length ? { key: "size", title: "Size", kind: "size", group: "size", options: sizeOpts } : null;
   const secColor: FSection | null = colorOpts.length ? { key: "color", title: "Color", kind: "color", group: "color", options: colorOpts } : null;
+  // Belts-only facets (verified facet JSON): Width buckets from the mm
+  // modelSize; Personalize "Yes" for belt kits; Universe kit-width/complete.
+  const secWidth: FSection | null = countBy((p) => beltWidthBucket(p.modelSize)).length ? { key: "width", title: "Width", kind: "checks", group: "width", options: countBy((p) => beltWidthBucket(p.modelSize)) } : null;
+  const secPersonalize: FSection | null = countBy((p) => isBeltKit(p) ? "Yes" : "").length ? { key: "personalize", title: "Personalize", kind: "checks", group: "personalize", options: countBy((p) => isBeltKit(p) ? "Yes" : "") } : null;
+  const secUniverse: FSection | null = countBy((p) => universeVal(p)).length ? { key: "universe", title: "Universe", kind: "checks", group: "universe", options: countBy((p) => universeVal(p)) } : null;
   const secPrice: FSection | null = priceHi - priceLo >= 50 ? { key: "price", title: "Price", kind: "price", options: [] } : null;
   const secSort: FSection = { key: "sort", title: "Sort by", kind: "sort", options: [] };
   const sections: FSection[] = [];
   const pushSec = (s: FSection | null) => { if (s) sections.push(s); };
-  if (isRTWPage) { pushSec(secLine); pushSec(secSize); pushSec(secCategory); pushSec(secMaterial); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
+  // Facet order per category — verified from hermes.com's served facet
+  // JSONs (belts: Category, Metallic finish, Width, Personalize, Color,
+  // Size, Price, Available online, Universe, Line; men's shoes: Line,
+  // Material, Size, Category, Universe, Color, Price, Available online).
+  // "Available online" is the switch rendered after the sections; Sort is
+  // our own control and stays last. Other pages keep their existing order.
+  if (isBeltsPage) { pushSec(secCategory); pushSec(secFinish); pushSec(secWidth); pushSec(secPersonalize); pushSec(secColor); pushSec(secSize); pushSec(secPrice); pushSec(secUniverse); pushSec(secLine); pushSec(secSort); }
+  else if (isMensShoesPage) { pushSec(secLine); pushSec(secMaterial); pushSec(secSize); pushSec(secCategory); pushSec(secUniverse); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
+  else if (isRTWPage) { pushSec(secLine); pushSec(secSize); pushSec(secCategory); pushSec(secMaterial); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
   else if (isBagsPage) { pushSec(secCategory); pushSec(secLine); pushSec(secMaterial); pushSec(secModelSize); pushSec(secFinish); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
   else if (isShoesPage) { pushSec(secLine); pushSec(secMaterial); pushSec(secSize); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
   else { pushSec(secCategory); pushSec(secLine); pushSec(secMaterial); pushSec(secModelSize); pushSec(secSize); pushSec(secFinish); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
@@ -1346,9 +1479,10 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
               <div className="grid grid-cols-6 gap-x-1 gap-y-3">
                 {s.options.map((o) => {
                   const on = sel[group].includes(o.value);
+                  const tile = colorMainUrl(o.value);
                   return (
                     <button key={o.value} aria-label={`Color ${o.value} (${o.count})`} aria-pressed={on} className="flex flex-col items-center gap-1" onClick={() => toggle(group, o.value)}>
-                      <span className={`h-8 w-8 rounded-full ${on ? "ring-2 ring-black ring-offset-2" : "ring-1 ring-black/20"}`} style={{ background: o.hex ?? "#cccccc" }} />
+                      <span className={`${on ? "ring-2 ring-black ring-offset-2" : "ring-1 ring-black/20"} h-8 w-8`} style={tile ? { backgroundImage: `url(${tile})`, backgroundSize: "cover", backgroundColor: o.hex ?? "#cccccc" } : { background: o.hex ?? "#cccccc" }} />
                       <span className="text-center text-[10px] leading-tight">{o.value}</span>
                       <span className="text-[10px] leading-tight text-neutral-500">({o.count})</span>
                     </button>
@@ -1475,13 +1609,12 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
         </div>
       )}
 
-      {loadingMore && <LoadingVeil leaving={moreLeaving} ms={2200} />}
       {!mosaic && visible < filtered.length && (
         <div className="mt-12 text-center">
           <p className="text-xs text-neutral-500">{Math.min(visible, filtered.length)} products viewed out of {filtered.length}</p>
           <div className="mx-auto mt-4 h-px w-[120px] bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${filtered.length ? (Math.min(visible, filtered.length) / filtered.length) * 100 : 0}%` }} /></div>
-          <button aria-label={loadingMore ? "Loading, please wait." : "See more products"} disabled={loadingMore} className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal disabled:opacity-60" onClick={() => { setLoadingMore(true); setMoreLeaving(false); setTimeout(() => setMoreLeaving(true), 100); setTimeout(() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadingMore(false); setMoreLeaving(false); setLoadedMsg(`${added} products added. ${next} out of ${filtered.length} displayed`); }, 2200); }}>SEE MORE PRODUCTS</button>
-          {loadedMsg && <p className="mt-1 text-xs text-neutral-500" role="status">{loadedMsg}</p>}
+          <button aria-label="See more products" className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal" onClick={() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadedMsg(`${added} products loaded`); }}>SEE MORE PRODUCTS</button>
+          {loadedMsg && <p className="sr-only" role="status">{loadedMsg}</p>}
         </div>
       )}
       {!mosaic && visible >= filtered.length && filtered.length > 40 && (
@@ -1514,15 +1647,32 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
           text, no "/15" counter anywhere — swipe-only). */}
       <section className="mt-12 lg:mt-10" aria-label="Product theme carousel">
         <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
-          {THEME_CARDS.map((card) => {
-            const rep = products.find((p) => p.category === (card.view.t === "category" ? card.view.cat : ""));
-            return (
-              <button key={card.label} data-theme-card aria-label={`Product theme ${card.label}`} className="w-[42%] shrink-0 snap-start text-left sm:w-[23%] lg:w-[18.6%]" onClick={() => go(card.view)}>
-                <span className="block aspect-[4/3] overflow-hidden bg-[#ece7dd]">{rep && <img src={productImageFor(rep)} alt="" className="h-full w-full object-cover" />}</span>
-                <span className="mt-2 block text-sm">{card.label}</span>
-              </button>
-            );
-          })}
+          {(() => {
+            const themed = isBeltsPage ? THEME_CAROUSEL_DATA.belts : isMensShoesPage ? THEME_CAROUSEL_DATA.menshoes : null;
+            if (themed) {
+              // 5 page-dependent themes x 3 repeats = 15 slides, editorial
+              // images with the overlay title bottom-right (as on hermes.com).
+              const slides = [...themed, ...themed, ...themed];
+              return slides.map((slide, i) => (
+                <button key={`${slide.label}-${i}`} data-theme-card aria-label={`Product theme ${slide.label}`} className="relative w-[42%] shrink-0 snap-start overflow-hidden text-left sm:w-[23%] lg:w-[18.6%]" onClick={() => go(slide.view)}>
+                  <picture>
+                    <source media="(min-width: 1024px)" srcSet={slide.imgDesktop} />
+                    <img src={slide.imgMo} alt={slide.label} loading="lazy" className="aspect-[3/4] w-full object-cover lg:aspect-[16/9]" />
+                  </picture>
+                  <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-2 pb-2 pt-10 text-right text-[12px] font-bold uppercase leading-5 text-white">{slide.label}</span>
+                </button>
+              ));
+            }
+            return THEME_CARDS.map((card) => {
+              const rep = products.find((p) => p.category === (card.view.t === "category" ? card.view.cat : ""));
+              return (
+                <button key={card.label} data-theme-card aria-label={`Product theme ${card.label}`} className="w-[42%] shrink-0 snap-start text-left sm:w-[23%] lg:w-[18.6%]" onClick={() => go(card.view)}>
+                  <span className="block aspect-[4/3] overflow-hidden bg-[#ece7dd]">{rep && <img src={productImageFor(rep)} alt="" className="h-full w-full object-cover" />}</span>
+                  <span className="mt-2 block text-sm">{card.label}</span>
+                </button>
+              );
+            });
+          })()}
         </div>
       </section>
 
@@ -2351,6 +2501,8 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
   const [email, setEmail] = useState("");
   const [done, setDone] = useState("");
   const [ship, setShip] = useState(settings.shipTo);
+  const [shipOpen, setShipOpen] = useState(false);
+  const shipCountries = (settings.shipToCountries || "UNITED STATES").split(",").map((c) => c.trim()).filter(Boolean);
   const [openCol, setOpenCol] = useState<string | null>(null);
   const [subOpen, setSubOpen] = useState(false);
   const [svcIdx, setSvcIdx] = useState(0);
@@ -2446,11 +2598,19 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
           {newsletterForm(false)}
           <p className="font-mono-d mt-8 text-xs font-light uppercase tracking-normal">Follow us</p>
           <div className="mt-3"><SocialCircles /></div>
-          <label className="mt-7 flex items-center gap-2 border-t border-black/10 pt-5 text-xs text-neutral-700">SHIP TO :
-            <select aria-label="Ship to country selector" className="max-w-[55vw] appearance-none bg-transparent py-1 font-medium uppercase underline underline-offset-4" value={ship} onChange={(e) => setShip(e.target.value)}>
-              {["UNITED STATES", "UNITED KINGDOM", "FRANCE", "PAKISTAN", "UNITED ARAB EMIRATES", "INDIA"].map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </label>
+          <div className="relative mt-7 border-t border-black/10 pt-5">
+            <button aria-label="Ship to country selector" aria-expanded={shipOpen} className="flex items-center gap-2 text-xs text-neutral-700 uppercase tracking-wider" onClick={() => setShipOpen(!shipOpen)}>
+              <span>Ship to : <span className="font-medium underline underline-offset-4">{ship}</span></span>
+              <span className="text-[11px] underline underline-offset-4">Change your location</span>
+            </button>
+            {shipOpen && (
+              <div className="absolute bottom-full left-0 z-50 mb-2 w-72 max-w-[85vw] border border-black/10 bg-[#fffcf7] py-2 shadow-lg" role="listbox" aria-label="Choose your location">
+                {shipCountries.map((c) => (
+                  <button key={c} role="option" aria-selected={ship === c} className={`block w-full px-4 py-2 text-left text-xs uppercase tracking-wider ${ship === c ? "font-semibold underline underline-offset-4" : "hover:underline"}`} onClick={() => { setShip(c); setShipOpen(false); }}>{c}</button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600">
             <p>© Hermès 2026. All rights reserved.</p>
           </div>
@@ -2476,11 +2636,19 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
       </div>
       <div className="hidden border-t border-[#e2d8ce] lg:block" style={{ background: "#f6f1eb" }}>
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-neutral-600">
-          <label className="flex items-center gap-2 uppercase tracking-wider">Ship to :
-            <select aria-label="Ship to country selector" className="appearance-none bg-transparent py-1 font-medium uppercase underline underline-offset-4" value={ship} onChange={(e) => setShip(e.target.value)}>
-              {["UNITED STATES", "UNITED KINGDOM", "FRANCE", "PAKISTAN", "UNITED ARAB EMIRATES", "INDIA"].map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </label>
+          <div className="relative">
+            <button aria-label="Ship to country selector" aria-expanded={shipOpen} className="flex items-center gap-2 uppercase tracking-wider" onClick={() => setShipOpen(!shipOpen)}>
+              <span>Ship to : <span className="font-medium underline underline-offset-4">{ship}</span></span>
+              <span className="text-[11px] normal-case tracking-normal underline underline-offset-4">Change your location</span>
+            </button>
+            {shipOpen && (
+              <div className="absolute bottom-full left-0 z-50 mb-2 w-72 border border-black/10 bg-[#fffcf7] py-2 shadow-lg" role="listbox" aria-label="Choose your location">
+                {shipCountries.map((c) => (
+                  <button key={c} role="option" aria-selected={ship === c} className={`block w-full px-4 py-2 text-left text-xs uppercase tracking-wider ${ship === c ? "font-semibold underline underline-offset-4" : "hover:underline"}`} onClick={() => { setShip(c); setShipOpen(false); }}>{c}</button>
+                ))}
+              </div>
+            )}
+          </div>
           <p>© Hermès 2026. All rights reserved.</p>
         </div>
       </div>
@@ -2990,7 +3158,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
               setStorePicked("Hermès — 691 Madison Avenue, New York"); setDeliverySaved(true);
             }}>Find</button>
             {storePicked && (
-              <div className="mt-4 border border-black/15 p-4" role="status">
+              <div className="mt-4 border border-[#f6f1eb] p-4" role="status">
                 <p className="text-sm font-medium">{storePicked}</p>
                 <p className="mt-1 text-sm text-neutral-600">Selected for collection — {settings.serviceHours}. Payment is now available below.</p>
               </div>
