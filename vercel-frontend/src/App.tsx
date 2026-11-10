@@ -906,7 +906,12 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         {/* No counter/arrows on mobile — the original's mobile carousel has only
             the progress line above (verified on hermes.com, phone). The 1/15
             counter + arrows live only in the desktop heading above (hidden lg:block). */}
-        <h3 className="mt-10 text-center text-[11px] font-semibold uppercase tracking-[0.25em] lg:text-left">Products for the theme {theme}</h3>
+        {/* The original renders this heading sr-only (visually hidden,
+            screen-reader only) — verified in hermes.com's rendered HTML:
+            <h2 class="sr-only">Products for the theme Belts</h2>. The 4
+            products below ARE visible on the original, so only the heading
+            is hidden, not the products. */}
+        <h2 className="sr-only">Products for the theme {theme}</h2>
         <div key={theme} className="-mx-4 mt-5 grid grid-cols-2 gap-x-[3px] gap-y-10 sm:mx-0 sm:gap-5 lg:grid-cols-4">
           {shown.map((p) => <ProductCard key={p.id} p={p} portrait onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
         </div>
@@ -1154,7 +1159,6 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
     navEl.scrollTo({ left: Math.max(0, cur.offsetLeft - 12) });
   }, []);
   const themeRef = useRef<HTMLDivElement>(null);
-  const [themePos, setThemePos] = useState(0);
 
   const priceLo = base.length ? Math.min(...base.map((p) => p.price)) : 0;
   const priceHi = base.length ? Math.max(...base.map((p) => p.price)) : 0;
@@ -1262,19 +1266,6 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
     if (showEditorial && i === 3) gridItems.push({ kind: "text" });
     if (showEditorial && i === 11) gridItems.push({ kind: "wide" });
   });
-
-  const themeScroll = (dir: number) => {
-    const el = themeRef.current; if (!el) return;
-    const card = el.querySelector<HTMLElement>("[data-theme-card]");
-    const w = card ? card.offsetWidth + 16 : 220;
-    el.scrollBy({ left: dir * w, behavior: "smooth" });
-  };
-  const onThemeScroll = () => {
-    const el = themeRef.current; if (!el) return;
-    const card = el.querySelector<HTMLElement>("[data-theme-card]");
-    const w = card ? card.offsetWidth + 16 : 220;
-    setThemePos(Math.min(THEME_CARDS.length - 1, Math.max(0, Math.round(el.scrollLeft / w))));
-  };
 
   const renderSection = (s: FSection) => {
     const isOpen = openSection === s.key;
@@ -1460,16 +1451,13 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
         {!sub && (<>{" / "}<span className="normal-case tracking-normal text-black">{titleText}</span></>)}
       </nav>
 
-      <section className="mt-12" aria-label="Product theme">
-        <div className="flex items-center justify-between">
-          <h2 className="text-[12px] font-semibold uppercase tracking-[0.25em]">Product theme</h2>
-          <div className="flex items-center gap-3">
-            <button aria-label="Previous product themes" className="flex h-8 w-8 items-center justify-center border border-black/25 hover:border-black" onClick={() => themeScroll(-1)}>‹</button>
-            <span className="text-xs tabular-nums" aria-live="polite">{themePos + 1}/15</span>
-            <button aria-label="Next product themes" className="flex h-8 w-8 items-center justify-center border border-black/25 hover:border-black" onClick={() => themeScroll(1)}>›</button>
-          </div>
-        </div>
-        <div ref={themeRef} onScroll={onThemeScroll} className="no-scrollbar mt-5 flex snap-x gap-4 overflow-x-auto pb-1">
+      {/* Product theme carousel — the original's category page has this swiper
+          (aria-label "Product theme carousel", 15 slides = 5 categories x 3)
+          with NO visible heading, NO counter and NO arrow buttons (verified
+          in hermes.com's rendered category HTML: no "Product theme" heading
+          text, no "/15" counter anywhere — swipe-only). */}
+      <section className="mt-12" aria-label="Product theme carousel">
+        <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
           {THEME_CARDS.map((card) => {
             const rep = products.find((p) => p.category === (card.view.t === "category" ? card.view.cat : ""));
             return (
