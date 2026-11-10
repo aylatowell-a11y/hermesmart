@@ -52,6 +52,11 @@ body { font-family: "Manrope", "Roboto", "Helvetica Neue", system-ui, sans-serif
 .fade-up { animation: fadeUp .45s ease both; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+/* Discover carousel (desktop): full-bleed — the original's carousel touches
+   the viewport edges. Breaks the slide track out of the max-w-7xl section
+   to the full viewport width, centred (the HomeView root clips any
+   scrollbar-width overshoot via overflow-x-clip). */
+.carousel-full-bleed { width: 100vw; margin-left: calc(50% - 50vw); }
 /* The loading horse is one of the user's own three animated GIFs (trot /
    jump-then-run / gallop, rotating in that fixed order) — the GIF files
    carry the motion themselves, so no CSS transform animation is applied
