@@ -1531,7 +1531,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
       "for dogs": (p) => p.subcategory === "Scarves, shawls and stoles" && /chiens/i.test(p.name),
       "dresses": (p) => p.subcategory === "Dresses and skirts",
       "ready-to-wear": (p) => p.line === "Ready-to-Wear" || p.subcategory === "Dresses and skirts",
-      "fall-winter 2026 collection": (p) => p.line === "Fall-Winter 2026",
+      // Fall-Winter 2026 is a gendered collection: the women's page (cat
+      // "women") shows the women's 330 and the men's page (cat "men") shows
+      // the men's 143. Both sets carry the same line value — the product's
+      // own category is what separates them. (Batch 15, 2026-11-11.)
+      "fall-winter 2026 collection": (p) => p.line === "Fall-Winter 2026" && p.category === cat,
       "spring-summer 2026 collection": (p) => p.line === "Spring-Summer 2026",
       "scarves shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles",
       "loafers": (p) => /loafer/i.test(p.name),
