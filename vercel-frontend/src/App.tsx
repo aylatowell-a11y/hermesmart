@@ -1281,29 +1281,41 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
       </div>
       </section>
 
-      {/* BOARD d) VIDEO — full-bleed BLACK board, no gap from the cream board
-          above. Video frame on top (white square controls bottom-right);
-          title, sub-text and Discover link centred on black BELOW the frame. */}
-      <section ref={vidRef} className="relative mb-12 overflow-hidden bg-black lg:mb-16" aria-label="The great outdoors in stereo video">
+      {/* BOARD d) VIDEO — full-bleed board, as on hermes.com (measured
+          2026-11-11, 1919x998): the 16:9 Baladeur video is 600px tall
+          (60vh, min 550px — at 1366 the original's video is ~550px, not
+          the 62vh ~390px the old code gave) and the title, sub-text and
+          Discover link are OVERLAID on the video's lower dark area —
+          there is NO black block below the video. A dark gradient covers
+          the bottom ~53% of the board (near-black at the bottom).
+          Controls are bare white glyphs (no white squares) at the
+          video's bottom-right: pause glyph 64px from the right edge,
+          sound glyph 21px from it, both centred 28px above the bottom
+          (30px gap between glyphs). The Kelly board abuts directly
+          below (no gap). (An earlier note claiming a black block below
+          the video was WRONG — the user's screenshots + live measurement
+          prove the overlay.) */}
+      <section ref={vidRef} className="relative overflow-hidden bg-black" aria-label="The great outdoors in stereo video">
         <div className="relative overflow-hidden">
-        <ProductVideo src={baladeurSrc} poster={baladeurPoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[62vh] w-full object-cover" />
-        <div className="absolute bottom-4 right-4 z-10 flex gap-2">
-          <button aria-label={vidPaused ? "Play video" : "Pause video"} aria-pressed={vidPaused} className="flex h-9 w-9 items-center justify-center bg-white text-black" onClick={() => setVidPaused(!vidPaused)}>
-            {vidPaused
-              ? <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>
-              : <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>}
-          </button>
-          <button aria-label={vidMuted ? "Enable sound" : "Mute"} aria-pressed={!vidMuted} className="flex h-9 w-9 items-center justify-center bg-white text-black" onClick={() => setVidMuted(!vidMuted)}>
-            {vidMuted
-              ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16 9l6 6M22 9l-6 6" /></svg>
-              : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>}
-          </button>
-        </div>
-        </div>
-        <div className="bg-black px-[15px] pb-14 pt-6 text-center text-white sm:px-0 sm:pt-8">
+        <ProductVideo src={baladeurSrc} poster={baladeurPoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[62vh] w-full object-cover lg:h-[60vh] lg:min-h-[550px]" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[53%] bg-gradient-to-t from-black via-black/60 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-[58px] z-10 px-4 text-center text-white">
           <h2 className="font-serif-d text-[30px] italic">The great outdoors in stereo</h2>
-          <p className="font-serif-d mx-auto mt-1 max-w-lg text-[20px] italic">Ride lightly, listen largely. The Hermès sound comes where the road begins.</p>
-          <button aria-label="Discover the equestrian collection" className="font-mono-d mt-4 text-xs font-medium uppercase tracking-normal underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "equestrian" })}>Discover the collection</button>
+          <p className="font-serif-d mx-auto mt-1 text-[20px] italic">Ride lightly, listen largely. The Hermès sound comes where the road begins.</p>
+          <button aria-label="Discover the equestrian collection" className="font-mono-d pointer-events-auto mt-5 text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => go({ t: "category", cat: "equestrian" })}>Discover the collection</button>
+        </div>
+        <div className="absolute bottom-[10px] right-[10px] z-10 flex items-center gap-[5px]">
+          <button aria-label={vidPaused ? "Play video" : "Pause video"} aria-pressed={vidPaused} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setVidPaused(!vidPaused)}>
+            {vidPaused
+              ? <svg width="10" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>
+              : <svg width="10" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>}
+          </button>
+          <button aria-label={vidMuted ? "Enable sound" : "Mute"} aria-pressed={!vidMuted} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setVidMuted(!vidMuted)}>
+            {vidMuted
+              ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16 9l6 6M22 9l-6 6" /></svg>
+              : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>}
+          </button>
+        </div>
         </div>
       </section>
 
