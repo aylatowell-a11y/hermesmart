@@ -771,7 +771,16 @@ export function App() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
-  const cartTotal = cart.reduce((s, i) => s + i.qty * i.price, 0);
+  // Cart prices always follow the LIVE catalog, as on hermes.com: a price
+  // corrected after an item was added (Kelly Pocket 18 belt $1,375 -> $2,150)
+  // must show the current price in the cart, not the price stored at add-time.
+  // Fall back to the stored price only if the product is no longer in the catalog.
+  const livePrice = (i: CartItem) => {
+    const p = products.find((x) => x.id === i.productId) ?? (i.refCode ? products.find((x) => (x.refCode ?? "") === i.refCode) : undefined);
+    return p ? p.price : i.price;
+  };
+  const pricedCart = cart.map((i) => ({ ...i, price: livePrice(i) }));
+  const cartTotal = pricedCart.reduce((s, i) => s + i.qty * i.price, 0);
 
   const addToCart = (p: Product, color = "", size = "", qty = 1) => {
     const c = color || p.colors[0]?.name || "";
@@ -996,14 +1005,14 @@ export function App() {
 
       <main className={view.t === "home" || view.t === "cart" || view.t === "checkout" ? "" : "pt-[62px] lg:pt-[142px]"}>
         {view.t === "home" && <HomeView settings={settings} products={products} themeIdx={themeIdx} setThemeIdx={setThemeIdx} go={go} addToCart={addToCart} pulse={pulse} />}
-        {view.t === "cart" && <CartPage cart={cart} setCart={setCart} settings={settings} go={go} total={cartTotal} count={cartCount} products={products} />}
+        {view.t === "cart" && <CartPage cart={pricedCart} setCart={setCart} settings={settings} go={go} total={cartTotal} count={cartCount} products={products} />}
         {view.t === "category" && view.cat === "about" && <AboutPage go={go} />}
         {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} pinTop={pinTop} initialVisible={catStateRef.current[catKey(view.cat, view.sub)]?.visible ?? 40} onVisibleChange={(n) => { const k = catKey(view.cat, view.sub); const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 }; catStateRef.current[k] = { ...prev, visible: n }; }} />}
         {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} from={fromView} />}
         {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} />}
         {view.t === "about" && <AboutPage go={go} />}
         {view.t === "account" && <AccountView key={view.mode ?? "login"} user={user} setUser={setUser} go={go} mode={view.mode} />}
-        {view.t === "checkout" && <CheckoutView cart={cart} setCart={setCart} user={user} go={go} total={cartTotal} settings={settings} />}
+        {view.t === "checkout" && <CheckoutView cart={pricedCart} setCart={setCart} user={user} go={go} total={cartTotal} settings={settings} />}
         {view.t === "admin" && <AdminView products={products} settings={settings} qc={qc} navOverrides={navOverrides} setNavOverrides={setNavOverrides} />}
       </main>
 
