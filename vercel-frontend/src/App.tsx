@@ -203,15 +203,35 @@ const CAROUSEL_EDITORIAL_DESKTOP: Record<string, { img: string; alt: string }> =
   "Silk": { img: "https://assets.hermes.com/is/image/hermesedito/SILK_NOV_P1_26_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing a patterned silk scarf" },
   "Beauty": { img: "https://assets.hermes.com/is/image/hermesedito/MAKEUP_NOV_P1_26_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Close-up of a model wearing red lipstick" },
 };
-// Verified theme grids on hermes.com (7 Nov 2026): the exact four products, in
-// this order, shown under each carousel theme. Names match this store's catalog
-// rows exactly, so repeats (1/6/11, 2/7/12, …) render identical products/prices.
+// Verified theme grids on hermes.com (7 Nov 2026, re-verified live
+// 11 Nov 2026 16:40, browser task f0a7843e): the exact four products, in
+// this order, shown under each carousel theme. Resolved by refCode, NOT by
+// name — name-matching landed on the wrong colour variant (Bouncing sneaker
+// Blanc instead of Beige/Natural, Noe loafer Brun instead of Yellow).
+// Entries starting with "id:" resolve by product id — used only for the
+// Serif strap row (id 16), whose refCode is empty in our data.
+// Tiebreaks (disclosed, verify against the live tile photo): Bouncing
+// sneaker H221898ZHBG is the FIRST Beige/Natural $1,275 Bouncing in the
+// men's shoes category (extraction pos 151); five other same-name/price/
+// colour rows exist (H262851ZHF8, H231763ZHNL, H221898ZHX3, H231763ZHX3,
+// H27100GZHAF). Mini Thalassa H500522FD89 is the FIRST Black $580 in the
+// bracelets category (extraction pos 108); alternatives H500522FC89,
+// H500522FK89. UNMATCHED: Colliers et Laisses scarf 90 in White $660 —
+// no White variant exists in our data (extraction has Green/Orange/Red/
+// Multi-colored only), so Silk slot 1 stays on the current row
+// H004391Sv02 (Marine/Rouge). Noe loafer H262834ZAAC: colour corrected
+// Brun -> Yellow in data.ts (live extraction pos 262 + theme tile both
+// Yellow). Kelly Pocket 18 belt H081120CK89 price $1,375 -> $2,150 in
+// data.ts (same change). Names NOT renamed here: Chaine d'ancre necklace /
+// earrings (product-page fetch 403'd — unverified); Beauty renames
+// (Eye shadow quartet / Nail polish) ARE in data.ts, product-page
+// confirmed.
 const THEME_GRID_ORDER: Record<string, string[]> = {
-  "Belts": ["Kelly Pocket 18 belt", "Collier de Chien 50 belt", "Elan Pocket 24 reversible belt", "Serif belt buckle & Reversible leather strap 32 mm"],
-  "Men's Shoes": ["Bouncing sneaker", "Jet sneaker", "Nine ankle boot", "Noe loafer"],
-  "Fashion Jewelry": ["Chaine d'ancre necklace, small model", "Clic Clac H bracelet", "Chaine d'ancre earrings", "Mini Thalassa bracelet"],
-  "Silk": ["Colliers et Laisses pour Chiens scarf 90", "Turf Les Courses Twilly", "Casaque Jumping scarf", "Palonniers scarf 45"],
-  "Beauty": ["Rouge Hermès gift set, Lip care", "Ombres d'Hermès, Eye shadow quartet, Ombres Sables", "Les Mains Hermès, Nail polish, Or Rose", "Bride-a-Brac Sellier case, large model"],
+  "Belts": ["H081120CK89", "H010439CK55080", "H011790UCAAXS", "id:16"],
+  "Men's Shoes": ["H221898ZHBG", "H261807ZHAF", "H262820ZHNL", "H262834ZAAC"],
+  "Fashion Jewelry": ["H101503Bv00", "H306324FvN2", "H109510Bv00", "H500522FD89"],
+  "Silk": ["H004391Sv02", "H061144Sv06", "H251526Sv02", "H891071Sv01"],
+  "Beauty": ["VP25SETD25BUNDLE", "V60875PV007", "V60861VV050", "H104951Mv01"],
 };
 const fmt = (n: number) => "$" + n.toLocaleString("en-US");
 const priceText = (p: Product) => (p.priceLabel ? p.priceLabel : fmt(p.price));
@@ -325,7 +345,7 @@ function HermesLogo({ settings, light, variant = "full" }: { settings: Settings;
 function load<T>(k: string, fb: T): T { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fb; } catch { return fb; } }
 function save(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } }
 
-export function ProductVisual({ p, large: _large, altSrc, altActive }: { p: Product; large?: boolean; altSrc?: string; altActive?: boolean }) {
+export function ProductVisual({ p, large: _large, altSrc, altActive, plain }: { p: Product; large?: boolean; altSrc?: string; altActive?: boolean; plain?: boolean }) {
   // Real studio product photo for every product (assets/products/), filling
   // the tile with object-cover — no glyph/emoji placeholders on the storefront.
   const img = productImageFor(p);
@@ -339,9 +359,11 @@ export function ProductVisual({ p, large: _large, altSrc, altActive }: { p: Prod
       {altSrc && (
         <img src={altSrc} alt="" aria-hidden="true" loading="lazy" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${altActive ? "opacity-100" : "opacity-0"}`} />
       )}
-      {p.status === "available_soon" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">Available soon</span>}
-      {p.status === "in_store_only" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">In store only</span>}
-      {p.status === "out_of_stock" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">Out of stock</span>}
+      {/* plain (homepage theme tiles): hermes.com shows NO status badge on
+          its homepage theme tiles, so the badge is hidden here only. */}
+      {!plain && p.status === "available_soon" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">Available soon</span>}
+      {!plain && p.status === "in_store_only" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">In store only</span>}
+      {!plain && p.status === "out_of_stock" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">Out of stock</span>}
     </div>
   );
 }
@@ -353,7 +375,7 @@ export function ProductVisual({ p, large: _large, altSrc, altActive }: { p: Prod
 // bags, etc. never get a quick-buy button.
 function isSneakerProduct(p: Product): boolean { return /sneaker/i.test(p.name); }
 
-function ProductCard({ p, onOpen, onQuickBuy, colourInName }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean }) {
+function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean; plainTile?: boolean }) {
   const bagIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>;
   // Tile alternate views (hermes.com parity): hovering does NOT swap the
   // photo. On tiles with more than one gallery view, small white square
@@ -418,8 +440,11 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName }: { p: Product; onOp
       onClick={() => { if (suppressClickRef.current) { suppressClickRef.current = false; return; } onOpen(p.id); }} onKeyDown={(e) => { if (e.key === "Enter") onOpen(p.id); }}
       onMouseLeave={() => setAltIdx(null)}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <div className="relative aspect-[3/4] overflow-hidden transition-transform duration-300 group-hover:scale-[1.015]"><ProductVisual p={p} altSrc={altIdx !== null ? altViews[altIdx] : (altArmed ? altViews[0] : undefined)} altActive={altIdx !== null} />
-        {altViews.length > 0 && (
+      <div className="relative aspect-[3/4] overflow-hidden transition-transform duration-300 group-hover:scale-[1.015]"><ProductVisual p={p} plain={plainTile} altSrc={altIdx !== null ? altViews[altIdx] : (altArmed ? altViews[0] : undefined)} altActive={altIdx !== null} />
+        {/* plainTile (homepage theme tiles only): hermes.com's homepage
+            tiles have NO < > arrows at all — the arrows live on category
+            tiles and the product-page gallery. Hidden here only. */}
+        {!plainTile && altViews.length > 0 && (
           <>
             <button aria-label="Previous image" className="absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center bg-white text-black opacity-0 shadow transition-opacity group-hover:opacity-100 focus-visible:opacity-100" onClick={(e) => { e.stopPropagation(); stepTile(-1); }} onKeyDown={(e) => e.stopPropagation()}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
@@ -1014,8 +1039,9 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
   const strip = products.filter((p) => p.theme === theme);
   // Grid = the verified four products for this theme, in verified order, so
   // positions 1/6/11 (Belts), 2/7/12, … always show identical products/prices.
-  const orderedNames = THEME_GRID_ORDER[theme];
-  const ordered = orderedNames ? orderedNames.map((n) => products.find((p) => p.name === n)).filter((p): p is Product => !!p) : [];
+  // Resolved by refCode (THEME_GRID_ORDER); "id:" entries resolve by id.
+  const orderedRefs = THEME_GRID_ORDER[theme];
+  const ordered = orderedRefs ? orderedRefs.map((r) => r.startsWith("id:") ? products.find((p) => p.id === Number(r.slice(3))) : products.find((p) => p.refCode === r)).filter((p): p is Product => !!p) : [];
   const shown = (ordered.length ? ordered : strip.length ? strip : products).slice(0, 4);
   const heroText = settings.heroText || "The blanket provides a canvas that can take any direction, from reimagining motifs to asserting a bold artistic signature. Its playful composition allows style to express itself on a larger scale.";
   const heroWords = (settings.heroTitle || "Threading ideas").split(" ");
@@ -1164,7 +1190,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             is hidden, not the products. */}
         <h2 className="sr-only">Products for the theme {theme}</h2>
         <div key={theme} className="-mx-4 mt-6 grid grid-cols-2 gap-x-[2px] gap-y-8 sm:mx-0 lg:mt-8 lg:grid-cols-4 lg:gap-[2px]">
-          {shown.map((p) => <ProductCard key={p.id} p={p} onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
+          {shown.map((p) => <ProductCard key={p.id} p={p} plainTile onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
         </div>
       </div>
       </section>
