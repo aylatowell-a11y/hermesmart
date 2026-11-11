@@ -377,12 +377,13 @@ function isSneakerProduct(p: Product): boolean { return /sneaker/i.test(p.name);
 function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean; plainTile?: boolean }) {
   const bagIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>;
   // Tile alternate views (hermes.com parity): resting the mouse on the
-  // tile PHOTO advances exactly once from view 1 to view 2 with the 300ms
-  // cross-fade wired in ProductVisual; leaving the photo returns instantly
-  // to view 1. The small white square < > arrows appear on photo hover
-  // (desktop) and cycle the photos on click with a hard cut; on touch the
-  // photo changes with a horizontal swipe — all without opening the product
-  // page. Hovering the name/price text below the photo triggers nothing.
+  // tile PHOTO advances exactly once from view 1 to view 2 after ~5s with
+  // the 300ms cross-fade wired in ProductVisual; leaving the photo returns
+  // instantly to view 1. The small white square < > arrows appear on photo
+  // hover (desktop) and cycle the photos on click with a hard cut; on touch
+  // the photo changes with a horizontal swipe — all without opening the
+  // product page. Hovering the name/price text below the photo triggers
+  // nothing.
   // Homepage theme tiles (plainTile) stay fully plain: no arrows, no
   // badge, no hover-swap. The alternates are the product's gallery views
   // after the first (galleryForProduct, default colourway), skipping Video
@@ -405,28 +406,40 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Pr
   const [altIdx, setAltIdx] = useState<number | null>(null);
   const [altArmed, setAltArmed] = useState(false);
   const [photoHovered, setPhotoHovered] = useState(false);
-  const hoverRafRef = useRef<number | null>(null);
+  // Auto-advance timer (hermes.com): resting the mouse on the tile photo
+  // advances exactly once from view 1 to view 2 after ~5s. The timer
+  // starts on mouseenter ONLY — moving the mouse does NOT reset it — fires
+  // once, and is cancelled on mouseleave (instant return to view 1) or as
+  // soon as the visitor steps/swipes the photos manually. (The previous
+  // double-requestAnimationFrame version flipped after 2 frames instead of
+  // ~5s, so the advance was invisible in practice: it fired before the
+  // visitor had even registered view 1.)
+  const hoverTimerRef = useRef<number | null>(null);
   const hoveredRef = useRef(false);
+  const cancelHoverTimer = () => {
+    if (hoverTimerRef.current !== null) { window.clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
+  };
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const suppressClickRef = useRef(false);
   const onPhotoEnter = () => {
     setPhotoHovered(true);
     if (plainTile || altViews.length === 0) return;
-    // Arm first (mounts the alternate at opacity-0), then flip to view 2
-    // on the next painted frame so the 300ms cross-fade actually animates
-    // instead of popping in already mounted.
+    // Arm first (mounts the alternate at opacity-0 so it preloads), then
+    // flip to view 2 on the timer so the 300ms cross-fade animates.
     hoveredRef.current = true;
     setAltArmed(true);
-    hoverRafRef.current = window.requestAnimationFrame(() => {
-      hoverRafRef.current = window.requestAnimationFrame(() => {
-        if (hoveredRef.current) setAltIdx(0);
-      });
-    });
+    cancelHoverTimer();
+    hoverTimerRef.current = window.setTimeout(() => {
+      hoverTimerRef.current = null;
+      // Fire exactly once, and only if the visitor hasn't already stepped
+      // the photos manually (altIdx still null) and is still hovering.
+      setAltIdx((cur) => (cur === null && hoveredRef.current ? 0 : cur));
+    }, 5000);
   };
   const onPhotoLeave = () => {
     setPhotoHovered(false);
     hoveredRef.current = false;
-    if (hoverRafRef.current !== null) { cancelAnimationFrame(hoverRafRef.current); hoverRafRef.current = null; }
+    cancelHoverTimer();
     // Instant return to view 1: the alternate unmounts at once.
     setAltIdx(null);
     setAltArmed(false);
@@ -434,6 +447,7 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Pr
   // Arrow step (hermes.com): cycles tile photo -> alternate views -> tile
   // photo again, in both directions. altIdx null = the tile photo itself.
   const stepTile = (dir: 1 | -1) => {
+    cancelHoverTimer();
     setAltArmed(true);
     setAltIdx((cur) => {
       const n = altViews.length;
@@ -457,6 +471,7 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Pr
     // page scrolling never changes the photo. A swipe never opens the
     // product — the tap that follows it is suppressed once.
     if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      cancelHoverTimer();
       setAltArmed(true);
       setAltIdx((i) => {
         if (i === null) return dx < 0 ? 0 : altViews.length - 1;
@@ -1660,7 +1675,19 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
   // JSONs, 2026-11-10): women's belts and men's shoes.
   const isBeltsPage = subLow === "belts";
   const isMensShoesPage = cat === "men" && isShoesPage;
-  const titleText = isCollectionSub && sub ? `${sub} Collection` : sub ?? (cat === "women" ? "Women's bags and clutches" : label.charAt(0) + label.slice(1).toLowerCase());
+  // Category titles render in proper case (hermes.com: "Fall-Winter 2026
+  // Collection"). The `sub` values come from the URL slug map in
+  // routing.ts, which is lowercase — map the two season collections to
+  // their display titles here instead of title-casing every sub: other
+  // subs are already proper case (e.g. "Bags and clutches") and a generic
+  // title-case would wrongly capitalise small words ("and").
+  const COLLECTION_TITLES: Record<string, string> = {
+    "fall-winter 2026": "Fall-Winter 2026 Collection",
+    "fall-winter 2026 collection": "Fall-Winter 2026 Collection",
+    "spring-summer 2026": "Spring-Summer 2026 Collection",
+    "spring-summer 2026 collection": "Spring-Summer 2026 Collection",
+  };
+  const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${sub} Collection` : sub ?? (cat === "women" ? "Women's bags and clutches" : label.charAt(0) + label.slice(1).toLowerCase()));
   const crumbTop = isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isRTWPage ? `${label} | READY-TO-WEAR` : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
@@ -2003,7 +2030,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
             </button>
             <div className="flex items-center gap-1.5" role="radiogroup" aria-label="View toggle">
               <button aria-label="Product view" role="radio" aria-checked={!mosaic} className={`flex h-8 w-8 items-center justify-center ${!mosaic ? "text-black" : "text-neutral-400 hover:text-neutral-600"}`} onClick={() => setMosaic(false)}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="3" width="8" height="8" /><rect x="13" y="3" width="8" height="8" /><rect x="3" y="13" width="8" height="8" /><rect x="13" y="13" width="8" height="8" /></svg>
+                {/* hermes.com's Product-view icon is a thin black OUTLINE grid
+                    with white centres (stroke only, no fill). The previous
+                    1.6-stroke 8-unit squares read as four solid filled
+                    squares at 16px — thinner strokes (1) on smaller squares
+                    with wider gaps so the white centres dominate. */}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" /><rect x="13.5" y="4" width="6.5" height="6.5" /><rect x="4" y="13.5" width="6.5" height="6.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" /></svg>
               </button>
               <button aria-label="Mosaic view" role="radio" aria-checked={mosaic} className={`flex h-8 w-8 items-center justify-center ${mosaic ? "text-black" : "text-neutral-400 hover:text-neutral-600"}`} onClick={() => setMosaic(true)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="3" width="11" height="7" /><rect x="16" y="3" width="5" height="11" /><rect x="3" y="12" width="6" height="9" /><rect x="11" y="12" width="5" height="5" /><rect x="11" y="19" width="10" height="2" /></svg>
