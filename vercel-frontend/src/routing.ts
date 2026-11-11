@@ -1,9 +1,10 @@
-// Real URLs for categories and products (History API routing), matching the
-// original hermes.com URL shape: /us/en/category/<path>/ and
-// /us/en/product/<slug>-<REF>/. Deep links are served by vercel.json
-// rewrites (every app path serves index.html) and parsed back here on load
-// and on popstate. Views that cannot be routed safely (cart, checkout,
-// account, admin, info pages, about) are left unrouted: navigating to them
+// Real URLs for categories, products and the contact page (History API
+// routing), matching the original hermes.com URL shape:
+// /us/en/category/<path>/, /us/en/product/<slug>-<REF>/ and
+// /us/en/contact-us/. Deep links are served by vercel.json rewrites (every
+// app path serves index.html) and parsed back here on load and on popstate.
+// Views that cannot be routed safely (cart, checkout, account, admin, info
+// pages other than contact, about) are left unrouted: navigating to them
 // does not push a history entry, so browser Back returns to the last
 // routed view. Nothing here invents products, prices or copy — the known
 // category paths below are the original's own URLs, verified live
@@ -12,7 +13,8 @@
 export type ParsedRoute =
   | { kind: "home" }
   | { kind: "category"; cat: string; sub?: string }
-  | { kind: "product"; id: number };
+  | { kind: "product"; id: number }
+  | { kind: "contact" };
 
 export function slugify(s: string): string {
   return s
@@ -77,6 +79,11 @@ export function productUrl(name: string, refCode: string, id: number): string {
   return `/us/en/product/${slug ? `${slug}-` : ""}${id}/`;
 }
 
+// The original's contact page URL, verified live 2026-11-11.
+export function contactUrl(): string {
+  return "/us/en/contact-us/";
+}
+
 // The product ref embedded in a product URL path, if the path is one.
 export function productRefFromPath(path: string): string | null {
   const clean = path.split("?")[0]?.split("#")[0] ?? "";
@@ -95,6 +102,7 @@ export function parseUrl(
   if (clean === "") return { kind: "home" };
   if (clean.startsWith("us/en/")) clean = clean.slice("us/en/".length);
   if (clean === "") return { kind: "home" };
+  if (clean === "contact-us") return { kind: "contact" };
   if (clean.startsWith("product/")) {
     const seg = clean.slice("product/".length).split("/")[0] ?? "";
     const tail = seg.split("-").pop() ?? "";

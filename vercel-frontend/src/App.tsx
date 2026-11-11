@@ -41,7 +41,7 @@ import scarfColliersImg from "./assets/products/scarf-90-colliers.webp";
 import { fileToBase64 } from "./fileToBase64";
 import { productImageFor } from "./productImages";
 import { galleryForProduct } from "./galleryImages";
-import { categoryUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
+import { categoryUrl, contactUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
 
 type Product = ApiResponse<typeof api, "getStorefront">["products"][number];
 type Settings = ApiResponse<typeof api, "getStorefront">["settings"];
@@ -538,13 +538,15 @@ export function App() {
   const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "800-441-4488", heroTitle: "Threading ideas", heroText: "", shipTo: "UNITED STATES", deliveryText: "", returnsText: "", paymentMethods: "", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10am - 9pm EST", logoMode: "both", logoUrl: "", flagshipStore: "691 Madison Avenue, New York", shipToCountries: "UNITED STATES, UNITED KINGDOM, FRANCE, PAKISTAN, UNITED ARAB EMIRATES, INDIA, CANADA", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. All rights reserved.", serviceDeliveryBody: "Free standard delivery. Herm\u00e8s offers several fast and secure delivery options.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
 
   // Real URLs (History API routing): the initial view comes from the URL
-  // when it is a routed one (category, or home); a product URL keeps its
-  // ref and resolves to the product once the catalog has loaded (effect
-  // below) — the URL is already correct, so nothing is pushed on load.
+  // when it is a routed one (category, contact page, or home); a product
+  // URL keeps its ref and resolves to the product once the catalog has
+  // loaded (effect below) — the URL is already correct, so nothing is
+  // pushed on load.
   const initialRoute = useMemo(() => {
     if (typeof window === "undefined") return { view: null as View | null, productRef: null as string | null };
     const parsed = parseUrl(window.location.pathname, [], SUBS_BY_CAT);
     if (parsed && parsed.kind === "category") return { view: { t: "category", cat: parsed.cat, sub: parsed.sub } as View, productRef: null as string | null };
+    if (parsed && parsed.kind === "contact") return { view: { t: "page", page: "contact" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "home") return { view: { t: "home" } as View, productRef: null as string | null };
     return { view: null as View | null, productRef: productRefFromPath(window.location.pathname) };
   }, []);
@@ -724,10 +726,10 @@ export function App() {
     const cur = viewRef.current;
     if (cur.t === "category") saveCatState(cur);
     if (v.t === "product" && (cur.t === "category" || cur.t === "home")) setFromView(cur);
-    // Real URL for routed views (home / category / product); other views
-    // (cart, checkout, account, admin, pages, about) stay unrouted so
-    // browser Back returns to the last routed view.
-    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : null;
+    // Real URL for routed views (home / category / product / contact);
+    // other views (cart, checkout, account, admin, other pages, about)
+    // stay unrouted so browser Back returns to the last routed view.
+    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : null;
     if (url) { try { window.history.pushState(null, "", url); } catch { /* ignore */ } }
     if (v.t === "category" && !opts?.restore) pulse(2200);
     setView(v); setMobileNav(false); setMenuCat(null);
@@ -745,6 +747,12 @@ export function App() {
       if (parsed.kind === "home") {
         if (cur.t === "category") saveCatState(cur);
         setView({ t: "home" }); setMobileNav(false); setMenuCat(null);
+        window.scrollTo({ top: 0 });
+        return;
+      }
+      if (parsed.kind === "contact") {
+        if (cur.t === "category") saveCatState(cur);
+        setView({ t: "page", page: "contact" }); setMobileNav(false); setMenuCat(null);
         window.scrollTo({ top: 0 });
         return;
       }
@@ -2607,32 +2615,101 @@ const PAGES: Record<string, { title: string; body: string[] }> = {
   accessibility: { title: "Accessibility", body: ["We aim to make this store usable by everyone: full keyboard navigation, labelled controls and text alternatives for imagery. Tell us at 800-441-4488 if any page is difficult to use."] },
 };
 
+// Contact form, per the original hermes.com/us/en/contact-us/ (audited
+// 2026-11-11): labels ABOVE every field, underline-only inputs (no boxes,
+// no placeholders), "Expected format" hints under e-mail and telephone,
+// area code as a flag + "US +1" control, subject as a custom dropdown with
+// the original's exact 12 options, message ~95px tall, consent on the left
+// with a fixed ~200px SEND button right-aligned on the same row.
+const SUBJECTS = ["Product information", "Order follow up", "Returns and exchanges for online purchases", "Returns and exchanges for in-store purchases", "Customer experience", "Product care and repair", "Press and communication", "Bespoke", "Furniture specialist", "Equestrian specialist", "Do not sell my data", "Other"];
+
 function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void }) {
   const [f, setF] = useState({ first: "", last: "", email: "", area: "US +1", phone: "", subject: "", message: "" });
   const [sent, setSent] = useState("");
   const [err, setErr] = useState("");
-  const inputCls = "w-full border border-black/30 px-3 py-3 text-sm";
+  const [subjectOpen, setSubjectOpen] = useState(false);
+  const [subjectTouched, setSubjectTouched] = useState(false);
+  const subjectInvalid = subjectTouched && !f.subject;
+  // Underline-only field (original): no box, no side/top borders; grey
+  // underline turning black on the active field.
+  const fieldCls = "w-full rounded-none border-0 border-b border-black/30 bg-transparent px-0 py-2 text-sm text-black focus:border-black focus:outline-none";
+  const labelCls = "mb-0.5 block text-xs text-neutral-700";
+  const flag = (
+    <span aria-hidden="true" className="inline-block h-[13px] w-[19px] shrink-0 overflow-hidden border border-black/10" title="United States">
+      <span className="block h-full w-full" style={{ background: "linear-gradient(to bottom, #b22234 0 7.7%, #ffffff 7.7% 15.4%, #b22234 15.4% 23.1%, #ffffff 23.1% 30.8%, #b22234 30.8% 38.5%, #ffffff 38.5% 46.2%, #b22234 46.2% 53.8%, #ffffff 53.8% 61.5%, #b22234 61.5% 69.2%, #ffffff 69.2% 76.9%, #b22234 76.9% 84.6%, #ffffff 84.6% 92.3%, #b22234 92.3% 100%)" }}>
+        <span className="block h-[54%] w-[40%] bg-[#3c3b6e]" />
+      </span>
+    </span>
+  );
+  const chevron = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>;
   if (sent) return <p className="mt-6 border border-black/15 bg-[#fffcf7] p-5 text-sm" role="status">{sent}</p>;
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!f.first || !f.last || !f.email.includes("@") || !/^\d{10}$/.test(f.phone.replace(/\D/g, "").replace(/^1/, "")) || !f.message || !f.subject) {
+      setSubjectTouched(true);
+      setErr("Please complete all fields — the telephone must be a US number (+1 followed by 10 digits).");
+      return;
+    }
+    setErr(""); setSent(`Thank you, ${f.first}. Your message about “${f.subject}” has been sent — customer service will reply to ${f.email}.`);
+  };
   return (
-    <form className="mt-6 space-y-3" onSubmit={(e) => { e.preventDefault(); if (!f.first || !f.last || !f.email.includes("@") || !/^\d{10}$/.test(f.phone.replace(/\D/g, "").replace(/^1/, "")) || !f.message || !f.subject) { setErr("Please complete all fields — the telephone must be a US number (+1 followed by 10 digits)."); return; } setErr(""); setSent(`Thank you, ${f.first}. Your message about “${f.subject}” has been sent — customer service will reply to ${f.email}.`); }}>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <input aria-label="Contact first name" className={inputCls} placeholder="First name *" value={f.first} onChange={(e) => setF({ ...f, first: e.target.value })} />
-        <input aria-label="Contact last name" className={inputCls} placeholder="Last name *" value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
+    <form className="mt-2 space-y-9" onSubmit={submit}>
+      <div className="grid gap-x-8 gap-y-9 sm:grid-cols-2">
+        <div>
+          <label className={labelCls} htmlFor="cf-first">First name *</label>
+          <input id="cf-first" aria-label="Contact first name" className={fieldCls} value={f.first} onChange={(e) => setF({ ...f, first: e.target.value })} />
+        </div>
+        <div>
+          <label className={labelCls} htmlFor="cf-last">Last name *</label>
+          <input id="cf-last" aria-label="Contact last name" className={fieldCls} value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
+        </div>
       </div>
-      <input aria-label="Contact email" type="email" className={inputCls} placeholder="E-mail *" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
-      <div className="grid grid-cols-[1fr_1.6fr] gap-3">
-        <select aria-label="Contact area code" className={inputCls} value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })}>
-          <option value="US +1">🇺🇸 US +1</option>
-        </select>
-        <input aria-label="Contact telephone" className={inputCls} placeholder="Telephone number *" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+      <div>
+        <label className={labelCls} htmlFor="cf-email">E-mail *</label>
+        <input id="cf-email" aria-label="Contact email" type="email" className={fieldCls} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
+        <p className="mt-1 text-xs text-neutral-500">Expected format: yourname@domain.com</p>
       </div>
-      <select aria-label="Contact subject" className={inputCls} value={f.subject} onChange={(e) => setF({ ...f, subject: e.target.value })}>
-        <option value="">Please select a subject</option>{["Order enquiry", "Delivery", "Returns and exchanges", "Product information", "Account", "Other"].map((s) => <option key={s} value={s}>{s}</option>)}
-      </select>
-      <textarea aria-label="Contact message" className={inputCls} rows={5} placeholder="Your message *" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} />
-      {err && <p className="text-sm text-red-700" role="status">{err}</p>}
-      <p className="text-xs leading-5 text-neutral-600">By sending your message, you agree to accept the <button type="button" aria-label="General Terms and Conditions of Use" className="underline" onClick={() => go({ t: "page", page: "terms" })}>General Terms and Conditions of Use</button> and that your data will be processed in compliance with the <button type="button" aria-label="Privacy Policy" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button> of Hermès.</p>
-      <button aria-label="Send contact message" type="submit" className="w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white">Send</button>
+      <div className="flex items-start gap-8">
+        <div className="w-[140px] shrink-0">
+          <label className={labelCls} htmlFor="cf-area">Area code *</label>
+          <div className="flex items-center gap-2 border-b border-black/30 py-2 focus-within:border-black">
+            {flag}
+            <select id="cf-area" aria-label="Contact area code" className="w-full appearance-none bg-transparent text-sm text-black focus:outline-none" value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })}>
+              <option value="US +1">US +1</option>
+            </select>
+            <span className="text-neutral-500">{chevron}</span>
+          </div>
+        </div>
+        <div className="min-w-0 flex-1">
+          <label className={labelCls} htmlFor="cf-phone">Telephone number *</label>
+          <input id="cf-phone" aria-label="Contact telephone" className={fieldCls} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+          <p className="mt-1 text-xs text-neutral-500">Expected format: phone number with 10 digits</p>
+        </div>
+      </div>
+      <div className="relative">
+        <button type="button" aria-label="Contact subject" aria-expanded={subjectOpen} className={`flex w-full items-center justify-between border-b bg-transparent px-0 py-2 text-left text-sm focus:outline-none ${subjectInvalid ? "border-red-700" : "border-black/30 focus:border-black"}`} onClick={() => { if (subjectOpen) { setSubjectOpen(false); setSubjectTouched(true); } else setSubjectOpen(true); }}>
+          <span className={f.subject ? "text-black" : "text-neutral-500"}>{f.subject || "Please select a subject *"}</span>
+          <span className="text-neutral-500">{chevron}</span>
+        </button>
+        {subjectInvalid && <p className="mt-1 text-xs text-red-700" role="status">Required information</p>}
+        {subjectOpen && (
+          <>
+            <button aria-hidden="true" tabIndex={-1} className="fixed inset-0 z-10 cursor-default" onClick={() => { setSubjectOpen(false); setSubjectTouched(true); }} />
+            <ul className="absolute left-0 right-0 z-20 mt-1 max-h-72 overflow-auto border border-black/15 bg-white py-1 shadow-md">
+              {SUBJECTS.map((s) => <li key={s}><button type="button" className="block w-full px-4 py-2 text-left text-sm text-black hover:bg-[#f6f1eb]" onClick={() => { setF({ ...f, subject: s }); setSubjectOpen(false); setSubjectTouched(true); }}>{s}</button></li>)}
+            </ul>
+          </>
+        )}
+      </div>
+      <div>
+        <label className={labelCls} htmlFor="cf-message">Your message *</label>
+        <textarea id="cf-message" aria-label="Contact message" className={fieldCls} rows={4} value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} />
+      </div>
+      {err && <p className="-mt-4 text-sm text-red-700" role="status">{err}</p>}
+      <div className="flex items-end justify-between gap-6">
+        <p className="max-w-[520px] text-xs leading-5 text-neutral-600">By sending your message, you agree to accept the <button type="button" aria-label="General Terms and Conditions of Use" className="underline" onClick={() => go({ t: "page", page: "terms" })}>General Terms and Conditions of Use<span className="sr-only"> (new window)</span></button> and that your data will be processed in compliance with the <button type="button" aria-label="Privacy Policy" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy<span className="sr-only"> (new window)</span></button> of Hermès.</p>
+        <button aria-label="Send contact message" type="submit" className="h-10 w-[200px] shrink-0 bg-black text-[11px] font-semibold uppercase tracking-[0.2em] text-white">Send</button>
+      </div>
     </form>
   );
 }
@@ -2661,6 +2738,37 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
   }
   if (page === "track") {
     return <TrackOrders settings={settings} user={user} go={go} />;
+  }
+  if (page === "contact") {
+    // Contact Us page, per the original hermes.com/us/en/contact-us/
+    // (audited 2026-11-11): BACK button above a white panel on the cream
+    // page; "CONTACT US" in a pale heading band with a divider below it;
+    // "Customer Service" sub-heading; hours line, then the phone on its
+    // own line as a tel link; FAQs as a bold link; "* Required information"
+    // right-aligned just above the form. Panel is ~2/3 of the viewport
+    // wide (905px at 1366, ~1270px at 1919), full width on mobile.
+    const back = () => { if (window.history.length > 1) window.history.back(); else go({ t: "home" }); };
+    return (
+      <div className="mx-auto px-4 py-6 sm:py-8">
+        <div className="mx-auto w-full max-w-[1280px] sm:max-w-[66vw]">
+          <button aria-label="Back" className="font-mono-d mb-4 text-xs font-medium uppercase tracking-[0.15em] text-black" onClick={back}>← BACK</button>
+          <div className="bg-white">
+            <div className="border-b border-[#e2d8ce] bg-[#fcf7f1] px-6 py-5 sm:px-8">
+              <h1 className="font-mono-d text-xl font-medium uppercase">Contact us</h1>
+            </div>
+            <div className="px-6 py-7 sm:px-8">
+              <h2 className="text-[15px] font-bold text-black">Customer Service</h2>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">{settings.serviceHours} :</p>
+              <p className="text-sm leading-7"><a aria-label="Call Hermès customer service" className="underline underline-offset-4" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">The answer to your question can certainly be found in the <button aria-label="Frequently asked questions" className="font-bold underline underline-offset-4" onClick={() => go({ t: "page", page: "faq" })}>FAQs</button></p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">You can also contact us outside public holidays:</p>
+              <p className="mt-6 text-right text-xs text-neutral-600">* Required information</p>
+              <ContactForm settings={settings} go={go} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
   const pg = PAGES[page] ?? PAGES.faq;
   const data = pg ?? { title: "Hermès", body: [] as string[] };
@@ -3042,7 +3150,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
   };
   const services: { title: string; body: React.ReactNode; page: string }[] = [
     { title: "STANDARD DELIVERY", page: "shipping", body: <>{settings.serviceDeliveryBody || "Free standard delivery. Hermès offers several fast and secure delivery options."}</> },
-    { title: "RETURNS", page: "returns", body: settings.serviceReturnsBody ? <>{settings.serviceReturnsBody}</> : <>Free returns within 30 days. See conditions and procedure in our <button aria-label="Return FAQs" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "returns" }); }}>return FAQs</button>.</> },
+    { title: "RETURNS", page: "returns", body: settings.serviceReturnsBody ? <>{settings.serviceReturnsBody}</> : <>Free returns within 30 days. See conditions and procedure in our return<button aria-label="Return FAQs" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "returns" }); }}>FAQs</button>.</> },
     { title: "CUSTOMER SERVICE", page: "contact", body: <>{settings.serviceHours}<br /><a aria-label="Call Hermès customer service" className="underline underline-offset-2" href={`tel:${settings.phone}`} onClick={(e) => e.stopPropagation()}>{settings.phone}</a> | <button aria-label="Contact us from footer" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Contact us</button></> },
     { title: "SECURED PAYMENT", page: "payment", body: <>{settings.servicePaymentBody || "All the transactions made on Hermes.com are secured"}</> },
   ];
@@ -3074,19 +3182,19 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
       <div style={{ background: "#fcf7f1" }}>
       <div className="relative px-12 py-4 text-center lg:hidden">
         <button aria-label="Previous image" className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-neutral-700" onClick={() => setSvcIdx((svcIdx + services.length - 1) % services.length)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg></button>
-        <div key={svc.title} className="cursor-pointer" onClick={() => go({ t: "page", page: svc.page })}>
+        <div key={svc.title}>
           <span className="flex justify-center">{serviceIcons[svc.title]}</span>
-          <button aria-label={`Service ${svc.title}`} className="font-mono-d mt-1 text-xs font-light uppercase tracking-normal sm:mt-4" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: svc.page }); }}>{svc.title}</button>
+          <p className="font-mono-d mt-1 text-xs font-light uppercase tracking-normal sm:mt-4">{svc.title}</p>
           <p className="mx-auto mt-1 max-w-xs text-[11px] leading-[18px] text-black">{svc.body}</p>
         </div>
         <button aria-label="Next image" className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-neutral-700" onClick={() => setSvcIdx((svcIdx + 1) % services.length)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg></button>
       </div>
-      <div className="mx-auto hidden max-w-7xl gap-10 px-4 py-8 text-center sm:px-6 lg:grid lg:grid-cols-4 lg:text-left">
+      <div className="mx-auto hidden max-w-7xl gap-10 px-4 py-8 text-center sm:px-6 lg:grid lg:grid-cols-4">
         {services.map((s) => (
-          <div key={s.title} className="cursor-pointer" onClick={() => go({ t: "page", page: s.page })}>
-            <span className="flex justify-center lg:justify-start">{serviceIcons[s.title]}</span>
-            <button aria-label={`Service ${s.title}`} className="font-mono-d mt-1 text-xs font-light uppercase tracking-normal sm:mt-4" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: s.page }); }}>{s.title}</button>
-            <p className="mx-auto mt-2 max-w-xs text-[11px] leading-[18px] text-black lg:mx-0">{s.body}</p>
+          <div key={s.title}>
+            <span className="flex justify-center">{serviceIcons[s.title]}</span>
+            <p className="font-mono-d mt-1 text-xs font-light uppercase tracking-normal sm:mt-4">{s.title}</p>
+            <p className="mx-auto mt-2 max-w-xs text-[11px] leading-[18px] text-black">{s.body}</p>
           </div>
         ))}
       </div>
