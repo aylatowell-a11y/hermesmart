@@ -459,6 +459,53 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName }: { p: Product; onOp
   );
 }
 
+// Fall-Winter grid video tiles — the original's Fall-Winter page shows these
+// 6 products as wide autoplay video tiles (the other 2 has_video products,
+// pos 1 + 20, have video only in their product-page gallery). Ids are the
+// compiled store ids for refs H6H2811DCKX (pos 5, id 4786), H6H0416DT4C
+// (pos 36, id 4810), H6H1301D3LN (pos 45, id 4763), H6H0140DA02 (pos 85,
+// id 4845), H6H1411D302 (pos 156, id 4897), H6H0540DTLK (pos 236, id 4768).
+const FW_VIDEO_TILE_IDS: ReadonlySet<number> = new Set([4763, 4768, 4786, 4810, 4845, 4897]);
+
+function VideoTile({ p, onOpen }: { p: Product; onOpen: (id: number) => void }) {
+  // Wide double-column video tile, as on hermes.com's Fall-Winter grid:
+  // autoplay muted loop video with a small white pause button bottom-right
+  // and the product name + price below, like a normal tile. The MP4 is the
+  // original Hermes clip (HLS -> MP4, staged in public/videos/ 2026-11-11);
+  // the poster is the original Hermes video poster frame. The clip plays
+  // only while the tile is on screen.
+  const views = galleryForProduct(p, 0);
+  const vid = views.find((v) => v.video && v.videoSrc);
+  const [paused, setPaused] = useState(false);
+  const [inView, setInView] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ob = new IntersectionObserver((es) => setInView(!!es[0]?.isIntersecting), { threshold: 0.25 });
+    ob.observe(el);
+    return () => ob.disconnect();
+  }, []);
+  if (!vid || !vid.videoSrc) return <ProductCard p={p} colourInName onOpen={onOpen} />;
+  return (
+    <div ref={ref} className="group relative col-span-2 cursor-pointer" role="link" aria-label={`${p.name}, ${priceText(p)}`} tabIndex={0}
+      onClick={() => onOpen(p.id)} onKeyDown={(e) => { if (e.key === "Enter") onOpen(p.id); }}>
+      <div className="relative aspect-[16/9] overflow-hidden">
+        <ProductVideo src={vid.videoSrc} poster={vid.src} playing={!paused && inView} className="h-full w-full object-cover" />
+        <button aria-label={paused ? "Play video" : "Pause video"} aria-pressed={!paused} className="absolute bottom-2 right-2 z-10 flex h-8 w-8 items-center justify-center bg-white text-black shadow" onClick={(e) => { e.stopPropagation(); setPaused(!paused); }}>
+          {paused ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+          )}
+        </button>
+      </div>
+      <p className="product-name mt-2 px-2 text-left text-xs leading-5 text-[var(--text)]">{p.name}</p>
+      <p className="mt-0.5 px-2 text-left text-xs leading-5 text-[var(--text)]">{priceText(p)}</p>
+    </div>
+  );
+}
+
 export function App() {
   const qc = useQueryClient();
   const store = useQuery({ queryKey: ["storefront"], queryFn: () => api.getStorefront({}) });
@@ -1342,12 +1389,104 @@ const THEME_CAROUSEL_DATA: Record<string, ThemeSlide[]> = {
     { label: "Timepieces", imgMo: ED("HSHOES-horlo-homme-3_4_P4-1"), imgDesktop: ED("HSHOES-horlo-homme-16_9_P4-1"), view: { t: "category", cat: "watches" } },
     { label: "Hats and gloves", imgMo: ED("HSHOES-gants chapeaux homme 34 P5-1"), imgDesktop: ED("HSHOES-gants chapeaux homme 169 P5-1"), view: { t: "category", cat: "men", sub: "Hats and gloves" } },
   ],
+  fallwinter: [
+    // Fall-Winter 2026 Collection page carousel — 5 themes verified live on
+    // hermes.com 2026-11-11 (browser tasks 1f7267c5 + 6fc222ae). Editorial
+    // image IDs come from the user's own Chrome DevTools Inspect (<source>
+    // elements inside each slide's <picture>); every URL verified HTTP 200
+    // at wid=3840 and wid=1920. Desktop uses wid=3840; mobile reuses the
+    // SAME image ID at wid=1920 — no mobile-only IDs were ever published
+    // for these slides, so none are invented.
+    { label: "SMALL LEATHER GOODS", imgMo: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P1_DESKTOP-1?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P1_DESKTOP-1?fit=wrap%2C0&wid=3840&resMode=sharp2&op_usm=1%2C1%2C6%2C0", view: { t: "category", cat: "leather", sub: "Small leather goods" } },
+    { label: "BELTS", imgMo: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P2_DESKTOP-1?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P2_DESKTOP-1?fit=wrap%2C0&wid=3840&resMode=sharp2&op_usm=1%2C1%2C6%2C0", view: { t: "category", cat: "women", sub: "Belts" } },
+    { label: "LOAFERS AND MULES", imgMo: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P3_DESKTOP-1?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P3_DESKTOP-1?fit=wrap%2C0&wid=3840&resMode=sharp2&op_usm=1%2C1%2C6%2C0", view: { t: "category", cat: "women", sub: "Loafers and mules" } },
+    { label: "FASHION JEWELRY", imgMo: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P4_DESKTOP-1?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P4_DESKTOP-1?fit=wrap%2C0&wid=3840&resMode=sharp2&op_usm=1%2C1%2C6%2C0", view: { t: "category", cat: "jewelry" } },
+    { label: "HATS AND GLOVES", imgMo: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P5_DESKTOP-1?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P5_DESKTOP-1?fit=wrap%2C0&wid=3840&resMode=sharp2&op_usm=1%2C1%2C6%2C0", view: { t: "category", cat: "women", sub: "Hats and gloves" } },
+  ],
 };
 const MOSAIC_ASPECTS = ["aspect-[3/4]", "aspect-square", "aspect-[4/5]", "aspect-[4/3]", "aspect-[3/4]", "aspect-[5/6]", "aspect-square"];
 
 type FGroup = "category" | "line" | "material" | "modelSize" | "finish" | "size" | "color" | "width" | "personalize" | "universe";
 type FSection = { key: string; title: string; kind: "checks" | "color" | "size" | "price" | "sort"; group?: FGroup; options: { value: string; count: number; hex?: string }[] };
 const EMPTY_SEL: Record<FGroup, string[]> = { category: [], line: [], material: [], modelSize: [], finish: [], size: [], color: [], width: [], personalize: [], universe: [] };
+
+// Fall-Winter theme carousel — the original's category-page carousel for
+// this page (verified live 2026-11-11): 5 themes x 3 repeats = 15 slides,
+// NO arrows, NO auto-advance. Desktop: wide 16:9 centre slide (60.8vw,
+// 35vw tall) with 128px side strips, 2 visible per side; the white label
+// button sits ON the centre slide near its bottom and links to the theme's
+// category; clicking a side strip brings it to the centre. Mobile:
+// portrait 3:4 swipeable slides, label button 16px above the slide bottom.
+// Progress line below: thin light-grey track with a ~1/5 black segment
+// that moves per theme. Mirrors the homepage Discover carousel geometry.
+function FallWinterThemeCarousel({ go }: { go: (v: View, opts?: { restore?: boolean }) => void }) {
+  const themes = THEME_CAROUSEL_DATA.fallwinter ?? [];
+  const slides = [...themes, ...themes, ...themes];
+  const [activeIdx, setActiveIdx] = useState(0);
+  const themeIdx = themes.length ? activeIdx % themes.length : 0;
+  const goTo = (i: number) => setActiveIdx(slides.length ? ((i % slides.length) + slides.length) % slides.length : 0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const centerSlide = (i: number, smooth = true) => {
+    goTo(i);
+    const el = carouselRef.current;
+    const slide = el?.querySelectorAll<HTMLElement>("[data-slide]")[i];
+    if (slide) slide.scrollIntoView({ behavior: smooth ? "smooth" : "auto", inline: "center", block: "nearest" });
+  };
+  const onCarouselScroll = () => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const slide = el.querySelector<HTMLElement>("[data-slide]");
+    if (!slide) return;
+    const w = slide.offsetWidth + 12;
+    const idx = Math.min(slides.length - 1, Math.max(0, Math.round(el.scrollLeft / w)));
+    if (idx !== activeIdx) setActiveIdx(idx);
+  };
+  if (slides.length === 0) return null;
+  return (
+    <div>
+      {/* DESKTOP (lg+) — centre slide + side strips, as on hermes.com */}
+      <div className="carousel-full-bleed mt-6 hidden overflow-hidden lg:mt-8 lg:block" role="tablist" aria-label="Product theme carousel">
+        <div className="flex h-[35vw] justify-center gap-[3px]">
+          {Array.from({ length: 11 }, (_, k) => k - 5).map((off) => {
+            const logicalIdx = (((activeIdx + off) % slides.length) + slides.length) % slides.length;
+            const slide = slides[logicalIdx];
+            if (!slide) return null;
+            const isActive = off === 0;
+            const n = (logicalIdx % themes.length) + 1;
+            return (
+              <div key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Visible Category ${slide.label}, ${n} of ${themes.length}`} tabIndex={0}
+                onClick={() => { if (!isActive) goTo(logicalIdx); }}
+                onKeyDown={(e) => { if (e.key === "Enter" && !isActive) goTo(logicalIdx); }}
+                className="relative h-full shrink-0 cursor-pointer overflow-hidden transition-[width] duration-500 ease-out"
+                style={{ width: isActive ? "60.8vw" : 128 }}>
+                <img src={slide.imgDesktop} alt={slide.label} loading="lazy" className="h-full w-full object-cover" />
+                {isActive && (
+                  <button aria-label={`Go to ${slide.label}`} className="font-mono-d absolute bottom-8 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black" onClick={(e) => { e.stopPropagation(); go(slide.view); }}>{slide.label}</button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {/* MOBILE — swipeable scroll-snap, portrait 3:4 */}
+      <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[12%] pb-1 sm:px-[18%] lg:hidden" role="tablist" aria-label="Product theme carousel">
+        {slides.map((slide, i) => (
+          <div key={`${slide.label}-${i}`} data-slide role="tab" aria-selected={activeIdx === i} aria-label={`Visible Category ${slide.label}, ${(i % themes.length) + 1} of ${themes.length}`} tabIndex={0}
+            onClick={() => centerSlide(i)}
+            onKeyDown={(e) => { if (e.key === "Enter") centerSlide(i); }}
+            className={`relative aspect-[3/4] w-full shrink-0 cursor-pointer snap-center overflow-hidden text-left transition-opacity duration-300 ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
+            <img src={slide.imgMo} alt={slide.label} loading="lazy" className="h-full w-full object-cover" />
+            <button aria-label={`Go to ${slide.label}`} className="font-mono-d absolute bottom-4 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black" onClick={(e) => { e.stopPropagation(); go(slide.view); }}>{slide.label}</button>
+          </div>
+        ))}
+      </div>
+      {/* Progress line — thin light-grey track, ~1/5 black segment per theme */}
+      <div className="mx-auto mt-6 h-px w-[120px] bg-black/15 lg:mt-8" aria-hidden="true">
+        <div className="h-full bg-black transition-transform duration-300" style={{ width: `${100 / themes.length}%`, transform: `translateX(${themeIdx * 100}%)` }} />
+      </div>
+    </div>
+  );
+}
 
 function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisible, onVisibleChange }: { products: Product[]; cat: string; sub?: string; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product) => void; pinTop: number; initialVisible?: number; onVisibleChange?: (n: number) => void }) {
   const nav = NAV.find((n) => n.key === cat);
@@ -1648,7 +1787,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
     : isShoesPage
       ? { img: outdoorsImg, alt: "Woman on a bicycle with a large white Afghan hound in a desert landscape", lines: ["Light on your feet", "Sneakers in calfskin and technical canvas"], view: { t: "category", cat } as View }
       : { img: heroImg, alt: "Hands smoothing a blue patterned blanket against a warm brown stone wall", lines: [titleText, "Discover the collection"], view: { t: "category", cat } as View };
-  type GridItem = { kind: "product"; p: Product } | { kind: "text" } | { kind: "wide" };
+  type GridItem = { kind: "product"; p: Product } | { kind: "video"; p: Product } | { kind: "text" } | { kind: "wide" };
   const gridItems: GridItem[] = [];
   // The Fall-Winter collection page carries NO editorial tiles on the
   // original (verified in its first 120 products) — the two invented
@@ -1656,7 +1795,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
   const isFallWinterPage = isRTWPage && (subLow === "fall-winter 2026 collection" || subLow === "fall-winter 2026");
   const showEditorial = !filtersActive && sort === "relevance" && !isFallWinterPage;
   filtered.slice(0, visible).forEach((p, i) => {
-    gridItems.push({ kind: "product", p });
+    // Fall-Winter video tiles: the 6 tile-video products render as wide
+    // autoplay video tiles instead of photo tiles (original behaviour).
+    if (isFallWinterPage && FW_VIDEO_TILE_IDS.has(p.id)) gridItems.push({ kind: "video", p });
+    else gridItems.push({ kind: "product", p });
     if (showEditorial && i === 3) gridItems.push({ kind: "text" });
     if (showEditorial && i === 11) gridItems.push({ kind: "wide" });
   });
@@ -1791,6 +1933,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
         <div className="mt-8 grid grid-cols-2 gap-[2px] lg:grid-cols-4">
           {gridItems.map((it) => it.kind === "product" ? (
             <ProductCard key={it.p.id} p={it.p} colourInName onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
+          ) : it.kind === "video" ? (
+            <VideoTile key={it.p.id} p={it.p} onOpen={(id) => go({ t: "product", id })} />
           ) : it.kind === "text" ? (
             <div key="ed-text" className="flex aspect-square flex-col justify-center bg-[#efe9df] p-6">
               <p className="font-serif-d text-xl italic">{edText.title}</p>
@@ -1857,6 +2001,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
           in hermes.com's rendered category HTML: no "Product theme" heading
           text, no "/15" counter anywhere — swipe-only). */}
       <section className="mt-12 lg:mt-10" aria-label="Product theme carousel">
+        {isFallWinterPage ? (
+          <FallWinterThemeCarousel go={go} />
+        ) : (
         <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
           {(() => {
             const themed = isBeltsPage ? THEME_CAROUSEL_DATA.belts : isMensShoesPage ? THEME_CAROUSEL_DATA.menshoes : null;
@@ -1885,6 +2032,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
             });
           })()}
         </div>
+        )}
       </section>
 
 
