@@ -1691,7 +1691,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
   const filtered = useMemo(() => {
     let list = filterList(sel, onlineOnly, pMin, pMax);
     if (sort === "low") list = [...list].sort((a, b) => a.price - b.price);
-    if (sort === "high") list = [...list].sort((a, b) => b.price - a.price);
+    else if (sort === "high") list = [...list].sort((a, b) => b.price - a.price);
+    // Men's Fall-Winter 2026 (batch 16, user-approved 2026-11-11): the 143
+    // men's FW rows carry fwPos = the original's extraction position
+    // (1-143), and the grid lists them in the original's order — Blue
+    // Eperon (fwPos 1) first. Only a list containing fwPos rows is
+    // reordered; every other row has no fwPos, so every other page —
+    // including the women's Fall-Winter page — keeps its exact order.
+    // Stable sort: rows without fwPos keep their relative order after
+    // the positioned rows, so sub-category views keep relative order too.
+    else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     return list;
   }, [base, sel, onlineOnly, sort, pMin, pMax]);
   // How many of OUR products the staged draft selection would show — the
