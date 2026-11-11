@@ -407,13 +407,14 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Pr
   const [altArmed, setAltArmed] = useState(false);
   const [photoHovered, setPhotoHovered] = useState(false);
   // Auto-advance timer (hermes.com): resting the mouse on the tile photo
-  // advances exactly once from view 1 to view 2 after ~5s. The timer
-  // starts on mouseenter ONLY — moving the mouse does NOT reset it — fires
-  // once, and is cancelled on mouseleave (instant return to view 1) or as
-  // soon as the visitor steps/swipes the photos manually. (The previous
-  // double-requestAnimationFrame version flipped after 2 frames instead of
-  // ~5s, so the advance was invisible in practice: it fired before the
-  // visitor had even registered view 1.)
+  // advances exactly once from view 1 to view 2 after ~1.8s — the original
+  // is already on view 2 after ~1.9s of still hover (measured live
+  // 2026-11-11). The timer starts on mouseenter ONLY — moving the mouse
+  // does NOT reset it — fires once, and is cancelled on mouseleave
+  // (instant return to view 1) or as soon as the visitor steps/swipes the
+  // photos manually. (The previous double-requestAnimationFrame version
+  // flipped after 2 frames instead of ~1.8s, so the advance was invisible
+  // in practice: it fired before the visitor had even registered view 1.)
   const hoverTimerRef = useRef<number | null>(null);
   const hoveredRef = useRef(false);
   const cancelHoverTimer = () => {
@@ -434,7 +435,7 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Pr
       // Fire exactly once, and only if the visitor hasn't already stepped
       // the photos manually (altIdx still null) and is still hovering.
       setAltIdx((cur) => (cur === null && hoveredRef.current ? 0 : cur));
-    }, 5000);
+    }, 1800);
   };
   const onPhotoLeave = () => {
     setPhotoHovered(false);
@@ -606,6 +607,9 @@ export function App() {
   // The category (or home) a product was opened from — the product page's
   // Back controls return to it, never to the default bags category.
   const [fromView, setFromView] = useState<View | null>(null);
+  // Desktop sticky buy bar visibility, reported up from ProductView so
+  // the chat bubble can sit above the bar (see ChatBubble).
+  const [buyBarVisible, setBuyBarVisible] = useState(false);
   const [cart, setCart] = useState<CartItem[]>(() => load("hlx-cart", []));
   const [user, setUser] = useState<{ name: string; email: string } | null>(() => load("hlx-user", null));
   const [addedDialog, setAddedDialog] = useState("");
@@ -1058,7 +1062,7 @@ export function App() {
         {view.t === "cart" && <CartPage cart={pricedCart} setCart={setCart} settings={settings} go={go} total={cartTotal} count={cartCount} products={products} />}
         {view.t === "category" && view.cat === "about" && <AboutPage go={go} />}
         {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} pinTop={pinTop} initialVisible={catStateRef.current[catKey(view.cat, view.sub)]?.visible ?? 40} onVisibleChange={(n) => { const k = catKey(view.cat, view.sub); const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 }; catStateRef.current[k] = { ...prev, visible: n }; }} />}
-        {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} from={fromView} lastViewedIds={lastViewedIds} onViewed={(pid) => setLastViewedIds((prev) => [pid, ...prev.filter((x) => x !== pid)].slice(0, 9))} />}
+        {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} from={fromView} lastViewedIds={lastViewedIds} onBuyBarChange={setBuyBarVisible} onViewed={(pid) => setLastViewedIds((prev) => [pid, ...prev.filter((x) => x !== pid)].slice(0, 9))} />}
         {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} />}
         {view.t === "about" && <AboutPage go={go} />}
         {view.t === "account" && <AccountView key={view.mode ?? "login"} user={user} setUser={setUser} go={go} mode={view.mode} />}
@@ -1067,7 +1071,7 @@ export function App() {
       </main>
 
       {view.t !== "cart" && view.t !== "checkout" && <Footer settings={settings} go={go} />}
-      {view.t !== "admin" && <ChatBubble settings={settings} go={go} view={view} />}
+      {view.t !== "admin" && <ChatBubble settings={settings} go={go} view={view} buyBarVisible={buyBarVisible} />}
 
       {addedDialog && (
         <div className="fixed right-4 top-4 z-50 w-[320px] max-w-[calc(100vw-32px)] bg-[#fffcf7] p-5 fade-up" role="dialog" aria-label="Item added to cart">
@@ -2032,10 +2036,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
               <button aria-label="Product view" role="radio" aria-checked={!mosaic} className={`flex h-8 w-8 items-center justify-center ${!mosaic ? "text-black" : "text-neutral-400 hover:text-neutral-600"}`} onClick={() => setMosaic(false)}>
                 {/* hermes.com's Product-view icon is a thin black OUTLINE grid
                     with white centres (stroke only, no fill). The previous
-                    1.6-stroke 8-unit squares read as four solid filled
-                    squares at 16px — thinner strokes (1) on smaller squares
-                    with wider gaps so the white centres dominate. */}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" /><rect x="13.5" y="4" width="6.5" height="6.5" /><rect x="4" y="13.5" width="6.5" height="6.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" /></svg>
+                    1-wide stroke rendered sub-pixel at 16px, so the dividing
+                    cross antialiased GREY in an enlarged crop while the
+                    original's cross is solid black. Strokes are pure #000
+                    when active, 1.5 wide so they render as solid 1px lines;
+                    inactive stays currentColor (grey). Smaller 6.5-unit
+                    squares with wider gaps keep the white centres dominant. */}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={!mosaic ? "#000" : "currentColor"} strokeWidth="1.5" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" /><rect x="13.5" y="4" width="6.5" height="6.5" /><rect x="4" y="13.5" width="6.5" height="6.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" /></svg>
               </button>
               <button aria-label="Mosaic view" role="radio" aria-checked={mosaic} className={`flex h-8 w-8 items-center justify-center ${mosaic ? "text-black" : "text-neutral-400 hover:text-neutral-600"}`} onClick={() => setMosaic(true)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="3" width="11" height="7" /><rect x="16" y="3" width="5" height="11" /><rect x="3" y="12" width="6" height="9" /><rect x="11" y="12" width="5" height="5" /><rect x="11" y="19" width="10" height="2" /></svg>
@@ -2248,7 +2255,7 @@ function ProductVideo({ src, poster, playing, muted = true, className }: { src: 
   return <video ref={videoRef} src={src} muted={muted} loop playsInline preload="metadata" poster={poster} className={className} aria-label="Product video" />;
 }
 
-function ProductView({ products, id, go, addToCart, settings, user, from, lastViewedIds, onViewed }: { products: Product[]; id: number; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; settings: Settings; user: { name: string; email: string } | null; from: View | null; lastViewedIds: number[]; onViewed: (id: number) => void }) {
+function ProductView({ products, id, go, addToCart, settings, user, from, lastViewedIds, onViewed, onBuyBarChange }: { products: Product[]; id: number; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; settings: Settings; user: { name: string; email: string } | null; from: View | null; lastViewedIds: number[]; onViewed: (id: number) => void; onBuyBarChange: (visible: boolean) => void }) {
   const p = products.find((x) => x.id === id) ?? products[0];
   // The category this product was opened from (tracked in App when
   // navigating to a product). Back controls return to it; a deep link has
@@ -2289,6 +2296,15 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
     ob.observe(el);
     return () => ob.disconnect();
   }, []);
+  // Report the desktop sticky bar's visibility up to the App so the chat
+  // bubble can sit above it (hermes.com: the bubble clears the bar with
+  // a gap; ours overlapped ADD TO CART, hiding the final "T"). Only the
+  // desktop bar counts — it is lg-only; the mobile bubble already sits
+  // 76px up on product pages. Cleanup resets it on unmount/product change.
+  useEffect(() => {
+    onBuyBarChange(!!p && isBuyableStatus(p.status) && !buyBoxInView);
+    return () => onBuyBarChange(false);
+  }, [buyBoxInView, p?.status, onBuyBarChange]);
   const notifyMut = useMutation({ mutationFn: () => api.requestNotify({ productId: p?.id ?? 0, productName: p?.name ?? "", email: notifyEmail }), onSuccess: () => setNotified("Thank you — we will notify you when this product is back in stock.") });
   // Last viewed: session-only, derived from the App-level id list (never
   // seeded from storage) — the section renders only once at least one
@@ -3231,8 +3247,12 @@ function SocialCircles() {
 // The thread itself is localStorage hv-chat (api.getChatMessages /
 // sendChatMessage), the same store the Admin Panel chat tab reads, so the
 // store's replies appear in the same thread. On mobile product pages the
-// bubble sits above the sticky ADD TO CART bar.
-function ChatBubble({ settings, go, view }: { settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; view: View }) {
+// bubble sits above the sticky ADD TO CART bar; on desktop it does the
+// same ONLY while the sticky bar is visible (buyBarVisible, reported up
+// from ProductView's IntersectionObserver) — raised 76px so it clears the
+// 72px bar with a gap, exactly as on hermes.com. When the bar is hidden
+// the desktop bubble stays at bottom-5 like everywhere else.
+function ChatBubble({ settings, go, view, buyBarVisible }: { settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; view: View; buyBarVisible?: boolean }) {
   const [open, setOpen] = useState(false);
   const [stage, setStage] = useState<"consent" | "loading" | "chat">("consent");
   const [msgs, setMsgs] = useState<LocalChat[]>([]);
@@ -3253,8 +3273,11 @@ function ChatBubble({ settings, go, view }: { settings: Settings; go: (v: View, 
     const r = await api.sendChatMessage({ from: "customer", text: t });
     if (r.ok) { setDraft(""); load(); }
   };
+  // Desktop raise is state-driven: only while the sticky bar is visible
+  // (buyBarVisible); otherwise the desktop bubble stays at bottom-5.
+  const barVisible = view.t === "product" && !!buyBarVisible;
   return (
-    <div className={`fixed z-40 flex flex-col items-end gap-2 ${view.t === "product" ? "bottom-[calc(76px+env(safe-area-inset-bottom))] right-5 lg:bottom-5" : "bottom-5 right-5"}`}>
+    <div className={`fixed z-40 flex flex-col items-end gap-2 right-5 ${view.t === "product" ? "bottom-[calc(76px+env(safe-area-inset-bottom))]" : "bottom-5"} ${barVisible ? "lg:bottom-[76px]" : "lg:bottom-5"}`}>
       {open && (
         <>
           <button aria-label="Close the live chat with an advisor" className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-lg leading-none text-neutral-600 shadow-lg ring-1 ring-black/10" onClick={closePanel}>×</button>
