@@ -2034,15 +2034,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
             </button>
             <div className="flex items-center gap-1.5" role="radiogroup" aria-label="View toggle">
               <button aria-label="Product view" role="radio" aria-checked={!mosaic} className={`flex h-8 w-8 items-center justify-center ${!mosaic ? "text-black" : "text-neutral-400 hover:text-neutral-600"}`} onClick={() => setMosaic(false)}>
-                {/* hermes.com's Product-view icon is a thin black OUTLINE grid
-                    with white centres (stroke only, no fill). The previous
-                    1-wide stroke rendered sub-pixel at 16px, so the dividing
-                    cross antialiased GREY in an enlarged crop while the
-                    original's cross is solid black. Strokes are pure #000
-                    when active, 1.5 wide so they render as solid 1px lines;
-                    inactive stays currentColor (grey). Smaller 6.5-unit
-                    squares with wider gaps keep the white centres dominant. */}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={!mosaic ? "#000" : "currentColor"} strokeWidth="1.5" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" /><rect x="13.5" y="4" width="6.5" height="6.5" /><rect x="4" y="13.5" width="6.5" height="6.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" /></svg>
+                {/* hermes.com's Product-view icon is ONE square divided by a
+                    thick black cross (a windowpane), not four separate small
+                    squares. The previous 4-square grid read as a grid; the
+                    original is a single outer outline with a solid cross
+                    through its middle. Strokes are pure #000 when active,
+                    inactive stays currentColor (grey). */}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={!mosaic ? "#000" : "currentColor"} aria-hidden="true"><rect x="4" y="4" width="16" height="16" strokeWidth="1.5" /><line x1="12" y1="4" x2="12" y2="20" strokeWidth="2" /><line x1="4" y1="12" x2="20" y2="12" strokeWidth="2" /></svg>
               </button>
               <button aria-label="Mosaic view" role="radio" aria-checked={mosaic} className={`flex h-8 w-8 items-center justify-center ${mosaic ? "text-black" : "text-neutral-400 hover:text-neutral-600"}`} onClick={() => setMosaic(true)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="3" width="11" height="7" /><rect x="16" y="3" width="5" height="11" /><rect x="3" y="12" width="6" height="9" /><rect x="11" y="12" width="5" height="5" /><rect x="11" y="19" width="10" height="2" /></svg>
