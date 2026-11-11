@@ -2300,7 +2300,20 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   const [thumb, setThumb] = useState(0);
   const [vidPlaying, setVidPlaying] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(2);
+  // IMAGE GALLERY dialog zoom — the original's vertical slider. The zoom is
+  // a continuous scale over the "fit-height" base (photo height = viewport
+  // height): 1 = whole photo (height fills the viewport), 10 = extreme
+  // close-up, default = the "cover" scale that fills the viewport width.
+  // null = default (cover, recomputed from the photo's aspect). +/− move one
+  // ×1.516 step; dragging the thumb sets it from the dot (log scale).
+  const [zoom, setZoom] = useState<number | null>(null);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [dialogIdx, setDialogIdx] = useState(0);
+  const [imgAspect, setImgAspect] = useState(0.75);
+  const [vp, setVp] = useState({ w: typeof window !== "undefined" ? window.innerWidth : 1920, h: typeof window !== "undefined" ? window.innerHeight : 998 });
+  const dragRef = useRef<{ x: number; y: number; pan: { x: number; y: number } } | null>(null);
+  const sliderDragRef = useRef(false);
+  const sliderHitRef = useRef<HTMLDivElement>(null);
   const [sizeDrawer, setSizeDrawer] = useState(false);
   // "SIZE GUIDE" drawer (hermes.com): a right-side drawer with the
   // ready-to-wear measurement table — NOT the User guides page. Shoes keep
@@ -2403,6 +2416,9 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
     stripRef.current?.querySelectorAll<HTMLElement>("[data-panel]")[thumb]?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
   }, [thumb]);
   useEffect(() => { if (!zoomOpen) return; const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setZoomOpen(false); }; document.addEventListener("keydown", onKey); return () => document.removeEventListener("keydown", onKey); }, [zoomOpen]);
+  // Track the viewport while the gallery dialog is open (the dialog's zoom
+  // math is viewport-relative).
+  useEffect(() => { if (!zoomOpen) return; const onRs = () => setVp({ w: window.innerWidth, h: window.innerHeight }); onRs(); window.addEventListener("resize", onRs); return () => window.removeEventListener("resize", onRs); }, [zoomOpen]);
   if (!p) return <p className="p-10 text-center">Product not found.</p>;
   const color = p.colors[colorIdx] ?? p.colors[0];
   // Sibling colourways (Cashmere coat): hermes.com shows both colour
@@ -2460,6 +2476,37 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   // strip file upscaled 2x+ is exactly the blur the user reported.
   const views: GalView[] = galleryForProduct(p, colorIdx).map((v) => ({ ...v, src: hiResHermes(v.src) }));
   const curView = views[thumb] ?? views[0];
+  // IMAGE GALLERY dialog — the original's dialog holds the STILL views only
+  // (the video view is excluded: 7 stills for the coat, not 8).
+  const dialogViews = views.filter((v) => !v.video);
+  const dialogView = dialogViews[dialogIdx] ?? dialogViews[0];
+  // Cover scale for the dialog photo (fills the viewport width), relative to
+  // the fit-height base; clamped to the zoom range [1, 10].
+  const coverScale = Math.min(10, Math.max(1, vp.w / (imgAspect * vp.h)));
+  const zoomScale = zoom ?? coverScale;
+  const renderedH = vp.h * zoomScale;
+  const renderedW = imgAspect * renderedH;
+  const maxPanX = Math.max(0, (renderedW - vp.w) / 2);
+  const maxPanY = Math.max(0, (renderedH - vp.h) / 2);
+  const clampPan = (x: number, y: number) => ({ x: Math.max(-maxPanX, Math.min(maxPanX, x)), y: Math.max(-maxPanY, Math.min(maxPanY, y)) });
+  // Re-clamp the pan whenever the rendered size changes (e.g. zooming out
+  // shrinks how far the photo can be panned).
+  useEffect(() => { setPan((prev) => { const c = clampPan(prev.x, prev.y); return c.x === prev.x && c.y === prev.y ? prev : c; }); }, [renderedW, renderedH]);
+  // Zoom slider dot: the panel's thumb travels 40–290px from the panel top
+  // (250px); the dot is log-linear in the scale (min 1 at the bottom,
+  // max 10 at the top) — this reproduces the original's measured dot
+  // positions (default 522, min 624, max 374 at 1919x998).
+  const zoomFrac = Math.log(10 / zoomScale) / Math.log(10);
+  const dotTop = 40 + zoomFrac * 250;
+  const zoomStepFactor = 1.516;
+  const zoomInStep = () => { setZoom((z) => Math.max(1, Math.min(10, (z ?? coverScale) * zoomStepFactor))); };
+  const zoomOutStep = () => { setZoom((z) => Math.max(1, Math.min(10, (z ?? coverScale) / zoomStepFactor))); };
+  const setZoomFromClientY = (clientY: number) => {
+    const el = sliderHitRef.current; if (!el) return;
+    const r = el.getBoundingClientRect();
+    const f = Math.max(0, Math.min(1, (clientY - r.top) / r.height));
+    setZoom(Math.max(1, Math.min(10, Math.pow(10, 1 - f))));
+  };
   // Colour switch reloads the WHOLE gallery: the new colourway's own view
   // photos replace every panel and thumbnail, the gallery returns to its
   // first view and any playing video stops.
@@ -2582,7 +2629,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                     )}
                   </button>
                 ) : (
-                  <button aria-label={`View ${v.label} — open image gallery`} className="block h-full w-full cursor-zoom-in" onClick={() => { setThumb(i); setZoomLevel(2); setZoomOpen(true); }}>
+                  <button aria-label={`View ${v.label} — open image gallery`} className="block h-full w-full cursor-zoom-in" onClick={() => { setThumb(i); setDialogIdx(Math.max(0, dialogViews.findIndex((d) => d.src === v.src))); setZoom(null); setPan({ x: 0, y: 0 }); setZoomOpen(true); }}>
                     <img src={v.src} alt={`${p.name} — ${v.label} view`} className="h-full w-full object-cover" />
                   </button>
                 )}
@@ -2774,47 +2821,88 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
         <span className="text-black">{p.name}</span>
       </nav>
 
-      {/* Full-screen IMAGE GALLERY dialog — large image, Close X top-right,
-          Zoom in / Zoom out buttons and a ZOOM slider (default 2), an image
-          counter, and the same thumbnail strip at the bottom-left. */}
-      {zoomOpen && curView && (
-        <div className="fixed inset-0 z-[80] flex flex-col" style={{ background: "#fcf7f1" }} role="dialog" aria-label="Image gallery">
-          <div className="flex items-center justify-between px-5 py-4">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.3em]">Image Gallery</span>
-            <button aria-label="Close image gallery" className="flex h-10 w-10 items-center justify-center" onClick={() => setZoomOpen(false)}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
+      {/* IMAGE GALLERY dialog — matches hermes.com (measured 2026-11-12,
+          1919x998): the photo fills the viewport at the default "cover"
+          zoom (the white dialog background appears only when zoomed out);
+          NO visible title and NO counter (both exist only as
+          screen-reader text); the video view is NOT in the dialog (7 stills
+          only); a vertical zoom slider on the LEFT (off-white 32x330px
+          panel, + top, − bottom, 5px black dot, track light grey above the
+          dot / dark grey below); Close X top-right in a 24x24 off-white
+          square; thumbnails bottom-left, 36px pitch, the selected one with
+          a 2px black border; the photo drags/pans 1:1 when zoomed (plain
+          arrow cursor, clicking it does nothing); switching thumbnails
+          keeps the zoom. */}
+      {zoomOpen && dialogView && (
+        <div className="fixed inset-0 z-[80] select-none bg-white" role="dialog" aria-label="Image gallery">
+          <h2 className="sr-only">Image Gallery</h2>
+          {/* Photo — rendered at the zoom scale over the fit-height base,
+              centred, panned by drag. */}
+          <div
+            className="absolute inset-0 overflow-hidden bg-white"
+            style={{ touchAction: "none" }}
+            onPointerDown={(e) => { if (e.button !== 0) return; (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); dragRef.current = { x: e.clientX, y: e.clientY, pan: { ...pan } }; }}
+            onPointerMove={(e) => { const d = dragRef.current; if (!d) return; setPan(clampPan(d.pan.x + (e.clientX - d.x), d.pan.y + (e.clientY - d.y))); }}
+            onPointerUp={() => { dragRef.current = null; }}
+            onPointerCancel={() => { dragRef.current = null; }}
+          >
+            <div className="flex h-full w-full items-center justify-center">
+              <img
+                src={dialogView.src}
+                alt={`${p.name} — ${dialogView.label} view`}
+                draggable={false}
+                onLoad={(e) => { const im = e.currentTarget; if (im.naturalWidth && im.naturalHeight) setImgAspect(im.naturalWidth / im.naturalHeight); }}
+                style={{ width: `${renderedW}px`, height: `${renderedH}px`, maxWidth: "none", transform: `translate(${pan.x}px, ${pan.y}px)` }}
+              />
+            </div>
+          </div>
+          {/* Close X — 24x24 off-white square, 24px from the top-right. */}
+          <button aria-label="Close image gallery" className="absolute right-6 top-6 z-20 flex h-6 w-6 items-center justify-center" style={{ background: "#f8f5f1" }} onClick={() => setZoomOpen(false)}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
+          </button>
+          {/* Vertical zoom slider — off-white panel, left, vertically centred. */}
+          <div className="absolute left-6 top-1/2 z-20 h-[330px] w-8 -translate-y-1/2" style={{ background: "#f8f5f1" }} role="slider" aria-label="Zoom" aria-valuemin={1} aria-valuemax={10} aria-valuenow={Math.round(zoomScale * 100) / 100}>
+            <button aria-label="Zoom in" className="absolute left-1/2 top-2 flex h-5 w-5 -translate-x-1/2 items-center justify-center text-black" onClick={zoomInStep}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+            <div
+              ref={sliderHitRef}
+              className="absolute left-0 top-[40px] h-[250px] w-full"
+              style={{ touchAction: "none" }}
+              onPointerDown={(e) => { if (e.button !== 0) return; (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); sliderDragRef.current = true; setZoomFromClientY(e.clientY); }}
+              onPointerMove={(e) => { if (sliderDragRef.current) setZoomFromClientY(e.clientY); }}
+              onPointerUp={() => { sliderDragRef.current = false; }}
+              onPointerCancel={() => { sliderDragRef.current = false; }}
+            >
+              <div className="absolute left-1/2 top-[2px] h-[246px] w-px -translate-x-1/2 bg-[#444444]">
+                <div className="absolute left-0 top-0 w-px bg-[#919191]" style={{ height: `${Math.max(0, Math.min(246, dotTop - 42 + 2.5))}px` }} />
+              </div>
+              <div className="absolute left-1/2 h-[5px] w-[5px] -translate-x-1/2 rounded-full bg-black" style={{ top: `${dotTop - 40}px` }} />
+            </div>
+            <button aria-label="Zoom out" className="absolute bottom-[11px] left-1/2 flex h-5 w-5 -translate-x-1/2 items-center justify-center text-black" onClick={zoomOutStep}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M5 12h14" /></svg>
             </button>
           </div>
-          <div className="relative flex flex-1 items-center justify-center overflow-hidden px-4 pb-28">
-            {curView.video ? (
-              <div className="relative block max-h-full">
-                {curView.videoSrc ? (
-                  <ProductVideo src={curView.videoSrc} poster={curView.src} playing={vidPlaying} className="max-h-[62vh] w-auto object-contain" />
-                ) : (
-                  <img src={curView.src} alt={`${p.name} — video`} className={`max-h-[62vh] w-auto object-contain ${vidPlaying ? "dress-walk" : ""}`} />
-                )}
-                <button aria-label={vidPlaying ? "Pause video" : "Play video"} aria-pressed={vidPlaying} className="absolute bottom-3 right-3 z-20 flex h-9 w-9 items-center justify-center bg-white text-black shadow" onClick={() => setVidPlaying((v) => !v)}>
-                  {vidPlaying ? (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>
-                  ) : (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>
-                  )}
-                </button>
-              </div>
-            ) : (
-              <img src={curView.src} alt={`${p.name} — ${curView.label} view`} className="max-h-full max-w-full object-contain transition-transform duration-300" style={{ transform: `scale(${zoomLevel})` }} />
-            )}
-            <div className="absolute bottom-4 left-4 flex gap-1.5" role="group" aria-label="Image gallery thumbnails">
-              {views.map((v, i) => thumbBtn(v, i))}
-            </div>
-            <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-white/90 px-3 py-2 shadow ring-1 ring-black/10 sm:gap-3">
-              <button aria-label="Zoom out" className="flex h-8 w-8 items-center justify-center border border-black/30 text-lg leading-none" onClick={() => setZoomLevel(Math.max(1, Math.round((zoomLevel - 0.25) * 100) / 100))}>−</button>
-              <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em]">Zoom
-                <input aria-label="Zoom level" type="range" min={1} max={3} step={0.1} value={zoomLevel} onChange={(e) => setZoomLevel(Number(e.target.value))} className="w-24 accent-black sm:w-32" />
-              </label>
-              <button aria-label="Zoom in" className="flex h-8 w-8 items-center justify-center border border-black/30 text-lg leading-none" onClick={() => setZoomLevel(Math.min(3, Math.round((zoomLevel + 0.25) * 100) / 100))}>+</button>
-              <span className="text-xs text-neutral-600" aria-live="polite">{thumb + 1} / {views.length}</span>
-            </div>
+          {/* Thumbnails — bottom-left, 36px pitch, selected = 2px black border. */}
+          <div className="absolute bottom-[25px] left-6 z-20 flex gap-[2px]" role="group" aria-label="Image gallery thumbnails">
+            {dialogViews.map((v, i) => (
+              <button
+                key={v.label + i}
+                aria-label={`View ${i + 1} of ${dialogViews.length}: ${v.label}`}
+                aria-current={dialogIdx === i}
+                className={`relative h-[47px] w-9 shrink-0 overflow-hidden border-2 ${dialogIdx === i ? "border-black" : "border-transparent"}`}
+                onClick={() => { setDialogIdx(i); const vi = views.findIndex((x) => x.src === v.src); if (vi >= 0) setThumb(vi); setPan({ x: 0, y: 0 }); }}
+                onKeyDown={(e) => {
+                  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+                  e.preventDefault();
+                  const n = e.key === "ArrowRight" ? Math.min(dialogViews.length - 1, i + 1) : Math.max(0, i - 1);
+                  setDialogIdx(n); const vi = views.findIndex((x) => x.src === dialogViews[n].src); if (vi >= 0) setThumb(vi); setPan({ x: 0, y: 0 });
+                  (e.currentTarget.parentElement?.children[n] as HTMLElement | undefined)?.focus();
+                }}
+              >
+                <img src={v.src} alt="" aria-hidden="true" className="h-full w-full object-cover" />
+              </button>
+            ))}
           </div>
         </div>
       )}
