@@ -2283,7 +2283,12 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   const [zoomOpen, setZoomOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(2);
   const [sizeDrawer, setSizeDrawer] = useState(false);
-  const [selSize, setSelSize] = useState(p?.defaultSize ?? "");
+  // No pre-selected size: hermes.com never pre-selects one (the buy-box
+  // button always reads "Select a size" on landing, on every colourway).
+  // The old `p?.defaultSize` init made the Noir coat's button read
+  // "Select a size 32" — the ref still shows the first size (…DA0232)
+  // via displaySize below, so nothing is lost by starting empty.
+  const [selSize, setSelSize] = useState("");
   const [sizeGone, setSizeGone] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState(user?.email ?? "");
   const [notifyOpen, setNotifyOpen] = useState(false);
@@ -2492,9 +2497,10 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
             page — quantity is changed in the cart only. */}
         <div className="relative">
           {/* Back button: hermes.com shows it top-left of the gallery on
-              desktop too (user's 1366px screenshot, 2026-11-11) — the old
-              "desktop has none" note was wrong. */}
-          <button aria-label="Back" className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center bg-white text-black shadow" onClick={goBack}>
+              desktop too (user's 1366px screenshot, 2026-11-11) — but NOT
+              at very wide widths (no arrow at 1919px, verified twice), so
+              it hides from 2xl up. */}
+          <button aria-label="Back" className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center bg-white text-black shadow 2xl:hidden" onClick={goBack}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg>
           </button>
           <div ref={stripRef} className="no-scrollbar flex snap-x snap-mandatory gap-[1px] overflow-x-auto" role="group" aria-label="Product gallery">
