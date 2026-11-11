@@ -2848,42 +2848,63 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
       )}
 
       {/* "SIZE GUIDE" — a slide-in drawer from the RIGHT on desktop and a
-          bottom sheet on mobile, as on hermes.com (title "SIZE GUIDE",
-          "Size chart | Measurement guide" tabs, "Select a location" →
-          United States, Cm/Inches toggle, ready-to-wear measurement
-          table). It replaces the old behaviour where both Size Guide
-          buttons navigated away to the User guides page. */}
+          bottom sheet on mobile, as on hermes.com. Scale matches the
+          original (user's 1366px screenshots, 2026-11-11): ~380px wide,
+          11px title, icon + label tabs, "Select a location *" select
+          showing US, small cm/inches radio circles, compact 12px table
+          with sentence-case headers. The coat's table has 7 columns
+          (Hip + Back width included); a sweater's has 5 (no Hip/Back
+          width) — the original varies the table by garment, and no
+          sweater in our catalogue carries sizes yet, so the 7-column
+          table is what this drawer shows. */}
       {sizeGuideOpen && (
         <div className="fixed inset-0 z-[60]" role="dialog" aria-label="Size guide">
           <button aria-label="Close size guide" className="absolute inset-0 h-full w-full bg-black/30" onClick={() => setSizeGuideOpen(false)} />
-          <div className="drawer-in absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col bg-[#fffcf7] shadow-2xl lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-0 lg:h-full lg:w-[480px] lg:max-w-[92vw]">
-            <div className="relative border-b border-black/10 px-5 py-4">
-              <span className="block text-center text-[12px] font-semibold uppercase tracking-[0.25em]">Size Guide</span>
-              <button aria-label="Close size guide" className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center" onClick={() => setSizeGuideOpen(false)}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
+          <div className="drawer-in absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col bg-[#fffcf7] shadow-2xl lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-0 lg:h-full lg:w-[380px] lg:max-w-[92vw]">
+            <div className="relative border-b border-black/10 px-4 py-3.5">
+              <span className="block text-center text-[11px] font-medium uppercase tracking-[0.3em]">Size Guide</span>
+              <button aria-label="Close size guide" className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center" onClick={() => setSizeGuideOpen(false)}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4">
-              <div className="flex gap-6 border-b border-black/10 pb-3 text-sm">
-                <button aria-label="Find the right size tab" className={guideTab === "chart" ? "font-semibold underline underline-offset-4" : ""} onClick={() => setGuideTab("chart")}>Find the right size</button>
-                <button aria-label="Measurement guide tab" className={guideTab === "measure" ? "font-semibold underline underline-offset-4" : ""} onClick={() => setGuideTab("measure")}>Measurement guide</button>
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              <div className="flex items-start justify-between border-b border-black/10 pb-3">
+                <button aria-label="Find the right size tab" className={`flex flex-col items-center gap-1.5 text-xs ${guideTab === "chart" ? "font-semibold" : "text-neutral-500"}`} onClick={() => setGuideTab("chart")}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><circle cx="12" cy="7.5" r="3.2" /><path d="M5.5 20c.8-3.4 3.4-5 6.5-5s5.7 1.6 6.5 5" /></svg>
+                  Find the right size
+                </button>
+                <button aria-label="Measurement guide tab" className={`flex flex-col items-center gap-1.5 text-xs ${guideTab === "measure" ? "font-semibold" : "text-neutral-500"}`} onClick={() => setGuideTab("measure")}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1Z" /><path d="M14.5 6.5l3 3" /></svg>
+                  Measurement guide
+                </button>
               </div>
-              <p className="mt-4 text-[11px] uppercase tracking-[0.18em] text-neutral-500">Select a location</p>
-              <p className="mt-1 text-sm">United States</p>
-              <div className="mt-4 flex gap-2" role="group" aria-label="Measurement unit">
-                <button aria-label="Show measurements in centimetres" className={`border px-4 py-1.5 text-xs uppercase tracking-[0.15em] ${guideUnit === "cm" ? "border-black bg-black text-white" : "border-black/30"}`} onClick={() => setGuideUnit("cm")}>Cm</button>
-                <button aria-label="Show measurements in inches" className={`border px-4 py-1.5 text-xs uppercase tracking-[0.15em] ${guideUnit === "in" ? "border-black bg-black text-white" : "border-black/30"}`} onClick={() => setGuideUnit("in")}>Inches</button>
+              <label className="mt-4 block text-[11px] text-neutral-500" htmlFor="guide-location">Select a location *</label>
+              <div className="relative mt-1">
+                <select id="guide-location" aria-label="Select a location" className="w-full appearance-none border-b border-black/25 bg-transparent py-2 pr-8 text-sm outline-none" value="US" onChange={() => {}}>
+                  <option value="US">US</option>
+                </select>
+                <svg className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+              </div>
+              <div className="mt-4 flex items-center gap-6" role="radiogroup" aria-label="Measurement unit">
+                <button role="radio" aria-checked={guideUnit === "cm"} aria-label="Show measurements in centimetres" className="flex items-center gap-2 text-xs" onClick={() => setGuideUnit("cm")}>
+                  <span className="flex h-[14px] w-[14px] items-center justify-center rounded-full border border-black">{guideUnit === "cm" ? <span className="h-[6px] w-[6px] rounded-full bg-black" /> : null}</span>
+                  cm
+                </button>
+                <button role="radio" aria-checked={guideUnit === "in"} aria-label="Show measurements in inches" className="flex items-center gap-2 text-xs" onClick={() => setGuideUnit("in")}>
+                  <span className="flex h-[14px] w-[14px] items-center justify-center rounded-full border border-black">{guideUnit === "in" ? <span className="h-[6px] w-[6px] rounded-full bg-black" /> : null}</span>
+                  inches
+                </button>
               </div>
               {guideTab === "chart" ? (
                 <div className="mt-5 overflow-x-auto">
-                <table className="w-full min-w-[520px] text-left text-sm">
+                <table className="w-full min-w-[520px] text-left text-xs">
                   <thead>
-                    <tr className="border-b border-black/20 text-[11px] uppercase tracking-[0.12em] text-neutral-500">
-                      <th className="py-2 pr-2 font-medium">Hermes Size</th>
+                    <tr className="border-b border-black/20 text-[11px] text-neutral-500">
+                      <th className="py-2 pr-2 font-medium">Hermès Size</th>
                       <th className="py-2 pr-2 font-medium">US</th>
-                      <th className="py-2 pr-2 font-medium">Chest</th>
-                      <th className="py-2 pr-2 font-medium">Waist</th>
-                      <th className="py-2 pr-2 font-medium">Hip</th>
+                      <th className="py-2 pr-2 font-medium">Chest circumference</th>
+                      <th className="py-2 pr-2 font-medium">Waist circumference</th>
+                      <th className="py-2 pr-2 font-medium">Hip circumference</th>
                       <th className="py-2 pr-2 font-medium">Back width</th>
                       <th className="py-2 font-medium">Sleeves length</th>
                     </tr>
@@ -2891,20 +2912,20 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                   <tbody>
                     {(guideUnit === "in" ? RTW_CHART_IN : RTW_CHART_CM).map((r) => (
                       <tr key={r[0]} className="border-b border-black/10">
-                        <td className="py-2.5 pr-2">{r[0]}</td>
-                        <td className="py-2.5 pr-2">{r[1]}</td>
-                        <td className="py-2.5 pr-2">{r[2]}</td>
-                        <td className="py-2.5 pr-2">{r[3]}</td>
-                        <td className="py-2.5 pr-2">{r[4]}</td>
-                        <td className="py-2.5 pr-2">{r[5]}</td>
-                        <td className="py-2.5">{r[6]}</td>
+                        <td className="py-2 pr-2">{r[0]}</td>
+                        <td className="py-2 pr-2">{r[1]}</td>
+                        <td className="py-2 pr-2">{r[2]}</td>
+                        <td className="py-2 pr-2">{r[3]}</td>
+                        <td className="py-2 pr-2">{r[4]}</td>
+                        <td className="py-2 pr-2">{r[5]}</td>
+                        <td className="py-2">{r[6]}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 </div>
               ) : (
-                <div className="mt-5 text-sm leading-6 text-neutral-700">
+                <div className="mt-5 text-xs leading-6 text-neutral-700">
                   <p>To take your measurements and find your perfect size, you will need a measuring tape. Make sure to keep the tape loose. If you are in-between sizes, we recommend sizing up. Time to follow the guide!</p>
                   <ol className="mt-4 space-y-4">
                     {MEASURE_STEPS.map(([title, body], i) => (
@@ -2917,13 +2938,13 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                   <p className="mt-5">Match the obtained figures with the corresponding size in the chart below</p>
                   <p className="mt-2">Our tip: If you do not have a measuring tape, use standard tape and then measure the tape against a ruler</p>
                   <div className="mt-5 overflow-x-auto">
-                  <table className="w-full min-w-[460px] text-left text-sm">
+                  <table className="w-full min-w-[460px] text-left text-xs">
                     <thead>
-                      <tr className="border-b border-black/20 text-[11px] uppercase tracking-[0.12em] text-neutral-500">
-                        <th className="py-2 pr-2 font-medium">Hermes Size</th>
-                        <th className="py-2 pr-2 font-medium">Chest</th>
-                        <th className="py-2 pr-2 font-medium">Waist</th>
-                        <th className="py-2 pr-2 font-medium">Hip</th>
+                      <tr className="border-b border-black/20 text-[11px] text-neutral-500">
+                        <th className="py-2 pr-2 font-medium">Hermès Size</th>
+                        <th className="py-2 pr-2 font-medium">Chest circumference</th>
+                        <th className="py-2 pr-2 font-medium">Waist circumference</th>
+                        <th className="py-2 pr-2 font-medium">Hip circumference</th>
                         <th className="py-2 pr-2 font-medium">Back width</th>
                         <th className="py-2 font-medium">Sleeves length</th>
                       </tr>
@@ -2931,12 +2952,12 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                     <tbody>
                       {RTW_CHART_CM.map((r) => (
                         <tr key={r[0]} className="border-b border-black/10">
-                          <td className="py-2.5 pr-2">{r[0]}</td>
-                          <td className="py-2.5 pr-2">{r[2]}</td>
-                          <td className="py-2.5 pr-2">{r[3]}</td>
-                          <td className="py-2.5 pr-2">{r[4]}</td>
-                          <td className="py-2.5 pr-2">{r[5]}</td>
-                          <td className="py-2.5">{r[6]}</td>
+                          <td className="py-2 pr-2">{r[0]}</td>
+                          <td className="py-2 pr-2">{r[2]}</td>
+                          <td className="py-2 pr-2">{r[3]}</td>
+                          <td className="py-2 pr-2">{r[4]}</td>
+                          <td className="py-2 pr-2">{r[5]}</td>
+                          <td className="py-2">{r[6]}</td>
                         </tr>
                       ))}
                     </tbody>
