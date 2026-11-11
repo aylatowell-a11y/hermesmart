@@ -835,7 +835,8 @@ export function App() {
         <nav ref={measureNav} aria-label="Main navigation" className={`relative mx-auto hidden max-w-7xl items-center justify-center gap-0 px-4 pb-0 pt-0 lg:flex`} onMouseLeave={() => setMenuCat(null)}>
           {mega.map((n) => (
             <div key={n.key} className="flex items-center" onMouseEnter={() => setMenuCat(n.key)}>
-              <button aria-label={`Open ${n.label} menu`} aria-expanded={menuCat === n.key} aria-haspopup="true" className={`whitespace-nowrap px-3 ${slim ? "py-[14px]" : "pb-3"} text-[10px] font-bold uppercase tracking-[1px] ${menuCat === n.key ? "underline underline-offset-8 decoration-1" : "hover:underline underline-offset-4"}`} onClick={() => setMenuCat(menuCat === n.key ? null : n.key)}>{n.label}</button>
+              {/* Click OPENS, never toggles: hover already opens the menu on mouseenter, so a toggle would close it again on the first click. Dismissal stays via mouse-leave / Escape / outside click. */}
+              <button aria-label={`Open ${n.label} menu`} aria-expanded={menuCat === n.key} aria-haspopup="true" className={`whitespace-nowrap px-3 ${slim ? "py-[14px]" : "pb-3"} text-[10px] font-bold uppercase tracking-[1px] ${menuCat === n.key ? "underline underline-offset-8 decoration-1" : "hover:underline underline-offset-4"}`} onClick={() => setMenuCat(n.key)}>{n.label}</button>
             </div>
           ))}
           {menuCat && (() => { const entry = mega.find(e => e.key === menuCat); if (!entry) return null; const cols = entry.key === "women" ? MEGA_DESKTOP_WOMEN : entry.columns; return (
