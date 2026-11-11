@@ -1981,7 +1981,6 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
         <div className="mt-12 text-center">
           <p className="text-xs text-neutral-500">{`${filtered.length} products viewed out of ${filtered.length}`}</p>
           <div className="mx-auto mt-4 h-px w-[120px] bg-black" />
-          {loadedMsg && <p className="mt-1 text-xs text-neutral-500" role="status">{loadedMsg}</p>}
         </div>
       )}
 
