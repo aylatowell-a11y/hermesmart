@@ -41,6 +41,7 @@ import scarfColliersImg from "./assets/products/scarf-90-colliers.webp";
 import { fileToBase64 } from "./fileToBase64";
 import { productImageFor } from "./productImages";
 import { galleryForProduct } from "./galleryImages";
+import { categoryUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
 
 type Product = ApiResponse<typeof api, "getStorefront">["products"][number];
 type Settings = ApiResponse<typeof api, "getStorefront">["settings"];
@@ -152,6 +153,15 @@ function megaTarget(entry: MegaEntry, overrides: NavOverrides, heading: string, 
   return { t: "category", cat: dest, sub: special[heading] || headingToSub(heading) };
 }
 const NAV: { key: string; label: string; subs: string[] }[] = MEGA_RAW.filter(e=>e.key!=="about").map(e => ({ key: e.key, label: e.label, subs: [...new Set(e.columns.flatMap(col => col.flatMap(sec => [headingToSub(sec.heading), ...sec.items])).filter(Boolean))] }));
+// Candidate sub-names per top-level category, for reversing slug category
+// URLs back into views (routing). Built from the nav lists plus the two
+// short collection spellings the desktop mega menu uses.
+const SUBS_BY_CAT: Record<string, string[]> = (() => {
+  const m: Record<string, string[]> = {};
+  for (const n of NAV) m[n.key] = [...n.subs];
+  m["women"] = [...new Set([...(m["women"] ?? []), "Fall-Winter 2026", "Spring-Summer 2026"])];
+  return m;
+})();
 const THEMES = ["Silk", "Beauty", "Belts", "Men's Shoes", "Fashion Jewelry", "Fragrances", "Watches", "Leather Goods", "Home"];
 // Discover carousel — verified on hermes.com (7 Nov 2026) by clicking controls 1–15:
 // 15 controls, but only 5 themes, repeated three times in this exact order.
@@ -343,14 +353,17 @@ export function ProductVisual({ p, large: _large, altSrc, altActive }: { p: Prod
 // bags, etc. never get a quick-buy button.
 function isSneakerProduct(p: Product): boolean { return /sneaker/i.test(p.name); }
 
-function ProductCard({ p, onOpen, onQuickBuy, colourInName, portrait }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean; portrait?: boolean }) {
+function ProductCard({ p, onOpen, onQuickBuy, colourInName }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean }) {
   const bagIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>;
-  // Tile alternate views (hermes.com parity): the tile photo swaps on hover
-  // (desktop) and cycles on horizontal swipe (touch) through the product's
-  // gallery views — without opening the product page. The alternate is the
-  // product's 2nd gallery view first (galleryForProduct, default colourway),
-  // skipping Video views and any view that duplicates the tile photo.
-  // Single-view products (e.g. Milo hat, Rider jacket) have no alternate.
+  // Tile alternate views (hermes.com parity): hovering does NOT swap the
+  // photo. On tiles with more than one gallery view, small white square
+  // < > arrows appear at mid-height on hover (desktop) and cycle the
+  // photos on click; on touch the photo changes with a horizontal swipe —
+  // all without opening the product page. The alternates are the
+  // product's gallery views after the first (galleryForProduct, default
+  // colourway), skipping Video views and any view that duplicates the tile
+  // photo. Single-view products (e.g. Milo hat, Rider jacket) have no
+  // alternate and no arrows.
   // CAVEAT: gallery views are mostly generated type-set photos, not the
   // original Hermes second view — the mechanism is exact, the imagery is
   // approximate until original second-view URLs are extracted live.
@@ -363,15 +376,20 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, portrait }: { p: Pro
   }, [p, tileSrc]);
   const [altIdx, setAltIdx] = useState<number | null>(null);
   const [altArmed, setAltArmed] = useState(false);
-  // Hover exists on laptop, not on mobile: only arm the hover swap on a
-  // fine pointer, so touch taps never get a stuck hover state.
-  const finePointer = useMemo(() => typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches, []);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const suppressClickRef = useRef(false);
-  const onHoverStart = () => {
-    if (!finePointer || altViews.length === 0) return;
+  // Arrow step (hermes.com): cycles tile photo -> alternate views -> tile
+  // photo again, in both directions. altIdx null = the tile photo itself.
+  const stepTile = (dir: 1 | -1) => {
     setAltArmed(true);
-    setAltIdx(0);
+    setAltIdx((cur) => {
+      const n = altViews.length;
+      if (n === 0) return null;
+      if (cur === null) return dir === 1 ? 0 : n - 1;
+      const nx = cur + dir;
+      if (nx < 0 || nx >= n) return null;
+      return nx;
+    });
   };
   const onTouchStart = (e: React.TouchEvent) => {
     const t = e.touches[0];
@@ -398,9 +416,20 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, portrait }: { p: Pro
   return (
     <div className="group relative cursor-pointer" role="link" aria-label={`${p.name}, ${priceText(p)}`} tabIndex={0}
       onClick={() => { if (suppressClickRef.current) { suppressClickRef.current = false; return; } onOpen(p.id); }} onKeyDown={(e) => { if (e.key === "Enter") onOpen(p.id); }}
-      onMouseEnter={onHoverStart} onMouseLeave={() => setAltIdx(null)}
+      onMouseLeave={() => setAltIdx(null)}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <div className={`${portrait ? "aspect-[4/5] sm:aspect-square" : "aspect-square"} overflow-hidden transition-transform duration-300 group-hover:scale-[1.015]`}><ProductVisual p={p} altSrc={altIdx !== null ? altViews[altIdx] : (altArmed ? altViews[0] : undefined)} altActive={altIdx !== null} /></div>
+      <div className="relative aspect-[3/4] overflow-hidden transition-transform duration-300 group-hover:scale-[1.015]"><ProductVisual p={p} altSrc={altIdx !== null ? altViews[altIdx] : (altArmed ? altViews[0] : undefined)} altActive={altIdx !== null} />
+        {altViews.length > 0 && (
+          <>
+            <button aria-label="Previous image" className="absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center bg-white text-black opacity-0 shadow transition-opacity group-hover:opacity-100 focus-visible:opacity-100" onClick={(e) => { e.stopPropagation(); stepTile(-1); }} onKeyDown={(e) => e.stopPropagation()}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
+            </button>
+            <button aria-label="Next image" className="absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center bg-white text-black opacity-0 shadow transition-opacity group-hover:opacity-100 focus-visible:opacity-100" onClick={(e) => { e.stopPropagation(); stepTile(1); }} onKeyDown={(e) => e.stopPropagation()}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg>
+            </button>
+          </>
+        )}
+      </div>
       {colourInName ? (
         // Category tile, as on hermes.com: the colour is appended to the
         // name ("Le Petit Sac bag, Beige/Natural"), the price sits below,
@@ -436,7 +465,27 @@ export function App() {
   const products = useMemo(() => store.data?.products ?? [], [store.data]);
   const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "800-441-4488", heroTitle: "Threading ideas", heroText: "", shipTo: "UNITED STATES", deliveryText: "", returnsText: "", paymentMethods: "", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10am - 9pm EST", logoMode: "both", logoUrl: "", flagshipStore: "691 Madison Avenue, New York", shipToCountries: "UNITED STATES, UNITED KINGDOM, FRANCE, PAKISTAN, UNITED ARAB EMIRATES, INDIA, CANADA", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. All rights reserved.", serviceDeliveryBody: "Free standard delivery. Herm\u00e8s offers several fast and secure delivery options.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
 
-  const [view, setView] = useState<View>({ t: "home" });
+  // Real URLs (History API routing): the initial view comes from the URL
+  // when it is a routed one (category, or home); a product URL keeps its
+  // ref and resolves to the product once the catalog has loaded (effect
+  // below) — the URL is already correct, so nothing is pushed on load.
+  const initialRoute = useMemo(() => {
+    if (typeof window === "undefined") return { view: null as View | null, productRef: null as string | null };
+    const parsed = parseUrl(window.location.pathname, [], SUBS_BY_CAT);
+    if (parsed && parsed.kind === "category") return { view: { t: "category", cat: parsed.cat, sub: parsed.sub } as View, productRef: null as string | null };
+    if (parsed && parsed.kind === "home") return { view: { t: "home" } as View, productRef: null as string | null };
+    return { view: null as View | null, productRef: productRefFromPath(window.location.pathname) };
+  }, []);
+  const [view, setView] = useState<View>(initialRoute.view ?? { t: "home" });
+  const pendingProductRef = useRef<string | null>(initialRoute.productRef);
+  const productsRef = useRef<Product[]>([]);
+  const viewRef = useRef<View>(initialRoute.view ?? { t: "home" });
+  // Per-category list state, so browser Back restores a category exactly
+  // as it was left (how many products were loaded + scroll position).
+  const catStateRef = useRef<Record<string, { visible: number; scrollY: number }>>({});
+  // The category (or home) a product was opened from — the product page's
+  // Back controls return to it, never to the default bags category.
+  const [fromView, setFromView] = useState<View | null>(null);
   const [cart, setCart] = useState<CartItem[]>(() => load("hlx-cart", []));
   const [user, setUser] = useState<{ name: string; email: string } | null>(() => load("hlx-user", null));
   const [addedDialog, setAddedDialog] = useState("");
@@ -533,14 +582,89 @@ export function App() {
   const [sentinelGone, setSentinelGone] = useState(false);
   useEffect(() => { const el = sentinelRef.current; if (!el || typeof IntersectionObserver === "undefined") return; const io = new IntersectionObserver((es) => { for (const e of es) setSentinelGone(!e.isIntersecting); }, { threshold: 0 }); io.observe(el); return () => io.disconnect(); }, []);
   useEffect(() => { setHeaderMode((p) => (sentinelGone ? (p === "top" ? "full" : p) : "top")); }, [sentinelGone]);
+  // Measure the fixed header's real height so the category sub-nav docks
+  // exactly under it in every header mode (top / slim / full) — the two pin
+  // together as one unit instead of the sub-nav floating over the grid.
+  const [headerH, setHeaderH] = useState(141);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => { const h = el.offsetHeight; setHeaderH((prev) => (prev === h ? prev : h)); });
+    ro.observe(el);
+    setHeaderH(el.offsetHeight);
+    return () => ro.disconnect();
+  }, [view.t]);
   const [themeIdx, setThemeIdx] = useState(0);
   const [cookie, setCookie] = useState<string | null>(() => { try { return localStorage.getItem("hlx-cookies"); } catch { return "pending"; } });
   const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { save("hlx-cart", cart); }, [cart]);
   useEffect(() => { save("hlx-user", user); }, [user]);
+  useEffect(() => { productsRef.current = products; }, [products]);
+  useEffect(() => { viewRef.current = view; }, [view]);
+  // Deep link to a product: the ref in the URL resolves once the catalog loads.
+  useEffect(() => {
+    if (!pendingProductRef.current || products.length === 0) return;
+    const ref = pendingProductRef.current;
+    pendingProductRef.current = null;
+    const found = products.find((x) => (x.refCode || "").replace(/\s+/g, "").toLowerCase() === ref.toLowerCase());
+    if (found) setView({ t: "product", id: found.id });
+  }, [products]);
   useEffect(() => { try { let k = localStorage.getItem("hlx-visitor"); if (!k) { k = "v-" + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("hlx-visitor", k); } const day = new Date().toISOString().slice(0, 10); const flag = `hlx-visit-${day}`; if (!localStorage.getItem(flag)) { localStorage.setItem(flag, "1"); api.recordVisit({ visitorKey: k, day }).catch(() => {}); } } catch { /* ignore */ } }, []);
-  const go = (v: View) => { if (v.t === "category") pulse(2200); setView(v); setMobileNav(false); setMenuCat(null); topRef.current?.scrollIntoView(); window.scrollTo({ top: 0 }); };
+  const catKey = (cat: string, sub?: string) => `${cat}|${sub ?? ""}`;
+  const saveCatState = (v: View) => {
+    if (v.t !== "category") return;
+    const k = catKey(v.cat, v.sub);
+    const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 };
+    catStateRef.current[k] = { visible: prev.visible, scrollY: window.scrollY };
+  };
+  const restoreCatScroll = (cat: string, sub?: string) => {
+    const saved = catStateRef.current[catKey(cat, sub)];
+    const y = saved?.scrollY ?? 0;
+    requestAnimationFrame(() => { window.setTimeout(() => window.scrollTo({ top: y }), 60); });
+  };
+  const go = (v: View, opts?: { restore?: boolean }) => {
+    const cur = viewRef.current;
+    if (cur.t === "category") saveCatState(cur);
+    if (v.t === "product" && (cur.t === "category" || cur.t === "home")) setFromView(cur);
+    // Real URL for routed views (home / category / product); other views
+    // (cart, checkout, account, admin, pages, about) stay unrouted so
+    // browser Back returns to the last routed view.
+    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : null;
+    if (url) { try { window.history.pushState(null, "", url); } catch { /* ignore */ } }
+    if (v.t === "category" && !opts?.restore) pulse(2200);
+    setView(v); setMobileNav(false); setMenuCat(null);
+    if (opts?.restore && v.t === "category") restoreCatScroll(v.cat, v.sub);
+    else { topRef.current?.scrollIntoView(); window.scrollTo({ top: 0 }); }
+  };
+  // ---- History (browser Back) --------------------------------------------
+  // popstate: the URL already changed; render the view it names and restore
+  // the category's saved list/scroll state instead of resetting it.
+  useEffect(() => {
+    const onPop = () => {
+      const parsed = parseUrl(window.location.pathname, productsRef.current, SUBS_BY_CAT);
+      if (!parsed) return;
+      const cur = viewRef.current;
+      if (parsed.kind === "home") {
+        if (cur.t === "category") saveCatState(cur);
+        setView({ t: "home" }); setMobileNav(false); setMenuCat(null);
+        window.scrollTo({ top: 0 });
+        return;
+      }
+      if (parsed.kind === "category") {
+        if (cur.t === "category") saveCatState(cur);
+        if (cur.t === "category" || cur.t === "home") setFromView(cur);
+        setView({ t: "category", cat: parsed.cat, sub: parsed.sub }); setMobileNav(false); setMenuCat(null);
+        restoreCatScroll(parsed.cat, parsed.sub);
+        return;
+      }
+      if (cur.t === "category" || cur.t === "home") setFromView(cur);
+      setView({ t: "product", id: parsed.id }); setMobileNav(false); setMenuCat(null);
+      window.scrollTo({ top: 0 });
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const cartTotal = cart.reduce((s, i) => s + i.qty * i.price, 0);
 
@@ -598,7 +722,7 @@ export function App() {
         const slim = headerMode === "slim";
         const ink = onHero ? "#ffffff" : "#191919";
         return (
-      <header ref={headerRef} className={`fixed inset-x-0 top-0 z-40 pt-safe transition-[background-color,border-color,color] duration-300 ${onHero ? "border-b border-transparent" : slim ? "border-b border-black" : "border-b border-[#f6f1eb]"}`} style={{ background: onHero ? "transparent" : "#fcf7f1", color: ink }}>
+      <header ref={headerRef} className={`fixed inset-x-0 top-0 z-40 pt-safe transition-[background-color,border-color,color] duration-300 ${onHero ? "border-b border-transparent" : "border-b border-[#f6f1eb]"}`} style={{ background: onHero ? "transparent" : "#fcf7f1", color: ink }}>
         {/* Top row (logo / Search / Account / Cart). In the slim state this row
             is gone on DESKTOP — only the nav board below remains. On mobile the
             slim carriage header IS the board, so the row stays at every width
@@ -639,7 +763,7 @@ export function App() {
         <nav aria-label="Main navigation" className={`relative mx-auto hidden max-w-7xl items-center justify-center gap-0 px-4 pb-0 pt-0 lg:flex`} onMouseLeave={() => setMenuCat(null)}>
           {mega.map((n) => (
             <div key={n.key} className="flex items-center" onMouseEnter={() => setMenuCat(n.key)}>
-              <button aria-label={`Open ${n.label} menu`} aria-expanded={menuCat === n.key} aria-haspopup="true" className={`whitespace-nowrap px-3 ${slim ? "py-[14px]" : "pb-3"} text-[10px] font-bold uppercase tracking-[1px] ${menuCat === n.key ? "underline underline-offset-8 decoration-1" : "hover:underline underline-offset-4"}`} onClick={() => { if (menuCat === n.key) { if (n.key === "about") go({ t: "about" }); else go({ t: "category", cat: navOverrides[n.key]?.dest || n.key }); } else setMenuCat(n.key); }}>{n.label}</button>
+              <button aria-label={`Open ${n.label} menu`} aria-expanded={menuCat === n.key} aria-haspopup="true" className={`whitespace-nowrap px-3 ${slim ? "py-[14px]" : "pb-3"} text-[10px] font-bold uppercase tracking-[1px] ${menuCat === n.key ? "underline underline-offset-8 decoration-1" : "hover:underline underline-offset-4"}`} onClick={() => setMenuCat(menuCat === n.key ? null : n.key)}>{n.label}</button>
             </div>
           ))}
           {menuCat && (() => { const entry = mega.find(e => e.key === menuCat); if (!entry) return null; const cols = entry.key === "women" ? MEGA_DESKTOP_WOMEN : entry.columns; return (
@@ -768,8 +892,8 @@ export function App() {
         {view.t === "home" && <HomeView settings={settings} products={products} themeIdx={themeIdx} setThemeIdx={setThemeIdx} go={go} addToCart={addToCart} pulse={pulse} />}
         {view.t === "cart" && <CartPage cart={cart} setCart={setCart} settings={settings} go={go} total={cartTotal} count={cartCount} products={products} />}
         {view.t === "category" && view.cat === "about" && <AboutPage go={go} />}
-        {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} />}
-        {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} />}
+        {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} headerH={headerH} initialVisible={catStateRef.current[catKey(view.cat, view.sub)]?.visible ?? 40} onVisibleChange={(n) => { const k = catKey(view.cat, view.sub); const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 }; catStateRef.current[k] = { ...prev, visible: n }; }} />}
+        {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} from={fromView} />}
         {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} />}
         {view.t === "about" && <AboutPage go={go} />}
         {view.t === "account" && <AccountView key={view.mode ?? "login"} user={user} setUser={setUser} go={go} mode={view.mode} />}
@@ -811,7 +935,7 @@ export function App() {
   );
 }
 
-function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pulse }: { settings: Settings; products: Product[]; themeIdx: number; setThemeIdx: (i: number) => void; go: (v: View) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; pulse: (ms?: number) => void }) {
+function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pulse }: { settings: Settings; products: Product[]; themeIdx: number; setThemeIdx: (i: number) => void; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; pulse: (ms?: number) => void }) {
   const activeIdx = Math.min(CAROUSEL_THEMES.length - 1, Math.max(0, themeIdx));
   const theme = CAROUSEL_THEMES[activeIdx] ?? "Belts";
   const strip = products.filter((p) => p.theme === theme);
@@ -967,7 +1091,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             is hidden, not the products. */}
         <h2 className="sr-only">Products for the theme {theme}</h2>
         <div key={theme} className="-mx-4 mt-6 grid grid-cols-2 gap-x-[2px] gap-y-8 sm:mx-0 lg:mt-8 lg:grid-cols-4 lg:gap-[2px]">
-          {shown.map((p) => <ProductCard key={p.id} p={p} portrait onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
+          {shown.map((p) => <ProductCard key={p.id} p={p} onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
         </div>
       </div>
       </section>
@@ -1200,7 +1324,7 @@ type FGroup = "category" | "line" | "material" | "modelSize" | "finish" | "size"
 type FSection = { key: string; title: string; kind: "checks" | "color" | "size" | "price" | "sort"; group?: FGroup; options: { value: string; count: number; hex?: string }[] };
 const EMPTY_SEL: Record<FGroup, string[]> = { category: [], line: [], material: [], modelSize: [], finish: [], size: [], color: [], width: [], personalize: [], universe: [] };
 
-function CategoryView({ products, cat, sub, go, addToCart }: { products: Product[]; cat: string; sub?: string; go: (v: View) => void; addToCart: (p: Product) => void }) {
+function CategoryView({ products, cat, sub, go, addToCart, headerH, initialVisible, onVisibleChange }: { products: Product[]; cat: string; sub?: string; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product) => void; headerH: number; initialVisible?: number; onVisibleChange?: (n: number) => void }) {
   const nav = NAV.find((n) => n.key === cat);
   const label = nav?.label ?? cat.toUpperCase();
   const base = useMemo(() => {
@@ -1306,7 +1430,16 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
     siblings = ["Sneakers", "Sandals", "Loafers and mules", "Derbies and Oxford shoes", "Boots and ankle boots"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
     siblings.push({ label: "View all", view: { t: "category", cat, sub: "Shoes" }, current: false });
   } else if (isRTWPage) {
-    siblings = RTW_SUBS.map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow || (isCollectionSub && l.toLowerCase() === `${subLow} collection`) || (l === "Dresses and skirts" && isDressesPage && !RTW_SUBS.some((x) => x.toLowerCase() === subLow)) }));
+    // The original lists only the CURRENT collection first — the other
+    // season is not a sibling on a collection page (the Fall-Winter page
+    // has no Spring-Summer item, and vice versa).
+    const rtwList = RTW_SUBS.filter((l) => {
+      const ll = l.toLowerCase();
+      if (ll === "spring-summer 2026 collection" && (subLow === "fall-winter 2026 collection" || subLow === "fall-winter 2026")) return false;
+      if (ll === "fall-winter 2026 collection" && (subLow === "spring-summer 2026 collection" || subLow === "spring-summer 2026")) return false;
+      return true;
+    });
+    siblings = rtwList.map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow || (isCollectionSub && l.toLowerCase() === `${subLow} collection`) || (l === "Dresses and skirts" && isDressesPage && !RTW_SUBS.some((x) => x.toLowerCase() === subLow)) }));
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -1320,7 +1453,9 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   // edits. Opening the drawer snapshots the applied state into the draft.
   const [fOpen, setFOpen] = useState(false);
   const [mosaic, setMosaic] = useState(false);
-  const [visible, setVisible] = useState(40);
+  const [visible, setVisible] = useState(initialVisible ?? 40);
+  // Persist the loaded count so browser Back restores the category as left.
+  useEffect(() => { onVisibleChange?.(visible); }, [visible]);
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [sel, setSel] = useState<Record<FGroup, string[]>>(EMPTY_SEL);
   const [sort, setSort] = useState("relevance");
@@ -1339,9 +1474,22 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
   useEffect(() => {
+    // Scroll the sideways sub-nav so the CURRENT sibling is fully in view.
+    // The current item's position is measured against the nav's own scroll
+    // content: offsetLeft is relative to the sticky bar (the offsetParent),
+    // not the nav, so the first item scrolls to exactly 0 and is never
+    // clipped at the left edge.
     const navEl = subNavRef.current; if (!navEl) return;
-    const cur = navEl.querySelector<HTMLElement>("[data-current='true']"); if (!cur) return;
-    navEl.scrollTo({ left: Math.max(0, cur.offsetLeft - 12) });
+    const ensureVisible = () => {
+      const cur = navEl.querySelector<HTMLElement>("[data-current='true']"); if (!cur) return;
+      const pos = cur.offsetLeft - navEl.offsetLeft;
+      const left = Math.max(0, pos - 12);
+      const right = pos + cur.offsetWidth;
+      if (navEl.scrollLeft > left || navEl.scrollLeft + navEl.clientWidth < right) navEl.scrollTo({ left });
+    };
+    ensureVisible();
+    const t = window.setTimeout(ensureVisible, 400);
+    return () => window.clearTimeout(t);
   }, []);
   const themeRef = useRef<HTMLDivElement>(null);
 
@@ -1477,7 +1625,11 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
       : { img: heroImg, alt: "Hands smoothing a blue patterned blanket against a warm brown stone wall", lines: [titleText, "Discover the collection"], view: { t: "category", cat } as View };
   type GridItem = { kind: "product"; p: Product } | { kind: "text" } | { kind: "wide" };
   const gridItems: GridItem[] = [];
-  const showEditorial = !filtersActive && sort === "relevance";
+  // The Fall-Winter collection page carries NO editorial tiles on the
+  // original (verified in its first 120 products) — the two invented
+  // tiles (beige text tile + wide blanket tile) are removed there.
+  const isFallWinterPage = isRTWPage && (subLow === "fall-winter 2026 collection" || subLow === "fall-winter 2026");
+  const showEditorial = !filtersActive && sort === "relevance" && !isFallWinterPage;
   filtered.slice(0, visible).forEach((p, i) => {
     gridItems.push({ kind: "product", p });
     if (showEditorial && i === 3) gridItems.push({ kind: "text" });
@@ -1568,7 +1720,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
           items off), the view toggle stays at the right end of the same
           line, and FILTER lives in the floating FILTER & SORT pill instead;
           on desktop the row shows fully with its FILTER button. */}
-      <div className="sticky top-[61px] z-30 -mx-4 mt-4 bg-[#fcf7f1] px-4 py-3 sm:-mx-6 sm:px-6 lg:top-[141px]">
+      <div className="sticky z-30 -mx-4 mt-4 bg-[#fcf7f1] px-4 py-3 sm:-mx-6 sm:px-6" style={{ top: headerH }}>
         <div className="flex items-center gap-x-4 lg:gap-x-5">
           <nav ref={subNavRef} className="no-scrollbar flex min-w-0 flex-1 gap-5 overflow-x-auto whitespace-nowrap" aria-label="Subcategories">
             {siblings.map((s) => (
@@ -1634,21 +1786,21 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
               </button>
             ))}
           </div>
-          <p className="mt-4 text-center text-xs text-neutral-500">{filtered.length} products viewed out of {filtered.length}</p>
+          <p className="mt-4 text-center text-xs text-neutral-500">{`${filtered.length} products viewed out of ${filtered.length}`}</p>
         </div>
       )}
 
       {!mosaic && visible < filtered.length && (
         <div className="mt-12 text-center">
-          <p className="text-xs text-neutral-500">{Math.min(visible, filtered.length)} products viewed out of {filtered.length}</p>
+          <p className="text-xs text-neutral-500">{`${Math.min(visible, filtered.length)} products viewed out of ${filtered.length}`}</p>
           <div className="mx-auto mt-4 h-px w-[120px] bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${filtered.length ? (Math.min(visible, filtered.length) / filtered.length) * 100 : 0}%` }} /></div>
-          <button aria-label="See more products" className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal" onClick={() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadedMsg(`${added} products loaded`); }}>SEE MORE PRODUCTS</button>
+          <button aria-label="SEE MORE PRODUCTS" className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal" onClick={() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadedMsg(`${added} products loaded`); }}>SEE MORE PRODUCTS</button>
           {loadedMsg && <p className="sr-only" role="status">{loadedMsg}</p>}
         </div>
       )}
-      {!mosaic && visible >= filtered.length && filtered.length > 40 && (
+      {!mosaic && visible >= filtered.length && filtered.length > 0 && (
         <div className="mt-12 text-center">
-          <p className="text-xs text-neutral-500">{filtered.length} products viewed out of {filtered.length}</p>
+          <p className="text-xs text-neutral-500">{`${filtered.length} products viewed out of ${filtered.length}`}</p>
           <div className="mx-auto mt-4 h-px w-[120px] bg-black" />
           {loadedMsg && <p className="mt-1 text-xs text-neutral-500" role="status">{loadedMsg}</p>}
         </div>
@@ -1661,7 +1813,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
         {sub && (
           <>
             {" / "}
-            <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : (base[0]?.subcategory ?? sub)}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : sub })}>{(isBagsPage ? "Bags and clutches" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
+            <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
             {" / "}
             <span className="normal-case tracking-normal text-black">{titleText}</span>
           </>
@@ -1743,7 +1895,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   );
 }
 
-function RelatedRow({ title, items, go, mt, onQuickBuy, hidePrice }: { title: string; items: Product[]; go: (v: View) => void; mt?: string; onQuickBuy?: (p: Product) => void; hidePrice?: boolean }) {
+function RelatedRow({ title, items, go, mt, onQuickBuy, hidePrice }: { title: string; items: Product[]; go: (v: View, opts?: { restore?: boolean }) => void; mt?: string; onQuickBuy?: (p: Product) => void; hidePrice?: boolean }) {
   if (items.length === 0) return null;
   return (
     <section className={`mx-auto ${mt ?? "mt-12 lg:mt-20"} max-w-5xl px-4 sm:px-6`}>
@@ -1755,7 +1907,7 @@ function RelatedRow({ title, items, go, mt, onQuickBuy, hidePrice }: { title: st
       <div className="mt-8 grid grid-cols-2 gap-[2px] lg:flex lg:overflow-x-auto lg:pb-1">
         {items.map((x) => (
           <div key={x.id} className="cursor-pointer lg:w-[220px] lg:shrink-0" role="link" aria-label={`${x.name}, ${priceText(x)}`} tabIndex={0} onClick={() => go({ t: "product", id: x.id })} onKeyDown={(e) => { if (e.key === "Enter") go({ t: "product", id: x.id }); }}>
-            <div className="relative aspect-square overflow-hidden"><ProductVisual p={x} />{onQuickBuy && isBuyableStatus(x.status) && isSneakerProduct(x) && (
+            <div className="relative aspect-[3/4] overflow-hidden"><ProductVisual p={x} />{onQuickBuy && isBuyableStatus(x.status) && isSneakerProduct(x) && (
               <button aria-label={`Quick buy ${x.name}`} className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#696969] shadow transition hover:bg-black hover:text-white" onClick={(e) => { e.stopPropagation(); onQuickBuy(x); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg></button>
             )}</div>
             <p className="mt-2 px-2 text-xs leading-5">{x.name}</p>
@@ -1790,8 +1942,19 @@ function ProductVideo({ src, poster, playing, muted = true, className }: { src: 
   return <video ref={videoRef} src={src} muted={muted} loop playsInline preload="metadata" poster={poster} className={className} aria-label="Product video" />;
 }
 
-function ProductView({ products, id, go, addToCart, settings, user }: { products: Product[]; id: number; go: (v: View) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; settings: Settings; user: { name: string; email: string } | null }) {
+function ProductView({ products, id, go, addToCart, settings, user, from }: { products: Product[]; id: number; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; settings: Settings; user: { name: string; email: string } | null; from: View | null }) {
   const p = products.find((x) => x.id === id) ?? products[0];
+  // The category this product was opened from (tracked in App when
+  // navigating to a product). Back controls return to it; a deep link has
+  // no origin, so it falls back to the product's own subcategory page.
+  const backCat: { t: "category"; cat: string; sub?: string } = from && from.t === "category" ? from : { t: "category", cat: p.category, sub: p.subcategory };
+  const backView: View = from ?? backCat;
+  const goBack = () => go(backView, { restore: true });
+  // Breadcrumb middle crumb: the product's season collection when it has
+  // one (the original's product breadcrumb is WOMEN / FALL-WINTER 2026
+  // COLLECTION / <name>), otherwise its subcategory.
+  const collName = p.line === "Fall-Winter 2026" ? "Fall-Winter 2026 Collection" : p.line === "Spring-Summer 2026" ? "Spring-Summer 2026 Collection" : null;
+  const crumbMid = collName ?? p.subcategory;
   // Finish options (e.g. the Kelly Pocket belt's Gold / Argenté buckle group)
   // ride in a detail line so no schema change is needed; the selected finish
   // is the product's metallicFinish.
@@ -1916,7 +2079,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
   return (
     <div className="pb-24 lg:pb-6">
       <p className="font-mono-d mx-auto max-w-7xl px-4 pt-8 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 sm:px-6">
-        <button aria-label="Back to category" className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category })}>{(NAV.find((n) => n.key === p.category)?.label ?? p.category.toUpperCase())}</button><span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" /><button aria-label={`Back to ${p.subcategory}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: p.subcategory })}>{p.subcategory}</button>
+        <button aria-label="Back to category" className="underline-offset-4 hover:underline" onClick={() => go(backCat, { restore: true })}>{(NAV.find((n) => n.key === backCat.cat)?.label ?? backCat.cat.toUpperCase())}</button><span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" /><button aria-label={`Back to ${p.subcategory}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: p.subcategory })}>{p.subcategory}</button>
       </p>
       <div className="relative mt-4">
         {/* Gallery — a wide horizontal strip of large panels, nearly
@@ -1927,6 +2090,12 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
             play/pause toggle. There is NO quantity selector on a product
             page — quantity is changed in the cart only. */}
         <div className="relative">
+          {/* Back button (hermes.com): a small white square with a left
+              arrow at the TOP LEFT of the gallery, returning to the
+              category the product was opened from. */}
+          <button aria-label="Back" className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center bg-white text-black shadow" onClick={goBack}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg>
+          </button>
           <div ref={stripRef} className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto" role="group" aria-label="Product gallery">
             {views.map((v, i) => (
               <div key={v.label + i} data-panel data-viewsrc={v.src} className={`relative aspect-[3/4] w-[82%] shrink-0 snap-center overflow-hidden bg-[#efe9df] sm:w-[48%] lg:w-[33.5%] ${thumb === i ? "ring-1 ring-black/50" : ""}`}>
@@ -2076,7 +2245,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
       <nav aria-label="Breadcrumb" className="font-mono-d mx-auto mt-14 max-w-5xl border-t border-black/10 px-4 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 sm:px-6">
         <button aria-label={`Breadcrumb ${NAV.find((n) => n.key === p.category)?.label ?? p.category}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category })}>{NAV.find((n) => n.key === p.category)?.label ?? p.category.toUpperCase()}</button>
         <span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" />
-        <button aria-label={`Breadcrumb ${p.subcategory}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: p.subcategory })}>{p.subcategory}</button>
+        <button aria-label={`Breadcrumb ${crumbMid}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: crumbMid })}>{crumbMid}</button>
         <span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" />
         <span className="text-black">{p.name}</span>
       </nav>
@@ -2220,7 +2389,7 @@ const PAGES: Record<string, { title: string; body: string[] }> = {
   accessibility: { title: "Accessibility", body: ["We aim to make this store usable by everyone: full keyboard navigation, labelled controls and text alternatives for imagery. Tell us at 800-441-4488 if any page is difficult to use."] },
 };
 
-function ContactForm({ settings, go }: { settings: Settings; go: (v: View) => void }) {
+function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void }) {
   const [f, setF] = useState({ first: "", last: "", email: "", area: "US +1", phone: "", subject: "", message: "" });
   const [sent, setSent] = useState("");
   const [err, setErr] = useState("");
@@ -2250,7 +2419,7 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View) => vo
   );
 }
 
-function InfoPage({ page, settings, go, user }: { page: string; settings: Settings; go: (v: View) => void; user: { name: string; email: string } | null }) {
+function InfoPage({ page, settings, go, user }: { page: string; settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; user: { name: string; email: string } | null }) {
   if (page === "sitemap") {
     return (
       <div className="mx-auto max-w-5xl px-4 py-12">
@@ -2296,7 +2465,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
   );
 }
 
-function TrackOrders({ user, go }: { settings: Settings; user: { name: string; email: string } | null; go: (v: View) => void }) {
+function TrackOrders({ user, go }: { settings: Settings; user: { name: string; email: string } | null; go: (v: View, opts?: { restore?: boolean }) => void }) {
   const [email, setEmail] = useState(user?.email ?? "");
   const [orderId, setOrderId] = useState("");
   const [sent, setSent] = useState("");
@@ -2350,7 +2519,7 @@ function TrackOrders({ user, go }: { settings: Settings; user: { name: string; e
   );
 }
 
-function AboutPage({ go }: { go: (v: View) => void }) {
+function AboutPage({ go }: { go: (v: View, opts?: { restore?: boolean }) => void }) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <p className="text-[11px] uppercase tracking-[0.3em] text-neutral-500">About Hermès</p>
@@ -2368,7 +2537,7 @@ function AboutPage({ go }: { go: (v: View) => void }) {
 
 const fmt2 = (n: number) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-function CartPage({ cart, setCart, settings, go, total, count, products }: { cart: CartItem[]; setCart: (c: CartItem[]) => void; settings: Settings; go: (v: View) => void; total: number; count: number; products: Product[] }) {
+function CartPage({ cart, setCart, settings, go, total, count, products }: { cart: CartItem[]; setCart: (c: CartItem[]) => void; settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; total: number; count: number; products: Product[] }) {
   const [giftOpen, setGiftOpen] = useState(false);
   const [giftCard, setGiftCard] = useState<"blank" | "personal">("blank");
   const [giftMsg, setGiftMsg] = useState("");
@@ -2548,7 +2717,7 @@ function SocialCircles() {
 // sendChatMessage), the same store the Admin Panel chat tab reads, so the
 // store's replies appear in the same thread. On mobile product pages the
 // bubble sits above the sticky ADD TO CART bar.
-function ChatBubble({ settings, go, view }: { settings: Settings; go: (v: View) => void; view: View }) {
+function ChatBubble({ settings, go, view }: { settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; view: View }) {
   const [open, setOpen] = useState(false);
   const [stage, setStage] = useState<"consent" | "loading" | "chat">("consent");
   const [msgs, setMsgs] = useState<LocalChat[]>([]);
@@ -2636,7 +2805,7 @@ function ChatBubble({ settings, go, view }: { settings: Settings; go: (v: View) 
   );
 }
 
-function Footer({ settings, go }: { settings: Settings; go: (v: View) => void }) {
+function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void }) {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState("");
   const [ship, setShip] = useState(settings.shipTo);
@@ -2803,7 +2972,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
   );
 }
 
-function AccountView({ user, setUser, go, mode }: { user: { name: string; email: string } | null; setUser: (u: { name: string; email: string } | null) => void; go: (v: View) => void; mode?: "login" | "signup" }) {
+function AccountView({ user, setUser, go, mode }: { user: { name: string; email: string } | null; setUser: (u: { name: string; email: string } | null) => void; go: (v: View, opts?: { restore?: boolean }) => void; mode?: "login" | "signup" }) {
   // Which form shows first: "signup" when opened from the header "Sign up"
   // option, "login" otherwise. The visitor can switch inside the page.
   const [authMode, setAuthMode] = useState<"login" | "signup">(mode ?? "login");
@@ -3129,7 +3298,7 @@ function CheckoutProgress({ step, nextStep }: { step: 1 | 2 | 3; nextStep?: bool
   );
 }
 
-function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: CartItem[]; setCart: (c: CartItem[]) => void; user: { name: string; email: string } | null; go: (v: View) => void; total: number; settings: Settings }) {
+function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: CartItem[]; setCart: (c: CartItem[]) => void; user: { name: string; email: string } | null; go: (v: View, opts?: { restore?: boolean }) => void; total: number; settings: Settings }) {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [email, setEmail] = useState(user?.email ?? "");
   const [accountEdit, setAccountEdit] = useState(!user);
