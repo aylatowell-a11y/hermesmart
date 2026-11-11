@@ -410,7 +410,7 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, portrait }: { p: Pro
             <p className="product-name px-2 text-left text-xs leading-5 text-[var(--text)]">{p.name}{p.colors[0] ? <span className="sr-only">, {p.colors[0].name}</span> : ""}</p>
             <p className="mt-0.5 px-2 text-left text-xs leading-5 text-[var(--text)]">{priceText(p)}</p>
           </div>
-          {onQuickBuy && p.status === "available" && (
+          {onQuickBuy && isBuyableStatus(p.status) && (
             <button aria-label={`Quick buy ${p.name}`} className="mt-[5px] flex h-9 w-9 shrink-0 items-center justify-center border border-black/25 bg-white transition hover:bg-black hover:text-white"
               onClick={(e) => { e.stopPropagation(); onQuickBuy(p); }}>{bagIcon}</button>
           )}
@@ -420,7 +420,7 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, portrait }: { p: Pro
           <p className="product-name mt-2 px-2 text-left text-xs leading-5 text-[var(--text)]">{p.name}</p>
           {p.colors[0] && <p className="sr-only">{p.colors[0].name}</p>}
           <p className="mt-0.5 px-2 text-left text-xs leading-5 text-[var(--text)]">{priceText(p)}</p>
-          {onQuickBuy && p.status === "available" && (
+          {onQuickBuy && isBuyableStatus(p.status) && (
             <button aria-label={`Quick buy ${p.name}`} className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-base shadow transition hover:bg-black hover:text-white"
               onClick={(e) => { e.stopPropagation(); onQuickBuy(p); }}>{bagIcon}</button>
           )}
@@ -1074,6 +1074,11 @@ function beltWidthBucket(modelSize: string): string {
 // A belt kit is a buckle + a strap sold together ("buckle & ... strap") —
 // the original's Customizable / Personalize: Yes products.
 function isBeltKit(p: { name: string }): boolean { return /buckle &/i.test(p.name); }
+// A product is buyable when its page shows ADD TO CART on hermes.com.
+// "Available soon" tiles show ADD TO CART on their product pages (verified
+// in the live extraction), so they are buyable here too — the tile keeps
+// its "Available soon" badge (ProductCard, ~line 332).
+function isBuyableStatus(s: string): boolean { return s === "available" || s === "available_soon"; }
 // Belts Universe — kit belts by their width, complete belts under "Belts".
 // (Kit widths other than 13/24/32mm have no Universe option on the original;
 // those rows simply carry no Universe value, as on hermes.com.)
@@ -1348,7 +1353,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   const matVal = (p: Product) => isMensShoesPage ? materialFamily(p.material) : p.material;
   const universeVal = (p: Product) => isBeltsPage ? beltUniverse(p) : isMensShoesPage ? shoeUniverse(p) : "";
   const filterList = (s: Record<FGroup, string[]>, on: boolean, lo: number, hi: number) => base.filter((p) =>
-    (!on || p.status === "available") &&
+    (!on || isBuyableStatus(p.status)) &&
     (!s.category.length || s.category.includes(catVal(p))) &&
     (!s.line.length || s.line.includes(p.line)) &&
     (!s.material.length || s.material.includes(matVal(p))) &&
@@ -1744,7 +1749,7 @@ function RelatedRow({ title, items, go, mt, onQuickBuy, hidePrice }: { title: st
       <div className="mt-8 grid grid-cols-2 gap-[2px] lg:flex lg:overflow-x-auto lg:pb-1">
         {items.map((x) => (
           <div key={x.id} className="cursor-pointer lg:w-[220px] lg:shrink-0" role="link" aria-label={`${x.name}, ${priceText(x)}`} tabIndex={0} onClick={() => go({ t: "product", id: x.id })} onKeyDown={(e) => { if (e.key === "Enter") go({ t: "product", id: x.id }); }}>
-            <div className="relative aspect-square overflow-hidden"><ProductVisual p={x} />{onQuickBuy && x.status === "available" && isSneakerProduct(x) && (
+            <div className="relative aspect-square overflow-hidden"><ProductVisual p={x} />{onQuickBuy && isBuyableStatus(x.status) && isSneakerProduct(x) && (
               <button aria-label={`Quick buy ${x.name}`} className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#696969] shadow transition hover:bg-black hover:text-white" onClick={(e) => { e.stopPropagation(); onQuickBuy(x); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg></button>
             )}</div>
             <p className="mt-2 px-2 text-xs leading-5">{x.name}</p>
@@ -1827,7 +1832,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
   const hasCustomSizes = (p.sizeOptions?.length ?? 0) > 0;
   const needsSize = isShoe || isRTW || hasCustomSizes;
   const sizeList: { label: string; available: boolean }[] = hasCustomSizes ? p.sizeOptions : isShoe ? ["40", "41", "42", "43", "44", "45"].map((label) => ({ label, available: true })) : ["XS", "S", "M", "L", "XL"].map((label) => ({ label, available: true }));
-  const canAdd = p.status === "available" && !sizeGone && (!needsSize || selSize !== "");
+  const canAdd = isBuyableStatus(p.status) && !sizeGone && (!needsSize || selSize !== "");
   // Gallery views — EVERY view is a DISTINCT photo whose content matches
   // its label (Detail = extreme close-up, Worn = model wearing it, Above =
   // top-down, Back = rear, Side = profile), shot for that view in
@@ -1957,12 +1962,12 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
             <>
               <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Color</p>
               <p className="mt-1 text-sm font-medium underline underline-offset-4">{color.name}</p>
-              {p.status === "available" ? (
+              {isBuyableStatus(p.status) ? (
                 <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
                   {p.colors.map((c, i) => (
-                    <button key={c.name} aria-label={`Colour ${c.name}${c.available && p.status === "available" ? "" : " (unavailable)"}`} disabled={!c.available || p.status !== "available"} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
-                      className={`relative h-9 w-9 border-2 lg:h-[59px] lg:w-[59px] ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || p.status !== "available" ? "opacity-40" : ""}`} style={{ background: c.hex }}>
-                      {(!c.available || p.status !== "available") && <span className="absolute inset-0 flex items-center justify-center text-white">✕</span>}
+                    <button key={c.name} aria-label={`Colour ${c.name}${c.available && isBuyableStatus(p.status) ? "" : " (unavailable)"}`} disabled={!c.available || !isBuyableStatus(p.status)} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
+                      className={`relative h-9 w-9 border-2 lg:h-[59px] lg:w-[59px] ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || !isBuyableStatus(p.status) ? "opacity-40" : ""}`} style={{ background: c.hex }}>
+                      {(!c.available || !isBuyableStatus(p.status)) && <span className="absolute inset-0 flex items-center justify-center text-white">✕</span>}
                     </button>
                   ))}
                 </div>
@@ -1973,7 +1978,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
               )}
             </>
           )}
-          {p.status === "available" && needsSize && (
+          {isBuyableStatus(p.status) && needsSize && (
             <div className="mt-4">
               <button aria-label="Select a size" className="flex min-h-[46px] w-full items-center justify-between border-b border-[#919191] px-4 py-3 text-sm" onClick={() => setSizeDrawer(true)}>
                 <span className="flex items-center gap-2.5">
@@ -1986,8 +1991,8 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
               {sizeGone && <p className="mt-1.5 text-xs font-medium text-red-700" role="status">The desired size is no longer available</p>}
             </div>
           )}
-          {p.status === "available" && needsSize && <button aria-label="Size guide" className="mt-2 text-xs uppercase tracking-[0.18em] underline" onClick={() => go({ t: "page", page: "guides" })}>Size guide</button>}
-          {p.status === "available" ? (
+          {isBuyableStatus(p.status) && needsSize && <button aria-label="Size guide" className="mt-2 text-xs uppercase tracking-[0.18em] underline" onClick={() => go({ t: "page", page: "guides" })}>Size guide</button>}
+          {isBuyableStatus(p.status) ? (
             <div className="mt-4">
               <div className="flex">
                 {p.applePay && <button aria-label="Buy with Apple Pay" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border text-xs font-medium uppercase ${canAdd ? "border-black text-black" : "cursor-not-allowed border-black/20 bg-neutral-100 text-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}><span className="text-xs font-medium uppercase tracking-normal">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
@@ -2140,7 +2145,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
           Out-of-stock products get the NOTIFY ME bar instead, which jumps
           back up to the buy box and opens the email capture. Desktop keeps
           the floating buy card only. */}
-      {p.status === "available" && (
+      {isBuyableStatus(p.status) && (
         <div className="fixed inset-x-0 bottom-0 z-40 bg-white px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_10px_rgba(0,0,0,0.14)] lg:hidden">
           <button aria-label="Add to cart" disabled={sizeGone} className={`flex w-full items-center justify-center gap-2 py-3.5 text-[12px] font-semibold uppercase tracking-[0.22em] text-white ${sizeGone ? "cursor-not-allowed bg-neutral-400" : "bg-black"}`} onClick={() => { if (needsSize && !selSize) { setSizeDrawer(true); return; } addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>
@@ -2148,7 +2153,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
           </button>
         </div>
       )}
-      {p.status !== "available" && p.status !== "in_store_only" && (
+      {!isBuyableStatus(p.status) && p.status !== "in_store_only" && (
         <div className="fixed inset-x-0 bottom-0 z-40 bg-white px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_10px_rgba(0,0,0,0.14)] lg:hidden">
           <button aria-label="Notify me when back in stock" className="flex w-full items-center justify-center gap-2 border border-black bg-white py-3.5 text-[12px] font-semibold uppercase tracking-[0.22em] text-black" onClick={() => { setNotifyOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="1.5" /><path d="m3.5 7 8.5 6 8.5-6" /></svg>
