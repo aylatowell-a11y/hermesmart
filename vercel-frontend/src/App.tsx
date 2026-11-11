@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type ApiResponse, type LocalChat } from "./api";
 // Real photos: the image files are in ./assets/ (uploaded to the repo).
@@ -582,18 +582,43 @@ export function App() {
   const [sentinelGone, setSentinelGone] = useState(false);
   useEffect(() => { const el = sentinelRef.current; if (!el || typeof IntersectionObserver === "undefined") return; const io = new IntersectionObserver((es) => { for (const e of es) setSentinelGone(!e.isIntersecting); }, { threshold: 0 }); io.observe(el); return () => io.disconnect(); }, []);
   useEffect(() => { setHeaderMode((p) => (sentinelGone ? (p === "top" ? "full" : p) : "top")); }, [sentinelGone]);
-  // Measure the fixed header's real height so the category sub-nav docks
-  // exactly under it in every header mode (top / slim / full) — the two pin
-  // together as one unit instead of the sub-nav floating over the grid.
-  const [headerH, setHeaderH] = useState(141);
-  useEffect(() => {
-    const el = headerRef.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => { const h = el.offsetHeight; setHeaderH((prev) => (prev === h ? prev : h)); });
-    ro.observe(el);
-    setHeaderH(el.offsetHeight);
-    return () => ro.disconnect();
-  }, [view.t]);
+  // Pinned offset for the category sub-nav: the height of the header block
+  // that is actually pinned at the top RIGHT NOW — the main nav row plus
+  // the logo/Search row above it when it is shown. In slim mode (scrolled
+  // down) the logo row is hidden, so the offset is just the nav's height
+  // (~44px) and the sub-nav docks directly under the pinned nav with no
+  // gap; scrolling up restores the full header and the offset grows with
+  // it, so header + sub-nav stay one continuous pinned block.
+  // WHY NOT A SINGLE ResizeObserver ON THE HEADER (Phase 1): that effect
+  // ran on mount while the store was still loading — the component returns
+  // the loading veil before the header exists, so headerRef.current was
+  // null and the effect bailed; its [view.t] deps never re-ran it after
+  // the header mounted, so headerH stayed at its initial 141 forever —
+  // 141 - 46 = 95px, exactly the floating gap the verifier saw. Callback
+  // refs fire when the element itself mounts, whatever the render history,
+  // so they cannot go stale this way.
+  const [navH, setNavH] = useState(44);
+  const [topRowH, setTopRowH] = useState(55);
+  const navRoRef = useRef<ResizeObserver | null>(null);
+  const topRowRoRef = useRef<ResizeObserver | null>(null);
+  const measureNav = useCallback((el: HTMLElement | null) => {
+    navRoRef.current?.disconnect(); navRoRef.current = null;
+    if (!el) return;
+    setNavH(el.offsetHeight);
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => { const h = el.offsetHeight; setNavH((prev) => (prev === h ? prev : h)); });
+    ro.observe(el); navRoRef.current = ro;
+  }, []);
+  const measureTopRow = useCallback((el: HTMLElement | null) => {
+    topRowRoRef.current?.disconnect(); topRowRoRef.current = null;
+    if (!el) return;
+    setTopRowH(el.offsetHeight);
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => { const h = el.offsetHeight; setTopRowH((prev) => (prev === h ? prev : h)); });
+    ro.observe(el); topRowRoRef.current = ro;
+  }, []);
+  // Height of the pinned header block the sub-nav must dock under.
+  const pinTop = topRowH + navH;
   const [themeIdx, setThemeIdx] = useState(0);
   const [cookie, setCookie] = useState<string | null>(() => { try { return localStorage.getItem("hlx-cookies"); } catch { return "pending"; } });
   const topRef = useRef<HTMLDivElement>(null);
@@ -727,7 +752,7 @@ export function App() {
             is gone on DESKTOP — only the nav board below remains. On mobile the
             slim carriage header IS the board, so the row stays at every width
             below lg. */}
-        <div className={`mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-2 pb-1.5 pt-1 sm:px-6 lg:pb-0 lg:pt-[7px] ${slim ? "lg:hidden" : ""}`}>
+        <div ref={measureTopRow} className={`mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-2 pb-1.5 pt-1 sm:px-6 lg:pb-0 lg:pt-[7px] ${slim ? "lg:hidden" : ""}`}>
           <div className="flex items-center">
             <button aria-label="Open menu" className="flex h-9 w-9 items-center justify-center lg:hidden" onClick={() => setMobileNav(true)}>
               <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.5" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
@@ -760,7 +785,7 @@ export function App() {
             </button>
           </div>
         </div>
-        <nav aria-label="Main navigation" className={`relative mx-auto hidden max-w-7xl items-center justify-center gap-0 px-4 pb-0 pt-0 lg:flex`} onMouseLeave={() => setMenuCat(null)}>
+        <nav ref={measureNav} aria-label="Main navigation" className={`relative mx-auto hidden max-w-7xl items-center justify-center gap-0 px-4 pb-0 pt-0 lg:flex`} onMouseLeave={() => setMenuCat(null)}>
           {mega.map((n) => (
             <div key={n.key} className="flex items-center" onMouseEnter={() => setMenuCat(n.key)}>
               <button aria-label={`Open ${n.label} menu`} aria-expanded={menuCat === n.key} aria-haspopup="true" className={`whitespace-nowrap px-3 ${slim ? "py-[14px]" : "pb-3"} text-[10px] font-bold uppercase tracking-[1px] ${menuCat === n.key ? "underline underline-offset-8 decoration-1" : "hover:underline underline-offset-4"}`} onClick={() => setMenuCat(menuCat === n.key ? null : n.key)}>{n.label}</button>
@@ -892,7 +917,7 @@ export function App() {
         {view.t === "home" && <HomeView settings={settings} products={products} themeIdx={themeIdx} setThemeIdx={setThemeIdx} go={go} addToCart={addToCart} pulse={pulse} />}
         {view.t === "cart" && <CartPage cart={cart} setCart={setCart} settings={settings} go={go} total={cartTotal} count={cartCount} products={products} />}
         {view.t === "category" && view.cat === "about" && <AboutPage go={go} />}
-        {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} headerH={headerH} initialVisible={catStateRef.current[catKey(view.cat, view.sub)]?.visible ?? 40} onVisibleChange={(n) => { const k = catKey(view.cat, view.sub); const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 }; catStateRef.current[k] = { ...prev, visible: n }; }} />}
+        {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} pinTop={pinTop} initialVisible={catStateRef.current[catKey(view.cat, view.sub)]?.visible ?? 40} onVisibleChange={(n) => { const k = catKey(view.cat, view.sub); const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 }; catStateRef.current[k] = { ...prev, visible: n }; }} />}
         {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} from={fromView} />}
         {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} />}
         {view.t === "about" && <AboutPage go={go} />}
@@ -1324,7 +1349,7 @@ type FGroup = "category" | "line" | "material" | "modelSize" | "finish" | "size"
 type FSection = { key: string; title: string; kind: "checks" | "color" | "size" | "price" | "sort"; group?: FGroup; options: { value: string; count: number; hex?: string }[] };
 const EMPTY_SEL: Record<FGroup, string[]> = { category: [], line: [], material: [], modelSize: [], finish: [], size: [], color: [], width: [], personalize: [], universe: [] };
 
-function CategoryView({ products, cat, sub, go, addToCart, headerH, initialVisible, onVisibleChange }: { products: Product[]; cat: string; sub?: string; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product) => void; headerH: number; initialVisible?: number; onVisibleChange?: (n: number) => void }) {
+function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisible, onVisibleChange }: { products: Product[]; cat: string; sub?: string; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product) => void; pinTop: number; initialVisible?: number; onVisibleChange?: (n: number) => void }) {
   const nav = NAV.find((n) => n.key === cat);
   const label = nav?.label ?? cat.toUpperCase();
   const base = useMemo(() => {
@@ -1719,15 +1744,20 @@ function CategoryView({ products, cat, sub, go, addToCart, headerH, initialVisib
           (the user's main complaint — it must never wrap to two lines or cut
           items off), the view toggle stays at the right end of the same
           line, and FILTER lives in the floating FILTER & SORT pill instead;
-          on desktop the row shows fully with its FILTER button. */}
-      <div className="sticky z-30 -mx-4 mt-4 bg-[#fcf7f1] px-4 py-3 sm:-mx-6 sm:px-6" style={{ top: headerH }}>
-        <div className="flex items-center gap-x-4 lg:gap-x-5">
-          <nav ref={subNavRef} className="no-scrollbar flex min-w-0 flex-1 gap-5 overflow-x-auto whitespace-nowrap" aria-label="Subcategories">
+          on desktop the row shows fully with its FILTER button. The row is
+          set at 11px with 12px gaps so all 9 Fall-Winter items + FILTER fit
+          the 1280px content width at 1920px with no clipping and no scroll
+          (measured against the real Manrope advances: ~1095px of ~1232px).
+          It docks at pinTop — the pinned header's live height — so header
+          + sub-nav pin as one continuous block (see the pinTop note above). */}
+      <div className="sticky z-30 -mx-4 mt-4 bg-[#fcf7f1] px-4 py-3 sm:-mx-6 sm:px-6" style={{ top: pinTop }}>
+        <div className="flex items-center gap-x-3">
+          <nav ref={subNavRef} className="no-scrollbar flex min-w-0 flex-1 gap-3 overflow-x-auto whitespace-nowrap" aria-label="Subcategories">
             {siblings.map((s) => (
-              <button key={s.label} data-current={s.current || undefined} aria-label={`Subcategory ${s.label}`} aria-current={s.current || undefined} className={`shrink-0 py-1 text-[12px] tracking-wide ${s.current ? "font-medium text-black underline underline-offset-8" : "text-neutral-600 hover:text-black"}`} onClick={() => go(s.view)}>{s.label}</button>
+              <button key={s.label} data-current={s.current || undefined} aria-label={`Subcategory ${s.label}`} aria-current={s.current || undefined} className={`shrink-0 py-1 text-[11px] tracking-wide ${s.current ? "font-medium text-black underline underline-offset-8" : "text-neutral-600 hover:text-black"}`} onClick={() => go(s.view)}>{s.label}</button>
             ))}
           </nav>
-          <div className="ml-auto flex shrink-0 items-center gap-4">
+          <div className="ml-auto flex shrink-0 items-center gap-3">
             <button aria-label={totalSel ? `Open filters, ${totalSel} selected` : "Open filters"} className={`font-mono-d hidden items-center gap-2 py-1 text-xs font-medium uppercase tracking-normal lg:flex ${totalSel > 0 ? "bg-black px-3 text-white" : ""}`} onClick={openDrawer}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 6h12M19 6h2M3 12h4M11 12h10M3 18h9M16 18h5" /><circle cx="17" cy="6" r="2" /><circle cx="9" cy="12" r="2" /><circle cx="14" cy="18" r="2" /></svg>
               FILTER{totalSel > 0 ? ` (${totalSel})` : ""}
