@@ -6371,6 +6371,21 @@ const NEW_GALLERY: Record<number, { label: string; src: string; videoSrc?: strin
   5087: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/087987CK10_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/087987CK10_worn_102?$product_default_bg$" }, { label: "Side", src: "https://assets.hermes.com/is/image/hermesproduct/087987CK10_side_wm_106?$product_default_bg$" }, { label: "Above", src: "https://assets.hermes.com/is/image/hermesproduct/087987CK10_above_wm_107?$product_default_bg$" }, { label: "Back", src: "https://assets.hermes.com/is/image/hermesproduct/087987CK10_back_wm_108?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/087987CK10_worn_109?$product_default_bg$" }],
 };
 
+// PDP full-photo quality (user complaint 2026-11-11, "koi compromise
+// nahi"): hermes.com serves its gallery strip files at
+// $product_default_bg$ = 300x400, but the IMAGE GALLERY dialog loads the
+// SAME photo at ?wid=1536&hei=2048&qlt=99&$product_default_bg$ =
+// 1536x2048 (verified live 2026-11-11). The PDP uses that hi-res form
+// for every standard hotlinked Hermes photo (strip, thumbnails, dialog,
+// video poster) — one URL per view, cached once. Local files, self-hosted
+// videos and the already-sized _g.jpg renditions pass through untouched.
+export function hiResHermes(src: string): string {
+  if (!src.includes("$product_default_bg$")) return src;
+  const q = src.indexOf("?");
+  const base = q >= 0 ? src.slice(0, q) : src;
+  return `${base}?wid=1536&hei=2048&qlt=99&$product_default_bg$`;
+}
+
 export function galleryForProduct(
   p: GalleryProduct & { galleryViews?: string[] },
   colorIndex: number,

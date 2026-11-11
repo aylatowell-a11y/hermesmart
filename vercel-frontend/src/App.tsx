@@ -40,7 +40,7 @@ import saddleBridleImg from "./assets/products/saddle-bridle.webp";
 import scarfColliersImg from "./assets/products/scarf-90-colliers.webp";
 import { fileToBase64 } from "./fileToBase64";
 import { productImageFor } from "./productImages";
-import { galleryForProduct } from "./galleryImages";
+import { galleryForProduct, hiResHermes } from "./galleryImages";
 import { categoryUrl, contactUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
 
 type Product = ApiResponse<typeof api, "getStorefront">["products"][number];
@@ -743,6 +743,14 @@ export function App() {
   }, []);
   // Height of the pinned header block the sub-nav must dock under.
   const pinTop = topRowH + navH;
+  // Full-header height for the product page's top padding: the live
+  // measured header height while the header is FULL, frozen while slim so
+  // scrolling never shifts the page (the padding only matters at scroll 0,
+  // where the header is always full). The old hardcoded lg:pt-[142px] came
+  // from the stale-141 bug and left a ~45px gap above the gallery — the
+  // original's gallery starts exactly at the header's bottom edge.
+  const [fullPinTop, setFullPinTop] = useState(99);
+  useEffect(() => { if (headerMode !== "slim") setFullPinTop(pinTop); }, [pinTop, headerMode]);
   const [themeIdx, setThemeIdx] = useState(0);
   // Last viewed (hermes.com): SESSION-ONLY — starts empty and only ever
   // holds products actually opened in this browser session. It is never
@@ -1057,7 +1065,7 @@ export function App() {
         </div>
       )}
 
-      <main className={view.t === "home" || view.t === "cart" || view.t === "checkout" ? "" : view.t === "category" && view.cat !== "about" ? "pt-[62px] lg:pt-[120px]" : "pt-[62px] lg:pt-[142px]"}>
+      <main className={view.t === "home" || view.t === "cart" || view.t === "checkout" ? "" : view.t === "product" ? "" : view.t === "category" && view.cat !== "about" ? "pt-[62px] lg:pt-[120px]" : "pt-[62px] lg:pt-[142px]"} style={view.t === "product" ? { paddingTop: fullPinTop } : undefined}>
         {view.t === "home" && <HomeView settings={settings} products={products} themeIdx={themeIdx} setThemeIdx={setThemeIdx} go={go} addToCart={addToCart} pulse={pulse} />}
         {view.t === "cart" && <CartPage cart={pricedCart} setCart={setCart} settings={settings} go={go} total={cartTotal} count={cartCount} products={products} />}
         {view.t === "category" && view.cat === "about" && <AboutPage go={go} />}
@@ -2331,6 +2339,27 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   // Naturel on the Blanc page, as on hermes.com); the own colour stays
   // selected.
   const colorwaySiblings = (p.colorwayRefs ?? []).map((ref) => products.find((x) => x.refCode === ref)).filter((x): x is Product => !!x && x.id !== p.id);
+  // Colour photo thumbnails (hermes.com, measured 2026-11-11): one 53x70
+  // photo per colourway — the colourway's own tile photo — selected
+  // underlined, in refCode order (the original's Blanc page lists Noir
+  // first, Blanc second). Only when a distinct photo exists per colourway
+  // (colourway siblings + own tile, or a single colour); several colours
+  // on one row keep the solid hex squares (no per-colour photo exists).
+  const colorThumbs: { key: string; src: string; name: string; selected: boolean; onClick: () => void }[] | null = (() => {
+    if (!color) return null;
+    if (colorwaySiblings.length > 0) {
+      const rows = [...colorwaySiblings, p].sort((a, b) => (a.refCode ?? "").localeCompare(b.refCode ?? ""));
+      return rows.map((row) => {
+        const isOwn = row.id === p.id;
+        const cn = row.colors[0];
+        return { key: `ct-${row.id}`, src: productImageFor(row), name: isOwn ? (color.pdpName ?? color.name) : (cn?.pdpName ?? cn?.name ?? ""), selected: isOwn, onClick: () => { if (!isOwn) go({ t: "product", id: row.id }); } };
+      });
+    }
+    if (p.colors.length === 1) {
+      return [{ key: "ct-own", src: productImageFor(p), name: color.pdpName ?? color.name, selected: true, onClick: () => {} }];
+    }
+    return null;
+  })();
   const isShoe = p.subcategory === "Shoes" || /sneaker|boot|loafer/i.test(p.name);
   const isRTW = p.subcategory.toLowerCase().includes("ready") || p.subcategory === "Dresses and skirts" || (p.category === "equestrian" && /jacket/i.test(p.name));
   const hasCustomSizes = (p.sizeOptions?.length ?? 0) > 0;
@@ -2354,7 +2383,10 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   // repeat the first"). Colour switch reloads the WHOLE gallery with the
   // selected colourway's own photos and backgrounds, thumbnails included.
   type GalView = { label: string; src: string; video?: boolean; videoSrc?: string };
-  const views: GalView[] = galleryForProduct(p, colorIdx);
+  // Hi-res PDP photos: the strip, thumbnails, dialog and video poster all
+  // use the original's 1536x2048 dialog form (hiResHermes) — the 300x400
+  // strip file upscaled 2x+ is exactly the blur the user reported.
+  const views: GalView[] = galleryForProduct(p, colorIdx).map((v) => ({ ...v, src: hiResHermes(v.src) }));
   const curView = views[thumb] ?? views[0];
   // Colour switch reloads the WHOLE gallery: the new colourway's own view
   // photos replace every panel and thumbnail, the gallery returns to its
@@ -2447,7 +2479,10 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   });
   return (
     <div className="pb-24 lg:pb-24">
-      <div className="relative mt-4">
+      {/* Gallery starts exactly at the header's bottom edge (main already
+          pads by the measured full header height) — no extra top margin,
+          as on hermes.com. */}
+      <div className="relative">
         {/* Gallery — a wide horizontal strip of large panels, nearly
             full-bleed, with the thumbnail strip at its BOTTOM-LEFT corner
             (selected thumbnail underlined). Clicking a photo opens the
@@ -2456,15 +2491,15 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
             play/pause toggle. There is NO quantity selector on a product
             page — quantity is changed in the cart only. */}
         <div className="relative">
-          {/* Back button: hermes.com has NO back arrow on the desktop
-              gallery — it appears only on mobile (top-left of the gallery,
-              as in the user's phone video). */}
-          <button aria-label="Back" className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center bg-white text-black shadow lg:hidden" onClick={goBack}>
+          {/* Back button: hermes.com shows it top-left of the gallery on
+              desktop too (user's 1366px screenshot, 2026-11-11) — the old
+              "desktop has none" note was wrong. */}
+          <button aria-label="Back" className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center bg-white text-black shadow" onClick={goBack}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg>
           </button>
-          <div ref={stripRef} className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto" role="group" aria-label="Product gallery">
+          <div ref={stripRef} className="no-scrollbar flex snap-x snap-mandatory gap-[1px] overflow-x-auto" role="group" aria-label="Product gallery">
             {views.map((v, i) => (
-              <div key={v.label + i} data-panel data-viewsrc={v.src} className={`relative aspect-[3/4] w-[82%] shrink-0 snap-start overflow-hidden bg-[#efe9df] sm:w-[48%] lg:w-[33.5%] ${thumb === i ? "ring-1 ring-black/50" : ""}`}>
+              <div key={v.label + i} data-panel data-viewsrc={v.src} className={`relative aspect-[3/4] w-[82%] shrink-0 snap-start overflow-hidden bg-[#efe9df] sm:w-[48%] lg:w-[34.8%] ${thumb === i ? "ring-1 ring-black/50" : ""}`}>
                 {v.video ? (
                   <button aria-label={`View ${v.label} video`} className="relative block h-full w-full" onClick={() => { if (thumb !== i) setThumb(i); }}>
                     {v.videoSrc ? (
@@ -2502,57 +2537,81 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
             user's phone videos of hermes.com. */}
         <div ref={buyBoxRef} className="relative z-10 border border-black/10 bg-[#fffcf7] px-[15px] pb-6 pt-4 lg:absolute lg:bottom-6 lg:right-6 lg:w-[380px] lg:p-[15px]">
           <h1 className="text-base leading-6">{p.name}</h1>
-          <div className="mt-2 flex items-baseline justify-between">
-            <span className="text-sm text-neutral-600">Price</span>
-            <span className="text-sm leading-[22px]">{priceText(p)}</span>
-          </div>
           {p.colors.length > 0 && color && (
             <>
-              <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Color</p>
-              <p className="mt-1 text-sm font-medium underline underline-offset-4">{color.pdpName ?? color.name}</p>
+              <div className="mt-4 flex items-baseline justify-between">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Color</p>
+                <p className="text-sm">{color.pdpName ?? color.name}</p>
+              </div>
               {isBuyableStatus(p.status) ? (
-                <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
-                  {colorwaySiblings.map((sib) => {
-                    const sc = sib.colors[0];
-                    if (!sc) return null;
-                    return (
-                      <button key={`sib-${sib.id}`} aria-label={`Colour ${sc.pdpName ?? sc.name}`} onClick={() => go({ t: "product", id: sib.id })}
-                        className="relative h-9 w-9 border-2 border-black/20 lg:h-[59px] lg:w-[59px]" style={{ background: sc.hex || "#cccccc" }} />
-                    );
-                  })}
-                  {p.colors.map((c, i) => (
-                    <button key={c.name} aria-label={`Colour ${c.pdpName ?? c.name}${c.available && isBuyableStatus(p.status) ? "" : " (unavailable)"}`} disabled={!c.available || !isBuyableStatus(p.status)} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
-                      className={`relative h-9 w-9 border-2 lg:h-[59px] lg:w-[59px] ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || !isBuyableStatus(p.status) ? "opacity-40" : ""}`} style={{ background: c.hex || "#cccccc" }}>
-                      {(!c.available || !isBuyableStatus(p.status)) && <span className="absolute inset-0 flex items-center justify-center text-white">✕</span>}
-                    </button>
-                  ))}
-                </div>
+                colorThumbs ? (
+                  <div className="mt-2 flex flex-wrap items-start gap-[3px]">
+                    {colorThumbs.map((t) => (
+                      <span key={t.key} className="relative mb-[3px]">
+                        <button aria-label={`Colour ${t.name}`} onClick={t.onClick} className="block h-[70px] w-[53px] overflow-hidden bg-[#efe9df]">
+                          <img src={t.src} alt="" className="h-full w-full object-cover" />
+                        </button>
+                        {t.selected && <span className="absolute inset-x-0 -bottom-[3px] h-[2px] bg-black" aria-hidden="true" />}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
+                    {colorwaySiblings.map((sib) => {
+                      const sc = sib.colors[0];
+                      if (!sc) return null;
+                      return (
+                        <button key={`sib-${sib.id}`} aria-label={`Colour ${sc.pdpName ?? sc.name}`} onClick={() => go({ t: "product", id: sib.id })}
+                          className="relative h-9 w-9 border-2 border-black/20 lg:h-[59px] lg:w-[59px]" style={{ background: sc.hex || "#cccccc" }} />
+                      );
+                    })}
+                    {p.colors.map((c, i) => (
+                      <button key={c.name} aria-label={`Colour ${c.pdpName ?? c.name}${c.available && isBuyableStatus(p.status) ? "" : " (unavailable)"}`} disabled={!c.available || !isBuyableStatus(p.status)} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
+                        className={`relative h-9 w-9 border-2 lg:h-[59px] lg:w-[59px] ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || !isBuyableStatus(p.status) ? "opacity-40" : ""}`} style={{ background: c.hex || "#cccccc" }}>
+                        {(!c.available || !isBuyableStatus(p.status)) && <span className="absolute inset-0 flex items-center justify-center text-white">✕</span>}
+                      </button>
+                    ))}
+                  </div>
+                )
               ) : (
-                <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
-                  <button disabled aria-label={`Colour ${color.name} (unavailable)`} className="relative h-9 w-9 border-2 border-black/20 opacity-40 lg:h-[59px] lg:w-[59px]" style={{ background: color.hex || "#cccccc" }}><span className="absolute inset-0 flex items-center justify-center text-white">✕</span></button>
+                <div className="mt-2 flex flex-wrap items-start gap-[3px]">
+                  {colorThumbs ? (
+                    <span className="relative mb-[3px]">
+                      <button disabled aria-label={`Colour ${color.name} (unavailable)`} className="relative block h-[70px] w-[53px] overflow-hidden bg-[#efe9df] opacity-40">
+                        <img src={colorThumbs.find((t) => t.selected)?.src ?? colorThumbs[0].src} alt="" className="h-full w-full object-cover" />
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/30 text-lg text-white">✕</span>
+                      </button>
+                    </span>
+                  ) : (
+                    <button disabled aria-label={`Colour ${color.name} (unavailable)`} className="relative h-9 w-9 border-2 border-black/20 opacity-40 lg:h-[59px] lg:w-[59px]" style={{ background: color.hex || "#cccccc" }}><span className="absolute inset-0 flex items-center justify-center text-white">✕</span></button>
+                  )}
                 </div>
               )}
             </>
           )}
           {isBuyableStatus(p.status) && needsSize && (
             <div className="mt-4">
-              <button aria-label="Select a size" className="flex min-h-[46px] w-full items-center justify-between border-b border-[#919191] px-4 py-3 text-sm" onClick={() => setSizeDrawer(true)}>
-                <span className="flex items-center gap-2.5">
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21l-4-4Z" /><path d="M8 16l1.5 1.5M11 13l1.5 1.5M14 10l1.5 1.5" /></svg>
-                  {selSize ? `Select a size ${selSize}` : "Select a size"}
-                </span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m5 9 7 7 7-7" /></svg>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Size</p>
+              <button aria-label="Select a size" className="mt-1 flex min-h-[46px] w-full items-center justify-between border-b border-black/20 py-3 text-sm" onClick={() => setSizeDrawer(true)}>
+                <span>{selSize ? `Select a size ${selSize}` : "Select a size"}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
               </button>
-              {/* Shipping-delay note (hermes.com): it renders directly under
-                  the SIZE row whenever the size row is present — including
-                  on landing, before any size is chosen. It is NOT in the
-                  top info panel. */}
-              {p.shippingDelay && <p className="mt-2 text-xs text-neutral-500">{p.shippingDelay}</p>}
-              {!selSize && !sizeGone && <p className="mt-1.5 text-xs text-neutral-500">Please choose a size before adding to cart.</p>}
+              {/* No shipping-delay or "Please choose a size" lines here:
+                  the original's buy card shows neither on landing
+                  (measured 2026-11-11); the delay lives in the
+                  DELIVERY & RETURNS accordion. */}
+              <div className="mt-2 flex justify-end">
+                <button aria-label="Size guide" className="flex items-center gap-1.5 text-xs underline underline-offset-2" onClick={() => go({ t: "page", page: "guides" })}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="2" y="9" width="20" height="7" rx="1" /><path d="M6.5 9v3.5M11 9v3.5M15.5 9v3.5M20 9v3.5" /></svg>
+                  Size Guide
+                </button>
+              </div>
               {sizeGone && <p className="mt-1.5 text-xs font-medium text-red-700" role="status">The desired size is no longer available</p>}
             </div>
           )}
-          {isBuyableStatus(p.status) && needsSize && <button aria-label="Size guide" className="mt-2 text-xs uppercase tracking-[0.18em] underline" onClick={() => go({ t: "page", page: "guides" })}>Size guide</button>}
+          {/* Price alone, bottom-right above the action buttons — no
+              "Price" label (the original's card has none). */}
+          <p className="mt-4 text-right text-sm leading-[22px]">{priceText(p)}</p>
           {isConfigProduct(p) ? (
             <div className="mt-4">
               <button aria-label="Personalize" className="font-mono-d flex h-12 w-full items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => setConfigOpen((v) => !v)}>Personalize</button>
@@ -2561,8 +2620,8 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           ) : isBuyableStatus(p.status) ? (
             <div className="mt-4">
               <div className="flex">
-                {p.applePay && <button aria-label="Buy with Apple Pay" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border text-xs font-medium uppercase ${canAdd ? "border-black text-black" : "cursor-not-allowed border-black/20 bg-neutral-100 text-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><span className="text-xs font-medium uppercase tracking-normal">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
-                <button aria-label="Add to cart" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-2 text-xs font-medium uppercase tracking-normal text-white ${canAdd ? "bg-black" : "cursor-not-allowed bg-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
+                {p.applePay && <button aria-label="Buy with Apple Pay" className="font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border border-black text-xs font-medium uppercase text-black" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
+                <button aria-label="Add to cart" className="font-mono-d flex h-12 flex-1 items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
               </div>
             </div>
           ) : p.status === "in_store_only" ? (
@@ -2765,8 +2824,8 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               <button aria-label="Personalize" className="font-mono-d flex h-12 items-center justify-center gap-2 bg-black px-8 text-xs font-medium uppercase tracking-normal text-white" onClick={() => { setConfigOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Personalize</button>
             ) : (
               <>
-                {p.applePay && <button aria-label="Buy with Apple Pay" disabled={!canAdd} className={`font-mono-d flex h-12 items-center justify-center gap-1.5 border px-6 text-xs font-medium uppercase ${canAdd ? "border-black text-black" : "cursor-not-allowed border-black/20 bg-neutral-100 text-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><span className="text-xs font-medium uppercase tracking-normal">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
-                <button aria-label="Add to cart" disabled={!canAdd} className={`font-mono-d flex h-12 items-center justify-center gap-2 px-8 text-xs font-medium uppercase tracking-normal text-white ${canAdd ? "bg-black" : "cursor-not-allowed bg-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
+                {p.applePay && <button aria-label="Buy with Apple Pay" className="font-mono-d flex h-12 items-center justify-center gap-1.5 border border-black px-6 text-xs font-medium uppercase text-black" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
+                <button aria-label="Add to cart" className="font-mono-d flex h-12 items-center justify-center gap-2 bg-black px-8 text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
               </>
             )}
           </div>
