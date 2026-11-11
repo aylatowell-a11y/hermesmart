@@ -6523,9 +6523,9 @@ export function galleryForProduct(
     if (/78|rose velours/.test(colorName)) set = FH_LIP_ROSE_VELOURS;
     else if (/33|orange bo/.test(colorName)) set = FH_LIP_ORANGE_BOITE;
     else set = MATTE_LIPSTICK_SET;
-  } else if (name === "Ombres d'Hermès, Eye shadow quartet, Ombres Sables") {
+  } else if (name === "Eye shadow quartet, Ombres Sables") {
     set = OMBRES_SABLES_SET;
-  } else if (name === "Les Mains Hermès, Nail polish, Or Rose") {
+  } else if (name === "Nail polish, Limited edition, Or Rose") {
     set = NAIL_POLISH_SET;
   } else if (name === "Les Grigris Hermès Face and eye illuminating powder, Limited edition, Or Permabrass") {
     set = LES_GRIGRIS_SET;

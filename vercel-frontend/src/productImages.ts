@@ -450,9 +450,9 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   "Le Philateliste du Faubourg scarf 90":
     "https://assets.hermes.com/is/image/hermesproduct/004205S%2012_flat_wm_103?$product_default_bg$",
   "Rouge Hermès gift set, Lip care": rougeLipCareSet,
-  "Ombres d'Hermès, Eye shadow quartet, Ombres Sables":
+  "Eye shadow quartet, Ombres Sables":
     "https://assets.hermes.com/is/image/hermesproduct/60875PV007_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60875PV007, $121 (REPLACE generated ombresEyeShadow)
-  "Les Mains Hermès, Nail polish, Or Rose":
+  "Nail polish, Limited edition, Or Rose":
     "https://assets.hermes.com/is/image/hermesproduct/60861VV050_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60861VV050, $66 (REPLACE generated nailPolishOrRose)
   // Original Hermes photo, hotlinked (CDN probe 2026-11-10, spaced ID
   // 104951M 01). Verified: tan case, red strap + striped band.
