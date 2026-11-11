@@ -86,9 +86,9 @@ function parseArr<T>(raw: string | undefined, fallback: T[]): T[] {
   }
 }
 function parseColors(raw: string | undefined): Product["colors"] {
-  return parseArr<{ name: string; hex: string; available: boolean }>(raw, []).filter(
+  return parseArr<{ name: string; hex: string; available: boolean; pdpName?: string }>(raw, []).filter(
     (c) => c && typeof c === "object" && "name" in c && "hex" in c,
-  ).map((c) => ({ name: String(c.name), hex: String(c.hex), available: c.available !== false }));
+  ).map((c) => ({ name: String(c.name), hex: String(c.hex), available: c.available !== false, ...(c.pdpName ? { pdpName: c.pdpName } : {}) }));
 }
 function parseSizes(raw: string | undefined): Product["sizeOptions"] {
   return parseArr<{ label: string; available: boolean }>(raw, []).filter(

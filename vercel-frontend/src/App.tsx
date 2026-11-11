@@ -216,10 +216,9 @@ const CAROUSEL_EDITORIAL_DESKTOP: Record<string, { img: string; alt: string }> =
 // colour rows exist (H262851ZHF8, H231763ZHNL, H221898ZHX3, H231763ZHX3,
 // H27100GZHAF). Mini Thalassa H500522FD89 is the FIRST Black $580 in the
 // bracelets category (extraction pos 108); alternatives H500522FC89,
-// H500522FK89. UNMATCHED: Colliers et Laisses scarf 90 in White $660 —
-// no White variant exists in our data (extraction has Green/Orange/Red/
-// Multi-colored only), so Silk slot 1 stays on the current row
-// H004391Sv02 (Marine/Rouge). Noe loafer H262834ZAAC: colour corrected
+// H500522FK89. White variant ADDED 2026-11-11 as id 5086 (ref H004391Sv05,
+// $660, live-read); Silk slot 1 now points at it (was H004391Sv02
+// Marine/Rouge). Noe loafer H262834ZAAC: colour corrected
 // Brun -> Yellow in data.ts (live extraction pos 262 + theme tile both
 // Yellow). Kelly Pocket 18 belt H081120CK89 price $1,375 -> $2,150 in
 // data.ts (same change). Names NOT renamed here: Chaine d'ancre necklace /
@@ -230,7 +229,7 @@ const THEME_GRID_ORDER: Record<string, string[]> = {
   "Belts": ["H081120CK89", "H010439CK55080", "H011790UCAAXS", "id:16"],
   "Men's Shoes": ["H221898ZHBG", "H261807ZHAF", "H262820ZHNL", "H262834ZAAC"],
   "Fashion Jewelry": ["H101503Bv00", "H306324FvN2", "H109510Bv00", "H500522FD89"],
-  "Silk": ["H004391Sv02", "H061144Sv06", "H251526Sv02", "H891071Sv01"],
+  "Silk": ["H004391Sv05", "H061144Sv06", "H251526Sv02", "H891071Sv01"],
   "Beauty": ["VP25SETD25BUNDLE", "V60875PV007", "V60861VV050", "H104951Mv01"],
 };
 const fmt = (n: number) => "$" + n.toLocaleString("en-US");
@@ -345,10 +344,14 @@ function HermesLogo({ settings, light, variant = "full" }: { settings: Settings;
 function load<T>(k: string, fb: T): T { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fb; } catch { return fb; } }
 function save(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } }
 
-export function ProductVisual({ p, large: _large, altSrc, altActive, plain }: { p: Product; large?: boolean; altSrc?: string; altActive?: boolean; plain?: boolean }) {
+export function ProductVisual({ p, large: _large, altSrc, altActive }: { p: Product; large?: boolean; altSrc?: string; altActive?: boolean }) {
   // Real studio product photo for every product (assets/products/), filling
   // the tile with object-cover — no glyph/emoji placeholders on the storefront.
   const img = productImageFor(p);
+  // No visible status pill on the photo: hermes.com shows none on its
+  // category/search tiles — the status is screen-reader-only here (on
+  // mobile the tile renders it as text below the photo instead).
+  const statusLabel = p.status === "available_soon" ? "Available soon" : p.status === "in_store_only" ? "In store only" : p.status === "out_of_stock" ? "Out of stock" : "";
   return (
     <div className="relative h-full w-full overflow-hidden" style={{ background: p.tone }} aria-label={p.name}>
       <img src={img} alt={p.name} loading="lazy" className="h-full w-full object-cover" />
@@ -359,11 +362,7 @@ export function ProductVisual({ p, large: _large, altSrc, altActive, plain }: { 
       {altSrc && (
         <img src={altSrc} alt="" aria-hidden="true" loading="lazy" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${altActive ? "opacity-100" : "opacity-0"}`} />
       )}
-      {/* plain (homepage theme tiles): hermes.com shows NO status badge on
-          its homepage theme tiles, so the badge is hidden here only. */}
-      {!plain && p.status === "available_soon" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">Available soon</span>}
-      {!plain && p.status === "in_store_only" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">In store only</span>}
-      {!plain && p.status === "out_of_stock" && <span className="absolute bottom-3 left-3 bg-white/85 px-1.5 py-0.5 text-[10px] uppercase tracking-[0.18em] text-neutral-600">Out of stock</span>}
+      {statusLabel && <span className="sr-only">{statusLabel}</span>}
     </div>
   );
 }
@@ -377,19 +376,26 @@ function isSneakerProduct(p: Product): boolean { return /sneaker/i.test(p.name);
 
 function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean; plainTile?: boolean }) {
   const bagIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>;
-  // Tile alternate views (hermes.com parity): hovering does NOT swap the
-  // photo. On tiles with more than one gallery view, small white square
-  // < > arrows appear at mid-height on hover (desktop) and cycle the
-  // photos on click; on touch the photo changes with a horizontal swipe —
-  // all without opening the product page. The alternates are the
-  // product's gallery views after the first (galleryForProduct, default
-  // colourway), skipping Video views and any view that duplicates the tile
-  // photo. Single-view products (e.g. Milo hat, Rider jacket) have no
-  // alternate and no arrows.
+  // Tile alternate views (hermes.com parity): resting the mouse on the
+  // tile PHOTO advances exactly once from view 1 to view 2 with the 300ms
+  // cross-fade wired in ProductVisual; leaving the photo returns instantly
+  // to view 1. The small white square < > arrows appear on photo hover
+  // (desktop) and cycle the photos on click with a hard cut; on touch the
+  // photo changes with a horizontal swipe — all without opening the product
+  // page. Hovering the name/price text below the photo triggers nothing.
+  // Homepage theme tiles (plainTile) stay fully plain: no arrows, no
+  // badge, no hover-swap. The alternates are the product's gallery views
+  // after the first (galleryForProduct, default colourway), skipping Video
+  // views and any view that duplicates the tile photo. Single-view
+  // products (e.g. Milo hat, Rider jacket) have no alternate and no arrows.
   // CAVEAT: gallery views are mostly generated type-set photos, not the
   // original Hermes second view — the mechanism is exact, the imagery is
   // approximate until original second-view URLs are extracted live.
   const tileSrc = productImageFor(p);
+  // Mobile-only status line (hermes.com's mobile category tiles show the
+  // status as small-caps text below the photo, above the name; desktop
+  // shows no on-photo pill at all — the status is screen-reader-only).
+  const statusLabel = p.status === "available_soon" ? "Available soon" : p.status === "in_store_only" ? "In store only" : p.status === "out_of_stock" ? "Out of stock" : "";
   const altViews = useMemo(() => {
     const views = galleryForProduct(p, 0);
     const afterFirst = views.filter((v, i) => i >= 1 && !v.video && v.src !== tileSrc).map((v) => v.src);
@@ -398,8 +404,33 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Pr
   }, [p, tileSrc]);
   const [altIdx, setAltIdx] = useState<number | null>(null);
   const [altArmed, setAltArmed] = useState(false);
+  const [photoHovered, setPhotoHovered] = useState(false);
+  const hoverRafRef = useRef<number | null>(null);
+  const hoveredRef = useRef(false);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const suppressClickRef = useRef(false);
+  const onPhotoEnter = () => {
+    setPhotoHovered(true);
+    if (plainTile || altViews.length === 0) return;
+    // Arm first (mounts the alternate at opacity-0), then flip to view 2
+    // on the next painted frame so the 300ms cross-fade actually animates
+    // instead of popping in already mounted.
+    hoveredRef.current = true;
+    setAltArmed(true);
+    hoverRafRef.current = window.requestAnimationFrame(() => {
+      hoverRafRef.current = window.requestAnimationFrame(() => {
+        if (hoveredRef.current) setAltIdx(0);
+      });
+    });
+  };
+  const onPhotoLeave = () => {
+    setPhotoHovered(false);
+    hoveredRef.current = false;
+    if (hoverRafRef.current !== null) { cancelAnimationFrame(hoverRafRef.current); hoverRafRef.current = null; }
+    // Instant return to view 1: the alternate unmounts at once.
+    setAltIdx(null);
+    setAltArmed(false);
+  };
   // Arrow step (hermes.com): cycles tile photo -> alternate views -> tile
   // photo again, in both directions. altIdx null = the tile photo itself.
   const stepTile = (dir: 1 | -1) => {
@@ -436,25 +467,25 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Pr
     }
   };
   return (
-    <div className="group relative cursor-pointer" role="link" aria-label={`${p.name}, ${priceText(p)}`} tabIndex={0}
+    <div className="relative cursor-pointer" role="link" aria-label={`${p.name}, ${priceText(p)}`} tabIndex={0}
       onClick={() => { if (suppressClickRef.current) { suppressClickRef.current = false; return; } onOpen(p.id); }} onKeyDown={(e) => { if (e.key === "Enter") onOpen(p.id); }}
-      onMouseLeave={() => setAltIdx(null)}
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <div className="relative aspect-[3/4] overflow-hidden transition-transform duration-300 group-hover:scale-[1.015]"><ProductVisual p={p} plain={plainTile} altSrc={altIdx !== null ? altViews[altIdx] : (altArmed ? altViews[0] : undefined)} altActive={altIdx !== null} />
+      <div className={`relative aspect-[3/4] overflow-hidden transition-transform duration-300 ${photoHovered ? "scale-[1.015]" : ""}`} onMouseEnter={onPhotoEnter} onMouseLeave={onPhotoLeave}><ProductVisual p={p} altSrc={altIdx !== null ? altViews[altIdx] : (altArmed ? altViews[0] : undefined)} altActive={altIdx !== null} />
         {/* plainTile (homepage theme tiles only): hermes.com's homepage
             tiles have NO < > arrows at all — the arrows live on category
             tiles and the product-page gallery. Hidden here only. */}
         {!plainTile && altViews.length > 0 && (
           <>
-            <button aria-label="Previous image" className="absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center bg-white text-black opacity-0 shadow transition-opacity group-hover:opacity-100 focus-visible:opacity-100" onClick={(e) => { e.stopPropagation(); stepTile(-1); }} onKeyDown={(e) => e.stopPropagation()}>
+            <button aria-label="Previous image" className={`absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center bg-white text-black shadow transition-opacity focus-visible:opacity-100 ${photoHovered ? "opacity-100" : "opacity-0"}`} onClick={(e) => { e.stopPropagation(); stepTile(-1); }} onKeyDown={(e) => e.stopPropagation()}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
             </button>
-            <button aria-label="Next image" className="absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center bg-white text-black opacity-0 shadow transition-opacity group-hover:opacity-100 focus-visible:opacity-100" onClick={(e) => { e.stopPropagation(); stepTile(1); }} onKeyDown={(e) => e.stopPropagation()}>
+            <button aria-label="Next image" className={`absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center bg-white text-black shadow transition-opacity focus-visible:opacity-100 ${photoHovered ? "opacity-100" : "opacity-0"}`} onClick={(e) => { e.stopPropagation(); stepTile(1); }} onKeyDown={(e) => e.stopPropagation()}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg>
             </button>
           </>
         )}
       </div>
+      {!plainTile && statusLabel && <p className="mt-2 px-2 text-left text-[10px] uppercase tracking-[0.18em] text-neutral-600 lg:hidden">{statusLabel}</p>}
       {colourInName ? (
         // Category tile, as on hermes.com: the colour is appended to the
         // name ("Le Petit Sac bag, Beige/Natural"), the price sits below,
@@ -694,6 +725,10 @@ export function App() {
   // Height of the pinned header block the sub-nav must dock under.
   const pinTop = topRowH + navH;
   const [themeIdx, setThemeIdx] = useState(0);
+  // Last viewed (hermes.com): SESSION-ONLY — starts empty and only ever
+  // holds products actually opened in this browser session. It is never
+  // seeded from storage, so a fresh load shows no "Last viewed products".
+  const [lastViewedIds, setLastViewedIds] = useState<number[]>([]);
   const [cookie, setCookie] = useState<string | null>(() => { try { return localStorage.getItem("hlx-cookies"); } catch { return "pending"; } });
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -819,7 +854,7 @@ export function App() {
   if (store.error) return <div className="p-8 text-center"><p>Failed to load the store.</p><button aria-label="Retry loading store" className="mt-4 border border-black px-6 py-2 text-xs uppercase tracking-widest" onClick={() => store.refetch()}>Retry</button></div>;
 
   return (
-    <div ref={topRef} className="relative min-h-screen" style={{ background: settings.bgColor || "#fcf7f1", color: "#000" }}>
+    <div ref={topRef} className="relative min-h-screen overflow-x-clip" style={{ background: settings.bgColor || "#fcf7f1", color: "#000" }}>
       <div ref={sentinelRef} aria-hidden="true" className="pointer-events-none absolute left-0 top-0 h-2 w-px" />
       {/* HEADER — fixed and DIRECTION-AWARE, exactly like hermes.com.
           "top" (scroll 0, homepage): transparent over the hero, white logo + icons.
@@ -1003,12 +1038,12 @@ export function App() {
         </div>
       )}
 
-      <main className={view.t === "home" || view.t === "cart" || view.t === "checkout" ? "" : "pt-[62px] lg:pt-[142px]"}>
+      <main className={view.t === "home" || view.t === "cart" || view.t === "checkout" ? "" : view.t === "category" && view.cat !== "about" ? "pt-[62px] lg:pt-[120px]" : "pt-[62px] lg:pt-[142px]"}>
         {view.t === "home" && <HomeView settings={settings} products={products} themeIdx={themeIdx} setThemeIdx={setThemeIdx} go={go} addToCart={addToCart} pulse={pulse} />}
         {view.t === "cart" && <CartPage cart={pricedCart} setCart={setCart} settings={settings} go={go} total={cartTotal} count={cartCount} products={products} />}
         {view.t === "category" && view.cat === "about" && <AboutPage go={go} />}
         {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} pinTop={pinTop} initialVisible={catStateRef.current[catKey(view.cat, view.sub)]?.visible ?? 40} onVisibleChange={(n) => { const k = catKey(view.cat, view.sub); const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 }; catStateRef.current[k] = { ...prev, visible: n }; }} />}
-        {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} from={fromView} />}
+        {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} from={fromView} lastViewedIds={lastViewedIds} onViewed={(pid) => setLastViewedIds((prev) => [pid, ...prev.filter((x) => x !== pid)].slice(0, 9))} />}
         {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} />}
         {view.t === "about" && <AboutPage go={go} />}
         {view.t === "account" && <AccountView key={view.mode ?? "login"} user={user} setUser={setUser} go={go} mode={view.mode} />}
@@ -1316,9 +1351,10 @@ function beltWidthBucket(modelSize: string): string {
 function isBeltKit(p: { name: string }): boolean { return /buckle &/i.test(p.name); }
 // A product is buyable when its page shows ADD TO CART on hermes.com.
 // "Available soon" tiles show ADD TO CART on their product pages (verified
-// in the live extraction), so they are buyable here too — the tile keeps
-// its "Available soon" badge (ProductCard, ~line 332) and the product page
-// buy box shows the same badge under the name (ProductPage, ~line 1963).
+// in the live extraction), so they are buyable here too — the tile shows
+// no on-photo badge (the status is screen-reader-only on desktop, a
+// small-caps line below the photo on mobile) and the product page buy box
+// shows no status label either.
 function isBuyableStatus(s: string): boolean { return s === "available" || s === "available_soon"; }
 // Configurable ("Customizable") products show PERSONALIZE on hermes.com
 // instead of ADD TO CART — the buyer chooses colours/finishes first.
@@ -1932,11 +1968,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-7xl px-4 pb-8 pt-0 sm:px-6">
       {/* Plain-text breadcrumb (not links), then the title with its count
-          attached directly — no description text at the top. */}
-      <p className="font-mono-d text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500">{crumbTop}</p>
-      <h1 className="mt-2 text-center text-[24px] leading-[34px]">{titleText}<span className="sr-only"> {displayCount} products</span></h1>
+          attached directly — no description text at the top. Both are
+          LEFT-aligned, as on hermes.com ("Fall-Winter 2026 Collection
+          [330]"); the header-to-title gap is ~30px via the main top
+          padding (category views) plus this block's zero top padding. */}
+      <p className="font-mono-d text-left text-[10px] font-medium uppercase tracking-normal text-neutral-500">{crumbTop}</p>
+      <h1 className="mt-1 text-left text-[24px] leading-[34px]">{titleText}<span className="ml-2 text-[16px] font-normal text-neutral-500">[{displayCount}]</span></h1>
 
       {/* Sticky sub-nav row: siblings (current underlined) + FILTER button +
           Product/Mosaic view toggle — pinned under the header on scroll.
@@ -1954,7 +1993,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
         <div className="flex items-center gap-x-3">
           <nav ref={subNavRef} className="no-scrollbar flex min-w-0 flex-1 gap-3 overflow-x-auto whitespace-nowrap" aria-label="Subcategories">
             {siblings.map((s) => (
-              <button key={s.label} data-current={s.current || undefined} aria-label={`Subcategory ${s.label}`} aria-current={s.current || undefined} className={`shrink-0 py-1 text-[11px] tracking-wide ${s.current ? "font-medium text-black underline underline-offset-8" : "text-neutral-600 hover:text-black"}`} onClick={() => go(s.view)}>{s.label}</button>
+              <button key={s.label} data-current={s.current || undefined} aria-label={`Subcategory ${s.label}`} aria-current={s.current || undefined} className={`shrink-0 border-b pb-[2px] pt-1 text-[11px] tracking-wide ${s.current ? "border-black font-medium text-black" : "border-transparent text-neutral-600 hover:text-black"}`} onClick={() => go(s.view)}>{s.label}</button>
             ))}
           </nav>
           <div className="ml-auto flex shrink-0 items-center gap-3">
@@ -1963,11 +2002,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
               FILTER{totalSel > 0 ? ` (${totalSel})` : ""}
             </button>
             <div className="flex items-center gap-1.5" role="radiogroup" aria-label="View toggle">
-              <button aria-label="Product view" role="radio" aria-checked={!mosaic} className={`flex h-8 w-8 items-center justify-center ${!mosaic ? "bg-black text-white" : "text-neutral-500 hover:text-black"}`} onClick={() => setMosaic(false)}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="8" height="8" /><rect x="13" y="3" width="8" height="8" /><rect x="3" y="13" width="8" height="8" /><rect x="13" y="13" width="8" height="8" /></svg>
+              <button aria-label="Product view" role="radio" aria-checked={!mosaic} className={`flex h-8 w-8 items-center justify-center ${!mosaic ? "text-black" : "text-neutral-400 hover:text-neutral-600"}`} onClick={() => setMosaic(false)}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="3" width="8" height="8" /><rect x="13" y="3" width="8" height="8" /><rect x="3" y="13" width="8" height="8" /><rect x="13" y="13" width="8" height="8" /></svg>
               </button>
-              <button aria-label="Mosaic view" role="radio" aria-checked={mosaic} className={`flex h-8 w-8 items-center justify-center ${mosaic ? "bg-black text-white" : "text-neutral-500 hover:text-black"}`} onClick={() => setMosaic(true)}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="11" height="7" /><rect x="16" y="3" width="5" height="11" /><rect x="3" y="12" width="6" height="9" /><rect x="11" y="12" width="5" height="5" /><rect x="11" y="19" width="10" height="2" /></svg>
+              <button aria-label="Mosaic view" role="radio" aria-checked={mosaic} className={`flex h-8 w-8 items-center justify-center ${mosaic ? "text-black" : "text-neutral-400 hover:text-neutral-600"}`} onClick={() => setMosaic(true)}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="3" width="11" height="7" /><rect x="16" y="3" width="5" height="11" /><rect x="3" y="12" width="6" height="9" /><rect x="11" y="12" width="5" height="5" /><rect x="11" y="19" width="10" height="2" /></svg>
               </button>
             </div>
           </div>
@@ -1988,7 +2027,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
       {filtered.length === 0 && <p className="py-16 text-center text-sm text-neutral-600">{sub ? `No articles in “${sub}” in this store yet.` : "No articles match these filters. Clear a filter to see more."}</p>}
 
       {!mosaic ? (
-        <div className="mt-8 grid grid-cols-2 gap-[2px] lg:grid-cols-4">
+        <div className="carousel-full-bleed mt-8 grid grid-cols-2 gap-[2px] lg:grid-cols-4">
           {gridItems.map((it) => it.kind === "product" ? (
             <ProductCard key={it.p.id} p={it.p} colourInName onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
           ) : it.kind === "video" ? (
@@ -2177,7 +2216,7 @@ function ProductVideo({ src, poster, playing, muted = true, className }: { src: 
   return <video ref={videoRef} src={src} muted={muted} loop playsInline preload="metadata" poster={poster} className={className} aria-label="Product video" />;
 }
 
-function ProductView({ products, id, go, addToCart, settings, user, from }: { products: Product[]; id: number; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; settings: Settings; user: { name: string; email: string } | null; from: View | null }) {
+function ProductView({ products, id, go, addToCart, settings, user, from, lastViewedIds, onViewed }: { products: Product[]; id: number; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; settings: Settings; user: { name: string; email: string } | null; from: View | null; lastViewedIds: number[]; onViewed: (id: number) => void }) {
   const p = products.find((x) => x.id === id) ?? products[0];
   // The category this product was opened from (tracked in App when
   // navigating to a product). Back controls return to it; a deep link has
@@ -2199,45 +2238,67 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
   const [zoomOpen, setZoomOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(2);
   const [sizeDrawer, setSizeDrawer] = useState(false);
-  const [selSize, setSelSize] = useState("");
+  const [selSize, setSelSize] = useState(p?.defaultSize ?? "");
   const [sizeGone, setSizeGone] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState(user?.email ?? "");
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
   const [notified, setNotified] = useState("");
   const [accOpen, setAccOpen] = useState(-1);
-  const [lastViewed, setLastViewed] = useState<Product[]>([]);
   const stripRef = useRef<HTMLDivElement>(null);
+  // Sticky desktop buy bar: shown once the buy panel has scrolled out of
+  // view (IntersectionObserver on the buy box itself).
+  const buyBoxRef = useRef<HTMLDivElement>(null);
+  const [buyBoxInView, setBuyBoxInView] = useState(true);
+  useEffect(() => {
+    const el = buyBoxRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const ob = new IntersectionObserver((es) => setBuyBoxInView(!!es[0]?.isIntersecting), { threshold: 0 });
+    ob.observe(el);
+    return () => ob.disconnect();
+  }, []);
   const notifyMut = useMutation({ mutationFn: () => api.requestNotify({ productId: p?.id ?? 0, productName: p?.name ?? "", email: notifyEmail }), onSuccess: () => setNotified("Thank you — we will notify you when this product is back in stock.") });
+  // Last viewed: session-only, derived from the App-level id list (never
+  // seeded from storage) — the section renders only once at least one
+  // product was actually opened in this session (RelatedRow returns null
+  // for an empty list). The current product is excluded.
+  const lastViewed = lastViewedIds.filter((x) => x !== p.id).slice(0, 4).map((i) => products.find((x) => x.id === i)).filter((x): x is Product => !!x);
   useEffect(() => {
     if (!p) return;
     api.recordProductView({ productId: p.id }).catch(() => {});
-    try {
-      const raw = JSON.parse(localStorage.getItem("hlx-last-viewed") || "[]") as number[];
-      const ids = [p.id, ...raw.filter((x) => x !== p.id)].slice(0, 9);
-      localStorage.setItem("hlx-last-viewed", JSON.stringify(ids));
-      setLastViewed(ids.slice(1).map((i) => products.find((x) => x.id === i)).filter((x): x is Product => !!x).slice(0, 4));
-    } catch { /* ignore */ }
+    onViewed(p.id);
   }, [p?.id]);
   useEffect(() => {
-    // Stop the video only when LEAVING the video view. Selecting the video
-    // view must NOT reset vidPlaying: the tap sets thumb to the video view
-    // AND vidPlaying to true, and an unconditional reset here would
-    // immediately clobber vidPlaying back to false, so the first tap to
-    // play would do nothing and the video would sit frozen on its poster.
+    // A video view AUTOPLAYS (muted, loop) the moment it is selected;
+    // leaving it stops it. The strip slides sideways so the selected view
+    // lands in the FIRST position (snap-start panels + inline "start").
     const isVideoView = galleryForProduct(p, colorIdx)[thumb]?.video;
-    if (!isVideoView) setVidPlaying(false);
-    stripRef.current?.querySelectorAll<HTMLElement>("[data-panel]")[thumb]?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    setVidPlaying(!!isVideoView);
+    stripRef.current?.querySelectorAll<HTMLElement>("[data-panel]")[thumb]?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
   }, [thumb]);
   useEffect(() => { if (!zoomOpen) return; const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setZoomOpen(false); }; document.addEventListener("keydown", onKey); return () => document.removeEventListener("keydown", onKey); }, [zoomOpen]);
   if (!p) return <p className="p-10 text-center">Product not found.</p>;
   const color = p.colors[colorIdx] ?? p.colors[0];
+  // Sibling colourways (Cashmere coat): hermes.com shows both colour
+  // thumbs on each colour's page and tapping one navigates to that
+  // colour's own product page. Siblings render first (Noir before Blanc
+  // Naturel on the Blanc page, as on hermes.com); the own colour stays
+  // selected.
+  const colorwaySiblings = (p.colorwayRefs ?? []).map((ref) => products.find((x) => x.refCode === ref)).filter((x): x is Product => !!x && x.id !== p.id);
   const isShoe = p.subcategory === "Shoes" || /sneaker|boot|loafer/i.test(p.name);
   const isRTW = p.subcategory.toLowerCase().includes("ready") || p.subcategory === "Dresses and skirts" || (p.category === "equestrian" && /jacket/i.test(p.name));
   const hasCustomSizes = (p.sizeOptions?.length ?? 0) > 0;
   const needsSize = isShoe || isRTW || hasCustomSizes;
   const sizeList: { label: string; available: boolean }[] = hasCustomSizes ? p.sizeOptions : isShoe ? ["40", "41", "42", "43", "44", "45"].map((label) => ({ label, available: true })) : ["XS", "S", "M", "L", "XL"].map((label) => ({ label, available: true }));
   const canAdd = isBuyableStatus(p.status) && !sizeGone && (!needsSize || selSize !== "");
+  // Shown reference (hermes.com): the base ref + the selected size,
+  // defaulting to the FIRST size when none is chosen yet (Blanc coat:
+  // H6H0113DAA3 + 36 = H6H0113DAA336). Products with no size row keep
+  // the bare ref. NOTE for the data pass: the coat's first size in
+  // sizeOptions must be the one the original shows on landing (34) —
+  // with sizes stored [32,34,36,38,40,42] this computes ...DAA332.
+  const displaySize = selSize || sizeList[0]?.label || "";
+  const displayRef = p.refCode && needsSize && displaySize ? `${p.refCode}${displaySize}` : p.refCode;
   // Gallery views — EVERY view is a DISTINCT photo whose content matches
   // its label (Detail = extreme close-up, Worn = model wearing it, Above =
   // top-down, Back = rear, Side = profile), shot for that view in
@@ -2257,9 +2318,12 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
   const descLines = p.detailLines.filter((l) => !l.startsWith("Finish options:") && !/\+\d+ more/.test(l) && !l.startsWith("Also available as"));
   const editorial = p.story && !p.story.startsWith("The story behind") ? p.story : "";
   const partnerPool = products.filter((x) => x.id !== p.id);
-  const partners = [...partnerPool.filter((x) => x.name === p.name), ...partnerPool.filter((x) => x.name !== p.name && x.theme !== "" && x.theme === p.theme), ...partnerPool.filter((x) => x.name !== p.name && x.category === p.category && x.subcategory === p.subcategory)].filter((x, i, a) => a.findIndex((y) => y.id === x.id) === i).slice(0, 4);
+  // Per-product overrides (Cashmere coat): the exact "The Perfect Partner"
+  // / "Keep exploring" rows from hermes.com; every other product keeps the
+  // derived lists below.
+  const partners = p.partnerIds ? p.partnerIds.map((id) => products.find((x) => x.id === id)).filter((x): x is Product => !!x) : [...partnerPool.filter((x) => x.name === p.name), ...partnerPool.filter((x) => x.name !== p.name && x.theme !== "" && x.theme === p.theme), ...partnerPool.filter((x) => x.name !== p.name && x.category === p.category && x.subcategory === p.subcategory)].filter((x, i, a) => a.findIndex((y) => y.id === x.id) === i).slice(0, 4);
   const partnerIds = new Set(partners.map((x) => x.id));
-  const explore = partnerPool.filter((x) => x.category === p.category && !partnerIds.has(x.id)).filter((x, i, a) => a.findIndex((y) => y.name.toLowerCase() === x.name.toLowerCase()) === i).slice(0, 4);
+  const explore = p.exploreIds ? p.exploreIds.map((id) => products.find((x) => x.id === id)).filter((x): x is Product => !!x) : partnerPool.filter((x) => x.category === p.category && !partnerIds.has(x.id)).filter((x, i, a) => a.findIndex((y) => y.name.toLowerCase() === x.name.toLowerCase()) === i).slice(0, 4);
   const thumbBtn = (v: GalView, i: number) => (
     <button key={v.label + i} aria-label={`Gallery thumbnail ${v.label}${v.video ? " (video)" : ""}`} aria-current={thumb === i} className="relative h-12 w-10 shrink-0 bg-white ring-1 ring-black/15" onClick={() => setThumb(i)}>
       <span className="absolute inset-0 overflow-hidden">
@@ -2269,6 +2333,27 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
       {thumb === i && <span className="absolute inset-x-0 -bottom-[5px] h-[2px] bg-black" aria-hidden="true" />}
     </button>
   );
+  // Rich lines: a per-product override body is an array of lines —
+  // "## " = subheading, "• " = bullet, anything else a paragraph. Used
+  // by the Cashmere coat's verbatim accordion bodies and by the
+  // description bullets ("• " lines in detailLines).
+  const renderRichLines = (lines: string[]) => {
+    const out: React.ReactNode[] = [];
+    let bullets: string[] = [];
+    const flush = () => {
+      if (bullets.length === 0) return;
+      out.push(<ul key={`ul-${out.length}`} className="list-disc space-y-1 pl-5">{bullets.map((b) => <li key={b}>{b}</li>)}</ul>);
+      bullets = [];
+    };
+    lines.forEach((l, i) => {
+      if (l.startsWith("## ")) { flush(); out.push(<p key={`${i}-${l}`} className="pt-1.5 font-semibold text-black first:pt-0">{l.slice(3)}</p>); }
+      else if (l.startsWith("• ")) { bullets.push(l.slice(2)); }
+      else { flush(); out.push(<p key={`${i}-${l}`}>{l}</p>); }
+    });
+    flush();
+    return <>{out}</>;
+  };
+  const accBodies: Record<string, string[]> = p.accordionBodies ?? {};
   const accItems: { title: string; content: React.ReactNode }[] = [
     // PRODUCT DETAILS first — the user's phone video of hermes.com (8 Nov
     // 2026) proves the mobile product page carries this accordion above
@@ -2310,12 +2395,12 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
     // the PDF URL is not in any saved source. Restore it as a link row
     // once the real PDF URL is read from the live product page — the
     // invented watch-care sentences above were removed 2026-11-10.
-  ];
+  ].map((it) => {
+    const body = accBodies[it.title];
+    return body ? { title: it.title, content: <div className="space-y-1.5">{renderRichLines(body)}</div> } : it;
+  });
   return (
-    <div className="pb-24 lg:pb-6">
-      <p className="font-mono-d mx-auto max-w-7xl px-4 pt-8 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 sm:px-6">
-        <button aria-label="Back to category" className="underline-offset-4 hover:underline" onClick={() => go(backCat, { restore: true })}>{(NAV.find((n) => n.key === backCat.cat)?.label ?? backCat.cat.toUpperCase())}</button><span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" /><button aria-label={`Back to ${p.subcategory}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: p.subcategory })}>{p.subcategory}</button>
-      </p>
+    <div className="pb-24 lg:pb-24">
       <div className="relative mt-4">
         {/* Gallery — a wide horizontal strip of large panels, nearly
             full-bleed, with the thumbnail strip at its BOTTOM-LEFT corner
@@ -2325,28 +2410,22 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
             play/pause toggle. There is NO quantity selector on a product
             page — quantity is changed in the cart only. */}
         <div className="relative">
-          {/* Back button (hermes.com): a small white square with a left
-              arrow at the TOP LEFT of the gallery, returning to the
-              category the product was opened from. */}
-          <button aria-label="Back" className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center bg-white text-black shadow" onClick={goBack}>
+          {/* Back button: hermes.com has NO back arrow on the desktop
+              gallery — it appears only on mobile (top-left of the gallery,
+              as in the user's phone video). */}
+          <button aria-label="Back" className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center bg-white text-black shadow lg:hidden" onClick={goBack}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg>
           </button>
           <div ref={stripRef} className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto" role="group" aria-label="Product gallery">
             {views.map((v, i) => (
-              <div key={v.label + i} data-panel data-viewsrc={v.src} className={`relative aspect-[3/4] w-[82%] shrink-0 snap-center overflow-hidden bg-[#efe9df] sm:w-[48%] lg:w-[33.5%] ${thumb === i ? "ring-1 ring-black/50" : ""}`}>
+              <div key={v.label + i} data-panel data-viewsrc={v.src} className={`relative aspect-[3/4] w-[82%] shrink-0 snap-start overflow-hidden bg-[#efe9df] sm:w-[48%] lg:w-[33.5%] ${thumb === i ? "ring-1 ring-black/50" : ""}`}>
                 {v.video ? (
-                  <button aria-label={vidPlaying && thumb === i ? "Pause video" : "Play video"} aria-pressed={vidPlaying && thumb === i} className="relative block h-full w-full" onClick={() => { if (thumb === i) setVidPlaying(!vidPlaying); else { setThumb(i); setVidPlaying(true); } }}>
+                  <button aria-label={`View ${v.label} video`} className="relative block h-full w-full" onClick={() => { if (thumb !== i) setThumb(i); }}>
                     {v.videoSrc ? (
                       <ProductVideo src={v.videoSrc} poster={v.src} playing={vidPlaying && thumb === i && !zoomOpen} className="h-full w-full object-cover" />
                     ) : (
                       <img src={v.src} alt={`${p.name} — video`} className={`h-full w-full object-cover ${vidPlaying && thumb === i ? "dress-walk" : ""}`} />
                     )}
-                    {!(vidPlaying && thumb === i) && <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true"><span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-black"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg></span></span>}
-                    <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center bg-white text-black shadow" aria-hidden="true">
-                      {vidPlaying && thumb === i
-                        ? <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>
-                        : <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>}
-                    </span>
                   </button>
                 ) : (
                   <button aria-label={`View ${v.label} — open image gallery`} className="block h-full w-full cursor-zoom-in" onClick={() => { setThumb(i); setZoomLevel(2); setZoomOpen(true); }}>
@@ -2356,6 +2435,18 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
               </div>
             ))}
           </div>
+          {/* Video pause/play: a small white button at the BOTTOM EDGE of
+              the gallery (two bars = pause), shown only while the selected
+              view is the video view. The video autoplays when selected. */}
+          {curView?.video && (
+            <button aria-label={vidPlaying ? "Pause video" : "Play video"} aria-pressed={vidPlaying} className="absolute bottom-3 right-3 z-20 flex h-9 w-9 items-center justify-center bg-white text-black shadow" onClick={() => setVidPlaying((v) => !v)}>
+              {vidPlaying ? (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>
+              ) : (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>
+              )}
+            </button>
+          )}
           <div className="absolute bottom-3 left-3 z-20 flex gap-1.5" role="group" aria-label="Gallery thumbnails">
             {views.map((v, i) => thumbBtn(v, i))}
           </div>
@@ -2363,9 +2454,8 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
         {/* Buy box — a panel floating over the BOTTOM-RIGHT of the
             gallery on desktop; below the gallery on mobile, as in the
             user's phone videos of hermes.com. */}
-        <div className="relative z-10 border border-black/10 bg-[#fffcf7] px-[15px] pb-6 pt-4 lg:absolute lg:bottom-6 lg:right-6 lg:w-[380px] lg:p-[15px]">
+        <div ref={buyBoxRef} className="relative z-10 border border-black/10 bg-[#fffcf7] px-[15px] pb-6 pt-4 lg:absolute lg:bottom-6 lg:right-6 lg:w-[380px] lg:p-[15px]">
           <h1 className="text-base leading-6">{p.name}</h1>
-          {p.status === "available_soon" && <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-neutral-600">Available soon</p>}
           <div className="mt-2 flex items-baseline justify-between">
             <span className="text-sm text-neutral-600">Price</span>
             <span className="text-sm leading-[22px]">{priceText(p)}</span>
@@ -2373,11 +2463,19 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
           {p.colors.length > 0 && color && (
             <>
               <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Color</p>
-              <p className="mt-1 text-sm font-medium underline underline-offset-4">{color.name}</p>
+              <p className="mt-1 text-sm font-medium underline underline-offset-4">{color.pdpName ?? color.name}</p>
               {isBuyableStatus(p.status) ? (
                 <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
+                  {colorwaySiblings.map((sib) => {
+                    const sc = sib.colors[0];
+                    if (!sc) return null;
+                    return (
+                      <button key={`sib-${sib.id}`} aria-label={`Colour ${sc.pdpName ?? sc.name}`} onClick={() => go({ t: "product", id: sib.id })}
+                        className="relative h-9 w-9 border-2 border-black/20 lg:h-[59px] lg:w-[59px]" style={{ background: sc.hex || "#cccccc" }} />
+                    );
+                  })}
                   {p.colors.map((c, i) => (
-                    <button key={c.name} aria-label={`Colour ${c.name}${c.available && isBuyableStatus(p.status) ? "" : " (unavailable)"}`} disabled={!c.available || !isBuyableStatus(p.status)} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
+                    <button key={c.name} aria-label={`Colour ${c.pdpName ?? c.name}${c.available && isBuyableStatus(p.status) ? "" : " (unavailable)"}`} disabled={!c.available || !isBuyableStatus(p.status)} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
                       className={`relative h-9 w-9 border-2 lg:h-[59px] lg:w-[59px] ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || !isBuyableStatus(p.status) ? "opacity-40" : ""}`} style={{ background: c.hex || "#cccccc" }}>
                       {(!c.available || !isBuyableStatus(p.status)) && <span className="absolute inset-0 flex items-center justify-center text-white">✕</span>}
                     </button>
@@ -2395,10 +2493,15 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
               <button aria-label="Select a size" className="flex min-h-[46px] w-full items-center justify-between border-b border-[#919191] px-4 py-3 text-sm" onClick={() => setSizeDrawer(true)}>
                 <span className="flex items-center gap-2.5">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21l-4-4Z" /><path d="M8 16l1.5 1.5M11 13l1.5 1.5M14 10l1.5 1.5" /></svg>
-                  {selSize ? `Size — ${selSize}` : "Select a size"}
+                  {selSize ? `Select a size ${selSize}` : "Select a size"}
                 </span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m5 9 7 7 7-7" /></svg>
               </button>
+              {/* Shipping-delay note (hermes.com): it renders directly under
+                  the SIZE row whenever the size row is present — including
+                  on landing, before any size is chosen. It is NOT in the
+                  top info panel. */}
+              {p.shippingDelay && <p className="mt-2 text-xs text-neutral-500">{p.shippingDelay}</p>}
               {!selSize && !sizeGone && <p className="mt-1.5 text-xs text-neutral-500">Please choose a size before adding to cart.</p>}
               {sizeGone && <p className="mt-1.5 text-xs font-medium text-red-700" role="status">The desired size is no longer available</p>}
             </div>
@@ -2408,17 +2511,13 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
             <div className="mt-4">
               <button aria-label="Personalize" className="font-mono-d flex h-12 w-full items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => setConfigOpen((v) => !v)}>Personalize</button>
               {configOpen && <p className="mt-4 border border-black/20 p-3 text-sm">Personalization for this article is not available in this store yet. Please call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a> for assistance.</p>}
-              {p.shippingDelay && <p className="mt-2 text-xs text-neutral-500">{p.shippingDelay}</p>}
-              <p className="mt-3 text-xs text-neutral-600">BESOIN D&apos;AIDE? Text or call 1-800-441-4488 (Monday to Saturday, 10 AM to 9 PM EST)</p>
             </div>
           ) : isBuyableStatus(p.status) ? (
             <div className="mt-4">
               <div className="flex">
-                {p.applePay && <button aria-label="Buy with Apple Pay" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border text-xs font-medium uppercase ${canAdd ? "border-black text-black" : "cursor-not-allowed border-black/20 bg-neutral-100 text-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}><span className="text-xs font-medium uppercase tracking-normal">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
-                <button aria-label="Add to cart" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-2 text-xs font-medium uppercase tracking-normal text-white ${canAdd ? "bg-black" : "cursor-not-allowed bg-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
+                {p.applePay && <button aria-label="Buy with Apple Pay" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border text-xs font-medium uppercase ${canAdd ? "border-black text-black" : "cursor-not-allowed border-black/20 bg-neutral-100 text-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><span className="text-xs font-medium uppercase tracking-normal">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
+                <button aria-label="Add to cart" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-2 text-xs font-medium uppercase tracking-normal text-white ${canAdd ? "bg-black" : "cursor-not-allowed bg-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
               </div>
-              {p.shippingDelay && <p className="mt-2 text-xs text-neutral-500">{p.shippingDelay}</p>}
-              <p className="mt-3 text-xs text-neutral-600">BESOIN D&apos;AIDE? Text or call 1-800-441-4488 (Monday to Saturday, 10 AM to 9 PM EST)</p>
             </div>
           ) : p.status === "in_store_only" ? (
             <p className="mt-4 border border-black/20 p-3 text-sm">This article is available in store only. Please visit a boutique or call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a>.</p>
@@ -2450,14 +2549,13 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
         <section className="bg-[#fffcf7] p-5">
           <h3 className="sr-only">Product description</h3>
           <p className="mt-2.5 text-xs leading-5 text-black">{p.description}</p>
-          {editorial && <p className="font-serif-d mt-2.5 text-base italic leading-6">{editorial}</p>}
           {descLines.length > 0 && (
             <div className="mt-2.5 space-y-2.5 text-xs leading-5 text-black">
-              {descLines.map((l) => <p key={l}>{l}</p>)}
+              {renderRichLines(descLines)}
             </div>
           )}
           {p.madeIn && <p className="mt-2.5 text-xs leading-5 text-black">Made in {p.madeIn}</p>}
-          {p.refCode && <p className="mt-4 text-xs text-[#696969]">Product reference: {p.refCode}</p>}
+          {displayRef && <p className="mt-4 text-xs text-[#696969]">Product reference: {displayRef}</p>}
           <p className="mt-4 text-xs text-[#696969]">Like to know more? <button aria-label="Contact Customer Service" className="underline underline-offset-4" onClick={() => go({ t: "page", page: "contact" })}>Contact Customer Service</button></p>
         </section>
         <div className="mb-[15px] bg-[#fffcf7e6] px-4 py-2">
@@ -2473,6 +2571,18 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
         </div>
       </div>
 
+      {/* "The story behind" — on hermes.com the product story is its own
+          headed editorial section BELOW the description/accordions and ABOVE
+          "The Perfect Partner", but ONLY for products whose story is real
+          editorial copy. The templated "The story behind — …" rows render
+          nothing here (and nothing in the description panel either) — the
+          `editorial` const above already implements that split. */}
+      {editorial && (
+        <section className="mx-auto mt-12 max-w-5xl px-4 text-center sm:px-6 lg:mt-20">
+          <h2 className="font-serif-d text-center text-[30px] italic leading-snug">The story behind</h2>
+          <p className="font-serif-d mx-auto mt-8 max-w-3xl text-[20px] italic leading-[28px]">{editorial}</p>
+        </section>
+      )}
       <RelatedRow title="The Perfect Partner" items={partners} go={go} onQuickBuy={(p) => addToCart(p)} />
       <RelatedRow title="Keep exploring" items={explore} go={go} onQuickBuy={(p) => addToCart(p)} />
       <RelatedRow title="Last viewed products" items={lastViewed} go={go} mt="mt-20 lg:mt-28" hidePrice onQuickBuy={(p) => addToCart(p)} />
@@ -2498,14 +2608,20 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
           </div>
           <div className="relative flex flex-1 items-center justify-center overflow-hidden px-4 pb-28">
             {curView.video ? (
-              <button aria-label={vidPlaying ? "Pause video" : "Play video"} aria-pressed={vidPlaying} className="relative block max-h-full" onClick={() => setVidPlaying(!vidPlaying)}>
+              <div className="relative block max-h-full">
                 {curView.videoSrc ? (
                   <ProductVideo src={curView.videoSrc} poster={curView.src} playing={vidPlaying} className="max-h-[62vh] w-auto object-contain" />
                 ) : (
                   <img src={curView.src} alt={`${p.name} — video`} className={`max-h-[62vh] w-auto object-contain ${vidPlaying ? "dress-walk" : ""}`} />
                 )}
-                {!vidPlaying && <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true"><span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 text-black"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg></span></span>}
-              </button>
+                <button aria-label={vidPlaying ? "Pause video" : "Play video"} aria-pressed={vidPlaying} className="absolute bottom-3 right-3 z-20 flex h-9 w-9 items-center justify-center bg-white text-black shadow" onClick={() => setVidPlaying((v) => !v)}>
+                  {vidPlaying ? (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>
+                  )}
+                </button>
+              </div>
             ) : (
               <img src={curView.src} alt={`${p.name} — ${curView.label} view`} className="max-h-full max-w-full object-contain transition-transform duration-300" style={{ transform: `scale(${zoomLevel})` }} />
             )}
@@ -2524,34 +2640,40 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
         </div>
       )}
 
-      {/* "Select a size" — a slide-in drawer from the RIGHT, as on
-          hermes.com. Unavailable sizes are grey, crossed out and marked
-          Unavailable; choosing an available size closes the drawer and
-          fills the buy-box size button. */}
+      {/* "Select a size" — a slide-in drawer from the RIGHT on desktop and
+          a bottom sheet on mobile, as on hermes.com. Title "Size" is
+          underlined and centred, Close (×) top right; sizes list
+          vertically one per row; unavailable sizes are grey, crossed out
+          and marked "Unavailable" on the right; choosing an available size
+          closes the drawer and fills the buy-box size button; "Size Guide"
+          sits at the bottom right with a small ruler icon to its left. */}
       {sizeDrawer && (
         <div className="fixed inset-0 z-[60]" role="dialog" aria-label="Select a size">
           <button aria-label="Close size selector" className="absolute inset-0 h-full w-full bg-black/30" onClick={() => setSizeDrawer(false)} />
           <div className="drawer-in absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col bg-[#fffcf7] shadow-2xl lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-0 lg:h-full lg:w-[340px] lg:max-w-[88vw]">
-            <div className="flex items-center justify-between border-b border-black/10 px-5 py-4">
-              <span className="text-[12px] font-semibold uppercase tracking-[0.25em]">Select a size</span>
-              <button aria-label="Close size selector" className="flex h-9 w-9 items-center justify-center" onClick={() => setSizeDrawer(false)}>
+            <div className="relative border-b border-black/10 px-5 py-4">
+              <span className="block text-center text-[12px] font-semibold uppercase tracking-[0.25em] underline underline-offset-4">Size</span>
+              <button aria-label="Close size selector" className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center" onClick={() => setSizeDrawer(false)}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4">
-              <div className="flex flex-wrap gap-2">
+            <div className="flex-1 overflow-y-auto px-5 py-2">
               {sizeList.map((opt) => opt.available ? (
-                <button key={opt.label} aria-label={`Size ${opt.label}`} aria-pressed={selSize === opt.label} className={`font-mono-d inline-flex h-[34px] min-w-[52px] items-center justify-center rounded-[24px] border px-4 text-[10px] font-medium uppercase ${selSize === opt.label ? "border-black bg-black text-white" : "border-black/40 bg-transparent text-black"}`} onClick={() => { setSelSize(opt.label); setSizeGone(false); }}>
-                  {opt.label}
+                <button key={opt.label} aria-label={`Size ${opt.label}`} aria-pressed={selSize === opt.label} className={`flex w-full items-center justify-between border-b border-black/10 py-3.5 text-left text-sm ${selSize === opt.label ? "font-semibold" : ""}`} onClick={() => { setSelSize(opt.label); setSizeGone(false); setSizeDrawer(false); }}>
+                  <span className={selSize === opt.label ? "underline underline-offset-4" : ""}>{opt.label}</span>
                 </button>
               ) : (
-                <span key={opt.label} className="font-mono-d inline-flex h-[34px] min-w-[52px] items-center justify-center rounded-[24px] bg-[#f6f1eb] px-4 text-[10px] font-medium uppercase text-[#696969] line-through" aria-label={`Size ${opt.label} unavailable`}>{opt.label}</span>
+                <div key={opt.label} className="flex w-full items-center justify-between border-b border-black/10 py-3.5 text-sm text-[#696969]" aria-label={`Size ${opt.label} unavailable`}>
+                  <span className="line-through">{opt.label}</span>
+                  <span>Unavailable</span>
+                </div>
               ))}
-              </div>
             </div>
-            <div className="border-t border-[#f6f1eb] px-5 py-4">
-              <button aria-label="Continue with selected size" className="font-mono-d flex h-12 w-full items-center justify-center border border-black text-xs font-medium uppercase tracking-normal" onClick={() => setSizeDrawer(false)}>Continue</button>
-              <button aria-label="Open size guide" className="mt-3 block w-full text-center text-xs uppercase tracking-[0.18em] underline" onClick={() => { setSizeDrawer(false); go({ t: "page", page: "guides" }); }}>Size guide</button>
+            <div className="flex justify-end border-t border-[#f6f1eb] px-5 py-4">
+              <button aria-label="Open size guide" className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] underline" onClick={() => { setSizeDrawer(false); go({ t: "page", page: "guides" }); }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21l-4-4Z" /><path d="M8 16l1.5 1.5M11 13l1.5 1.5M14 10l1.5 1.5" /></svg>
+                Size guide
+              </button>
             </div>
           </div>
         </div>
@@ -2565,17 +2687,43 @@ function ProductView({ products, id, go, addToCart, settings, user, from }: { pr
           back up to the buy box and opens the email capture. Desktop keeps
           the floating buy card only. */}
       {isBuyableStatus(p.status) && (
-        <div className="fixed inset-x-0 bottom-0 z-40 bg-white px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_10px_rgba(0,0,0,0.14)] lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-40 bg-black pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
           {isConfigProduct(p) ? (
-            <button aria-label="Personalize" className="flex w-full items-center justify-center gap-2 bg-black py-3.5 text-[12px] font-semibold uppercase tracking-[0.22em] text-white" onClick={() => { setConfigOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+            <button aria-label="Personalize" className="flex w-full items-center justify-center gap-2 bg-black py-4 text-[12px] font-semibold uppercase tracking-[0.22em] text-white" onClick={() => { setConfigOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
               Personalize
             </button>
           ) : (
-          <button aria-label="Add to cart" disabled={sizeGone} className={`flex w-full items-center justify-center gap-2 py-3.5 text-[12px] font-semibold uppercase tracking-[0.22em] text-white ${sizeGone ? "cursor-not-allowed bg-neutral-400" : "bg-black"}`} onClick={() => { if (needsSize && !selSize) { setSizeDrawer(true); return; } addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}>
+          <button aria-label="Add to cart" disabled={sizeGone} className={`flex w-full items-center justify-center gap-2 py-4 text-[12px] font-semibold uppercase tracking-[0.22em] text-white ${sizeGone ? "cursor-not-allowed bg-neutral-400" : "bg-black"}`} onClick={() => { if (needsSize && !selSize) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>
             Add to cart
           </button>
           )}
+        </div>
+      )}
+      {/* Sticky DESKTOP buy bar — once the buy panel has scrolled out of
+          view, a translucent bar pins to the bottom: small thumbnail +
+          name + price on the left, Apple Pay + black ADD TO CART on the
+          right. Same addToCart action (and size gating) as the in-panel
+          buttons; config products get PERSONALIZE instead. */}
+      {isBuyableStatus(p.status) && !buyBoxInView && (
+        <div className="fixed inset-x-0 bottom-0 z-40 hidden items-center justify-between gap-4 border-t border-black/10 bg-[#fffcf7]/90 px-6 py-3 backdrop-blur lg:flex" role="region" aria-label="Quick buy">
+          <div className="flex min-w-0 items-center gap-3">
+            <img src={productImageFor(p)} alt="" className="h-12 w-10 shrink-0 object-cover" />
+            <span className="min-w-0">
+              <span className="block truncate text-sm">{p.name}</span>
+              <span className="mt-0.5 block text-sm">{priceText(p)}</span>
+            </span>
+          </div>
+          <div className="flex shrink-0">
+            {isConfigProduct(p) ? (
+              <button aria-label="Personalize" className="font-mono-d flex h-12 items-center justify-center gap-2 bg-black px-8 text-xs font-medium uppercase tracking-normal text-white" onClick={() => { setConfigOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Personalize</button>
+            ) : (
+              <>
+                {p.applePay && <button aria-label="Buy with Apple Pay" disabled={!canAdd} className={`font-mono-d flex h-12 items-center justify-center gap-1.5 border px-6 text-xs font-medium uppercase ${canAdd ? "border-black text-black" : "cursor-not-allowed border-black/20 bg-neutral-100 text-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><span className="text-xs font-medium uppercase tracking-normal">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
+                <button aria-label="Add to cart" disabled={!canAdd} className={`font-mono-d flex h-12 items-center justify-center gap-2 px-8 text-xs font-medium uppercase tracking-normal text-white ${canAdd ? "bg-black" : "cursor-not-allowed bg-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
+              </>
+            )}
+          </div>
         </div>
       )}
       {!isBuyableStatus(p.status) && p.status !== "in_store_only" && (
