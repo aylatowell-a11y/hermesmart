@@ -167,7 +167,7 @@ const CAROUSEL_THEMES: string[] = Array.from({ length: 15 }, (_, i) => CAROUSEL_
 // nothing extra added, nothing invented. All 10 URLs below were fetched
 // (HTTP 200) and VIEWED: the 3x4 portrait crop is the original's mobile
 // editorial image and is used on every breakpoint because our slides are
-// portrait (4/5 mobile, 3/4 desktop); the original's desktop 16:9 crops
+// portrait (3/4 mobile, 16:9 desktop); the original's desktop 16:9 crops
 // are the same scenes in landscape (Fashion jewelry desktop is 9:16, the
 // same face/bracelets close-up, even tighter). The 4 products shown under
 // each theme are unchanged (THEME_GRID_ORDER).
@@ -434,7 +434,7 @@ export function App() {
   const qc = useQueryClient();
   const store = useQuery({ queryKey: ["storefront"], queryFn: () => api.getStorefront({}) });
   const products = useMemo(() => store.data?.products ?? [], [store.data]);
-  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "800-441-4488", heroTitle: "Threading ideas", heroText: "", shipTo: "UNITED STATES", deliveryText: "", returnsText: "", paymentMethods: "", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10 AM - 9 PM", logoMode: "both", logoUrl: "", flagshipStore: "691 Madison Avenue, New York", shipToCountries: "UNITED STATES, UNITED KINGDOM, FRANCE, PAKISTAN, UNITED ARAB EMIRATES, INDIA, CANADA", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. All rights reserved.", serviceDeliveryBody: "Free standard delivery. Herm\u00e8s offers several fast and secure delivery options.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
+  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "800-441-4488", heroTitle: "Threading ideas", heroText: "", shipTo: "UNITED STATES", deliveryText: "", returnsText: "", paymentMethods: "", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10am - 9pm EST", logoMode: "both", logoUrl: "", flagshipStore: "691 Madison Avenue, New York", shipToCountries: "UNITED STATES, UNITED KINGDOM, FRANCE, PAKISTAN, UNITED ARAB EMIRATES, INDIA, CANADA", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. All rights reserved.", serviceDeliveryBody: "Free standard delivery. Herm\u00e8s offers several fast and secure delivery options.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
 
   const [view, setView] = useState<View>({ t: "home" });
   const [cart, setCart] = useState<CartItem[]>(() => load("hlx-cart", []));
@@ -598,7 +598,7 @@ export function App() {
         const slim = headerMode === "slim";
         const ink = onHero ? "#ffffff" : "#191919";
         return (
-      <header ref={headerRef} className={`fixed inset-x-0 top-0 z-40 pt-safe transition-[background-color,border-color,color] duration-300 ${onHero ? "border-b border-transparent" : slim ? "border-b border-black" : "border-b border-black/10 shadow-[0_1px_0_rgba(0,0,0,0.02)]"}`} style={{ background: onHero ? "transparent" : "#fcf7f1", color: ink }}>
+      <header ref={headerRef} className={`fixed inset-x-0 top-0 z-40 pt-safe transition-[background-color,border-color,color] duration-300 ${onHero ? "border-b border-transparent" : slim ? "border-b border-black" : "border-b border-[#f6f1eb]"}`} style={{ background: onHero ? "transparent" : "#fcf7f1", color: ink }}>
         {/* Top row (logo / Search / Account / Cart). In the slim state this row
             is gone on DESKTOP — only the nav board below remains. On mobile the
             slim carriage header IS the board, so the row stays at every width
@@ -630,7 +630,7 @@ export function App() {
             <button aria-label="Account" className="flex h-9 w-9 items-center justify-center" onClick={() => go({ t: "account" })}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M4.5 20c1.4-3.6 4.2-5.2 7.5-5.2s6.1 1.6 7.5 5.2" /></svg>
             </button>
-            <button aria-label={`Cart, ${cartCount} items`} className="relative flex h-9 w-9 items-center justify-center" onClick={() => go({ t: "cart" })}>
+            <button aria-label={cartCount === 0 ? "Cart, empty" : `Cart, ${cartCount} item${cartCount === 1 ? "" : "s"}`} className="relative flex h-9 w-9 items-center justify-center" onClick={() => go({ t: "cart" })}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.5" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>
               {cartCount > 0 && <span className={`absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${onHero ? "bg-white text-black" : "bg-black text-white"}`}>{cartCount}</span>}
             </button>
@@ -643,7 +643,7 @@ export function App() {
             </div>
           ))}
           {menuCat && (() => { const entry = mega.find(e => e.key === menuCat); if (!entry) return null; const cols = entry.key === "women" ? MEGA_DESKTOP_WOMEN : entry.columns; return (
-            <div className="absolute inset-x-0 top-full z-50 border-t border-black/10 bg-[#fffcf7] shadow-[0_24px_40px_rgba(0,0,0,0.12)]" role="menu" aria-label={`${entry.label} mega menu`} onMouseEnter={() => setMenuCat(entry.key)}>
+            <div className="absolute inset-x-0 top-full z-50 border-t border-[#f6f1eb] bg-[#fffcf7]" role="menu" aria-label={`${entry.label} mega menu`} onMouseEnter={() => setMenuCat(entry.key)}>
               <div className="mx-auto flex max-w-7xl gap-10 px-6 py-8">
                 <button aria-label={`${entry.label} ${entry.caption}`} className="relative block h-[340px] w-[260px] shrink-0 overflow-hidden text-left" onClick={() => go(megaTarget(entry, navOverrides, entry.columns[0]?.[0]?.heading || "", entry.columns[0]?.[0]?.items[0]))}>
                   <img src={megaImage(entry)} alt={entry.caption} className="h-full w-full object-cover" />
@@ -778,10 +778,10 @@ export function App() {
       </main>
 
       {view.t !== "cart" && view.t !== "checkout" && <Footer settings={settings} go={go} />}
-      {view.t !== "checkout" && view.t !== "admin" && <ChatBubble settings={settings} go={go} view={view} />}
+      {view.t !== "admin" && <ChatBubble settings={settings} go={go} view={view} />}
 
       {addedDialog && (
-        <div className="fixed right-4 top-4 z-50 w-[320px] max-w-[calc(100vw-32px)] bg-[#fffcf7] p-5 shadow-xl ring-1 ring-black/10 fade-up" role="dialog" aria-label="Item added to cart">
+        <div className="fixed right-4 top-4 z-50 w-[320px] max-w-[calc(100vw-32px)] bg-[#fffcf7] p-5 fade-up" role="dialog" aria-label="Item added to cart">
           <button aria-label="Close added to cart dialog" className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center text-lg leading-none text-neutral-600" onClick={() => setAddedDialog("")}>×</button>
           <div className="flex items-start gap-3 pr-6">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="mt-0.5 shrink-0"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>
@@ -929,7 +929,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
                   style={{ width: isActive ? "60.8vw" : 128 }}>
                   <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
                   {isActive && (
-                    <span className="font-mono-d absolute bottom-8 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-[2px] bg-white px-8 text-xs font-medium uppercase text-black shadow">{t}</span>
+                    <span className="font-mono-d absolute bottom-8 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black">{t}</span>
                   )}
                 </button>
               );
@@ -947,9 +947,9 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             if (!ed) return null;
             return (
               <button key={`${t}-${i}`} data-slide role="tab" aria-selected={activeIdx === i} aria-label={`Theme ${t}, ${i + 1} of ${CAROUSEL_THEMES.length}`} onClick={() => centerSlide(i)}
-                className={`relative aspect-[4/5] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
+                className={`relative aspect-[3/4] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
                 <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
-                <span className="font-mono-d absolute bottom-4 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-[2px] bg-white px-8 text-xs font-medium uppercase text-black shadow">{t}</span>
+                <span className="font-mono-d absolute bottom-4 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black">{t}</span>
               </button>
             );
           })}
@@ -979,12 +979,12 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         <div className="relative overflow-hidden">
         <ProductVideo src={baladeurSrc} poster={baladeurPoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[62vh] w-full object-cover" />
         <div className="absolute bottom-4 right-4 z-10 flex gap-2">
-          <button aria-label={vidPaused ? "Play video" : "Pause video"} aria-pressed={vidPaused} className="flex h-9 w-9 items-center justify-center bg-white text-black shadow" onClick={() => setVidPaused(!vidPaused)}>
+          <button aria-label={vidPaused ? "Play video" : "Pause video"} aria-pressed={vidPaused} className="flex h-9 w-9 items-center justify-center bg-white text-black" onClick={() => setVidPaused(!vidPaused)}>
             {vidPaused
               ? <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>
               : <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>}
           </button>
-          <button aria-label={vidMuted ? "Enable sound" : "Mute"} aria-pressed={!vidMuted} className="flex h-9 w-9 items-center justify-center bg-white text-black shadow" onClick={() => setVidMuted(!vidMuted)}>
+          <button aria-label={vidMuted ? "Enable sound" : "Mute"} aria-pressed={!vidMuted} className="flex h-9 w-9 items-center justify-center bg-white text-black" onClick={() => setVidMuted(!vidMuted)}>
             {vidMuted
               ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16 9l6 6M22 9l-6 6" /></svg>
               : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>}
@@ -1548,7 +1548,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
       {/* Plain-text breadcrumb (not links), then the title with its count
           attached directly — no description text at the top. */}
       <p className="font-mono-d text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500">{crumbTop}</p>
-      <h1 className="mt-2 text-[24px] leading-[34px]">{titleText}<span className="sr-only"> {displayCount}products</span></h1>
+      <h1 className="mt-2 text-center text-[24px] leading-[34px]">{titleText}<span className="sr-only"> {displayCount} products</span></h1>
 
       {/* Sticky sub-nav row: siblings (current underlined) + FILTER button +
           Product/Mosaic view toggle — pinned under the header on scroll.
@@ -1732,7 +1732,7 @@ function CategoryView({ products, cat, sub, go, addToCart }: { products: Product
   );
 }
 
-function RelatedRow({ title, items, go, mt, onQuickBuy }: { title: string; items: Product[]; go: (v: View) => void; mt?: string; onQuickBuy?: (p: Product) => void }) {
+function RelatedRow({ title, items, go, mt, onQuickBuy, hidePrice }: { title: string; items: Product[]; go: (v: View) => void; mt?: string; onQuickBuy?: (p: Product) => void; hidePrice?: boolean }) {
   if (items.length === 0) return null;
   return (
     <section className={`mx-auto ${mt ?? "mt-12 lg:mt-20"} max-w-5xl px-4 sm:px-6`}>
@@ -1744,12 +1744,12 @@ function RelatedRow({ title, items, go, mt, onQuickBuy }: { title: string; items
       <div className="mt-8 grid grid-cols-2 gap-[2px] lg:flex lg:overflow-x-auto lg:pb-1">
         {items.map((x) => (
           <div key={x.id} className="cursor-pointer lg:w-[220px] lg:shrink-0" role="link" aria-label={`${x.name}, ${priceText(x)}`} tabIndex={0} onClick={() => go({ t: "product", id: x.id })} onKeyDown={(e) => { if (e.key === "Enter") go({ t: "product", id: x.id }); }}>
-            <div className="relative aspect-square overflow-hidden"><ProductVisual p={x} />{onQuickBuy && x.status === "available" && (
+            <div className="relative aspect-square overflow-hidden"><ProductVisual p={x} />{onQuickBuy && x.status === "available" && isSneakerProduct(x) && (
               <button aria-label={`Quick buy ${x.name}`} className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#696969] shadow transition hover:bg-black hover:text-white" onClick={(e) => { e.stopPropagation(); onQuickBuy(x); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg></button>
             )}</div>
             <p className="mt-2 px-2 text-xs leading-5">{x.name}</p>
             {x.colors[0] && <p className="sr-only">Color: {x.colors[0].name}</p>}
-            <p className="mt-0.5 px-2 text-xs leading-5">{priceText(x)}</p>
+            {!hidePrice && <p className="mt-0.5 px-2 text-xs leading-5">{priceText(x)}</p>}
           </div>
         ))}
       </div>
@@ -1796,16 +1796,9 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [notified, setNotified] = useState("");
   const [accOpen, setAccOpen] = useState(-1);
-  const [wishMsg, setWishMsg] = useState("");
   const [lastViewed, setLastViewed] = useState<Product[]>([]);
-  const [tiePlaying, setTiePlaying] = useState(false);
-  const [tieMuted, setTieMuted] = useState(true);
-  const [tieVol, setTieVol] = useState(50);
-  const [tieProg, setTieProg] = useState(0);
-  const tieRef = useRef<HTMLDivElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
   const notifyMut = useMutation({ mutationFn: () => api.requestNotify({ productId: p?.id ?? 0, productName: p?.name ?? "", email: notifyEmail }), onSuccess: () => setNotified("Thank you — we will notify you when this product is back in stock.") });
-  const wishMut = useMutation({ mutationFn: () => api.toggleWishlist({ email: user?.email ?? "", productId: p?.id ?? 0, productName: p?.name ?? "" }), onSuccess: (r) => setWishMsg(r.added ? "Added to your wishlist." : "Removed from your wishlist.") });
   useEffect(() => {
     if (!p) return;
     api.recordProductView({ productId: p.id }).catch(() => {});
@@ -1827,7 +1820,6 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
     stripRef.current?.querySelectorAll<HTMLElement>("[data-panel]")[thumb]?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }, [thumb]);
   useEffect(() => { if (!zoomOpen) return; const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setZoomOpen(false); }; document.addEventListener("keydown", onKey); return () => document.removeEventListener("keydown", onKey); }, [zoomOpen]);
-  useEffect(() => { if (!tiePlaying) return; const t = window.setInterval(() => setTieProg((v) => (v + 1) % 101), 120); return () => window.clearInterval(t); }, [tiePlaying]);
   if (!p) return <p className="p-10 text-center">Product not found.</p>;
   const color = p.colors[colorIdx] ?? p.colors[0];
   const isShoe = p.subcategory === "Shoes" || /sneaker|boot|loafer/i.test(p.name);
@@ -1854,7 +1846,6 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
   useEffect(() => { setThumb(0); setVidPlaying(false); stripRef.current?.scrollTo({ left: 0 }); }, [galleryKey]);
   const descLines = p.detailLines.filter((l) => !l.startsWith("Finish options:") && !/\+\d+ more/.test(l) && !l.startsWith("Also available as"));
   const editorial = p.story && !p.story.startsWith("The story behind") ? p.story : "";
-  const isScarfStory = p.name.includes("Philateliste");
   const partnerPool = products.filter((x) => x.id !== p.id);
   const partners = [...partnerPool.filter((x) => x.name === p.name), ...partnerPool.filter((x) => x.name !== p.name && x.theme !== "" && x.theme === p.theme), ...partnerPool.filter((x) => x.name !== p.name && x.category === p.category && x.subcategory === p.subcategory)].filter((x, i, a) => a.findIndex((y) => y.id === x.id) === i).slice(0, 4);
   const partnerIds = new Set(partners.map((x) => x.id));
@@ -1883,11 +1874,25 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
     { title: "CARE", content: <>Preserve the original qualities of this article by avoiding contact with water, perfume and cosmetics. Store it in its original case, away from direct light and heat, and entrust maintenance to a Hermès boutique.</> },
     { title: "DELIVERY & RETURNS", content: (<>
       <p className="font-semibold text-black">Shipping</p>
-      {settings.deliveryText ? <p className="mt-1">{settings.deliveryText}</p> : <p className="mt-1">Complimentary ground shipping within 1 to 10 business days for items up to $2,000. Ship to a store for collection with 2 Day delivery. Express delivery is required for orders greater than $2,000. Items greater than $25,000 require white glove delivery. Purchases are delivered in an orange box tied with a Bolduc ribbon, with the exception of certain items. Select items require ground shipping. See the delivery <button aria-label="Delivery FAQs" className="underline underline-offset-2" onClick={() => go({ t: "page", page: "faq" })}>FAQs</button> for details on shipping methods, costs and delivery times.</p>}
+      {settings.deliveryText ? <p className="mt-1">{settings.deliveryText}</p> : <>
+        <p className="mt-1">Free standard delivery. Hermès offers several fast and secure delivery options.</p>
+        <p className="mt-3 font-semibold text-black">Delivery options</p>
+        <p className="mt-1">Standard Delivery (Free): An estimated delivery date will be provided at checkout (expected delivery date is visible during the payment step). Your order will be prepared within 1 to 2 business days and delivered within 3 to 5 business days.</p>
+        <p className="mt-1">Express Delivery ($35): Your order will be prepared within 1 business day and delivered within 1 to 2 business days.</p>
+        <p className="mt-1">Same-Day Delivery ($35): Order by 2:00 PM EST (except on weekends and holidays), your order will be delivered within 1 to 2 business days.</p>
+      </>}
       <p className="mt-4 font-semibold text-black">Payment methods</p>
       {settings.paymentMethods ? <p className="mt-1">{settings.paymentMethods}</p> : <p className="mt-1">By card: Visa®, MasterCard®, American Express®, Discover®, Diners Club®, JCB® and China Union Pay®. By PayPal® and Apple Pay®. Payment is debited immediately for personalized product.</p>}
       <p className="mt-4 font-semibold text-black">Returns and exchanges</p>
-      {settings.returnsText ? <p className="mt-1">{settings.returnsText}</p> : <p className="mt-1">Easy and complimentary, within 30 days. We recommend that you try your shoes on non-abrasive or carpeted surfaces. We will not be able to accept your return if the sole is damaged or marked. The Hermès Sellier tag must be intact, attached, and free of any alteration or damage. Personalized product cannot be refunded or exchanged. See conditions and procedure in our return FAQs.</p>}
+      {settings.returnsText ? <p className="mt-1">{settings.returnsText}</p> : <>
+        <p className="mt-1">Free returns within 30 days. See conditions and procedure in our FAQ.</p>
+        <p className="mt-3 font-semibold text-black">Returns</p>
+        <p className="mt-1">If you do not receive your order within [estimated time shown on order summary], please contact Customer Service.</p>
+        <p className="mt-3 font-semibold text-black">Designer or product exclusions</p>
+        <p className="mt-1">Some items are not eligible for delivery. Please see our Delivery FAQs for more details.</p>
+        <p className="mt-3 font-semibold text-black">Return policy</p>
+        <p className="mt-1">Returning your item is free. You have 30 days from the delivery date to return your product. Your item must be in a new condition and the packaging must be in its original state. Packages (including the orange box) will be collected at no extra charge when you have your return pick-up. Please note that international shipping costs and certain categories in Leather Goods are not refundable.</p>
+      </>}
     </>) },
     { title: "GIFTING", content: <>Your purchases are delivered in an orange box tied with a Bolduc ribbon, with the exception of fragrances, makeup and beauty products, books, certain equestrian and bulky items. During checkout, you can include one card with a personalized message and a priceless invoice. The gift recipient can exchange a gift. For more details, please contact Customer Service.</> },
     // USER GUIDE (Arceau id 53) is NOT rendered yet: the original's
@@ -1952,14 +1957,20 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
             <>
               <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Color</p>
               <p className="mt-1 text-sm font-medium underline underline-offset-4">{color.name}</p>
-              <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
-                {p.colors.map((c, i) => (
-                  <button key={c.name} aria-label={`Colour ${c.name}${c.available && p.status === "available" ? "" : " (unavailable)"}`} disabled={!c.available || p.status !== "available"} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
-                    className={`relative h-9 w-9 border-2 lg:h-[59px] lg:w-[59px] ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || p.status !== "available" ? "opacity-40" : ""}`} style={{ background: c.hex }}>
-                    {(!c.available || p.status !== "available") && <span className="absolute inset-0 flex items-center justify-center text-white">✕</span>}
-                  </button>
-                ))}
-              </div>
+              {p.status === "available" ? (
+                <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
+                  {p.colors.map((c, i) => (
+                    <button key={c.name} aria-label={`Colour ${c.name}${c.available && p.status === "available" ? "" : " (unavailable)"}`} disabled={!c.available || p.status !== "available"} onClick={() => { setColorIdx(i); setThumb(0); setVidPlaying(false); }}
+                      className={`relative h-9 w-9 border-2 lg:h-[59px] lg:w-[59px] ${i === colorIdx ? "border-black" : "border-black/20"} ${!c.available || p.status !== "available" ? "opacity-40" : ""}`} style={{ background: c.hex }}>
+                      {(!c.available || p.status !== "available") && <span className="absolute inset-0 flex items-center justify-center text-white">✕</span>}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-2 flex flex-wrap items-center gap-x-[2px] gap-y-2">
+                  <button disabled aria-label={`Colour ${color.name} (unavailable)`} className="relative h-9 w-9 border-2 border-black/20 opacity-40 lg:h-[59px] lg:w-[59px]" style={{ background: color.hex }}><span className="absolute inset-0 flex items-center justify-center text-white">✕</span></button>
+                </div>
+              )}
             </>
           )}
           {p.status === "available" && needsSize && (
@@ -1975,6 +1986,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
               {sizeGone && <p className="mt-1.5 text-xs font-medium text-red-700" role="status">The desired size is no longer available</p>}
             </div>
           )}
+          {p.status === "available" && needsSize && <button aria-label="Size guide" className="mt-2 text-xs uppercase tracking-[0.18em] underline" onClick={() => go({ t: "page", page: "guides" })}>Size guide</button>}
           {p.status === "available" ? (
             <div className="mt-4">
               <div className="flex">
@@ -1982,7 +1994,7 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
                 <button aria-label="Add to cart" disabled={!canAdd} className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-2 text-xs font-medium uppercase tracking-normal text-white ${canAdd ? "bg-black" : "cursor-not-allowed bg-neutral-400"}`} onClick={() => { if (canAdd) addToCart(p, color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
               </div>
               {p.shippingDelay && <p className="mt-2 text-xs text-neutral-500">{p.shippingDelay}.</p>}
-              <div className="mt-3">{user ? <button aria-label="Add to wishlist" className="text-xs uppercase tracking-[0.18em] underline" onClick={() => wishMut.mutate()}>♡ Add to wishlist</button> : <button aria-label="Sign in for wishlist" className="text-xs uppercase tracking-[0.18em] underline" onClick={() => go({ t: "account" })}>♡ Sign in to add to wishlist</button>}{wishMsg && <p className="mt-1 text-xs" role="status">{wishMsg}</p>}</div>
+              <p className="mt-3 text-xs text-neutral-600">BESOIN D&apos;AIDE? Text or call 1-800-441-4488 (Monday to Saturday, 10 AM to 9 PM EST)</p>
             </div>
           ) : p.status === "in_store_only" ? (
             <p className="mt-4 border border-black/20 p-3 text-sm">This article is available in store only. Please visit a boutique or call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a>.</p>
@@ -2037,42 +2049,9 @@ function ProductView({ products, id, go, addToCart, settings, user }: { products
         </div>
       </div>
 
-      {/* NOTE (2026-11-10): the original "tying your Twilly" video for this
-          scarf (a 16-second clip below the description on hermes.com) could
-          NOT be wired in yet — its video URL is not in any product asset
-          list and the scarf page HTML is Cloudflare-blocked, so no verified
-          video URL exists for it. Until one is found, the motion stays
-          recreated in-app on the product photo (slow pan); the controls
-          match the real ones. */}
-      {isScarfStory && (
-        <section className="mx-auto mt-12 max-w-5xl px-4 sm:px-6">
-          <h2 className="text-[12px] font-semibold uppercase tracking-[0.25em]">Play the illustration video</h2>
-          <div ref={tieRef} className="relative mt-4 overflow-hidden" style={{ background: "#efe9df" }}>
-            <img src={productImageFor(p)} alt={`${p.name} — illustration video`} className={`aspect-video w-full object-cover ${tiePlaying ? "dress-walk" : ""}`} />
-            <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-black/55 px-3 py-2 text-white sm:gap-3">
-              <button aria-label={tiePlaying ? "Pause illustration video" : "Play illustration video"} aria-pressed={tiePlaying} className="flex h-8 w-8 shrink-0 items-center justify-center" onClick={() => setTiePlaying(!tiePlaying)}>
-                {tiePlaying
-                  ? <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>
-                  : <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>}
-              </button>
-              <button aria-label={tieMuted ? "Unmute illustration video" : "Mute illustration video"} className="shrink-0 text-[11px] uppercase tracking-wider" onClick={() => setTieMuted(!tieMuted)}>{tieMuted ? "Unmute" : "Mute"}</button>
-              <label className="hidden shrink-0 items-center gap-1.5 text-[11px] uppercase tracking-wider sm:flex">Volume
-                <input aria-label="Volume level" type="range" min={0} max={100} value={tieVol} onChange={(e) => { setTieVol(Number(e.target.value)); if (Number(e.target.value) > 0) setTieMuted(false); }} className="w-16 accent-white" />
-              </label>
-              <div className="h-1 min-w-8 flex-1 bg-white/30" role="progressbar" aria-label="Video progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={tieProg}><div className="h-full bg-white transition-[width] duration-150" style={{ width: `${tieProg}%` }} /></div>
-              <button aria-label="Fullscreen illustration video" className="flex h-8 w-8 shrink-0 items-center justify-center" onClick={() => { tieRef.current?.requestFullscreen?.().catch(() => {}); }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
-              </button>
-            </div>
-          </div>
-          <p className="font-serif-d mt-5 text-xl italic">The art and craft of tying your Twilly</p>
-          <button aria-label="Over a thousand ways to tie your scarf" className="mt-2 text-[11px] font-semibold uppercase tracking-[0.22em] underline underline-offset-4" onClick={() => go({ t: "page", page: "guides" })}>Over a thousand ways to tie your scarf</button>
-        </section>
-      )}
-
       <RelatedRow title="The Perfect Partner" items={partners} go={go} onQuickBuy={(p) => addToCart(p)} />
       <RelatedRow title="Keep exploring" items={explore} go={go} onQuickBuy={(p) => addToCart(p)} />
-      <RelatedRow title="Last viewed products" items={lastViewed} go={go} mt="mt-20 lg:mt-28" onQuickBuy={(p) => addToCart(p)} />
+      <RelatedRow title="Last viewed products" items={lastViewed} go={go} mt="mt-20 lg:mt-28" hidePrice onQuickBuy={(p) => addToCart(p)} />
 
       <nav aria-label="Breadcrumb" className="font-mono-d mx-auto mt-14 max-w-5xl border-t border-black/10 px-4 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 sm:px-6">
         <button aria-label={`Breadcrumb ${NAV.find((n) => n.key === p.category)?.label ?? p.category}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category })}>{NAV.find((n) => n.key === p.category)?.label ?? p.category.toUpperCase()}</button>
@@ -2216,7 +2195,7 @@ const PAGES: Record<string, { title: string; body: string[] }> = {
 };
 
 function ContactForm({ settings, go }: { settings: Settings; go: (v: View) => void }) {
-  const [f, setF] = useState({ first: "", last: "", email: "", phone: "", subject: "", message: "" });
+  const [f, setF] = useState({ first: "", last: "", email: "", area: "US +1", phone: "", subject: "", message: "" });
   const [sent, setSent] = useState("");
   const [err, setErr] = useState("");
   const inputCls = "w-full border border-black/30 px-3 py-3 text-sm";
@@ -2228,7 +2207,12 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View) => vo
         <input aria-label="Contact last name" className={inputCls} placeholder="Last name *" value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
       </div>
       <input aria-label="Contact email" type="email" className={inputCls} placeholder="E-mail *" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
-      <input aria-label="Contact telephone" className={inputCls} placeholder="Telephone (+1, 10 digits) *" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+      <div className="grid grid-cols-[1fr_1.6fr] gap-3">
+        <select aria-label="Contact area code" className={inputCls} value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })}>
+          <option value="US +1">🇺🇸 US +1</option>
+        </select>
+        <input aria-label="Contact telephone" className={inputCls} placeholder="Telephone number *" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+      </div>
       <select aria-label="Contact subject" className={inputCls} value={f.subject} onChange={(e) => setF({ ...f, subject: e.target.value })}>
         <option value="">Please select a subject</option>{["Order enquiry", "Delivery", "Returns and exchanges", "Product information", "Account", "Other"].map((s) => <option key={s} value={s}>{s}</option>)}
       </select>
@@ -2497,7 +2481,7 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
                 </div>
                 <div className="mt-6 flex gap-3">
                   <button aria-label="Checkout from cart" className="font-mono-d flex h-12 flex-1 items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => go({ t: "checkout" })}>Checkout</button>
-                  <button aria-label="Buy with Apple Pay from cart" className="flex h-12 flex-1 items-center justify-center border border-black bg-white text-sm font-semibold" onClick={() => go({ t: "checkout" })}>Buy with Apple Pay</button>
+                  <button aria-label="Buy with Apple Pay from cart" className="flex h-12 flex-1 items-center justify-center gap-1.5 border border-black bg-white text-sm font-semibold" onClick={() => go({ t: "checkout" })}><span className="text-sm font-semibold">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span className="text-sm font-semibold">Pay</span></button>
                 </div>
               </div>
               <aside className="h-fit lg:sticky lg:bottom-0">{rightCol}</aside>
@@ -2527,8 +2511,8 @@ function SocialCircles() {
   );
 }
 
-// Floating chat bubble — bottom-right on every page except checkout (which
-// keeps its own bubble) and admin, as on hermes.com: a 48px white circle
+// Floating chat bubble — bottom-right on every page except admin,
+// as on hermes.com: a 48px white circle
 // with the speech-bubble glyph, bottom-5 right-5, accessible name "Open a
 // Live Chat with an advisor". Opening it first shows the Live Chat consent
 // dialog (§G, verbatim text + Privacy Policy link + CONTINUE), then a
@@ -2591,10 +2575,6 @@ function ChatBubble({ settings, go, view }: { settings: Settings; go: (v: View) 
                 <div className="mt-3 max-h-[50vh] space-y-2 overflow-y-auto">
                   <div className="max-w-[85%] bg-[#f6f1eb] px-3 py-2 text-sm leading-5">
                     Welcome to Hermès.com Live Chat! We are delighted to assist you and a Client Specialist will be with you shortly.
-                    <p className="mt-1 text-right text-[10px] text-neutral-500">{chatOpenedAt}</p>
-                  </div>
-                  <div className="max-w-[85%] bg-[#f6f1eb] px-3 py-2 text-sm leading-5">
-                    Thank you for visiting Hermes.com! How may I assist you today?
                     <p className="mt-1 text-right text-[10px] text-neutral-500">{chatOpenedAt}</p>
                   </div>
                   {msgs.map((m) => m.from === "customer" ? (
@@ -2710,7 +2690,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
             const isServices = c.title === "SERVICES";
             const cols = isServices ? [...FOOTER_COLS[0]!.links] : c.links;
             return (
-              <div key={c.title} className="border-b border-black/10 last:border-b-0">
+              <div key={c.title} className="border-b border-[#f6f1eb] last:border-b-0">
                 <button aria-label={`Footer section ${c.title}`} aria-expanded={open} className="font-mono-d flex w-full items-center justify-between py-4 text-left text-xs font-light uppercase tracking-normal" onClick={() => setOpenCol(open ? null : c.title)}>
                   {c.title}<span aria-hidden="true" className="text-base">{open ? "−" : "+"}</span>
                 </button>
@@ -2725,19 +2705,19 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
             );
           })}
         </div>
-        <div className="border-t border-black/10 px-4 py-6">
+        <div className="border-t border-[#f6f1eb] px-4 py-6">
           <p className="font-mono-d text-xs font-light uppercase tracking-normal">Newsletter</p>
           <p className="mt-4 text-[11px] leading-[18px] text-black">{settings.newsletterText || "Receive our newsletter and discover our stories, collections, and surprises."}</p>
           {newsletterForm(false)}
           <p className="font-mono-d mt-8 text-xs font-light uppercase tracking-normal">Follow us</p>
           <div className="mt-3"><SocialCircles /></div>
-          <div className="relative mt-7 border-t border-black/10 pt-5">
+          <div className="relative mt-7 border-t border-[#f6f1eb] pt-5">
             <button aria-label="Ship to country selector" aria-expanded={shipOpen} className="flex items-center gap-2 text-xs text-neutral-700 uppercase tracking-wider" onClick={() => setShipOpen(!shipOpen)}>
               <span>Ship to : <span className="font-medium underline underline-offset-4">{ship}</span></span>
               <span className="text-[11px] underline underline-offset-4">Change your location</span>
             </button>
             {shipOpen && (
-              <div className="absolute bottom-full left-0 z-50 mb-2 w-72 max-w-[85vw] border border-black/10 bg-[#fffcf7] py-2 shadow-lg" role="listbox" aria-label="Choose your location">
+              <div className="absolute bottom-full left-0 z-50 mb-2 w-72 max-w-[85vw] border border-[#f6f1eb] bg-[#fffcf7] py-2" role="listbox" aria-label="Choose your location">
                 {shipCountries.map((c) => (
                   <button key={c} role="option" aria-selected={ship === c} className={`block w-full px-4 py-2 text-left text-xs uppercase tracking-wider ${ship === c ? "font-semibold underline underline-offset-4" : "hover:underline"}`} onClick={() => { setShip(c); setShipOpen(false); }}>{c}</button>
                 ))}
@@ -2775,7 +2755,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View) => void })
               <span className="text-[11px] normal-case tracking-normal underline underline-offset-4">Change your location</span>
             </button>
             {shipOpen && (
-              <div className="absolute bottom-full left-0 z-50 mb-2 w-72 border border-black/10 bg-[#fffcf7] py-2 shadow-lg" role="listbox" aria-label="Choose your location">
+              <div className="absolute bottom-full left-0 z-50 mb-2 w-72 border border-[#f6f1eb] bg-[#fffcf7] py-2" role="listbox" aria-label="Choose your location">
                 {shipCountries.map((c) => (
                   <button key={c} role="option" aria-selected={ship === c} className={`block w-full px-4 py-2 text-left text-xs uppercase tracking-wider ${ship === c ? "font-semibold underline underline-offset-4" : "hover:underline"}`} onClick={() => { setShip(c); setShipOpen(false); }}>{c}</button>
                 ))}
@@ -2808,9 +2788,9 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   const [suTitle, setSuTitle] = useState(""); const [suFirst, setSuFirst] = useState(""); const [suLast, setSuLast] = useState("");
   const [suEmail, setSuEmail] = useState(""); const [suCode, setSuCode] = useState(""); const [suShowCode, setSuShowCode] = useState(false);
   const [suPw, setSuPw] = useState(""); const [suShowPw, setSuShowPw] = useState(false); const [suArea, setSuArea] = useState("US +1"); const [suPhone, setSuPhone] = useState(""); const [suDobMonth, setSuDobMonth] = useState(""); const [suDobDay, setSuDobDay] = useState(""); const [suDobYear, setSuDobYear] = useState(""); const [suMarketing, setSuMarketing] = useState(false);
-  const [suMsg, setSuMsg] = useState(""); const [sentCode, setSentCode] = useState("");
+  const [suMsg, setSuMsg] = useState(""); const [sentCode, setSentCode] = useState(""); const [codeWait, setCodeWait] = useState(0);
   const login = useMutation({ mutationFn: () => api.loginUser({ email: liEmail, password: liPw }), onSuccess: (r) => { setLiMsg(r.message); if (r.ok) setUser({ name: r.name, email: liEmail }); } });
-  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobDisplay = suDobMonth && suDobDay && suDobYear ? `${monthNames[Number(suDobMonth) - 1] ?? ""} ${Number(suDobDay)}, ${suDobYear}` : ""; save("hlx-profile", { phone: `${areaDigits} ${digits}`, dob: dobDisplay }); setUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail }); } } });
+  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobDisplay = suDobMonth && suDobDay && suDobYear ? `${monthNames[Number(suDobMonth) - 1] ?? ""} ${Number(suDobDay)}, ${suDobYear}` : ""; save("hlx-profile", { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }); setUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail }); } } });
   const ordersQ = useQuery({ queryKey: ["myorders", user?.email], queryFn: () => api.myOrders({ email: user?.email ?? "" }), enabled: !!user });
   // Signed-in account tabs (§D addendum): exactly five, in this order.
   const [acctTab, setAcctTab] = useState<"orders" | "profile" | "addresses" | "payments" | "reservations">("orders");
@@ -2818,7 +2798,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   if (user) {
     // Phone / date of birth entered at sign-up (saved locally on
     // registration — the clone's account record holds name + email only).
-    const savedProfile = load<{ phone?: string; dob?: string }>("hlx-profile", {});
+    const savedProfile = load<{ title?: string; phone?: string; dob?: string }>("hlx-profile", {});
     const savedAddresses = [...new Set((ordersQ.data?.orders ?? []).map((o) => o.address).filter(Boolean))];
     const tabs: { key: typeof acctTab; label: string }[] = [
       { key: "orders", label: "Order history" },
@@ -2875,10 +2855,10 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
                   </button>
                 </div>
                 <dl className="mt-6 space-y-4 text-sm">
-                  <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Name</dt><dd className="mt-1">{user.name}</dd></div>
+                  <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Name</dt><dd className="mt-1">{savedProfile.title ? `${savedProfile.title}. ${user.name}` : user.name}</dd></div>
                   <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">E-mail</dt><dd className="mt-1">{user.email}</dd></div>
-                  <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Telephone number</dt><dd className="mt-1">{savedProfile.phone || "Not provided"}</dd></div>
-                  <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Date of birth</dt><dd className="mt-1">{savedProfile.dob || "Not provided"}</dd></div>
+                  <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Telephone number</dt><dd className="mt-1">{savedProfile.phone || ""}</dd></div>
+                  <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Date of birth</dt><dd className="mt-1">{savedProfile.dob || ""}</dd></div>
                   <div><dt className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Password</dt><dd className="mt-1">*********</dd></div>
                 </dl>
                 <p className="mt-6 text-sm text-neutral-700">You are not subscribed to the Hermès newsletter.</p>
@@ -2928,8 +2908,14 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   const sendCode = () => {
     if (!suEmail.includes("@")) { setSuMsg("Please enter a valid email address first."); return; }
     setSentCode(String(Math.floor(100000 + Math.random() * 900000)));
+    setCodeWait(60);
     setSuMsg("");
   };
+  useEffect(() => {
+    if (codeWait <= 0) return;
+    const t = window.setTimeout(() => setCodeWait((v) => v - 1), 1000);
+    return () => window.clearTimeout(t);
+  }, [codeWait]);
   const submitSignup = () => {
     if (!suEmail.includes("@")) return setSuMsg("Please enter a valid email address.");
     if (!sentCode) return setSuMsg("Please press SEND CODE first — a demo code will be shown for you to enter.");
@@ -2998,8 +2984,9 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
           <label className={`${lab} mt-5`}>E-mail *
             <span className="mt-1 flex items-end gap-3">
               <input aria-label="Create account email" type="email" className={`${underline} min-w-0 flex-1`} value={suEmail} onChange={(e) => setSuEmail(e.target.value)} />
-              <button aria-label="Send verification code" type="button" className="shrink-0 bg-black px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={sendCode}>Send code</button>
+              <button aria-label="Send verification code" type="button" disabled={codeWait > 0} className="shrink-0 bg-black px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white disabled:opacity-50" onClick={sendCode}>Send code</button>
             </span>
+            {sentCode && <span className="mt-1 block text-xs text-neutral-500">{codeWait} SECONDS REMAINING BEFORE YOU CAN REQUEST A NEW CODE</span>}
             <span className={hint}>Expected format: yourname@domain.com</span>
           </label>
           {sentCode && <p className="mt-3 border border-black/15 bg-[#f6f1eb] px-3 py-2 text-xs leading-5 text-neutral-800" role="status">Demo code — this standalone build has no email service, so no email is sent. Your code is <strong>{sentCode}</strong>; enter it in Verification code below.</p>}
@@ -3039,7 +3026,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
           <div className="mt-5 flex items-end gap-3">
             <label className={`${lab} w-32 shrink-0`}>Area code *
               <select aria-label="Area code" className={underline} value={suArea} onChange={(e) => setSuArea(e.target.value)}>
-                <option value="US +1">🇺🇸 US +1</option><option value="GB +44">🇬🇧 GB +44</option><option value="FR +33">🇫🇷 FR +33</option><option value="PK +92">🇵🇰 PK +92</option><option value="IN +91">🇮🇳 IN +91</option><option value="AE +971">🇦🇪 AE +971</option>
+                <option value="US +1">🇺🇸 US +1</option>
               </select>
             </label>
             <label className={`${lab} min-w-0 flex-1`}>Telephone number *
@@ -3135,12 +3122,11 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
   const [pay, setPay] = useState("Visa");
   const [placed, setPlaced] = useState(0);
   const [placedTotal, setPlacedTotal] = useState(0);
-  const [chatOpen, setChatOpen] = useState(false);
   const mountCartCount = useRef(cart.length);
   useEffect(() => { if (mountCartCount.current === 0) go({ t: "cart" }); }, []);
   // Payment methods are admin-editable (Theme & Settings); the default
   // list is the original's US methods, in the original's order.
-  const payMethods = settings.paymentMethods ? settings.paymentMethods.split(",").map((m) => m.trim()).filter(Boolean) : ["Visa", "MasterCard", "American Express", "Discover", "Diners Club", "JCB", "China Union Pay", "Carte Blanche", "Accel", "Pulse", "Nyce", "Star", "PayPal", "Apple Pay"];
+  const payMethods = settings.paymentMethods ? settings.paymentMethods.split(",").map((m) => m.trim()).filter(Boolean) : ["MasterCard", "Visa", "American Express", "Diners Club", "Carte Blanche", "JCB", "Discover", "Accel", "Pulse", "Nyce", "Star", "China Union Pay", "PayPal", "Apple Pay"];
   const order = useMutation({
     mutationFn: () => api.placeOrder({ customerName: `${f.first} ${f.last}`.trim() || (user?.name ?? "Customer"), email, address: tab === "collect" ? `Collect in store — ${storePicked}` : `${f.address}${f.address2 ? ", " + f.address2 : ""}, ${f.city}, ${f.state} ${f.zip}`, paymentMethod: pay, deliveryOption: tab === "collect" ? "Collect in store" : "Ship to an address", items: cart.map((i) => ({ productId: i.productId, name: i.name, price: i.price, qty: i.qty, color: i.color, size: i.size })) }),
     onSuccess: (r) => { setPlacedTotal(total); setPlaced(r.orderId); setCart([]); window.scrollTo({ top: 0 }); },
@@ -3165,18 +3151,6 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
         </div>
         <CheckoutProgress step={step} />
         {children}
-      </div>
-      <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2">
-        {chatOpen && (
-          <div className="w-64 bg-[#fffcf7] p-4 shadow-xl" role="dialog" aria-label="Customer service help">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em]">Customer service</p>
-            <p className="mt-2 text-sm leading-6 text-neutral-700">{settings.serviceHours}<br /><a aria-label="Call customer service from chat" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
-            <button aria-label="Contact us from chat" className="mt-3 w-full bg-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => go({ t: "page", page: "contact" })}>Contact us</button>
-          </div>
-        )}
-        <button aria-label="Customer service chat" aria-expanded={chatOpen} className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-black/10" onClick={() => setChatOpen(!chatOpen)}>
-          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5Z" /><path d="M8 10.5h8M8 13.5h5" /></svg>
-        </button>
       </div>
     </div>
   );
@@ -3280,7 +3254,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
               <label className={labelCls}>Location *
                 <span className="relative block">
                   <select aria-label="Location" className={`${underline} appearance-none pr-8`} value={f.location} onChange={(e) => setF({ ...f, location: e.target.value })}>
-                    {["United States", "United Kingdom", "France", "Canada", "Pakistan", "United Arab Emirates", "India"].map((c) => <option key={c} value={c}>{c}</option>)}
+                    {["United States"].map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                   <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2" aria-hidden="true">⌄</span>
                 </span>
@@ -3341,7 +3315,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
               <div className="grid grid-cols-[1fr_1.2fr] gap-4">
                 <label className={labelCls}>Area code *
                   <select aria-label="Area code" className={`${underline} appearance-none`} value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })}>
-                    <option value="US +1">🇺🇸 US +1</option><option value="GB +44">🇬🇧 GB +44</option><option value="FR +33">🇫🇷 FR +33</option><option value="PK +92">🇵🇰 PK +92</option>
+                    <option value="US +1">🇺🇸 US +1</option>
                   </select>
                 </label>
                 <label className={labelCls}>Telephone number *
@@ -3395,6 +3369,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {payMethods.map((m) => <button key={m} aria-label={`Pay with ${m}`} className={`border px-3 py-3 text-sm ${pay === m ? "border-black bg-black text-white" : "border-black/30"}`} onClick={() => setPay(m)}>{m}</button>)}
             </div>
+            <p className="mt-2 text-xs text-neutral-500">PayPal and Apple Pay are available for select products.</p>
             <p className="mt-3 text-xs leading-5 text-neutral-500">Demo checkout only — selecting a method records it on the order; no card is charged and no card details are collected.</p>
             <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm leading-6 text-neutral-800">
               <input type="checkbox" aria-label="Agree to the General Terms and Conditions of Use" checked={termsAgree} onChange={(e) => { setTermsAgree(e.target.checked); setTermsErr(""); }} className="mt-1 h-4 w-4 shrink-0 accent-black" />

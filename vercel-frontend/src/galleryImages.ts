@@ -1562,6 +1562,16 @@ const SATIN_LIPSTICK_SET = [
   V("Box", HERMES_IMG + "60001SV021_front_wm_104" + HERMES_Q),
   V("Worn", HERMES_IMG + "60001SV021_worn_105" + HERMES_Q),
 ];
+// Satin lipstick, Beige Kalahari — ref V60001SV013, $86. Same 5-view shape
+// as SATIN_LIPSTICK_SET (Rose Épicé); every view verified HTTP 200 by CDN
+// probe 2026-11-10 (worn_102 / flat_wm_103 / detail_wm_104 are 403).
+const SATIN_LIPSTICK_KALAHARI_SET = [
+  V("Front", HERMES_IMG + "60001SV013_front_wm_101" + HERMES_Q),
+  V("Detail", HERMES_IMG + "60001SV013_front_wm_102" + HERMES_Q),
+  V("Case", HERMES_IMG + "60001SV013_front_wm_103" + HERMES_Q),
+  V("Box", HERMES_IMG + "60001SV013_front_wm_104" + HERMES_Q),
+  V("Worn", HERMES_IMG + "60001SV013_worn_105" + HERMES_Q),
+];
 const PRECOMPOSED_SET = [
   V("Front", HERMES_IMG + "604810V0_front_wm_101" + HERMES_Q),
   V("Closed", HERMES_IMG + "604810V0_front_wm_102" + HERMES_Q),
@@ -2016,6 +2026,10 @@ export function galleryForProduct(
     set = SILKY_LIPSTICK_SET;
   } else if (name === "ROUGE HERMÈS Satin lipstick, Limited Edition, Rose Épicé") {
     set = SATIN_LIPSTICK_SET;
+  } else if (name === "Satin lipstick, Beige Kalahari") {
+    // Original Hermes photos, hotlinked (CDN probe 2026-11-10; all 5 views HTTP 200).
+    // Ref V60001SV013, $86. Replaces the pooled matte-lipstick gallery (red/burgundy bullet).
+    set = SATIN_LIPSTICK_KALAHARI_SET;
   } else if (name === "ROUGE HERMÈS Pre-composed gift set, Limited edition") {
     set = PRECOMPOSED_SET;
   } else if (name === "Barénia Perfumed hair mist") {
@@ -2105,6 +2119,15 @@ export function galleryForProduct(
     set = MUG_SET3_SET;
   } else if (name === "Iskender white wine glass") {
     set = ISKENDER_SET;
+  } else if (name === "Milo Panorama bucket hat") {
+    // Original Hermes photos, hotlinked (live extraction 2026-11-10 §B; each URL verified HTTP 200).
+    // Ref H261010N 0W58, $690. Matches data.ts galleryViews ["Front","Detail","Worn"].
+    // Replaces the generated bucketHat pool (same asset served for every hat).
+    set = [
+      V("Front", "https://assets.hermes.com/is/image/hermesproduct/261010N%200W_front_wm_102?$product_default_bg$"),
+      V("Detail", "https://assets.hermes.com/is/image/hermesproduct/261010N%200W_detail_wm_104?$product_default_bg$"),
+      V("Worn", "https://assets.hermes.com/is/image/hermesproduct/261010N%200W_worn_109?$product_default_bg$"),
+    ];
   } else if (name === "Milo L'Aventure bucket hat") {
     // Fallback served long-dress photos (RTW_SET) for a hat. Single
     // generated view, same asset as the tile.

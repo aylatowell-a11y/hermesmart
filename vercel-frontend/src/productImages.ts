@@ -661,6 +661,11 @@ export const PRODUCT_IMAGES: Record<string, string> = {
     "https://assets.hermes.com/is/image/hermesproduct/60267TV048_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60267TV048, $86
   "ROUGE HERMÈS Satin lipstick, Limited Edition, Rose Épicé":
     "https://assets.hermes.com/is/image/hermesproduct/60001SV021_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60001SV021, $90
+  // Original Hermes photo, hotlinked (CDN probe 2026-11-10; front_wm_101 verified HTTP 200).
+  // Satin lipstick, Beige Kalahari, ref V60001SV013, $86 — replaces the pooled
+  // matteLipstickRoseBoise tile, which showed a red/burgundy bullet (wrong shade).
+  "Satin lipstick, Beige Kalahari":
+    "https://assets.hermes.com/is/image/hermesproduct/60001SV013_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   "ROUGE HERMÈS Pre-composed gift set, Limited edition":
     "https://assets.hermes.com/is/image/hermesproduct/604810V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V604810V0, $172 (price mismatch — see §5)
   "Barénia Perfumed hair mist":
@@ -700,6 +705,10 @@ export const PRODUCT_IMAGES: Record<string, string> = {
     "https://assets.hermes.com/is/image/hermesproduct/069853CD10_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   "Rouge Hermès Nourishing lip care mask":
     "https://assets.hermes.com/is/image/hermesproduct/60855BV000_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60855BV000, $100 (REPLACE generated lipCareMask)
+  // Original Hermes photo, hotlinked (live extraction 2026-11-10 §B; verified HTTP 200).
+  // Milo Panorama bucket hat, ref H261010N 0W58, $690 — tile is the Front view.
+  "Milo Panorama bucket hat":
+    "https://assets.hermes.com/is/image/hermesproduct/261010N%200W_front_wm_102?$product_default_bg$",
   "Milo L'Aventure bucket hat": bucketHat,
   "Swing dressage breeches": dressageBreeches,
 };
