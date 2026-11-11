@@ -14,6 +14,7 @@ export type ParsedRoute =
   | { kind: "home" }
   | { kind: "category"; cat: string; sub?: string }
   | { kind: "product"; id: number }
+  | { kind: "faq"; topic: string }
   | { kind: "contact" };
 
 export function slugify(s: string): string {
@@ -84,6 +85,12 @@ export function contactUrl(): string {
   return "/us/en/contact-us/";
 }
 
+// The original's FAQ topic URL, verified live 2026-11-12 (Payment page).
+// Only "payment" has a built FAQ page so far; other topics are not routed.
+export function faqUrl(topic: string): string {
+  return `/us/en/faq/online-shopping/${slugify(topic)}/`;
+}
+
 // The product ref embedded in a product URL path, if the path is one.
 export function productRefFromPath(path: string): string | null {
   const clean = path.split("?")[0]?.split("#")[0] ?? "";
@@ -103,6 +110,13 @@ export function parseUrl(
   if (clean.startsWith("us/en/")) clean = clean.slice("us/en/".length);
   if (clean === "") return { kind: "home" };
   if (clean === "contact-us") return { kind: "contact" };
+  if (clean.startsWith("faq/online-shopping/")) {
+    const topic = clean.slice("faq/online-shopping/".length).split("/")[0] ?? "";
+    // Only the Payment FAQ page is built so far; other topics fall back
+    // to home rather than rendering an empty FAQ page.
+    if (topic === "payment") return { kind: "faq", topic };
+    return null;
+  }
   if (clean.startsWith("product/")) {
     const seg = clean.slice("product/".length).split("/")[0] ?? "";
     const tail = seg.split("-").pop() ?? "";

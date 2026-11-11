@@ -41,13 +41,14 @@ import scarfColliersImg from "./assets/products/scarf-90-colliers.webp";
 import { fileToBase64 } from "./fileToBase64";
 import { productImageFor } from "./productImages";
 import { galleryForProduct, hiResHermes } from "./galleryImages";
-import { categoryUrl, contactUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
+import { categoryUrl, contactUrl, faqUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
 
 type Product = ApiResponse<typeof api, "getStorefront">["products"][number];
 type Settings = ApiResponse<typeof api, "getStorefront">["settings"];
 type View =
   | { t: "home" } | { t: "category"; cat: string; sub?: string }
   | { t: "product"; id: number } | { t: "page"; page: string }
+  | { t: "faq"; topic: string }
   | { t: "account"; mode?: "login" | "signup" } | { t: "checkout" } | { t: "admin" } | { t: "about" } | { t: "cart" };
 type CartItem = { key: string; productId: number; name: string; price: number; qty: number; color: string; size: string; glyph: string; tone: string; refCode: string };
 
@@ -593,6 +594,7 @@ export function App() {
     const parsed = parseUrl(window.location.pathname, [], SUBS_BY_CAT);
     if (parsed && parsed.kind === "category") return { view: { t: "category", cat: parsed.cat, sub: parsed.sub } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "contact") return { view: { t: "page", page: "contact" } as View, productRef: null as string | null };
+    if (parsed && parsed.kind === "faq") return { view: { t: "faq", topic: parsed.topic } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "home") return { view: { t: "home" } as View, productRef: null as string | null };
     return { view: null as View | null, productRef: productRefFromPath(window.location.pathname) };
   }, []);
@@ -790,7 +792,7 @@ export function App() {
     // Real URL for routed views (home / category / product / contact);
     // other views (cart, checkout, account, admin, other pages, about)
     // stay unrouted so browser Back returns to the last routed view.
-    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : null;
+    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "faq" ? faqUrl(v.topic) : null;
     if (url) { try { window.history.pushState(null, "", url); } catch { /* ignore */ } }
     if (v.t === "category" && !opts?.restore) pulse(2200);
     setView(v); setMobileNav(false); setMenuCat(null);
@@ -814,6 +816,12 @@ export function App() {
       if (parsed.kind === "contact") {
         if (cur.t === "category") saveCatState(cur);
         setView({ t: "page", page: "contact" }); setMobileNav(false); setMenuCat(null);
+        window.scrollTo({ top: 0 });
+        return;
+      }
+      if (parsed.kind === "faq") {
+        if (cur.t === "category") saveCatState(cur);
+        setView({ t: "faq", topic: parsed.topic }); setMobileNav(false); setMenuCat(null);
         window.scrollTo({ top: 0 });
         return;
       }
@@ -1071,6 +1079,7 @@ export function App() {
         {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} pinTop={pinTop} initialVisible={catStateRef.current[catKey(view.cat, view.sub)]?.visible ?? 40} onVisibleChange={(n) => { const k = catKey(view.cat, view.sub); const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 }; catStateRef.current[k] = { ...prev, visible: n }; }} />}
         {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} from={fromView} lastViewedIds={lastViewedIds} onBuyBarChange={setBuyBarVisible} onViewed={(pid) => setLastViewedIds((prev) => [pid, ...prev.filter((x) => x !== pid)].slice(0, 9))} />}
         {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} />}
+        {view.t === "faq" && <FaqPage topic={view.topic} go={go} />}
         {view.t === "about" && <AboutPage go={go} />}
         {view.t === "account" && <AccountView key={view.mode ?? "login"} user={user} setUser={setUser} go={go} mode={view.mode} />}
         {view.t === "checkout" && <CheckoutView cart={pricedCart} setCart={setCart} user={user} go={go} total={cartTotal} settings={settings} products={products} />}
@@ -3131,7 +3140,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
 
 const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
   { title: "SERVICES", links: [["Contact us", "contact"], ["FAQ", "faq"], ["Find a store", "stores"], ["Stores selling beauty products", "stores"], ["Stores selling Apple Watch Hermès", "stores"], ["Gifting", "gifting"], ["Made to measure", "measure"], ["Maintenance and repair", "maintenance"], ["User guides", "guides"]] },
-  { title: "ORDERS", links: [["Payment", "payment"], ["Shipping", "shipping"], ["Collect in store", "collect"], ["Track orders", "track"], ["Returns and exchanges", "returns"]] },
+  { title: "ORDERS", links: [["Payment", "faq:payment"], ["Shipping", "shipping"], ["Collect in store", "collect"], ["Track orders", "track"], ["Returns and exchanges", "returns"]] },
   { title: "LA MAISON HERMÈS", links: [["Sustainable development", "sustainability"], ["The Hermès Foundation", "foundation"], ["Join Hermès", "join"], ["Finance & Governance", "finance"], ["Our partner brands", "partners"]] },
   { title: "LEGAL", links: [["Terms and conditions", "terms"], ["Privacy & cookies", "privacy"], ["Binding Corporate Rules (BCRs)", "bcr"], ["California Transparency in Supply Chain Act", "california"], ["Transparency in coverage", "coverage"], ["Do Not Sell/Share My Personal Information", "donotsell"], ["Legal issues", "legal"], ["Accessibility", "accessibility"], ["Hermès Sitemap", "sitemap"]] },
 ];
@@ -3262,6 +3271,157 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
   );
 }
 
+// ---- FAQ pages -----------------------------------------------------------
+// The original's FAQ layout, measured live 2026-11-12 on the Payment page
+// (hermes.com/us/en/faq/online-shopping/payment/#4605): a "← BACK" button,
+// a left sidebar of 4 groups (only one expanded at a time; ONLINE SHOPPING
+// expanded on load), the topic's accordions (single-open, + / − at right,
+// the URL hash #4605…#4610 follows the open question), and a centred
+// "More questions?" card overlapping a wide still-life photo. Only the
+// Payment topic has its questions + answers so far; the other sidebar items
+// point at the closest existing page until their own FAQ topic is built.
+// Sidebar item order and wording are the original's own.
+const FAQ_GROUPS: { key: string; label: string; icon: "bag" | "person" | "box" | "h"; items: string[] }[] = [
+  { key: "online-shopping", label: "ONLINE SHOPPING", icon: "bag", items: ["Browsing", "Orders", "Gifting", "Delivery", "Collect in store", "Payment", "Returns and exchanges", "Trade Program"] },
+  { key: "customer-account", label: "CUSTOMER ACCOUNT", icon: "person", items: ["Account creation", "Forgotten password", "Settings and cancellation"] },
+  { key: "products", label: "PRODUCTS", icon: "box", items: ["Availability", "Size guide", "Care and repair", "Authentication", "Stores selling beauty products", "Orange boxes", "Bespoke", "Apple Watch Hermès"] },
+  { key: "house", label: "THE HOUSE OF HERMÈS", icon: "h", items: ["Newsletter - advertising emails", "Manufacture", "House of Hermès", "Cookies", "Security and Data Protection"] },
+];
+// Interim destinations for sidebar items without their own FAQ topic page.
+const FAQ_ITEM_VIEW: Record<string, View> = {
+  "Delivery": { t: "page", page: "shipping" },
+  "Collect in store": { t: "page", page: "collect" },
+  "Returns and exchanges": { t: "page", page: "returns" },
+  "Gifting": { t: "page", page: "gifting" },
+  "Orders": { t: "page", page: "track" },
+  "Size guide": { t: "page", page: "guides" },
+  "Stores selling beauty products": { t: "page", page: "stores" },
+  "Care and repair": { t: "page", page: "maintenance" },
+  "Bespoke": { t: "page", page: "measure" },
+  "Apple Watch Hermès": { t: "page", page: "stores" },
+  "Orange boxes": { t: "page", page: "gifting" },
+  "Cookies": { t: "page", page: "privacy" },
+  "Security and Data Protection": { t: "page", page: "privacy" },
+};
+// Payment FAQ — all 6 questions + answers verbatim from the original
+// (hashes #4605–#4610). Note the site's own spellings: "CarteBlanche®"
+// (no space) and "Paypal®".
+const PAYMENT_QAS: { q: string; hash: string; intro: string; bullets?: string[] }[] = [
+  { q: "Which means of payment are accepted by Hermes.com?", hash: "4605", intro: "You can only pay for your purchases with a credit or charge card: MasterCard®, Visa®, American Express®. Diners Club®, CarteBlanche®, JCB®, Discover®, Accel®, Pulse®, Nyce®, Star® and China Union Pay®. You should enter your credit card or charge card number, its expiry date and its card verification number on the relevant page. Payments via Paypal® and Apple Pay® are accepted for select products." },
+  { q: "Is my payment secure?", hash: "4606", intro: "All the transactions made on the Hermes.com website are secure. The padlock symbol next to the address bar of the page beginning with \"https\" indicates that you are in a secure setting. HERMÈS INTERNATIONAL has also established specific security measures to protect your personal information from non-authorized access and use. However, you should never consider the transmission of data by Internet to be 100% secure. Any information that you make available online can potentially be recuperated and used by third parties." },
+  { q: "Do you accept international credit cards?", hash: "4607", intro: "We accept international credit cards; however, when placing your order, you must enter the international billing address that is linked to your credit card." },
+  { q: "Can I place an order using a bank card that is not my own?", hash: "4608", intro: "Yes, in this case please indicate the billing address associated with the card." },
+  { q: "When will my credit card be debited?", hash: "4609", intro: "Your payment will only be debited when your order is shipped, except for personalized products and for pre-orders. In this case, your payment will be debited at the time the order is placed." },
+  { q: "What is the security code on my payment card?", hash: "4610", intro: "A unique code made up of 3 or 4 digits secures remote sale transactions. This code can be found:", bullets: ["on the back of your credit card in the signature field. It is made up of 3 digits (Visa or MasterCard, for example).", "or on front, above your card number. It is made up of 4 digits (American Express, for example)."] },
+];
+// "More questions?" photo — the original's own FAQ banner image
+// (banniere-faq.png), found in the page's HTML: a still-life of grey
+// crates, orange tape rings and wooden shelves. Served at the original's
+// own 440px-high variant.
+const FAQ_MORE_QUESTIONS_IMG = "https://assets.hermes.com/is/image/hermesedito/banniere-faq.png?fit=hfit&hei=440";
+
+function FaqPage({ topic, go }: { topic: string; go: (v: View, opts?: { restore?: boolean }) => void }) {
+  const [openGroup, setOpenGroup] = useState("online-shopping");
+  const [openQa, setOpenQa] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const h = window.location.hash.replace("#", "");
+    const i = PAYMENT_QAS.findIndex((x) => x.hash === h);
+    return i >= 0 ? i : 0;
+  });
+  // Today only the "payment" topic has its questions + answers; routing
+  // only ever produces that topic (see routing.ts).
+  const activeItem = topic === "payment" ? "Payment" : "";
+  const openQuestion = (i: number) => {
+    setOpenQa(i);
+    try { window.history.replaceState(null, "", `#${PAYMENT_QAS[i]?.hash ?? "4605"}`); } catch { /* ignore */ }
+  };
+  const groupIcon = (icon: "bag" | "person" | "box" | "h") => {
+    if (icon === "h") return <span className="font-serif-d text-[15px] leading-none">H</span>;
+    if (icon === "bag") return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M6 8h12l-1.2 12H7.2L6 8Z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>;
+    if (icon === "person") return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5 20c1-3.5 4-5 7-5s6 1.5 7 5" /></svg>;
+    return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 8l9-4 9 4v8l-9 4-9-4V8Z" /><path d="M3 8l9 4 9-4M12 12v8" /></svg>;
+  };
+  return (
+    <div className="mx-auto w-full max-w-[1258px] px-4 pb-16 pt-6">
+      <div className="grid gap-4 lg:grid-cols-[413px_1fr]">
+        <div>
+          <button aria-label="Back" className="mb-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => window.history.back()}>
+            <span aria-hidden="true">←</span> Back
+          </button>
+          <div className="bg-[#fffcf7] py-2">
+            {FAQ_GROUPS.map((g) => (
+              <div key={g.key}>
+                <button
+                  aria-expanded={openGroup === g.key}
+                  className="flex w-full items-center gap-2 px-4 py-3 text-left"
+                  onClick={() => setOpenGroup(openGroup === g.key ? "" : g.key)}
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-black/20">{groupIcon(g.icon)}</span>
+                  <span className="flex-1 text-[12px] font-medium uppercase tracking-[0.18em]">{g.label}</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true" className={openGroup === g.key ? "rotate-180" : ""}><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+                {openGroup === g.key && (
+                  <div className="pb-2">
+                    {g.items.map((item) => {
+                      const active = item === activeItem;
+                      return (
+                        <button
+                          key={item}
+                          aria-current={active ? "page" : undefined}
+                          className={`block w-full py-2 pl-7 pr-4 text-left text-sm hover:underline ${active ? "font-bold text-black" : "text-[#696969]"}`}
+                          onClick={() => { if (active) return; go(FAQ_ITEM_VIEW[item] ?? { t: "page", page: "faq" }); }}
+                        >
+                          {item}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-[#fffcf7] px-6 py-6 sm:px-8">
+          <h1 className="text-base font-bold uppercase tracking-[0.2em]">Payment</h1>
+          <div className="mt-2">
+            {PAYMENT_QAS.map((qa, i) => (
+              <div key={qa.hash} className="border-b border-[#f6f1eb]">
+                <button
+                  aria-expanded={openQa === i}
+                  className="flex w-full items-center justify-between gap-4 py-4 text-left"
+                  onClick={() => openQuestion(i)}
+                >
+                  <span className="text-[15px] font-bold text-black">{qa.q}</span>
+                  <span aria-hidden="true" className="shrink-0 text-xl font-light leading-none">{openQa === i ? "−" : "+"}</span>
+                </button>
+                {openQa === i && (
+                  <div className="pb-5 text-sm leading-6 text-neutral-700">
+                    <p>{qa.intro}</p>
+                    {qa.bullets?.map((b, j) => <p key={j} className="mt-2 pl-4">•&nbsp;&nbsp;{b}</p>)}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* "More questions?" — the original's white card centred over the
+          still-life photo, overlapping its lower part and extending below
+          it onto the cream page background; no button or link in the card. */}
+      <div className="mt-14">
+        {FAQ_MORE_QUESTIONS_IMG ? (
+          <img src={FAQ_MORE_QUESTIONS_IMG} alt="A group of colorful objects are arranged on a shelf" className="aspect-[4/1] w-full object-cover" />
+        ) : null}
+        <div className={`relative mx-auto w-full max-w-[1020px] bg-[#fffcf7] px-6 py-12 text-center ${FAQ_MORE_QUESTIONS_IMG ? "-mt-[121px]" : ""}`}>
+          <h3 className="font-serif-d text-3xl italic">More questions?</h3>
+          <p className="mt-4 text-sm leading-6 text-neutral-700">Do you need to contact our team?</p>
+          <p className="text-sm leading-6 text-neutral-700">Our advisors will be delighted to answer your questions.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function InfoPage({ page, settings, go, user }: { page: string; settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; user: { name: string; email: string } | null }) {
   if (page === "sitemap") {
     return (
@@ -3277,7 +3437,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
           {FOOTER_COLS.map((c) => (
             <div key={c.title}>
               <p className="text-xs font-semibold uppercase tracking-[0.2em]">{c.title}</p>
-              {c.links.map(([l, pg]) => <button key={l} aria-label={`Sitemap page ${l}`} className="block py-1 text-sm text-neutral-600 hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
+              {c.links.map(([l, pg]) => <button key={l} aria-label={`Sitemap page ${l}`} className="block py-1 text-sm text-neutral-600 hover:underline" onClick={() => { if (pg.startsWith("faq:")) go({ t: "faq", topic: pg.slice(4) }); else go({ t: "page", page: pg }); }}>{l}</button>)}
             </div>
           ))}
         </div>
@@ -3811,7 +3971,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
           {FOOTER_COLS.map((c) => (
             <div key={c.title}>
               <p className="font-mono-d pb-2.5 text-xs font-light uppercase tracking-normal">{c.title}</p>
-              {c.links.map(([l, pg]) => <button key={l} aria-label={`Footer ${l}`} className="block py-1 text-left text-[11px] leading-[18px] text-black hover:text-[#696969] hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
+              {c.links.map(([l, pg]) => <button key={l} aria-label={`Footer ${l}`} className="block py-1 text-left text-[11px] leading-[18px] text-black hover:text-[#696969] hover:underline" onClick={() => { if (pg.startsWith("faq:")) go({ t: "faq", topic: pg.slice(4) }); else go({ t: "page", page: pg }); }}>{l}</button>)}
             </div>
           ))}
           <div>
