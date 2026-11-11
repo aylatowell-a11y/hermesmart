@@ -367,6 +367,22 @@ export function ProductVisual({ p, large: _large, altSrc, altActive }: { p: Prod
   );
 }
 
+// Cart/checkout thumbnails must be the product's OWN photo (its gallery
+// first still view — the original Hermes photo), never the generated-pool
+// fallback: the old productImageFor({name, price}) call dropped the id,
+// so "Cashmere coat with shawl collar" fell into the /shawl/ keyword
+// branch and the cart showed a blue scarf for a white coat (user's
+// screenshot, 2026-11-11). Falls back to productImageFor with the id.
+function cartImageFor(products: Product[], productId: number, name: string, price: number): string {
+  const prod = products.find((x) => x.id === productId);
+  if (prod) {
+    const first = galleryForProduct(prod, 0).find((v) => !v.video);
+    if (first) return first.src;
+    return productImageFor(prod);
+  }
+  return productImageFor({ name, price });
+}
+
 // Quick buy exists on hermes.com only on sneaker tiles. Every sneaker in
 // this catalogue has "sneaker" in its name (45 products, subcategory
 // "Shoes") — the same test the category page already uses for its Sneakers
@@ -377,9 +393,9 @@ function isSneakerProduct(p: Product): boolean { return /sneaker/i.test(p.name);
 function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean; plainTile?: boolean }) {
   const bagIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>;
   // Tile alternate views (hermes.com parity): resting the mouse on the
-  // tile PHOTO advances exactly once from view 1 to view 2 after ~5s with
-  // the 300ms cross-fade wired in ProductVisual; leaving the photo returns
-  // instantly to view 1. The small white square < > arrows appear on photo
+  // tile PHOTO flips instantly from view 1 to view 2 (no timer — the user
+  // flagged the old 1.8s wait, 2026-11-11) with the 300ms cross-fade wired
+  // in ProductVisual; leaving the photo returns instantly to view 1. The small white square < > arrows appear on photo
   // hover (desktop) and cycle the photos on click with a hard cut; on touch
   // the photo changes with a horizontal swipe — all without opening the
   // product page. Hovering the name/price text below the photo triggers
@@ -406,41 +422,26 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Pr
   const [altIdx, setAltIdx] = useState<number | null>(null);
   const [altArmed, setAltArmed] = useState(false);
   const [photoHovered, setPhotoHovered] = useState(false);
-  // Auto-advance timer (hermes.com): resting the mouse on the tile photo
-  // advances exactly once from view 1 to view 2 after ~1.8s — the original
-  // is already on view 2 after ~1.9s of still hover (measured live
-  // 2026-11-11). The timer starts on mouseenter ONLY — moving the mouse
-  // does NOT reset it — fires once, and is cancelled on mouseleave
-  // (instant return to view 1) or as soon as the visitor steps/swipes the
-  // photos manually. (The previous double-requestAnimationFrame version
-  // flipped after 2 frames instead of ~1.8s, so the advance was invisible
-  // in practice: it fired before the visitor had even registered view 1.)
-  const hoverTimerRef = useRef<number | null>(null);
+  // Hover flip (hermes.com): resting the mouse on the tile photo flips
+  // INSTANTLY from view 1 to view 2 the moment the mouse arrives — the
+  // user flagged the old ~1.8s timer wait (2026-11-11). It stays on view 2
+  // while hovered and returns instantly to view 1 on mouseleave, or as
+  // soon as the visitor steps/swipes the photos manually.
   const hoveredRef = useRef(false);
-  const cancelHoverTimer = () => {
-    if (hoverTimerRef.current !== null) { window.clearTimeout(hoverTimerRef.current); hoverTimerRef.current = null; }
-  };
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const suppressClickRef = useRef(false);
   const onPhotoEnter = () => {
     setPhotoHovered(true);
     if (plainTile || altViews.length === 0) return;
     // Arm first (mounts the alternate at opacity-0 so it preloads), then
-    // flip to view 2 on the timer so the 300ms cross-fade animates.
+    // flip to view 2 AT ONCE — the 300ms cross-fade animates the change.
     hoveredRef.current = true;
     setAltArmed(true);
-    cancelHoverTimer();
-    hoverTimerRef.current = window.setTimeout(() => {
-      hoverTimerRef.current = null;
-      // Fire exactly once, and only if the visitor hasn't already stepped
-      // the photos manually (altIdx still null) and is still hovering.
-      setAltIdx((cur) => (cur === null && hoveredRef.current ? 0 : cur));
-    }, 1800);
+    setAltIdx(0);
   };
   const onPhotoLeave = () => {
     setPhotoHovered(false);
     hoveredRef.current = false;
-    cancelHoverTimer();
     // Instant return to view 1: the alternate unmounts at once.
     setAltIdx(null);
     setAltArmed(false);
@@ -448,7 +449,6 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Pr
   // Arrow step (hermes.com): cycles tile photo -> alternate views -> tile
   // photo again, in both directions. altIdx null = the tile photo itself.
   const stepTile = (dir: 1 | -1) => {
-    cancelHoverTimer();
     setAltArmed(true);
     setAltIdx((cur) => {
       const n = altViews.length;
@@ -472,7 +472,6 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Pr
     // page scrolling never changes the photo. A swipe never opens the
     // product — the tap that follows it is suppressed once.
     if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      cancelHoverTimer();
       setAltArmed(true);
       setAltIdx((i) => {
         if (i === null) return dx < 0 ? 0 : altViews.length - 1;
@@ -1074,7 +1073,7 @@ export function App() {
         {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} />}
         {view.t === "about" && <AboutPage go={go} />}
         {view.t === "account" && <AccountView key={view.mode ?? "login"} user={user} setUser={setUser} go={go} mode={view.mode} />}
-        {view.t === "checkout" && <CheckoutView cart={pricedCart} setCart={setCart} user={user} go={go} total={cartTotal} settings={settings} />}
+        {view.t === "checkout" && <CheckoutView cart={pricedCart} setCart={setCart} user={user} go={go} total={cartTotal} settings={settings} products={products} />}
         {view.t === "admin" && <AdminView products={products} settings={settings} qc={qc} navOverrides={navOverrides} setNavOverrides={setNavOverrides} />}
       </main>
 
@@ -1183,6 +1182,14 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           <source media="(max-width: 640px)" srcSet={heroBenchImgMobile} />
           <img src={heroBenchImg} alt="Blue patterned blanket folded on a black-and-white triangular tiled bench against a beige stone wall" className="h-[70vh] w-full object-cover object-center sm:h-screen" />
         </picture>
+        {/* Vintage dark gradients, as on hermes.com (measured live
+            2026-11-11 23:21): top darkening ~15–20% of the height,
+            near-black at the very top (behind the header); bottom
+            darkening ~20–22%, near-black at the very bottom (behind the
+            title text). The bottom text div's own from-black/55 sits
+            above the bottom overlay. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[20%] bg-gradient-to-b from-black/90 to-transparent" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[22%] bg-gradient-to-t from-black/90 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent pb-6 pt-6 text-white sm:pb-8 sm:pt-8">
           <div className="mx-auto max-w-[629px] px-[15px] text-center">
             <h1 className="font-serif-d text-[34px] italic leading-tight"><span>{heroFirst}</span> {heroRest}</h1>
@@ -2283,6 +2290,54 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   const [zoomOpen, setZoomOpen] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(2);
   const [sizeDrawer, setSizeDrawer] = useState(false);
+  // "SIZE GUIDE" drawer (hermes.com): a right-side drawer with the
+  // ready-to-wear measurement table — NOT the User guides page. Shoes keep
+  // the old guides-page link: their table is a shoe-size table, not yet
+  // measured, and the RTW chest/waist/hip table would be wrong for them.
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
+  const [guideTab, setGuideTab] = useState<"chart" | "measure">("chart");
+  const [guideUnit, setGuideUnit] = useState<"cm" | "in">("in");
+  const isShoeSize = p.subcategory === "Shoes";
+  // Ready-to-wear size chart (Hermes Size | US | Chest | Waist | Hip |
+  // Back width | Sleeves length), transcribed LIVE from the original's
+  // Size Guide drawer on the Blanc coat PDP (2026-11-11 23:21). Inches are
+  // decimal values with a " suffix; cm reproduces the site's own separators
+  // verbatim (commas in most rows, a period in one) — never derived.
+  const RTW_CHART_IN: [string, string, string, string, string, string, string][] = [
+    ["32", "0", "28.86\"", "22.23\"", "31.6\"", "13\"", "26\""],
+    ["34", "2", "30.42\"", "23.79\"", "33.15\"", "13.65\"", "26.38\""],
+    ["36", "4", "31.98\"", "25.35\"", "34.71\"", "13.84\"", "26.77\""],
+    ["38", "6", "33.54\"", "26.91\"", "36.27\"", "14.04\"", "27\""],
+    ["40", "8", "35.1\"", "28.47\"", "37.83\"", "14.43\"", "27.36\""],
+    ["42", "10", "36.66\"", "30.03\"", "39.39\"", "14.82\"", "27.76\""],
+    ["44", "12", "38.22\"", "31.59\"", "40.95\"", "15.21\"", "28.15\""],
+    ["46", "14", "39.78\"", "33.15\"", "42.51\"", "15.6\"", "28.54\""],
+    ["48", "16", "41.34\"", "34.71\"", "44.07\"", "15.99\"", "28.94\""],
+    ["50", "18", "42.9\"", "36.27\"", "45.63\"", "16.38\"", "29.33\""],
+    ["52", "20", "44.46\"", "37.83\"", "47.19\"", "16.77\"", "29.72\""],
+  ];
+  const RTW_CHART_CM: [string, string, string, string, string, string, string][] = [
+    ["32", "0", "74 cm", "57 cm", "81 cm", "33 cm", "66,5 cm"],
+    ["34", "2", "78 cm", "61 cm", "85 cm", "35 cm", "67,5 cm"],
+    ["36", "4", "82 cm", "65 cm", "89 cm", "35.5 cm", "68,5 cm"],
+    ["38", "6", "86 cm", "69 cm", "93 cm", "36 cm", "69 cm"],
+    ["40", "8", "90 cm", "73 cm", "97 cm", "37 cm", "69,5 cm"],
+    ["42", "10", "94 cm", "77 cm", "101 cm", "38 cm", "70,5 cm"],
+    ["44", "12", "98 cm", "81 cm", "105 cm", "39 cm", "71,5 cm"],
+    ["46", "14", "102 cm", "85 cm", "109 cm", "40 cm", "72,5 cm"],
+    ["48", "16", "106 cm", "89 cm", "113 cm", "41 cm", "73,5 cm"],
+    ["50", "18", "110 cm", "93 cm", "117 cm", "42 cm", "74,5 cm"],
+    ["52", "20", "114 cm", "97 cm", "121 cm", "43 cm", "75,5 cm"],
+  ];
+  // Measurement-guide steps, verbatim from the original's Size Guide
+  // drawer (including the site's "strech" spelling — do not correct it).
+  const MEASURE_STEPS: [string, string][] = [
+    ["Chest circumference", "Starting from the back, wrap the measuring tape around the largest part of your chest. Make sure to keep a straight horizontal line."],
+    ["Waist circumference", "Starting from the back, wrap the measuring tape around your waist, running it over your belly button."],
+    ["Hip circumference", "Starting from the back, wrap the measuring tape around the largest part of your hips."],
+    ["Back width", "Running the measuring tape on your back, place the tip on the extremity of one shoulder and then strech it to the other shoulder."],
+    ["Sleeves length", "Keeping your arm outstretched, place the tip of the measuring tape at the top of your shoulder and strech it down to the wrist."],
+  ];
   // No pre-selected size: hermes.com never pre-selects one (the buy-box
   // button always reads "Select a size" on landing, on every colourway).
   // The old `p?.defaultSize` init made the Noir coat's button read
@@ -2599,20 +2654,21 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
             <div className="mt-4">
               <p className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Size</p>
               <button aria-label="Select a size" className="mt-1 flex min-h-[46px] w-full items-center justify-between border-b border-black/20 py-3 text-sm" onClick={() => setSizeDrawer(true)}>
-                <span>{selSize ? `Select a size ${selSize}` : "Select a size"}</span>
+                <span className="flex flex-col items-start leading-snug"><span className={selSize ? "text-neutral-500" : ""}>Select a size</span>{selSize ? <span className="underline underline-offset-4">{selSize}</span> : null}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
               </button>
-              {/* No shipping-delay or "Please choose a size" lines here:
-                  the original's buy card shows neither on landing
-                  (measured 2026-11-11); the delay lives in the
-                  DELIVERY & RETURNS accordion. */}
               <div className="mt-2 flex justify-end">
-                <button aria-label="Size guide" className="flex items-center gap-1.5 text-xs underline underline-offset-2" onClick={() => go({ t: "page", page: "guides" })}>
+                <button aria-label="Size guide" className="flex items-center gap-1.5 text-xs underline underline-offset-2" onClick={() => { if (isShoeSize) { go({ t: "page", page: "guides" }); return; } setSizeGuideOpen(true); }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="2" y="9" width="20" height="7" rx="1" /><path d="M6.5 9v3.5M11 9v3.5M15.5 9v3.5M20 9v3.5" /></svg>
                   Size Guide
                 </button>
               </div>
               {sizeGone && <p className="mt-1.5 text-xs font-medium text-red-700" role="status">The desired size is no longer available</p>}
+              {/* Shipping-delay line: the original's buy card shows it ONLY
+                  once a size is chosen (live measurement 2026-11-11 23:21:
+                  absent on landing, present after selecting 36). It sits
+                  below the size block, above the price. */}
+              {p.shippingDelay && selSize && <p className="mt-3 text-xs leading-[18px] text-[#696969]">{p.shippingDelay}</p>}
             </div>
           )}
           {/* Price alone, bottom-right above the action buttons — no
@@ -2763,7 +2819,8 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           <button aria-label="Close size selector" className="absolute inset-0 h-full w-full bg-black/30" onClick={() => setSizeDrawer(false)} />
           <div className="drawer-in absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col bg-[#fffcf7] shadow-2xl lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-0 lg:h-full lg:w-[340px] lg:max-w-[88vw]">
             <div className="relative border-b border-black/10 px-5 py-4">
-              <span className="block text-center text-[12px] font-semibold uppercase tracking-[0.25em] underline underline-offset-4">Size</span>
+              <span className="block text-center text-[12px] font-semibold uppercase tracking-[0.25em] underline underline-offset-4">Select a size</span>
+              <span className="mt-1.5 block text-center text-xs text-neutral-500">Please select a size to add this product to your cart</span>
               <button aria-label="Close size selector" className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center" onClick={() => setSizeDrawer(false)}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
               </button>
@@ -2781,10 +2838,112 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               ))}
             </div>
             <div className="flex justify-end border-t border-[#f6f1eb] px-5 py-4">
-              <button aria-label="Open size guide" className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] underline" onClick={() => { setSizeDrawer(false); go({ t: "page", page: "guides" }); }}>
+              <button aria-label="Open size guide" className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] underline" onClick={() => { setSizeDrawer(false); if (isShoeSize) { go({ t: "page", page: "guides" }); return; } setSizeGuideOpen(true); }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21l-4-4Z" /><path d="M8 16l1.5 1.5M11 13l1.5 1.5M14 10l1.5 1.5" /></svg>
                 Size guide
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* "SIZE GUIDE" — a slide-in drawer from the RIGHT on desktop and a
+          bottom sheet on mobile, as on hermes.com (title "SIZE GUIDE",
+          "Size chart | Measurement guide" tabs, "Select a location" →
+          United States, Cm/Inches toggle, ready-to-wear measurement
+          table). It replaces the old behaviour where both Size Guide
+          buttons navigated away to the User guides page. */}
+      {sizeGuideOpen && (
+        <div className="fixed inset-0 z-[60]" role="dialog" aria-label="Size guide">
+          <button aria-label="Close size guide" className="absolute inset-0 h-full w-full bg-black/30" onClick={() => setSizeGuideOpen(false)} />
+          <div className="drawer-in absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col bg-[#fffcf7] shadow-2xl lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-0 lg:h-full lg:w-[480px] lg:max-w-[92vw]">
+            <div className="relative border-b border-black/10 px-5 py-4">
+              <span className="block text-center text-[12px] font-semibold uppercase tracking-[0.25em]">Size Guide</span>
+              <button aria-label="Close size guide" className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center" onClick={() => setSizeGuideOpen(false)}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              <div className="flex gap-6 border-b border-black/10 pb-3 text-sm">
+                <button aria-label="Find the right size tab" className={guideTab === "chart" ? "font-semibold underline underline-offset-4" : ""} onClick={() => setGuideTab("chart")}>Find the right size</button>
+                <button aria-label="Measurement guide tab" className={guideTab === "measure" ? "font-semibold underline underline-offset-4" : ""} onClick={() => setGuideTab("measure")}>Measurement guide</button>
+              </div>
+              <p className="mt-4 text-[11px] uppercase tracking-[0.18em] text-neutral-500">Select a location</p>
+              <p className="mt-1 text-sm">United States</p>
+              <div className="mt-4 flex gap-2" role="group" aria-label="Measurement unit">
+                <button aria-label="Show measurements in centimetres" className={`border px-4 py-1.5 text-xs uppercase tracking-[0.15em] ${guideUnit === "cm" ? "border-black bg-black text-white" : "border-black/30"}`} onClick={() => setGuideUnit("cm")}>Cm</button>
+                <button aria-label="Show measurements in inches" className={`border px-4 py-1.5 text-xs uppercase tracking-[0.15em] ${guideUnit === "in" ? "border-black bg-black text-white" : "border-black/30"}`} onClick={() => setGuideUnit("in")}>Inches</button>
+              </div>
+              {guideTab === "chart" ? (
+                <div className="mt-5 overflow-x-auto">
+                <table className="w-full min-w-[520px] text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-black/20 text-[11px] uppercase tracking-[0.12em] text-neutral-500">
+                      <th className="py-2 pr-2 font-medium">Hermes Size</th>
+                      <th className="py-2 pr-2 font-medium">US</th>
+                      <th className="py-2 pr-2 font-medium">Chest</th>
+                      <th className="py-2 pr-2 font-medium">Waist</th>
+                      <th className="py-2 pr-2 font-medium">Hip</th>
+                      <th className="py-2 pr-2 font-medium">Back width</th>
+                      <th className="py-2 font-medium">Sleeves length</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(guideUnit === "in" ? RTW_CHART_IN : RTW_CHART_CM).map((r) => (
+                      <tr key={r[0]} className="border-b border-black/10">
+                        <td className="py-2.5 pr-2">{r[0]}</td>
+                        <td className="py-2.5 pr-2">{r[1]}</td>
+                        <td className="py-2.5 pr-2">{r[2]}</td>
+                        <td className="py-2.5 pr-2">{r[3]}</td>
+                        <td className="py-2.5 pr-2">{r[4]}</td>
+                        <td className="py-2.5 pr-2">{r[5]}</td>
+                        <td className="py-2.5">{r[6]}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                </div>
+              ) : (
+                <div className="mt-5 text-sm leading-6 text-neutral-700">
+                  <p>To take your measurements and find your perfect size, you will need a measuring tape. Make sure to keep the tape loose. If you are in-between sizes, we recommend sizing up. Time to follow the guide!</p>
+                  <ol className="mt-4 space-y-4">
+                    {MEASURE_STEPS.map(([title, body], i) => (
+                      <li key={title}>
+                        <p className="font-semibold text-black">{i + 1} — {title}</p>
+                        <p className="mt-0.5">{body}</p>
+                      </li>
+                    ))}
+                  </ol>
+                  <p className="mt-5">Match the obtained figures with the corresponding size in the chart below</p>
+                  <p className="mt-2">Our tip: If you do not have a measuring tape, use standard tape and then measure the tape against a ruler</p>
+                  <div className="mt-5 overflow-x-auto">
+                  <table className="w-full min-w-[460px] text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-black/20 text-[11px] uppercase tracking-[0.12em] text-neutral-500">
+                        <th className="py-2 pr-2 font-medium">Hermes Size</th>
+                        <th className="py-2 pr-2 font-medium">Chest</th>
+                        <th className="py-2 pr-2 font-medium">Waist</th>
+                        <th className="py-2 pr-2 font-medium">Hip</th>
+                        <th className="py-2 pr-2 font-medium">Back width</th>
+                        <th className="py-2 font-medium">Sleeves length</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {RTW_CHART_CM.map((r) => (
+                        <tr key={r[0]} className="border-b border-black/10">
+                          <td className="py-2.5 pr-2">{r[0]}</td>
+                          <td className="py-2.5 pr-2">{r[2]}</td>
+                          <td className="py-2.5 pr-2">{r[3]}</td>
+                          <td className="py-2.5 pr-2">{r[4]}</td>
+                          <td className="py-2.5 pr-2">{r[5]}</td>
+                          <td className="py-2.5">{r[6]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -3214,7 +3373,7 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
                   return (
                     <div key={i.key} className="mt-5 flex gap-4 border-b border-black/10 pb-5">
                       <div className="w-24 shrink-0 sm:w-[172px]">
-                        <button aria-label={`Open ${i.name}`} className="block w-full overflow-hidden" onClick={() => go({ t: "product", id: i.productId })}><img src={productImageFor({ name: i.name, price: i.price })} alt={i.name} className="w-full object-cover" /></button>
+                        <button aria-label={`Open ${i.name}`} className="block w-full overflow-hidden" onClick={() => go({ t: "product", id: i.productId })}><img src={cartImageFor(products, i.productId, i.name, i.price)} alt={i.name} className="w-full object-cover" /></button>
                         <div className="mt-2 flex items-center justify-center gap-2">
                           <button aria-label={`Decrease quantity of ${i.name}`} disabled={i.qty <= 1} className="h-7 w-7 border border-black/30 disabled:cursor-not-allowed disabled:opacity-30" onClick={() => setCart(cart.map((x) => x.key === i.key ? { ...x, qty: Math.max(1, x.qty - 1) } : x))}>−</button>
                           <span aria-label={`Quantity of ${i.name}`}>{i.qty}</span>
@@ -3225,7 +3384,7 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
                         <button aria-label={`Open ${i.name}`} className="text-left text-sm underline-offset-4 hover:underline" onClick={() => go({ t: "product", id: i.productId })}>{i.name}</button>
                         {i.color ? <p className="mt-1 text-xs text-neutral-600">Color: {i.color}</p> : null}
                         {i.size ? <p className="text-xs text-neutral-600">Size: {i.size}</p> : null}
-                        {i.refCode ? <p className="text-xs text-neutral-600">Ref: {i.refCode}</p> : null}
+                        {i.refCode ? <p className="text-xs text-neutral-600">Ref: {i.refCode}{i.size}</p> : null}
                         {delayText ? <p className="mt-2 flex items-start gap-1.5 text-xs text-neutral-600"><span aria-hidden="true">ⓘ</span><span>{delayText}</span></p> : null}
                       </div>
                       <div className="shrink-0 text-right">
@@ -3421,7 +3580,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
     "STANDARD DELIVERY": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2.5 6h12v10h-12zM14.5 9.5h3.6l3 3.4v3.1h-6.6" /><circle cx="6.5" cy="17.8" r="1.9" /><circle cx="17.3" cy="17.8" r="1.9" /></svg>,
     "RETURNS": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M8.5 5.5 4 10l4.5 4.5M4 10h10a6 6 0 0 1 0 12h-3" /></svg>,
     "CUSTOMER SERVICE": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M5 3.5h4l1.5 4.5L8 10a13 13 0 0 0 6 6l2-2.5 4.5 1.5v4a2 2 0 0 1-2.2 2A18.5 18.5 0 0 1 3 5.7a2 2 0 0 1 2-2.2Z" /></svg>,
-    "SECURED PAYMENT": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><rect x="2.5" y="6" width="15" height="11" rx="1.5" /><path d="M2.5 9.8h15" /><rect x="15.8" y="13.2" width="5.7" height="5" rx="0.8" /><path d="M17.2 13.2v-1.4a1.5 1.5 0 0 1 3 0v1.4" /></svg>,
+    "SECURED PAYMENT": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><rect x="2.5" y="6" width="15" height="11" rx="1.5" /><path d="M2.5 9.8h15" /><path d="M17.2 13.2v-1.4a1.5 1.5 0 0 1 3 0v1.4" /><rect x="15.8" y="13.2" width="5.7" height="5" rx="0.8" fill="currentColor" stroke="none" /></svg>,
   };
   const services: { title: string; body: React.ReactNode; page: string }[] = [
     { title: "STANDARD DELIVERY", page: "shipping", body: <>{settings.serviceDeliveryBody || "Free standard delivery. Hermès offers several fast and secure delivery options."}</> },
@@ -3464,7 +3623,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
         </div>
         <button aria-label="Next image" className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-neutral-700" onClick={() => setSvcIdx((svcIdx + 1) % services.length)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg></button>
       </div>
-      <div className="mx-auto hidden max-w-7xl gap-10 px-4 py-8 text-center sm:px-6 lg:grid lg:grid-cols-4">
+      <div className="hidden w-full gap-10 px-6 py-8 text-center lg:grid lg:grid-cols-4">
         {services.map((s) => (
           <div key={s.title}>
             <span className="flex justify-center">{serviceIcons[s.title]}</span>
@@ -3527,7 +3686,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
       </div>
       {/* Desktop — five open columns on #f6f1eb, as verified on hermes.com */}
       <div className="hidden lg:block" style={{ background: "#f6f1eb" }}>
-        <div className="mx-auto grid max-w-7xl gap-12 px-6 py-16 lg:grid-cols-5">
+        <div className="grid max-w-[1585px] gap-12 px-6 py-16 lg:grid-cols-5">
           {FOOTER_COLS.map((c) => (
             <div key={c.title}>
               <p className="font-mono-d pb-2.5 text-xs font-light uppercase tracking-normal">{c.title}</p>
@@ -3544,7 +3703,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
         </div>
       </div>
       <div className="hidden border-t border-[#e2d8ce] lg:block" style={{ background: "#f6f1eb" }}>
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-neutral-600">
+        <div className="flex max-w-[1585px] flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-neutral-600">
           <div className="relative">
             <button aria-label="Ship to country selector" aria-expanded={shipOpen} className="flex items-center gap-2 uppercase tracking-wider" onClick={() => setShipOpen(!shipOpen)}>
               <span>Ship to : <span className="font-medium underline underline-offset-4">{ship}</span></span>
@@ -3899,7 +4058,7 @@ function CheckoutProgress({ step, nextStep }: { step: 1 | 2 | 3; nextStep?: bool
   );
 }
 
-function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: CartItem[]; setCart: (c: CartItem[]) => void; user: { name: string; email: string } | null; go: (v: View, opts?: { restore?: boolean }) => void; total: number; settings: Settings }) {
+function CheckoutView({ cart, setCart, user, go, total, settings, products }: { cart: CartItem[]; setCart: (c: CartItem[]) => void; user: { name: string; email: string } | null; go: (v: View, opts?: { restore?: boolean }) => void; total: number; settings: Settings; products: Product[] }) {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [email, setEmail] = useState(user?.email ?? "");
   const [accountEdit, setAccountEdit] = useState(!user);
@@ -3982,7 +4141,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings }: { cart: Cart
           <div className="pb-5">
             {cart.map((i) => (
               <div key={i.key} className="flex items-center gap-3 border-t border-[#f6f1eb] py-3">
-                <span className="h-14 w-14 shrink-0 overflow-hidden" aria-hidden="true"><img src={productImageFor({ name: i.name, price: i.price })} alt="" className="h-full w-full object-cover" /></span>
+                <span className="h-14 w-14 shrink-0 overflow-hidden" aria-hidden="true"><img src={cartImageFor(products, i.productId, i.name, i.price)} alt="" className="h-full w-full object-cover" /></span>
                 <span className="min-w-0 flex-1 text-sm">{i.name}<span className="block text-xs text-neutral-500">{i.color}{i.size ? ` · ${i.size}` : ""} · Qty {i.qty}</span></span>
                 <span className="text-sm">{fmt2(i.price * i.qty)}</span>
               </div>
