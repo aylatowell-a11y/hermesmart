@@ -2135,19 +2135,26 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
       <p className="font-mono-d text-left text-[10px] font-medium uppercase tracking-normal text-neutral-500">{crumbTop}</p>
       <h1 className="mt-1 text-left text-[24px] leading-[34px]">{titleText}<span className="ml-2 text-[16px] font-normal text-neutral-500">[{displayCount}]</span></h1>
 
-      {/* Sticky sub-nav row: siblings (current underlined) + FILTER button +
-          Product/Mosaic view toggle — pinned under the header on scroll.
-          ONE line at every width: on mobile the sibling row SCROLLS SIDEWAYS
-          (the user's main complaint — it must never wrap to two lines or cut
+      {/* Sub-nav row: siblings (current underlined) + FILTER button +
+          Product/Mosaic view toggle. NOT sticky: it scrolls away with the
+          page, so during scroll only the site header stays pinned (ONE
+          top bar). The old code pinned it under the header (sticky,
+          top: pinTop) so header + sub-nav formed one continuous pinned
+          block — two bars at the top on scroll. The user (2026-11-12,
+          Leather goods page) asked for only one top bar on scroll, and
+          hermes.com does the same: its scroll-down header is only the
+          slim nav row, the sub-nav scrolls away (filtering on mobile is
+          via the floating FILTER & SORT pill; on desktop you scroll back
+          up to filter). ONE line at every width: on mobile the sibling
+          row SCROLLS SIDEWAYS (it must never wrap to two lines or cut
           items off), the view toggle stays at the right end of the same
-          line, and FILTER lives in the floating FILTER & SORT pill instead;
-          on desktop the row shows fully with its FILTER button. The row is
-          set at 11px with 12px gaps so all 9 Fall-Winter items + FILTER fit
-          the 1280px content width at 1920px with no clipping and no scroll
-          (measured against the real Manrope advances: ~1095px of ~1232px).
-          It docks at pinTop — the pinned header's live height — so header
-          + sub-nav pin as one continuous block (see the pinTop note above). */}
-      <div className="sticky z-30 -mx-4 mt-4 bg-[#fcf7f1] px-4 py-3 sm:-mx-6 sm:px-6" style={{ top: pinTop }}>
+          line, and FILTER lives in the floating FILTER & SORT pill
+          instead; on desktop the row shows fully with its FILTER button.
+          The row is set at 11px with 12px gaps so all 9 Fall-Winter
+          items + FILTER fit the 1280px content width at 1920px with no
+          clipping and no scroll (measured against the real Manrope
+          advances: ~1095px of ~1232px). */}
+      <div className="-mx-4 mt-4 bg-[#fcf7f1] px-4 py-3 sm:-mx-6 sm:px-6">
         <div className="flex items-center gap-x-3">
           <nav ref={subNavRef} className="no-scrollbar flex min-w-0 flex-1 gap-3 overflow-x-auto whitespace-nowrap" aria-label="Subcategories">
             {siblings.map((s) => (
