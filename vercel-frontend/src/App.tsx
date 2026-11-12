@@ -345,13 +345,15 @@ function HermesLogo({ settings, light, variant = "full" }: { settings: Settings;
 function load<T>(k: string, fb: T): T { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fb; } catch { return fb; } }
 function save(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } }
 
-export function ProductVisual({ p, large: _large, altSrc, altActive }: { p: Product; large?: boolean; altSrc?: string; altActive?: boolean }) {
+export function ProductVisual({ p, large: _large, altSrc, altActive, hideStatus }: { p: Product; large?: boolean; altSrc?: string; altActive?: boolean; hideStatus?: boolean }) {
   // Real studio product photo for every product (assets/products/), filling
   // the tile with object-cover — no glyph/emoji placeholders on the storefront.
   const img = productImageFor(p);
   // No visible status pill on the photo: hermes.com shows none on its
   // category/search tiles — the status is screen-reader-only here (on
   // mobile the tile renders it as text below the photo instead).
+  // Recommendation tiles (RelatedRow) hide it entirely — the original's
+  // Perfect Partner / Keep exploring tiles carry no status at all.
   const statusLabel = p.status === "available_soon" ? "Available soon" : p.status === "in_store_only" ? "In store only" : p.status === "out_of_stock" ? "Out of stock" : "";
   return (
     <div className="relative h-full w-full overflow-hidden" style={{ background: p.tone }} aria-label={p.name}>
@@ -363,7 +365,7 @@ export function ProductVisual({ p, large: _large, altSrc, altActive }: { p: Prod
       {altSrc && (
         <img src={altSrc} alt="" aria-hidden="true" loading="lazy" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${altActive ? "opacity-100" : "opacity-0"}`} />
       )}
-      {statusLabel && <span className="sr-only">{statusLabel}</span>}
+      {statusLabel && !hideStatus && <span className="sr-only">{statusLabel}</span>}
     </div>
   );
 }
@@ -616,7 +618,7 @@ export function App() {
   const qc = useQueryClient();
   const store = useQuery({ queryKey: ["storefront"], queryFn: () => api.getStorefront({}) });
   const products = useMemo(() => store.data?.products ?? [], [store.data]);
-  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "800-441-4488", heroTitle: "Threading ideas", heroText: "", shipTo: "UNITED STATES", deliveryText: "", returnsText: "", paymentMethods: "", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10am - 9pm EST", logoMode: "both", logoUrl: "", flagshipStore: "691 Madison Avenue, New York", shipToCountries: "UNITED STATES, UNITED KINGDOM, FRANCE, PAKISTAN, UNITED ARAB EMIRATES, INDIA, CANADA", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. All rights reserved.", serviceDeliveryBody: "Free standard delivery. Herm\u00e8s offers several fast and secure delivery options.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
+  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "800-441-4488", heroTitle: "Threading ideas", heroText: "", shipTo: "UNITED STATES", deliveryText: "", returnsText: "", paymentMethods: "", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10am - 9pm EST", logoMode: "both", logoUrl: "", flagshipStore: "691 Madison Avenue, New York", shipToCountries: "UNITED STATES", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. All rights reserved.", serviceDeliveryBody: "Free standard delivery. Herm\u00e8s offers several fast and secure delivery options.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
 
   // Real URLs (History API routing): the initial view comes from the URL
   // when it is a routed one (category, contact page, or home); a product
@@ -948,20 +950,24 @@ export function App() {
         const slim = headerMode === "slim";
         const ink = onHero ? "#ffffff" : "#191919";
         return (
-      <header ref={headerRef} className={`fixed inset-x-0 top-0 z-40 pt-safe transition-[background-color,border-color,color] duration-300 ${onHero ? "border-b border-transparent" : "border-b border-[#f6f1eb]"}`} style={{ background: onHero ? "transparent" : "#fcf7f1", color: ink }}>
+      <header ref={headerRef} className={`fixed inset-x-0 top-0 z-40 pt-safe transition-[border-color,color] duration-300 ${onHero ? "border-b border-transparent" : "border-b border-[#f6f1eb]"}`} style={{ background: onHero ? "transparent" : "#fcf7f1", color: ink }}>
         {/* Top row (logo / Search / Account / Cart). In the slim state this row
             is gone on DESKTOP — only the nav board below remains. On mobile the
             slim carriage header IS the board, so the row stays at every width
             below lg. */}
-        <div ref={measureTopRow} className={`mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-2 pb-1.5 pt-1 sm:px-6 lg:pb-0 lg:pt-[7px] ${slim ? "lg:hidden" : ""}`}>
+        <div ref={measureTopRow} className={`grid grid-cols-[1fr_auto_1fr] items-center px-4 pb-1.5 pt-1 sm:px-6 lg:pb-0 lg:pt-[7px] ${slim ? "lg:hidden" : ""}`}>
           <div className="flex items-center">
             <button aria-label="Open menu" className="flex h-9 w-9 items-center justify-center lg:hidden" onClick={() => setMobileNav(true)}>
               <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.5" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
             </button>
-            <button aria-label="Search for an article" className="hidden items-center gap-2 pl-1 text-xs lg:flex" onClick={() => setSearchOpen(true)}>
+            {/* hermes.com has a real text input at the far left edge (not a
+                button): magnifier at its left, placeholder "Search", thin
+                underline. Focusing it opens the search panel (which carries
+                the same query), so typing shows results at once. */}
+            <div className="hidden items-center gap-2 lg:flex">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>
-              <span className="pb-0.5" style={{ borderBottom: `1px solid ${onHero ? "rgba(255,255,255,.7)" : "rgba(0,0,0,.6)"}`, color: onHero ? "#fff" : "#525252" }}>Search</span>
-            </button>
+              <input aria-label="Search for an article" className="w-44 bg-transparent pb-0.5 text-xs outline-none" placeholder="Search" value={searchQ} onChange={(e) => { setSearchQ(e.target.value); if (e.target.value.trim()) setSearchOpen(true); }} onFocus={() => { if (searchQ.trim()) setSearchOpen(true); }} style={{ borderBottom: `1px solid ${onHero ? "rgba(255,255,255,.7)" : "rgba(0,0,0,.6)"}`, color: onHero ? "#fff" : "#525252" }} />
+            </div>
             <button aria-label="Search" className="flex h-9 w-9 items-center justify-center lg:hidden" onClick={() => setSearchOpen(true)}>
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>
             </button>
@@ -986,9 +992,12 @@ export function App() {
             </button>
           </div>
         </div>
-        <nav ref={measureNav} aria-label="Main navigation" className={`relative mx-auto hidden max-w-7xl items-center justify-center gap-0 px-4 pb-0 pt-0 lg:flex`} onMouseLeave={() => setMenuCat(null)}>
+        <nav ref={measureNav} aria-label="Main navigation" className={`relative hidden items-center justify-center gap-0 px-4 pb-0 pt-0 lg:flex`} onMouseLeave={() => setMenuCat(null)}>
           {mega.map((n) => (
             <div key={n.key} className="flex items-center" onMouseEnter={() => setMenuCat(n.key)}>
+              {/* hermes.com has a vertical "|" separator between GIFTS and
+                  ABOUT HERMÈS; it sits directly before the last nav item. */}
+              {n.key === "about" && <span aria-hidden="true" className="mx-1 text-[10px] font-bold text-neutral-400">|</span>}
               {/* Click OPENS, never toggles: hover already opens the menu on mouseenter, so a toggle would close it again on the first click. Dismissal stays via mouse-leave / Escape / outside click. */}
               <button aria-label={`Open ${n.label} menu`} aria-expanded={menuCat === n.key} aria-haspopup="true" className={`whitespace-nowrap px-3 ${slim ? "py-[14px]" : "pb-3"} text-[10px] font-bold uppercase tracking-[1px] ${menuCat === n.key ? "underline underline-offset-8 decoration-1" : "hover:underline underline-offset-4"}`} onClick={() => setMenuCat(n.key)}>{n.label}</button>
             </div>
@@ -1289,14 +1298,16 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         {/* DESKTOP carousel (lg+) — matches hermes.com desktop exactly
             (measured from the user's laptop screenshots of hermes.com):
             full-bleed; centre slide 60.8vw wide × 35vw tall (16:9 desktop
-            editorial); side slides as 128px strips (same 16:9 image,
-            centre-cropped), 2 visible per side; white label button only on
-            the centre slide, 32px above its bottom. Clicking a strip (or an
-            arrow) brings it to the centre with a smooth width transition
-            and the previous centre becomes a strip. Starts with BELTS
-            (index 0) in the centre. The window renders the 11 slides
-            around the active index (circular), so wrapping 15→1 / 1→15 is
-            seamless and no slide mounts/unmounts in view. */}
+            editorial); side slides as 185px strips (same 16:9 image,
+            centre-cropped), 2 visible per side (5 slices total — the
+            128px strips the old code used showed 3 per side, 7 total);
+            white label button only on the centre slide, 32px above its
+            bottom. Clicking a strip (or an arrow) brings it to the centre
+            with a smooth width transition and the previous centre becomes
+            a strip. Starts with BELTS (index 0) in the centre. The window
+            renders the 11 slides around the active index (circular), so
+            wrapping 15→1 / 1→15 is seamless and no slide mounts/unmounts
+            in view. */}
         <div className="carousel-full-bleed mt-6 hidden overflow-hidden lg:mt-8 lg:block" role="tablist" aria-label="Discover themes">
           <div className="flex h-[35vw] justify-center gap-[3px]">
             {Array.from({ length: 11 }, (_, k) => k - 5).map((off) => {
@@ -1308,7 +1319,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
               return (
                 <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${logicalIdx + 1} of ${CAROUSEL_THEMES.length}`} onClick={() => goToSlide(logicalIdx)}
                   className="relative h-full shrink-0 overflow-hidden transition-[width] duration-500 ease-out"
-                  style={{ width: isActive ? "60.8vw" : 128 }}>
+                  style={{ width: isActive ? "60.8vw" : 185 }}>
                   <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
                   {isActive && (
                     <span className="font-mono-d absolute bottom-8 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black">{t}</span>
@@ -1361,7 +1372,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             <h2 class="sr-only">Products for the theme Belts</h2>. The 4
             products below ARE visible on the original, so only the heading
             is hidden, not the products. */}
-        <h2 className="sr-only">Products for the theme {theme}</h2>
+        <h2 className="sr-only">PRODUCTS FOR THE THEME {theme.toUpperCase()}</h2>
         <div key={theme} className="-mx-4 mt-6 grid grid-cols-2 gap-x-[2px] gap-y-8 sm:mx-0 lg:mt-8 lg:grid-cols-4 lg:gap-[2px]">
           {shown.map((p) => <ProductCard key={p.id} p={p} plainTile onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
         </div>
@@ -2360,9 +2371,10 @@ function RelatedRow({ title, items, go, mt, onQuickBuy, hidePrice, feature }: { 
   if (items.length === 0) return null;
   const tile = (x: Product) => (
     <div key={x.id} className="cursor-pointer lg:w-[220px] lg:shrink-0" role="link" aria-label={`${x.name}, ${priceText(x)}`} tabIndex={0} onClick={() => go({ t: "product", id: x.id })} onKeyDown={(e) => { if (e.key === "Enter") go({ t: "product", id: x.id }); }}>
-      <div className="relative aspect-[3/4] overflow-hidden"><ProductVisual p={x} />{onQuickBuy && isBuyableStatus(x.status) && isSneakerProduct(x) && (
-        <button aria-label={`Quick buy ${x.name}`} className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#696969] shadow transition hover:bg-black hover:text-white" onClick={(e) => { e.stopPropagation(); onQuickBuy(x); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg></button>
-      )}</div>
+      {/* Recommendation tiles (Perfect Partner / Keep exploring) have NO
+          Quick buy button and NO status — hermes.com never shows either on
+          its recommendation tiles. The photo is the tile's own image only. */}
+      <div className="relative aspect-[3/4] overflow-hidden"><ProductVisual p={x} hideStatus /></div>
       <p className="mt-2 px-2 text-xs leading-5">{x.name}</p>
       {x.colors[0] && <p className="sr-only">Color: {x.colors[0].name}</p>}
       {!hidePrice && <p className="mt-0.5 px-2 text-xs leading-5">{priceText(x)}</p>}
@@ -2974,7 +2986,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           <p className="font-serif-d mx-auto mt-8 max-w-3xl text-[20px] italic leading-[28px]">{editorial}</p>
         </section>
       )}
-      <RelatedRow title="The Perfect Partner" items={partners} go={go} onQuickBuy={(p) => addToCart(p)} feature={p.partnerFeature ? p : undefined} />
+      <RelatedRow title="The Perfect Partner" items={partners} go={go} onQuickBuy={(p) => addToCart(p)} feature={p} />
       <RelatedRow title="Keep exploring" items={explore} go={go} onQuickBuy={(p) => addToCart(p)} />
       <RelatedRow title="Last viewed products" items={lastViewed} go={go} mt="mt-20 lg:mt-28" hidePrice onQuickBuy={(p) => addToCart(p)} />
 
@@ -3410,6 +3422,8 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
           <label className={labelCls} htmlFor="cf-phone">Telephone number *</label>
           <input id="cf-phone" aria-label="Contact telephone" className={fieldCls} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
           <p className="mt-1 text-xs text-neutral-500">Expected format: phone number with 10 digits</p>
+          {/* hermes.com shows a second hint under the telephone field. */}
+          <p className="mt-1 text-xs text-neutral-500">Minimum 10 numbers</p>
         </div>
       </div>
       <div className="relative">
@@ -3637,7 +3651,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
               <h2 className="text-[15px] font-bold text-black">Customer Service</h2>
               <p className="mt-4 text-sm leading-7 text-neutral-700">{settings.serviceHours} :</p>
               <p className="text-sm leading-7"><a aria-label="Call Hermès customer service" className="underline underline-offset-4" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
-              <p className="mt-4 text-sm leading-7 text-neutral-700">The answer to your question can certainly be found in the <button aria-label="Frequently asked questions" className="font-bold underline underline-offset-4" onClick={() => go({ t: "page", page: "faq" })}>FAQs</button></p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">The answer to your question can certainly be found in the <a href="/us/en/faq/" aria-label="Frequently asked questions" className="font-bold underline underline-offset-4" onClick={(e) => { e.preventDefault(); go({ t: "page", page: "faq" }); }}>FAQs</a></p>
               <p className="mt-4 text-sm leading-7 text-neutral-700">You can also contact us outside public holidays:</p>
               <p className="mt-6 text-right text-xs text-neutral-600">* Required information</p>
               <ContactForm settings={settings} go={go} />
@@ -3773,16 +3787,20 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
       </section>
     </div>
   );
-  // Minimal cart-page footer (§E): four links + copyright only — no
-  // newsletter / footer services block on the cart page.
+  // Minimal cart-page footer (§E): five links + copyright only — no
+  // newsletter / footer services block on the cart page. The link set
+  // matches hermes.com's cart footer exactly: "Terms and conditions,
+  // Privacy & cookies, Legal issues, Accessibility, Site map".
   const cartFooter = (
     <div className="mt-10 border-t border-[#f6f1eb] bg-[#fffcf7] px-5 py-5 text-[13px] text-neutral-600">
       <p>
-        <button aria-label="Cart footer Terms and Conditions" className="hover:underline" onClick={() => go({ t: "page", page: "terms" })}>Terms and Conditions</button>
+        <button aria-label="Cart footer Terms and conditions" className="hover:underline" onClick={() => go({ t: "page", page: "terms" })}>Terms and conditions</button>
         {" | "}
-        <button aria-label="Cart footer Privacy" className="hover:underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy</button>
+        <button aria-label="Cart footer Privacy and cookies" className="hover:underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy &amp; cookies</button>
         {" | "}
-        <button aria-label="Cart footer Legal and Accessibility" className="hover:underline" onClick={() => go({ t: "page", page: "legal" })}>Legal &amp; Accessibility</button>
+        <button aria-label="Cart footer Legal issues" className="hover:underline" onClick={() => go({ t: "page", page: "legal" })}>Legal issues</button>
+        {" | "}
+        <button aria-label="Cart footer Accessibility" className="hover:underline" onClick={() => go({ t: "page", page: "accessibility" })}>Accessibility</button>
         {" | "}
         <button aria-label="Cart footer Site map" className="hover:underline" onClick={() => go({ t: "page", page: "sitemap" })}>Site map</button>
       </p>
@@ -4123,7 +4141,9 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
           <div className="relative mt-7 border-t border-[#f6f1eb] pt-5">
             <button aria-label="Ship to country selector" aria-expanded={shipOpen} className="flex items-center gap-2 text-xs text-neutral-700 uppercase tracking-wider" onClick={() => setShipOpen(!shipOpen)}>
               <span>Ship to : <span className="font-medium underline underline-offset-4">{ship}</span></span>
-              <span className="text-[11px] underline underline-offset-4">Change your location</span>
+              {/* hermes.com shows only "SHIP TO : UNITED STATES" — "Change
+                  your location" is the button's hidden label, not visible text. */}
+              <span className="sr-only">Change your location</span>
             </button>
             {shipOpen && (
               <div className="absolute bottom-full left-0 z-50 mb-2 w-72 max-w-[85vw] border border-[#f6f1eb] bg-[#fffcf7] py-2" role="listbox" aria-label="Choose your location">
@@ -4161,7 +4181,9 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
           <div className="relative">
             <button aria-label="Ship to country selector" aria-expanded={shipOpen} className="flex items-center gap-2 uppercase tracking-wider" onClick={() => setShipOpen(!shipOpen)}>
               <span>Ship to : <span className="font-medium underline underline-offset-4">{ship}</span></span>
-              <span className="text-[11px] normal-case tracking-normal underline underline-offset-4">Change your location</span>
+              {/* hermes.com shows only "SHIP TO : UNITED STATES" — "Change
+                  your location" is the button's hidden label, not visible text. */}
+              <span className="sr-only">Change your location</span>
             </button>
             {shipOpen && (
               <div className="absolute bottom-full left-0 z-50 mb-2 w-72 border border-[#f6f1eb] bg-[#fffcf7] py-2" role="listbox" aria-label="Choose your location">
