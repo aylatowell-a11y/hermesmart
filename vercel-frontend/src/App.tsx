@@ -2349,27 +2349,43 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
   );
 }
 
-function RelatedRow({ title, items, go, mt, onQuickBuy, hidePrice }: { title: string; items: Product[]; go: (v: View, opts?: { restore?: boolean }) => void; mt?: string; onQuickBuy?: (p: Product) => void; hidePrice?: boolean }) {
+function RelatedRow({ title, items, go, mt, onQuickBuy, hidePrice, feature }: { title: string; items: Product[]; go: (v: View, opts?: { restore?: boolean }) => void; mt?: string; onQuickBuy?: (p: Product) => void; hidePrice?: boolean; feature?: Product }) {
   if (items.length === 0) return null;
+  const tile = (x: Product) => (
+    <div key={x.id} className="cursor-pointer lg:w-[220px] lg:shrink-0" role="link" aria-label={`${x.name}, ${priceText(x)}`} tabIndex={0} onClick={() => go({ t: "product", id: x.id })} onKeyDown={(e) => { if (e.key === "Enter") go({ t: "product", id: x.id }); }}>
+      <div className="relative aspect-[3/4] overflow-hidden"><ProductVisual p={x} />{onQuickBuy && isBuyableStatus(x.status) && isSneakerProduct(x) && (
+        <button aria-label={`Quick buy ${x.name}`} className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#696969] shadow transition hover:bg-black hover:text-white" onClick={(e) => { e.stopPropagation(); onQuickBuy(x); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg></button>
+      )}</div>
+      <p className="mt-2 px-2 text-xs leading-5">{x.name}</p>
+      {x.colors[0] && <p className="sr-only">Color: {x.colors[0].name}</p>}
+      {!hidePrice && <p className="mt-0.5 px-2 text-xs leading-5">{priceText(x)}</p>}
+    </div>
+  );
   return (
     <section className={`mx-auto ${mt ?? "mt-12 lg:mt-20"} max-w-5xl px-4 sm:px-6`}>
       {/* Heading as in the user's video: large italic serif, centred
           ("The Perfect Partner"). Tiles are LARGE on mobile — a 2-column
           grid of big photos, nearly full-width halves — and a 4-across
-          horizontal row on desktop. */}
+          horizontal row on desktop. With `feature` (the current product,
+          hermes.com's "The Perfect Partner" mosaic) the first tile is
+          LARGE — the product itself, spanning both rows of a 2×2 grid of
+          the partner tiles beside it, image only, no name or price. */}
       <h2 className="font-serif-d text-center text-[30px] italic leading-snug">{title}</h2>
-      <div className="mt-8 grid grid-cols-2 gap-[2px] lg:flex lg:overflow-x-auto lg:pb-1">
-        {items.map((x) => (
-          <div key={x.id} className="cursor-pointer lg:w-[220px] lg:shrink-0" role="link" aria-label={`${x.name}, ${priceText(x)}`} tabIndex={0} onClick={() => go({ t: "product", id: x.id })} onKeyDown={(e) => { if (e.key === "Enter") go({ t: "product", id: x.id }); }}>
-            <div className="relative aspect-[3/4] overflow-hidden"><ProductVisual p={x} />{onQuickBuy && isBuyableStatus(x.status) && isSneakerProduct(x) && (
-              <button aria-label={`Quick buy ${x.name}`} className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#696969] shadow transition hover:bg-black hover:text-white" onClick={(e) => { e.stopPropagation(); onQuickBuy(x); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg></button>
-            )}</div>
-            <p className="mt-2 px-2 text-xs leading-5">{x.name}</p>
-            {x.colors[0] && <p className="sr-only">Color: {x.colors[0].name}</p>}
-            {!hidePrice && <p className="mt-0.5 px-2 text-xs leading-5">{priceText(x)}</p>}
+      {feature ? (
+        <div className="mt-8 grid grid-cols-2 gap-[2px] lg:flex lg:gap-[2px]">
+          <div className="col-span-2 cursor-pointer lg:w-[480px] lg:shrink-0" role="link" aria-label={`${feature.name}, ${priceText(feature)}`} tabIndex={0} onClick={() => go({ t: "product", id: feature.id })} onKeyDown={(e) => { if (e.key === "Enter") go({ t: "product", id: feature.id }); }}>
+            <div className="relative aspect-[3/4] overflow-hidden lg:aspect-auto lg:h-full"><ProductVisual p={feature} /></div>
           </div>
-        ))}
-      </div>
+          <div className="col-span-2 grid grid-cols-2 gap-[2px] lg:flex lg:flex-col lg:gap-[2px]">
+            <div className="contents lg:flex lg:gap-[2px]">{items.slice(0, 2).map(tile)}</div>
+            <div className="contents lg:flex lg:gap-[2px]">{items.slice(2, 4).map(tile)}</div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-8 grid grid-cols-2 gap-[2px] lg:flex lg:overflow-x-auto lg:pb-1">
+          {items.map(tile)}
+        </div>
+      )}
     </section>
   );
 }
@@ -2479,6 +2495,15 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
     ["Back width", "Running the measuring tape on your back, place the tip on the extremity of one shoulder and then strech it to the other shoulder."],
     ["Sleeves length", "Keeping your arm outstretched, place the tip of the measuring tape at the top of your shoulder and strech it down to the wrist."],
   ];
+  // Knitwear (sweaters/cardigans) Size Guide — the original's chart for a
+  // knit has only 5 columns (no Hip, no Back width) and 3 measurement
+  // steps (no Hip, no Back width). The figures are the RTW chart's own
+  // chest/waist/sleeve values (verified identical on the sweater's PDP,
+  // 2026-11-12) — derived from the chart above, never retyped.
+  const KNIT_CHART_IN = RTW_CHART_IN.map((r) => [r[0], r[1], r[2], r[3], r[6]] as [string, string, string, string, string]);
+  const KNIT_CHART_CM = RTW_CHART_CM.map((r) => [r[0], r[1], r[2], r[3], r[6]] as [string, string, string, string, string]);
+  const KNIT_MEASURE_STEPS = [MEASURE_STEPS[0], MEASURE_STEPS[1], MEASURE_STEPS[4]];
+  const isKnit = p.subcategory === "Knitwear and twillaines";
   // No pre-selected size: hermes.com never pre-selects one (the buy-box
   // button always reads "Select a size" on landing, on every colourway).
   // The old `p?.defaultSize` init made the Noir coat's button read
@@ -2508,10 +2533,27 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   // a gap; ours overlapped ADD TO CART, hiding the final "T"). Only the
   // desktop bar counts — it is lg-only; the mobile bubble already sits
   // 76px up on product pages. Cleanup resets it on unmount/product change.
+  // hermes.com also hides the bar at the very bottom of the page (the
+  // footer lockup) — it stays visible through the service strip and the
+  // footer columns, then disappears once the lockup is in view.
+  const [nearBottom, setNearBottom] = useState(false);
   useEffect(() => {
-    onBuyBarChange(!!p && isBuyableStatus(p.status) && !buyBoxInView);
+    const onScroll = () => {
+      const doc = document.documentElement;
+      setNearBottom(doc.scrollHeight - window.scrollY - window.innerHeight < 150);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+  useEffect(() => {
+    onBuyBarChange(!!p && isBuyableStatus(p.status) && !buyBoxInView && !nearBottom);
     return () => onBuyBarChange(false);
-  }, [buyBoxInView, p?.status, onBuyBarChange]);
+  }, [buyBoxInView, nearBottom, p?.status, onBuyBarChange]);
   const notifyMut = useMutation({ mutationFn: () => api.requestNotify({ productId: p?.id ?? 0, productName: p?.name ?? "", email: notifyEmail }), onSuccess: () => setNotified("Thank you — we will notify you when this product is back in stock.") });
   // Last viewed: session-only, derived from the App-level id list (never
   // seeded from storage) — the section renders only once at least one
@@ -2925,7 +2967,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           <p className="font-serif-d mx-auto mt-8 max-w-3xl text-[20px] italic leading-[28px]">{editorial}</p>
         </section>
       )}
-      <RelatedRow title="The Perfect Partner" items={partners} go={go} onQuickBuy={(p) => addToCart(p)} />
+      <RelatedRow title="The Perfect Partner" items={partners} go={go} onQuickBuy={(p) => addToCart(p)} feature={p.partnerFeature ? p : undefined} />
       <RelatedRow title="Keep exploring" items={explore} go={go} onQuickBuy={(p) => addToCart(p)} />
       <RelatedRow title="Last viewed products" items={lastViewed} go={go} mt="mt-20 lg:mt-28" hidePrice onQuickBuy={(p) => addToCart(p)} />
 
@@ -3113,6 +3155,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               </div>
               {guideTab === "chart" ? (
                 <div className="mt-5 overflow-x-auto">
+                <p className="mb-3 text-xs font-semibold text-black">Size comparison chart in {guideUnit === "in" ? "inches" : "centimetres"}</p>
                 <table className="w-full min-w-[520px] text-left text-xs">
                   <thead>
                     <tr className="border-b border-black/20 text-[11px] text-neutral-500">
@@ -3120,21 +3163,27 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                       <th className="py-2 pr-2 font-medium">US</th>
                       <th className="py-2 pr-2 font-medium">Chest circumference</th>
                       <th className="py-2 pr-2 font-medium">Waist circumference</th>
-                      <th className="py-2 pr-2 font-medium">Hip circumference</th>
-                      <th className="py-2 pr-2 font-medium">Back width</th>
+                      {!isKnit && <th className="py-2 pr-2 font-medium">Hip circumference</th>}
+                      {!isKnit && <th className="py-2 pr-2 font-medium">Back width</th>}
                       <th className="py-2 font-medium">Sleeves length</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(guideUnit === "in" ? RTW_CHART_IN : RTW_CHART_CM).map((r) => (
+                    {(isKnit ? (guideUnit === "in" ? KNIT_CHART_IN : KNIT_CHART_CM) : (guideUnit === "in" ? RTW_CHART_IN : RTW_CHART_CM)).map((r) => (
                       <tr key={r[0]} className="border-b border-black/10">
                         <td className="py-2 pr-2">{r[0]}</td>
                         <td className="py-2 pr-2">{r[1]}</td>
                         <td className="py-2 pr-2">{r[2]}</td>
                         <td className="py-2 pr-2">{r[3]}</td>
-                        <td className="py-2 pr-2">{r[4]}</td>
-                        <td className="py-2 pr-2">{r[5]}</td>
-                        <td className="py-2">{r[6]}</td>
+                        {isKnit ? (
+                          <td className="py-2">{r[4]}</td>
+                        ) : (
+                          <>
+                            <td className="py-2 pr-2">{r[4]}</td>
+                            <td className="py-2 pr-2">{r[5]}</td>
+                            <td className="py-2">{r[6]}</td>
+                          </>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -3144,7 +3193,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                 <div className="mt-5 text-xs leading-6 text-neutral-700">
                   <p>To take your measurements and find your perfect size, you will need a measuring tape. Make sure to keep the tape loose. If you are in-between sizes, we recommend sizing up. Time to follow the guide!</p>
                   <ol className="mt-4 space-y-4">
-                    {MEASURE_STEPS.map(([title, body], i) => (
+                    {(isKnit ? KNIT_MEASURE_STEPS : MEASURE_STEPS).map(([title, body], i) => (
                       <li key={title}>
                         <p className="font-semibold text-black">{i + 1} — {title}</p>
                         <p className="mt-0.5">{body}</p>
@@ -3160,20 +3209,26 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                         <th className="py-2 pr-2 font-medium">Hermès Size</th>
                         <th className="py-2 pr-2 font-medium">Chest circumference</th>
                         <th className="py-2 pr-2 font-medium">Waist circumference</th>
-                        <th className="py-2 pr-2 font-medium">Hip circumference</th>
-                        <th className="py-2 pr-2 font-medium">Back width</th>
+                        {!isKnit && <th className="py-2 pr-2 font-medium">Hip circumference</th>}
+                        {!isKnit && <th className="py-2 pr-2 font-medium">Back width</th>}
                         <th className="py-2 font-medium">Sleeves length</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {RTW_CHART_CM.map((r) => (
+                      {(isKnit ? KNIT_CHART_CM : RTW_CHART_CM).map((r) => (
                         <tr key={r[0]} className="border-b border-black/10">
                           <td className="py-2 pr-2">{r[0]}</td>
                           <td className="py-2 pr-2">{r[2]}</td>
                           <td className="py-2 pr-2">{r[3]}</td>
-                          <td className="py-2 pr-2">{r[4]}</td>
-                          <td className="py-2 pr-2">{r[5]}</td>
-                          <td className="py-2">{r[6]}</td>
+                          {isKnit ? (
+                            <td className="py-2">{r[4]}</td>
+                          ) : (
+                            <>
+                              <td className="py-2 pr-2">{r[4]}</td>
+                              <td className="py-2 pr-2">{r[5]}</td>
+                              <td className="py-2">{r[6]}</td>
+                            </>
+                          )}
                         </tr>
                       ))}
                     </tbody>
