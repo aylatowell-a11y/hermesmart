@@ -1180,7 +1180,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
   const slideW = () => {
     const el = carouselRef.current;
     const slide = el?.querySelector<HTMLElement>("[data-slide]");
-    return slide ? slide.offsetWidth + 12 : 0;
+    return slide ? slide.offsetWidth + 3 : 0; // gap-[3px] between slides
   };
   const centerSlide = (i: number, smooth = true) => {
     // Wrap around the 15 controls, as on hermes.com (15 → 1 and 1 → 15).
@@ -1228,11 +1228,21 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
   };
   // On mount, start scrolled to the middle copy's first slide (BELTS
   // centred, BEAUTY peeking on the left) — not the very start, where the
-  // left side would be empty cream.
+  // left side would be empty cream. Done after layout (double rAF) so
+  // slide widths are final, with a safety-net retry if the scroll did
+  // not take (e.g. layout not ready) and the user has not scrolled yet.
   useEffect(() => {
     const el = carouselRef.current;
-    const w = slideW();
-    if (el && w) el.scrollTo({ left: CAROUSEL_N * w, behavior: "auto" });
+    if (!el) return;
+    const goMiddle = () => {
+      const w = slideW();
+      if (w) el.scrollTo({ left: CAROUSEL_N * w, behavior: "auto" });
+    };
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = requestAnimationFrame(() => { raf2 = requestAnimationFrame(goMiddle); });
+    const t = window.setTimeout(() => { if (el.scrollLeft < 10) goMiddle(); }, 500);
+    return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); window.clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const themeDest = (t: string): View => {
@@ -1329,22 +1339,23 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             })}
           </div>
         </div>
-        {/* MOBILE carousel — swipeable scroll-snap, centre ~80% wide with
-            neighbours peeking (measured from the user's phone screenshot of
-            hermes.com, 2026-11-12: centre slide ~290px of a 360px viewport,
-            aspect ~8:9 — NOT 3:4, which rendered too tall). Tap a slide to
-            centre it; no counter/arrows on mobile (only the progress line
-            below). The white label button sits ~32px above the photo's
-            bottom edge and is smaller than the desktop one. */}
-        <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[10%] pb-1 sm:px-[18%] lg:hidden" role="tablist" aria-label="Discover themes">
+        {/* MOBILE carousel — swipeable scroll-snap, centre ~73% wide with
+            ~13% neighbours peeking each side (measured from the user's
+            phone screenshots of hermes.com, 2026-11-12, 720x1640 device
+            px: centre x 97–624, photo 528x705 = 3:4 aspect — NOT 8:9;
+            the Round 8 8/9 reading was wrong and is reverted here).
+            Tap a slide to centre it; no counter/arrows on mobile (only
+            the progress line below). The white label button is ~100x46
+            CSS, ~16 CSS above the photo's bottom edge. */}
+        <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-[3px] overflow-x-auto px-[13%] pb-1 sm:px-[18%] lg:hidden" role="tablist" aria-label="Discover themes">
           {[0, 1, 2].map((copy) => CAROUSEL_THEMES.map((t, i) => {
             const ed = CAROUSEL_EDITORIAL[t];
             if (!ed) return null;
             return (
               <button key={`${copy}-${i}`} data-slide role="tab" aria-selected={activeIdx === i} aria-label={`Theme ${t}, ${i + 1} of ${CAROUSEL_THEMES.length}`} onClick={() => centerSlide(i)}
-                className={`relative aspect-[8/9] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
+                className={`relative aspect-[3/4] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
                 <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
-                <span className="font-mono-d absolute bottom-8 left-1/2 flex h-10 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-4 text-xs font-medium uppercase text-black">{t}</span>
+                <span className="font-mono-d absolute bottom-4 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-sm font-medium uppercase text-black">{t}</span>
               </button>
             );
           }))}
@@ -1642,7 +1653,7 @@ function FallWinterThemeCarousel({ go }: { go: (v: View, opts?: { restore?: bool
   const slideW = () => {
     const el = carouselRef.current;
     const slide = el?.querySelector<HTMLElement>("[data-slide]");
-    return slide ? slide.offsetWidth + 12 : 0;
+    return slide ? slide.offsetWidth + 3 : 0; // gap-[3px] between slides
   };
   // The mobile carousel is CIRCULAR (like hermes.com and like the homepage
   // carousel): the 5 themes are rendered 3 times (15 slides) and the scroll
@@ -1683,11 +1694,21 @@ function FallWinterThemeCarousel({ go }: { go: (v: View, opts?: { restore?: bool
     }, 150);
   };
   // On mount, start scrolled to the middle copy's first slide — not the
-  // very start, where the left side would be empty cream.
+  // very start, where the left side would be empty cream. Done after
+  // layout (double rAF) so slide widths are final, with a safety-net
+  // retry if the scroll did not take and the user has not scrolled yet.
   useEffect(() => {
     const el = carouselRef.current;
-    const w = slideW();
-    if (el && w && themes.length) el.scrollTo({ left: themes.length * w, behavior: "auto" });
+    if (!el) return;
+    const goMiddle = () => {
+      const w = slideW();
+      if (w && themes.length) el.scrollTo({ left: themes.length * w, behavior: "auto" });
+    };
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = requestAnimationFrame(() => { raf2 = requestAnimationFrame(goMiddle); });
+    const t = window.setTimeout(() => { if (el.scrollLeft < 10) goMiddle(); }, 500);
+    return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); window.clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   if (slides.length === 0) return null;
@@ -1718,15 +1739,15 @@ function FallWinterThemeCarousel({ go }: { go: (v: View, opts?: { restore?: bool
         </div>
       </div>
       {/* MOBILE — swipeable scroll-snap, same geometry as the homepage
-          Discover carousel (aspect 8/9, centre ~80% wide) */}
-      <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[10%] pb-1 sm:px-[18%] lg:hidden" role="tablist" aria-label="Product theme carousel">
+          Discover carousel (aspect 3/4, centre ~73% wide, ~13% peeks) */}
+      <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-[3px] overflow-x-auto px-[13%] pb-1 sm:px-[18%] lg:hidden" role="tablist" aria-label="Product theme carousel">
         {slides.map((slide, i) => (
           <div key={`${slide.label}-${i}`} data-slide role="tab" aria-selected={activeIdx === i} aria-label={`Visible Category ${slide.label}, ${(i % themes.length) + 1} of ${themes.length}`} tabIndex={0}
             onClick={() => centerSlide(i)}
             onKeyDown={(e) => { if (e.key === "Enter") centerSlide(i); }}
-            className={`relative aspect-[8/9] w-full shrink-0 cursor-pointer snap-center overflow-hidden text-left transition-opacity duration-300 ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
+            className={`relative aspect-[3/4] w-full shrink-0 cursor-pointer snap-center overflow-hidden text-left transition-opacity duration-300 ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
             <img src={slide.imgMo} alt={slide.label} loading="lazy" className="h-full w-full object-cover" />
-            <button aria-label={`Go to ${slide.label}`} className="font-mono-d absolute bottom-8 left-1/2 flex h-10 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-4 text-xs font-medium uppercase text-black" onClick={(e) => { e.stopPropagation(); go(slide.view); }}>{slide.label}</button>
+            <button aria-label={`Go to ${slide.label}`} className="font-mono-d absolute bottom-4 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-sm font-medium uppercase text-black" onClick={(e) => { e.stopPropagation(); go(slide.view); }}>{slide.label}</button>
           </div>
         ))}
       </div>
