@@ -3267,7 +3267,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           name + price on the left, Apple Pay + black ADD TO CART on the
           right. Same addToCart action (and size gating) as the in-panel
           buttons; config products get PERSONALIZE instead. */}
-      {isBuyableStatus(p.status) && !buyBoxInView && (
+      {isBuyableStatus(p.status) && !buyBoxInView && !nearBottom && (
         <div className="fixed inset-x-0 bottom-0 z-40 hidden items-center justify-between gap-4 border-t border-black/10 bg-[#fffcf7]/90 px-6 py-3 backdrop-blur lg:flex" role="region" aria-label="Quick buy">
           <div className="flex min-w-0 items-center gap-3">
             <img src={productImageFor(p)} alt="" className="h-12 w-10 shrink-0 object-cover" />
