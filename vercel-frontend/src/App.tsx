@@ -1363,10 +1363,18 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           (30px gap between glyphs). The Kelly board abuts directly
           below (no gap). (An earlier note claiming a black block below
           the video was WRONG — the user's screenshots + live measurement
-          prove the overlay.) */}
+          prove the overlay.)
+          MOBILE HEIGHT (fixed 2026-11-12 from the user's phone
+          screenshots of hermes.com, 720x1640): the original's mobile
+          video is TALLER than the 62vh the old code used — the DISCOVER
+          underline sits ~58px above the video bottom and the video runs
+          to the bottom of the screen, giving ~76vh, so the board is
+          75vh on phones (desktop stays 60vh / min 550px). At 75vh the
+          9:16 mobile video shows almost uncropped (360 wide x ~615
+          tall ≈ the video's natural 9:16 shape). */}
       <section ref={vidRef} className="relative overflow-hidden bg-black" aria-label="The great outdoors in stereo video">
         <div className="relative overflow-hidden">
-        <ProductVideo src={baladeurSrc} poster={baladeurPoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[62vh] w-full object-cover lg:h-[60vh] lg:min-h-[550px]" />
+        <ProductVideo src={baladeurSrc} poster={baladeurPoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[75vh] w-full object-cover lg:h-[60vh] lg:min-h-[550px]" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[53%] bg-gradient-to-t from-black via-black/60 to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-[58px] z-10 px-4 text-center text-white">
           <h2 className="font-serif-d text-[30px] italic">The great outdoors in stereo</h2>
