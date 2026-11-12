@@ -1235,7 +1235,16 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
       <section className="relative cursor-pointer overflow-x-clip" onClick={() => go({ t: "category", cat: "home", sub: "Blankets and pillows" })} aria-label="Threading ideas — discover the blanket collection">
         <picture>
           <source media="(max-width: 640px)" srcSet={heroBenchImgMobile} />
-          <img src={heroBenchImg} alt="Blue patterned blanket folded on a black-and-white triangular tiled bench against a beige stone wall" className="h-[70vh] w-full object-cover object-center sm:h-screen" />
+          {/* Mobile height is FULL-SCREEN (100svh, 100vh fallback), as on
+              hermes.com: the user's phone screenshots (2026-11-12) show the
+              original's mobile hero running to the bottom of the screen
+              (text + DISCOVER near the bottom edge), while the old 70vh
+              ended ~25vh early and showed the "Discover the world" board
+              below — a visible size gap, and the shorter crop also made the
+              image read warmer/brighter than the original's taller crop.
+              100svh fills the visible screen (accounting for the mobile
+              browser chrome); 100vh is the fallback for older browsers. */}
+          <img src={heroBenchImg} alt="Blue patterned blanket folded on a black-and-white triangular tiled bench against a beige stone wall" className="h-screen h-[100svh] w-full object-cover object-center sm:h-screen" />
         </picture>
         {/* Vintage dark gradients, as on hermes.com (measured live
             2026-11-11 23:21): top darkening ~15–20% of the height,
