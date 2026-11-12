@@ -2467,9 +2467,8 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   const sliderHitRef = useRef<HTMLDivElement>(null);
   const [sizeDrawer, setSizeDrawer] = useState(false);
   // "SIZE GUIDE" drawer (hermes.com): a right-side drawer with the
-  // ready-to-wear measurement table — NOT the User guides page. Shoes keep
-  // the old guides-page link: their table is a shoe-size table, not yet
-  // measured, and the RTW chest/waist/hip table would be wrong for them.
+  // measurement table — RTW (7-col), knitwear (5-col) and shoes (3-col:
+  // Hermès Size | US/UK | Foot length, measured live 2026-11-12).
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [guideTab, setGuideTab] = useState<"chart" | "measure">("chart");
   const [guideUnit, setGuideUnit] = useState<"cm" | "in">("in");
@@ -2523,6 +2522,48 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   const KNIT_CHART_CM = RTW_CHART_CM.map((r) => [r[0], r[1], r[2], r[3], r[6]] as [string, string, string, string, string]);
   const KNIT_MEASURE_STEPS = [MEASURE_STEPS[0], MEASURE_STEPS[1], MEASURE_STEPS[4]];
   const isKnit = p.subcategory === "Knitwear and twillaines";
+  // SHOES Size Guide — transcribed LIVE from the original's Bouncing
+  // sneaker PDP Size Guide drawer (2026-11-12): 3 columns (Hermès Size |
+  // US or UK | Foot length), Hermès sizes 34–42 in half sizes. Foot length
+  // uses a comma decimal in cm ("21,80 cm") and a period in inches; the
+  // US view shows inches with TWO decimals ("8.58\"") while the UK view
+  // rounds to ONE decimal ("8.6\"") — the same physical length, the
+  // original's own display difference, preserved exactly. The location
+  // selector offers US + UK here (the two measured conversions); the
+  // original offers 17 locations, the other 15 are not yet measured.
+  // Row: [Hermès, US, UK, foot cm, foot inches (US view, 2 dec), foot inches (UK view, 1 dec)]
+  const SHOE_CHART: [string, string, string, string, string, string][] = [
+    ["34", "4", "2", "21,80 cm", "8.58\"", "8.6\""],
+    ["34,5", "4,5", "2,5", "22,14 cm", "8.66\"", "8.7\""],
+    ["35", "5", "3", "22,47 cm", "8.78\"", "8.8\""],
+    ["35,5", "5,5", "3,5", "22,80 cm", "8.9\"", "9\""],
+    ["36", "6", "4", "23,13 cm", "9.02\"", "9.1\""],
+    ["36,5", "6,5", "4,5", "23,47 cm", "9.15\"", "9.2\""],
+    ["37", "7", "5", "23,8 cm", "9.27\"", "9.4\""],
+    ["37,5", "7,5", "5,5", "24,13 cm", "9.39\"", "9.5\""],
+    ["38", "8", "6", "24,47 cm", "9.51\"", "9.6\""],
+    ["38,5", "8,5", "6,5", "24,80 cm", "9.64\"", "9.8\""],
+    ["39", "9", "7", "25,13 cm", "9.76\"", "9.9\""],
+    ["39,5", "9,5", "7,5", "25,47 cm", "9.88\"", "10\""],
+    ["40", "10", "8", "25,80 cm", "10\"", "10.2\""],
+    ["40,5", "10,5", "8,5", "26,13 cm", "10.13\"", "10.3\""],
+    ["41", "11", "9", "26,46 cm", "10.25\"", "10.4\""],
+    ["41,5", "11,5", "9,5", "26,80 cm", "10.37\"", "10.6\""],
+    ["42", "12", "10", "27,13 cm", "10.49\"", "10.7\""],
+  ];
+  const SHOE_CHART_INTRO = "To find your perfect size, enter your usual size and we'll convert it for you.";
+  const SHOE_MEASURE_HEADING = "Taking the appropriate measures!";
+  const SHOE_MEASURE_INTRO = "To find the perfect size, use a measuring tape to measure yourself following the steps explained below. We recommend that you keep the measuring tape loose and that you size up if you are in-between sizes.";
+  const SHOE_MEASURE_STEPS: [string, string][] = [
+    ["Place the tip of your bare foot against the wall.", ""],
+    ["Place your foot on a piece of paper on a flat and solid surface and draw a line at the tip of your biggest toe using a pencil.", ""],
+    ["Measure the length between the two lines.", ""],
+    ["Refer to the chart below to find the corresponding shoe size.", ""],
+  ];
+  const SHOE_MEASURE_TIP = "Our tip: Following the instructions, measure both feet and take into account the maximum length when selecting your shoe size.";
+  // Shoe Size Guide location (US default, UK measured too). The RTW/knit
+  // drawer keeps its US-only location select (unchanged).
+  const [guideLoc, setGuideLoc] = useState<"US" | "UK">("US");
   // No pre-selected size: hermes.com never pre-selects one (the buy-box
   // button always reads "Select a size" on landing, on every colourway).
   // The old `p?.defaultSize` init made the Noir coat's button read
@@ -2894,7 +2935,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
               </button>
               <div className="mt-2 flex justify-end">
-                <button aria-label="Size guide" className="flex items-center gap-1.5 text-xs underline underline-offset-2" onClick={() => { if (isShoeSize) { go({ t: "page", page: "guides" }); return; } setSizeGuideOpen(true); }}>
+                <button aria-label="Size guide" className="flex items-center gap-1.5 text-xs underline underline-offset-2" onClick={() => setSizeGuideOpen(true)}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="2" y="9" width="20" height="7" rx="1" /><path d="M6.5 9v3.5M11 9v3.5M15.5 9v3.5M20 9v3.5" /></svg>
                   Size Guide
                 </button>
@@ -3157,9 +3198,18 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               </div>
               <label className="mt-4 block text-[11px] text-neutral-500" htmlFor="guide-location">Select a location *</label>
               <div className="relative mt-1">
-                <select id="guide-location" aria-label="Select a location" className="w-full appearance-none border-b border-black/25 bg-transparent py-2 pr-8 text-sm outline-none" value="US" onChange={() => {}}>
-                  <option value="US">US</option>
-                </select>
+                {/* Shoes: US + UK (both measured live). RTW/knit: US only
+                    (the chart is the US conversion). */}
+                {isShoeSize ? (
+                  <select id="guide-location" aria-label="Select a location" className="w-full appearance-none border-b border-black/25 bg-transparent py-2 pr-8 text-sm outline-none" value={guideLoc} onChange={(e) => setGuideLoc(e.target.value as "US" | "UK")}>
+                    <option value="US">US</option>
+                    <option value="UK">UK</option>
+                  </select>
+                ) : (
+                  <select id="guide-location" aria-label="Select a location" className="w-full appearance-none border-b border-black/25 bg-transparent py-2 pr-8 text-sm outline-none" value="US" onChange={() => {}}>
+                    <option value="US">US</option>
+                  </select>
+                )}
                 <svg className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
               </div>
               <div className="mt-4 flex items-center gap-6" role="radiogroup" aria-label="Measurement unit">
@@ -3173,6 +3223,32 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                 </button>
               </div>
               {guideTab === "chart" ? (
+                isShoeSize ? (
+                  <div className="mt-5 overflow-x-auto">
+                  <p className="mb-3 text-xs leading-5 text-neutral-700">{SHOE_CHART_INTRO}</p>
+                  <p className="mb-3 text-xs font-semibold text-black">Size comparison chart in {guideUnit === "in" ? "inches" : "centimeter"}</p>
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-black/20 text-[11px] text-neutral-500">
+                        <th className="py-2 pr-2 font-medium">Hermès Size</th>
+                        <th className="py-2 pr-2 font-medium">{guideLoc}</th>
+                        <th className="py-2 font-medium">Foot length</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {SHOE_CHART.map((r) => (
+                        <tr key={r[0]} className="border-b border-black/10">
+                          <td className="py-2 pr-2">{r[0]}</td>
+                          <td className="py-2 pr-2">{guideLoc === "US" ? r[1] : r[2]}</td>
+                          {/* Foot length: cm is the same for both locations;
+                              inches use 2 decimals in the US view, 1 in UK. */}
+                          <td className="py-2">{guideUnit === "in" ? (guideLoc === "US" ? r[4] : r[5]) : r[3]}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  </div>
+                ) : (
                 <div className="mt-5 overflow-x-auto">
                 <p className="mb-3 text-xs font-semibold text-black">Size comparison chart in {guideUnit === "in" ? "inches" : "centimetres"}</p>
                 <table className="w-full min-w-[520px] text-left text-xs">
@@ -3208,7 +3284,42 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                   </tbody>
                 </table>
                 </div>
+                )
               ) : (
+                isShoeSize ? (
+                  <div className="mt-5 text-xs leading-6 text-neutral-700">
+                    <p className="font-semibold text-black">{SHOE_MEASURE_HEADING}</p>
+                    <p className="mt-2">{SHOE_MEASURE_INTRO}</p>
+                    <ol className="mt-4 space-y-4">
+                      {SHOE_MEASURE_STEPS.map(([title], i) => (
+                        <li key={title}>
+                          <p className="font-semibold text-black">{i + 1} — {title}</p>
+                        </li>
+                      ))}
+                    </ol>
+                    <p className="mt-5">{SHOE_MEASURE_TIP}</p>
+                    <div className="mt-5 overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-black/20 text-[11px] text-neutral-500">
+                          <th className="py-2 pr-2 font-medium">Hermès Size</th>
+                          <th className="py-2 font-medium">Foot length</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* Measurement tab foot lengths: cm as in the chart;
+                            inches use the one-decimal (UK) display. */}
+                        {SHOE_CHART.map((r) => (
+                          <tr key={r[0]} className="border-b border-black/10">
+                            <td className="py-2 pr-2">{r[0]}</td>
+                            <td className="py-2">{guideUnit === "in" ? r[5] : r[3]}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    </div>
+                  </div>
+                ) : (
                 <div className="mt-5 text-xs leading-6 text-neutral-700">
                   <p>To take your measurements and find your perfect size, you will need a measuring tape. Make sure to keep the tape loose. If you are in-between sizes, we recommend sizing up. Time to follow the guide!</p>
                   <ol className="mt-4 space-y-4">
@@ -3254,6 +3365,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                   </table>
                   </div>
                 </div>
+                )
               )}
             </div>
           </div>
