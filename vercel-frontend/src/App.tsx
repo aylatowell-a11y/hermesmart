@@ -778,6 +778,15 @@ export function App() {
   }, []);
   // Height of the pinned header block the sub-nav must dock under.
   const pinTop = topRowH + navH;
+  const subNavTop = headerMode === "slim" ? navH : pinTop;
+  // The sub-nav's sticky offset is the header height that is ACTUALLY
+  // pinned right now: just the nav row (~44px) in slim mode (scrolled
+  // down), the full header (logo row + nav, ~99px) otherwise. The user
+  // (2026-11-12 20:46) chose "Original jaisa pin karo": hermes.com pins
+  // its category sub-nav under the header while scrolling, so ours does
+  // the same. (Round 11 had made it scroll away on the claim that
+  // hermes.com's sub-nav scrolls away — the live category audit showed
+  // that claim is wrong for category pages: the original pins it.)
   // Full-header height for the product page's top padding: the live
   // measured header height while the header is FULL, frozen while slim so
   // scrolling never shifts the page (the padding only matters at scroll 0,
@@ -1110,7 +1119,7 @@ export function App() {
         {view.t === "home" && <HomeView settings={settings} products={products} themeIdx={themeIdx} setThemeIdx={setThemeIdx} go={go} addToCart={addToCart} pulse={pulse} />}
         {view.t === "cart" && <CartPage cart={pricedCart} setCart={setCart} settings={settings} go={go} total={cartTotal} count={cartCount} products={products} />}
         {view.t === "category" && view.cat === "about" && <AboutPage go={go} />}
-        {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} pinTop={pinTop} initialVisible={catStateRef.current[catKey(view.cat, view.sub)]?.visible ?? 40} onVisibleChange={(n) => { const k = catKey(view.cat, view.sub); const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 }; catStateRef.current[k] = { ...prev, visible: n }; }} />}
+        {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} pinTop={pinTop} stickyTop={subNavTop} initialVisible={catStateRef.current[catKey(view.cat, view.sub)]?.visible ?? 40} onVisibleChange={(n) => { const k = catKey(view.cat, view.sub); const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 }; catStateRef.current[k] = { ...prev, visible: n }; }} />}
         {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} from={fromView} lastViewedIds={lastViewedIds} onBuyBarChange={setBuyBarVisible} onViewed={(pid) => setLastViewedIds((prev) => [pid, ...prev.filter((x) => x !== pid)].slice(0, 9))} />}
         {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} />}
         {view.t === "faq" && <FaqPage topic={view.topic} go={go} />}
@@ -1723,7 +1732,7 @@ function FallWinterThemeCarousel({ go }: { go: (v: View, opts?: { restore?: bool
   );
 }
 
-function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisible, onVisibleChange }: { products: Product[]; cat: string; sub?: string; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product) => void; pinTop: number; initialVisible?: number; onVisibleChange?: (n: number) => void }) {
+function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, initialVisible, onVisibleChange }: { products: Product[]; cat: string; sub?: string; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product) => void; pinTop: number; stickyTop: number; initialVisible?: number; onVisibleChange?: (n: number) => void }) {
   const nav = NAV.find((n) => n.key === cat);
   const label = nav?.label ?? cat.toUpperCase();
   const base = useMemo(() => {
@@ -2145,16 +2154,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
       <h1 className="mt-1 text-left text-[24px] leading-[34px]">{titleText}<span className="ml-2 text-[16px] font-normal text-neutral-500">[{displayCount}]</span></h1>
 
       {/* Sub-nav row: siblings (current underlined) + FILTER button +
-          Product/Mosaic view toggle. NOT sticky: it scrolls away with the
-          page, so during scroll only the site header stays pinned (ONE
-          top bar). The old code pinned it under the header (sticky,
-          top: pinTop) so header + sub-nav formed one continuous pinned
-          block — two bars at the top on scroll. The user (2026-11-12,
-          Leather goods page) asked for only one top bar on scroll, and
-          hermes.com does the same: its scroll-down header is only the
-          slim nav row, the sub-nav scrolls away (filtering on mobile is
-          via the floating FILTER & SORT pill; on desktop you scroll back
-          up to filter). ONE line at every width: on mobile the sibling
+          Product/Mosaic view toggle. STICKY, pinned under the header like
+          hermes.com: the user (2026-11-12 20:46) chose "Original jaisa pin
+          karo". Its top offset (stickyTop) is the header height actually
+          pinned right now — just the nav row in slim mode (scrolled down),
+          the full header otherwise — so header + sub-nav stay one
+          continuous pinned block with no gap. (Round 11 had made it scroll
+          away; the live category audit showed hermes.com pins it on
+          category pages.) ONE line at every width: on mobile the sibling
           row SCROLLS SIDEWAYS (it must never wrap to two lines or cut
           items off), the view toggle stays at the right end of the same
           line, and FILTER lives in the floating FILTER & SORT pill
@@ -2163,7 +2170,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
           items + FILTER fit the 1280px content width at 1920px with no
           clipping and no scroll (measured against the real Manrope
           advances: ~1095px of ~1232px). */}
-      <div className="-mx-4 mt-4 bg-[#fcf7f1] px-4 py-3 sm:-mx-6 sm:px-6">
+      <div className="sticky z-30 -mx-4 mt-4 bg-[#fcf7f1] px-4 py-3 sm:-mx-6 sm:px-6" style={{ top: stickyTop }}>
         <div className="flex items-center gap-x-3">
           <nav ref={subNavRef} className="no-scrollbar flex min-w-0 flex-1 gap-3 overflow-x-auto whitespace-nowrap" aria-label="Subcategories">
             {siblings.map((s) => (
