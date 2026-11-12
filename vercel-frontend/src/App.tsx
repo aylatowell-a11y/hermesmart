@@ -2,20 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type ApiResponse, type LocalChat } from "./api";
 // Real photos: the image files are in ./assets/ (uploaded to the repo).
-import heroImg from "./assets/media-generation-hero-hands-blanket-0-42d3a746-833a-44bc-b0cb-99ad6e08730c.webp";
 // Original Hermes hero photo (hermes.com homepage, verified 2026-11-10):
 // black-and-white triangular tiled bench + blue patterned blanket on a beige
 // stone wall. Desktop 16:9, mobile 9:16 (the crop hermes.com serves ≤1023px).
 const heroBenchImg = "https://assets.hermes.com/is/image/hermesedito/cover_maison_167?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 const heroBenchImgMobile = "https://assets.hermes.com/is/image/hermesedito/Cover_maison_mobile?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
-import runwayImg from "./assets/media-generation-runway-show-0-97e89bc4-b374-4de6-96e4-e7a69020f3a2.webp";
-import outdoorsImg from "./assets/media-generation-editorial-outdoors-0-67c3bd9b-b631-4b20-a0fa-75d9e7d34982.webp";
 // Original Hermes Baladeur poster (hermes.com homepage, verified 2026-11-10):
 // woman + bicycle + large white Afghan hound in front of a desert screen.
 // The video itself is served from public/videos/ as MP4 (see BOARD d).
 const baladeurPosterImg = "https://assets.hermes.com/is/image/hermesedito/Hero_Baladeur_Cover_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 const baladeurPosterImgMobile = "https://assets.hermes.com/is/image/hermesedito/Hero_Baladeur_Cover_9x16?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
-import kellyImg from "./assets/media-generation-editorial-kelly-coat-0-7238f945-faef-4dda-bd99-0169e098f7ee.webp";
 // Original Hermes Kelly editorial (hermes.com homepage, verified 2026-11-10):
 // two stacked gold Kelly RINGS (one plain, one diamond-pavé) on an orange /
 // terracotta background. "Bague" = ring — this is what hermes.com shows for
@@ -116,12 +112,23 @@ function applyNavOverrides(overrides: NavOverrides): MegaEntry[] {
   return MEGA_RAW.filter(e => !overrides[e.key]?.hidden).map(e => ({ ...e, label: overrides[e.key]?.label || e.label, caption: overrides[e.key]?.caption || e.caption, key: e.key }));
 }
 // One distinct photo per nav category (mega-menu left image). The `img` key
-// on each MEGA_RAW entry selects its photo; anything unknown falls back to heroImg.
+// on each MEGA_RAW entry selects its photo; anything unknown falls back to
+// heroBenchImg (the real homepage bench photo).
+// Real Hermes photos for the mega-menu slots (hotlinked, as the user
+// requires — NO AI-generated images anywhere on the storefront). The
+// original's WOMEN menu photo is the SS27 runway show and its LEATHER
+// menu photo is "Bags and clutches" (a woman running with bags); neither
+// exposes its image URL in the browser (lazy-load placeholder), so these
+// slots use real Hermes product photos instead: the Cashmere coat worn
+// photo for WOMEN, the Picotin Lock 18 bag for LEATHER. The exact
+// editorial stills are a follow-up once their URLs are captured from a
+// desktop browser's Network panel.
+const MEGA_PHOTO_RUNWAY = "https://assets.hermes.com/is/image/hermesproduct/6H0113DAA3_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+const MEGA_PHOTO_KELLY = "https://assets.hermes.com/is/image/hermesproduct/083189CCBQ_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
 function megaImage(e: MegaEntry): string {
   switch (e.img) {
-    case "outdoors": return outdoorsImg;
-    case "kelly": return kellyImg;
-    case "runway": return runwayImg;
+    case "kelly": return MEGA_PHOTO_KELLY;
+    case "runway": return MEGA_PHOTO_RUNWAY;
     case "heroBench": return heroBenchImg;
     case "riderJacket": return riderJacketImg;
     case "mensLeatherJacket": return mensLeatherJacketImg;
@@ -131,7 +138,7 @@ function megaImage(e: MegaEntry): string {
     case "avalonBlanket": return avalonBlanketImg;
     case "saddleBridle": return saddleBridleImg;
     case "scarfColliers": return scarfColliersImg;
-    default: return heroImg;
+    default: return heroBenchImg;
   }
 }
 function headingToSub(h: string): string { const t = h.toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); }
@@ -1421,7 +1428,14 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           tall ≈ the video's natural 9:16 shape). */}
       <section ref={vidRef} className="relative overflow-hidden bg-black" aria-label="The great outdoors in stereo video">
         <div className="relative overflow-hidden">
-        <ProductVideo src={baladeurSrc} poster={baladeurPoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[75vh] w-full object-cover lg:h-[60vh] lg:min-h-[550px]" />
+        {/* Baladeur video board — desktop is FULL viewport height (100vh):
+            measured live 2026-11-12 ~21:55 at 1919x998: the original's
+            board is ~998px (100vh), NOT 60vh/min-550px (the clone's old
+            599px was ~40% too short). The audit's "~360px" reading was
+            wrong. Mobile stays 75vh (Round 10b, from the user's video).
+            Caption stays at bottom-[58px]: the original's caption underline
+            is 58px above the board bottom, the clone's is 56px — identical. */}
+        <ProductVideo src={baladeurSrc} poster={baladeurPoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[75vh] w-full object-cover lg:h-screen" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[53%] bg-gradient-to-t from-black via-black/60 to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-[58px] z-10 px-4 text-center text-white">
           <h2 className="font-serif-d text-[30px] italic">The great outdoors in stereo</h2>
@@ -2077,29 +2091,31 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
 
   const quickBuyOn = isSneakersPage;
 
-  // Editorial tiles interleaved in the unfiltered grid, as on hermes.com.
-  const edText = isBagsPage
-    ? { title: "Ready to carry", body: "The leather goods universe — handbags, crossbody bags, totes and clutches in leather, canvas and silk, crafted in the Maison's workshops to be carried every day.", view: { t: "category", cat: "leather", sub: "Bags and clutches" } as View }
-    : { title: titleText, body: `The ${titleText.charAt(0).toLowerCase() + titleText.slice(1)} selection — pieces crafted in the Maison's workshops, made to last and to be repaired.`, view: { t: "category", cat } as View };
-  const edWide = isBagsPage
-    ? { img: kellyImg, alt: "Woman in a dark brown coat holding a tan Kelly bag", lines: ["An extraordinary journey", "The world of leather", "Equestrian style"], view: { t: "category", cat: "leather", sub: "Bags and clutches" } as View }
-    : isShoesPage
-      ? { img: outdoorsImg, alt: "Woman on a bicycle with a large white Afghan hound in a desert landscape", lines: ["Light on your feet", "Sneakers in calfskin and technical canvas"], view: { t: "category", cat } as View }
-      : { img: heroImg, alt: "Hands smoothing a blue patterned blanket against a warm brown stone wall", lines: [titleText, "Discover the collection"], view: { t: "category", cat } as View };
-  type GridItem = { kind: "product"; p: Product } | { kind: "video"; p: Product } | { kind: "text" } | { kind: "wide" };
+  // Editorial interlude in the unfiltered grid, as on hermes.com — but
+  // ONLY the Belts page has one, and it is TEXT-ONLY (verified live
+  // 2026-11-12 ~22:04): heading "Within reach" + the line below, no
+  // image and no link. The wide IMAGE tile is removed everywhere: the
+  // original's Shoes page has NO editorial tile at all (its "Light on
+  // your feet" tile was invented), the Belts page has no image tile, and
+  // the Bags page's two real wide tiles ("The goldsmith's touch" +
+  // "City style", heading + italic subtext BELOW the photo + DISCOVER)
+  // cannot be wired yet — their image URLs do not expose in the browser
+  // (lazy-load placeholder). The invented AI-photo wide tile + the
+  // invented "Ready to carry" text tile are gone.
+  const edText = { title: "Within reach", body: "The silhouette sharpens, the gait lightens, hands are left free to roam.", view: null as View | null };
+  type GridItem = { kind: "product"; p: Product } | { kind: "video"; p: Product } | { kind: "text" };
   const gridItems: GridItem[] = [];
   // The Fall-Winter collection page carries NO editorial tiles on the
-  // original (verified in its first 120 products) — the two invented
-  // tiles (beige text tile + wide blanket tile) are removed there.
+  // original (verified in its first 120 products). Only the Belts page
+  // carries the text interlude (verified live 2026-11-12).
   const isFallWinterPage = isRTWPage && (subLow === "fall-winter 2026 collection" || subLow === "fall-winter 2026");
-  const showEditorial = !filtersActive && sort === "relevance" && !isFallWinterPage;
+  const showTextInterlude = !filtersActive && sort === "relevance" && !isFallWinterPage && isBeltsPage;
   filtered.slice(0, visible).forEach((p, i) => {
     // Fall-Winter video tiles: the 6 tile-video products render as wide
     // autoplay video tiles instead of photo tiles (original behaviour).
     if (isFallWinterPage && FW_VIDEO_TILE_IDS.has(p.id)) gridItems.push({ kind: "video", p });
     else gridItems.push({ kind: "product", p });
-    if (showEditorial && i === 3) gridItems.push({ kind: "text" });
-    if (showEditorial && i === 11) gridItems.push({ kind: "wide" });
+    if (showTextInterlude && i === 3) gridItems.push({ kind: "text" });
   });
 
   const renderSection = (s: FSection) => {
@@ -2248,19 +2264,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             <ProductCard key={it.p.id} p={it.p} colourInName onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
           ) : it.kind === "video" ? (
             <VideoTile key={it.p.id} p={it.p} onOpen={(id) => go({ t: "product", id })} />
-          ) : it.kind === "text" ? (
+          ) : (
             <div key="ed-text" className="flex aspect-square flex-col justify-center bg-[#efe9df] p-6">
               <p className="font-serif-d text-xl italic">{edText.title}</p>
               <p className="mt-3 text-sm leading-6 text-neutral-700">{edText.body}</p>
-              <button aria-label={`Discover ${edText.title}`} className="mt-4 self-start text-[11px] font-semibold uppercase tracking-[0.22em] underline underline-offset-4" onClick={() => go(edText.view)}>Discover</button>
-            </div>
-          ) : (
-            <div key="ed-wide" className="relative col-span-2 min-h-[240px] overflow-hidden">
-              <img src={edWide.img} alt={edWide.alt} className="absolute inset-0 h-full w-full object-cover" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/35 px-6 text-center text-white">
-                {edWide.lines.map((l) => <p key={l} className="font-serif-d text-xl italic leading-snug sm:text-2xl">{l}</p>)}
-                <button aria-label="Discover the collection" className="mt-4 border border-white px-6 py-2.5 text-[11px] font-semibold uppercase tracking-[0.22em]" onClick={() => go(edWide.view)}>Discover</button>
-              </div>
             </div>
           ))}
         </div>
