@@ -393,115 +393,149 @@ function isSneakerProduct(p: Product): boolean { return /sneaker/i.test(p.name);
 
 function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean; plainTile?: boolean }) {
   const bagIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>;
-  // Tile alternate views (hermes.com parity): resting the mouse on the
-  // tile PHOTO flips instantly from view 1 to view 2 (no timer — the user
-  // flagged the old 1.8s wait, 2026-11-11) with the 300ms cross-fade wired
-  // in ProductVisual; leaving the photo returns instantly to view 1. The small white square < > arrows appear on photo
-  // hover (desktop) and cycle the photos on click with a hard cut; on touch
-  // the photo changes with a horizontal swipe — all without opening the
-  // product page. Hovering the name/price text below the photo triggers
-  // nothing.
+  // Tile views (hermes.com parity): the tile photo first, then the
+  // alternates — the product's gallery views after the first
+  // (galleryForProduct, default colourway), skipping Video views and any
+  // view that duplicates the tile photo. Single-view products (e.g. Milo
+  // hat, Rider jacket) have no alternate and no arrows/dots.
   // Homepage theme tiles (plainTile) stay fully plain: no arrows, no
-  // badge, no hover-swap. The alternates are the product's gallery views
-  // after the first (galleryForProduct, default colourway), skipping Video
-  // views and any view that duplicates the tile photo. Single-view
-  // products (e.g. Milo hat, Rider jacket) have no alternate and no arrows.
+  // dots, no hover-swap, no swipe. Hovering the name/price text below
+  // the photo triggers nothing.
   // CAVEAT: gallery views are mostly generated type-set photos, not the
   // original Hermes second view — the mechanism is exact, the imagery is
   // approximate until original second-view URLs are extracted live.
   const tileSrc = productImageFor(p);
-  // Mobile-only status line (hermes.com's mobile category tiles show the
-  // status as small-caps text below the photo, above the name; desktop
-  // shows no on-photo pill at all — the status is screen-reader-only).
-  const statusLabel = p.status === "available_soon" ? "Available soon" : p.status === "in_store_only" ? "In store only" : p.status === "out_of_stock" ? "Out of stock" : "";
+  // No visible status line on tiles: hermes.com shows NO status badge or
+  // text on its category tiles (mobile or desktop) — the user's phone
+  // screenshots of the original (2026-11-12) show no "Available soon" on
+  // the coat or the sweater tiles, while the clone rendered it below the
+  // photo on mobile. The status stays screen-reader-only here and drives
+  // buyability (isBuyableStatus) only.
+  const statusText = p.status === "available_soon" ? "Available soon" : p.status === "in_store_only" ? "In store only" : p.status === "out_of_stock" ? "Out of stock" : "";
   const altViews = useMemo(() => {
     const views = galleryForProduct(p, 0);
     const afterFirst = views.filter((v, i) => i >= 1 && !v.video && v.src !== tileSrc).map((v) => v.src);
     const first = views.filter((v) => !v.video && v.src !== tileSrc).map((v) => v.src);
     return [...new Set([...afterFirst, ...first])];
   }, [p, tileSrc]);
-  const [altIdx, setAltIdx] = useState<number | null>(null);
-  const [altArmed, setAltArmed] = useState(false);
+  const views = useMemo(() => [tileSrc, ...altViews], [tileSrc, altViews]);
+  const viewCount = views.length;
+  // Current view index (0 = tile photo). The photo area is a sliding
+  // track: each view is an absolute slide translated by (view - idx) full
+  // widths plus the live drag offset, so on touch the photo follows the
+  // finger sideways and snaps smoothly to the nearest view on release —
+  // as on hermes.com's mobile tiles. (The old code only stepped the photo
+  // with a hard cut on touchend: no follow, no dots.)
+  const [idx, setIdx] = useState(0);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
   const [photoHovered, setPhotoHovered] = useState(false);
+  const hoveredRef = useRef(false);
+  const touchRef = useRef<{ x: number; y: number; w: number } | null>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const suppressClickRef = useRef(false);
+  const clampIdx = (i: number) => Math.max(0, Math.min(viewCount - 1, i));
+  // Views rendered in the track: the current view and its neighbours
+  // (plainTile renders only the tile photo itself).
+  const rendered = plainTile ? [0] : [idx - 1, idx, idx + 1].filter((v) => v >= 0 && v < viewCount);
   // Hover flip (hermes.com): resting the mouse on the tile photo flips
   // INSTANTLY from view 1 to view 2 the moment the mouse arrives — the
   // user flagged the old ~1.8s timer wait (2026-11-11). It stays on view 2
   // while hovered and returns instantly to view 1 on mouseleave, or as
   // soon as the visitor steps/swipes the photos manually.
-  const hoveredRef = useRef(false);
-  const touchRef = useRef<{ x: number; y: number } | null>(null);
-  const suppressClickRef = useRef(false);
   const onPhotoEnter = () => {
     setPhotoHovered(true);
-    if (plainTile || altViews.length === 0) return;
-    // Arm first (mounts the alternate at opacity-0 so it preloads), then
-    // flip to view 2 AT ONCE — the 300ms cross-fade animates the change.
+    if (plainTile || viewCount <= 1) return;
     hoveredRef.current = true;
-    setAltArmed(true);
-    setAltIdx(0);
+    setIdx(1);
   };
   const onPhotoLeave = () => {
     setPhotoHovered(false);
     hoveredRef.current = false;
-    // Instant return to view 1: the alternate unmounts at once.
-    setAltIdx(null);
-    setAltArmed(false);
+    setIdx(0);
   };
-  // Arrow step (hermes.com): cycles tile photo -> alternate views -> tile
-  // photo again, in both directions. altIdx null = the tile photo itself.
-  const stepTile = (dir: 1 | -1) => {
-    setAltArmed(true);
-    setAltIdx((cur) => {
-      const n = altViews.length;
-      if (n === 0) return null;
-      if (cur === null) return dir === 1 ? 0 : n - 1;
-      const nx = cur + dir;
-      if (nx < 0 || nx >= n) return null;
-      return nx;
-    });
-  };
+  // Arrow step: moves one view in either direction, stopping at the ends
+  // (no wrap — the dots show the finite set).
+  const stepTile = (dir: 1 | -1) => { setIdx((cur) => clampIdx(cur + dir)); };
   const onTouchStart = (e: React.TouchEvent) => {
     const t = e.touches[0];
-    touchRef.current = t ? { x: t.clientX, y: t.clientY } : null;
+    const w = trackRef.current?.getBoundingClientRect().width ?? 0;
+    touchRef.current = t ? { x: t.clientX, y: t.clientY, w } : null;
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    const start = touchRef.current;
+    const t = e.touches[0];
+    if (!start || !t || plainTile || viewCount <= 1) return;
+    const dx = t.clientX - start.x; const dy = t.clientY - start.y;
+    // Sideways drag only: horizontal movement must dominate, so vertical
+    // page scrolling never moves the photo.
+    if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy)) return;
+    setDragging(true);
+    // Follow the finger, clamped to one slide width; at either end the
+    // drag is damped (rubber-band) since there is no further view.
+    const w = start.w || 1;
+    let off = Math.max(-w, Math.min(w, dx));
+    if ((idx === 0 && off > 0) || (idx === viewCount - 1 && off < 0)) off *= 0.25;
+    setDragX(off);
   };
   const onTouchEnd = (e: React.TouchEvent) => {
     const start = touchRef.current; touchRef.current = null;
     const t = e.changedTouches[0];
-    if (!start || !t || altViews.length === 0) return;
+    setDragging(false);
+    if (!start || !t || plainTile || viewCount <= 1) { setDragX(0); return; }
     const dx = t.clientX - start.x; const dy = t.clientY - start.y;
-    // Sideways swipe only: horizontal movement must dominate, so vertical
-    // page scrolling never changes the photo. A swipe never opens the
-    // product — the tap that follows it is suppressed once.
-    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      setAltArmed(true);
-      setAltIdx((i) => {
-        if (i === null) return dx < 0 ? 0 : altViews.length - 1;
-        const next = dx < 0 ? i + 1 : i - 1;
-        return ((next % altViews.length) + altViews.length) % altViews.length;
-      });
-      suppressClickRef.current = true;
+    const w = start.w || 1;
+    // A real sideways swipe (not a tap, not a vertical scroll) snaps to
+    // the next/previous view; anything smaller springs back. A swipe never
+    // opens the product — the tap that follows it is suppressed once.
+    if (Math.abs(dx) > Math.max(40, w * 0.2) && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      const next = clampIdx(idx + (dx < 0 ? 1 : -1));
+      if (next !== idx) { setIdx(next); suppressClickRef.current = true; }
     }
+    setDragX(0);
   };
   return (
     <div className="relative cursor-pointer" role="link" aria-label={`${p.name}, ${priceText(p)}`} tabIndex={0}
-      onClick={() => { if (suppressClickRef.current) { suppressClickRef.current = false; return; } onOpen(p.id); }} onKeyDown={(e) => { if (e.key === "Enter") onOpen(p.id); }}
-      onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <div className={`relative aspect-[3/4] overflow-hidden transition-transform duration-300 ${photoHovered ? "scale-[1.015]" : ""}`} onMouseEnter={onPhotoEnter} onMouseLeave={onPhotoLeave}><ProductVisual p={p} altSrc={altIdx !== null ? altViews[altIdx] : (altArmed ? altViews[0] : undefined)} altActive={altIdx !== null} />
+      onClick={() => { if (suppressClickRef.current) { suppressClickRef.current = false; return; } onOpen(p.id); }} onKeyDown={(e) => { if (e.key === "Enter") onOpen(p.id); }}>
+      <div ref={trackRef} className={`relative aspect-[3/4] overflow-hidden transition-transform duration-300 ${photoHovered ? "scale-[1.015]" : ""}`} style={{ background: p.tone }} onMouseEnter={onPhotoEnter} onMouseLeave={onPhotoLeave} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+        {/* Sliding track — the current view and its neighbours, each an
+            absolute slide translated by (view - idx) full widths plus the
+            live drag offset. */}
+        {rendered.map((v) => (
+          <img key={v} src={views[v]} alt={v === idx ? p.name : ""} aria-hidden={v === idx ? undefined : true} loading="lazy" draggable={false}
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ transform: `translateX(calc(${(v - idx) * 100}% + ${dragX}px))`, transition: dragging ? "none" : "transform 300ms ease" }} />
+        ))}
+        {statusText && <span className="sr-only">{statusText}</span>}
+        {/* Pagination dots (hermes.com mobile tiles): below the photo is
+            where the original shows them — centred on the photo's bottom
+            edge, the active view black, the rest faint. Mobile only, and
+            never on homepage theme tiles (those stay fully plain). */}
+        {!plainTile && viewCount > 1 && (
+          <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 lg:hidden" aria-hidden="true">
+            {views.map((_, i) => (
+              <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === idx ? "bg-black" : "bg-black/30"}`} />
+            ))}
+          </div>
+        )}
         {/* plainTile (homepage theme tiles only): hermes.com's homepage
             tiles have NO < > arrows at all — the arrows live on category
             tiles and the product-page gallery. Hidden here only. */}
-        {!plainTile && altViews.length > 0 && (
+        {!plainTile && viewCount > 1 && (
           <>
-            <button aria-label="Previous image" className={`absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center bg-white text-black shadow transition-opacity focus-visible:opacity-100 ${photoHovered ? "opacity-100" : "opacity-0"}`} onClick={(e) => { e.stopPropagation(); stepTile(-1); }} onKeyDown={(e) => e.stopPropagation()}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
-            </button>
-            <button aria-label="Next image" className={`absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center bg-white text-black shadow transition-opacity focus-visible:opacity-100 ${photoHovered ? "opacity-100" : "opacity-0"}`} onClick={(e) => { e.stopPropagation(); stepTile(1); }} onKeyDown={(e) => e.stopPropagation()}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg>
-            </button>
+            {idx > 0 && (
+              <button aria-label="Previous image" className={`absolute left-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center bg-white text-black shadow transition-opacity focus-visible:opacity-100 ${photoHovered ? "opacity-100" : "opacity-0"}`} onClick={(e) => { e.stopPropagation(); stepTile(-1); }} onKeyDown={(e) => e.stopPropagation()}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
+              </button>
+            )}
+            {idx < viewCount - 1 && (
+              <button aria-label="Next image" className={`absolute right-2 top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center bg-white text-black shadow transition-opacity focus-visible:opacity-100 ${photoHovered ? "opacity-100" : "opacity-0"}`} onClick={(e) => { e.stopPropagation(); stepTile(1); }} onKeyDown={(e) => e.stopPropagation()}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg>
+              </button>
+            )}
           </>
         )}
       </div>
-      {!plainTile && statusLabel && <p className="mt-2 px-2 text-left text-[10px] uppercase tracking-[0.18em] text-neutral-600 lg:hidden">{statusLabel}</p>}
       {colourInName ? (
         // Category tile, as on hermes.com: the colour is appended to the
         // name ("Le Petit Sac bag, Beige/Natural"), the price sits below,
@@ -1254,20 +1288,22 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             })}
           </div>
         </div>
-        {/* MOBILE carousel — swipeable scroll-snap, portrait 3:4 editorial,
-            centre ~76% wide with neighbours peeking (verified against the
-            user's phone screenshot of hermes.com). Tap a slide to centre
-            it; no counter/arrows on mobile (only the progress line below).
-            Unchanged by the desktop fix. */}
-        <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[12%] pb-1 sm:px-[18%] lg:hidden" role="tablist" aria-label="Discover themes">
+        {/* MOBILE carousel — swipeable scroll-snap, centre ~80% wide with
+            neighbours peeking (measured from the user's phone screenshot of
+            hermes.com, 2026-11-12: centre slide ~290px of a 360px viewport,
+            aspect ~8:9 — NOT 3:4, which rendered too tall). Tap a slide to
+            centre it; no counter/arrows on mobile (only the progress line
+            below). The white label button sits ~32px above the photo's
+            bottom edge and is smaller than the desktop one. */}
+        <div ref={carouselRef} onScroll={onCarouselScroll} className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[10%] pb-1 sm:px-[18%] lg:hidden" role="tablist" aria-label="Discover themes">
           {CAROUSEL_THEMES.map((t, i) => {
             const ed = CAROUSEL_EDITORIAL[t];
             if (!ed) return null;
             return (
               <button key={`${t}-${i}`} data-slide role="tab" aria-selected={activeIdx === i} aria-label={`Theme ${t}, ${i + 1} of ${CAROUSEL_THEMES.length}`} onClick={() => centerSlide(i)}
-                className={`relative aspect-[3/4] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
+                className={`relative aspect-[8/9] w-full shrink-0 snap-center overflow-hidden text-left transition-opacity duration-300 ${activeIdx === i ? "opacity-100" : "opacity-75"}`}>
                 <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
-                <span className="font-mono-d absolute bottom-4 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black">{t}</span>
+                <span className="font-mono-d absolute bottom-8 left-1/2 flex h-10 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-4 text-xs font-medium uppercase text-black">{t}</span>
               </button>
             );
           })}
@@ -2207,7 +2243,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, initialVisibl
 
       <button aria-label="Filter and sort products" className={`font-mono-d fixed bottom-4 left-1/2 z-40 flex h-12 -translate-x-1/2 items-center gap-2 px-8 text-xs font-medium uppercase tracking-normal shadow-lg ring-1 ring-black/10 lg:hidden ${totalSel > 0 ? "bg-black text-white" : "bg-white"}`} onClick={openDrawer}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2.2" /><circle cx="10" cy="17" r="2.2" /></svg>
-        Filter{totalSel > 0 ? ` (${totalSel})` : ""}
+        Filter &amp; Sort{totalSel > 0 ? ` (${totalSel})` : ""}
       </button>
 
       {fOpen && (
