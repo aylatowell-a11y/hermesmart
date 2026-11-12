@@ -3,7 +3,7 @@
 // /us/en/category/<path>/, /us/en/product/<slug>-<REF>/ and
 // /us/en/contact-us/. Deep links are served by vercel.json rewrites (every
 // app path serves index.html) and parsed back here on load and on popstate.
-// Views that cannot be routed safely (cart, checkout, account, admin, info
+// Views that cannot be routed safely (cart, checkout, admin, info
 // pages other than contact, about) are left unrouted: navigating to them
 // does not push a history entry, so browser Back returns to the last
 // routed view. Nothing here invents products, prices or copy — the known
@@ -15,7 +15,8 @@ export type ParsedRoute =
   | { kind: "category"; cat: string; sub?: string }
   | { kind: "product"; id: number }
   | { kind: "faq"; topic: string }
-  | { kind: "contact" };
+  | { kind: "contact" }
+  | { kind: "account" };
 
 export function slugify(s: string): string {
   return s
@@ -85,6 +86,13 @@ export function contactUrl(): string {
   return "/us/en/contact-us/";
 }
 
+// The account page URL — a direct load of /us/en/account/ used to render
+// the homepage (parseUrl returned null for it), so the account view only
+// appeared after clicking the header Account icon at the same URL.
+export function accountUrl(): string {
+  return "/us/en/account/";
+}
+
 // The original's FAQ topic URL, verified live 2026-11-12 (Payment page).
 // Only "payment" has a built FAQ page so far; other topics are not routed.
 export function faqUrl(topic: string): string {
@@ -110,6 +118,7 @@ export function parseUrl(
   if (clean.startsWith("us/en/")) clean = clean.slice("us/en/".length);
   if (clean === "") return { kind: "home" };
   if (clean === "contact-us") return { kind: "contact" };
+  if (clean === "account") return { kind: "account" };
   if (clean.startsWith("faq/online-shopping/")) {
     const topic = clean.slice("faq/online-shopping/".length).split("/")[0] ?? "";
     // Only the Payment FAQ page is built so far; other topics fall back

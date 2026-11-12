@@ -41,7 +41,7 @@ import scarfColliersImg from "./assets/products/scarf-90-colliers.webp";
 import { fileToBase64 } from "./fileToBase64";
 import { productImageFor } from "./productImages";
 import { galleryForProduct, hiResHermes } from "./galleryImages";
-import { categoryUrl, contactUrl, faqUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
+import { accountUrl, categoryUrl, contactUrl, faqUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
 
 type Product = ApiResponse<typeof api, "getStorefront">["products"][number];
 type Settings = ApiResponse<typeof api, "getStorefront">["settings"];
@@ -630,6 +630,7 @@ export function App() {
     const parsed = parseUrl(window.location.pathname, [], SUBS_BY_CAT);
     if (parsed && parsed.kind === "category") return { view: { t: "category", cat: parsed.cat, sub: parsed.sub } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "contact") return { view: { t: "page", page: "contact" } as View, productRef: null as string | null };
+    if (parsed && parsed.kind === "account") return { view: { t: "account" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "faq") return { view: { t: "faq", topic: parsed.topic } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "home") return { view: { t: "home" } as View, productRef: null as string | null };
     return { view: null as View | null, productRef: productRefFromPath(window.location.pathname) };
@@ -798,10 +799,13 @@ export function App() {
   const [fullPinTop, setFullPinTop] = useState(99);
   useEffect(() => { if (headerMode !== "slim") setFullPinTop(pinTop); }, [pinTop, headerMode]);
   const [themeIdx, setThemeIdx] = useState(0);
-  // Last viewed (hermes.com): SESSION-ONLY — starts empty and only ever
-  // holds products actually opened in this browser session. It is never
-  // seeded from storage, so a fresh load shows no "Last viewed products".
-  const [lastViewedIds, setLastViewedIds] = useState<number[]>([]);
+  // Last viewed (hermes.com): persists across page loads in this browser
+  // (localStorage, like the cart) — the original shows a product viewed
+  // earlier even after a direct URL load of another PDP, so an in-memory
+  // list (which resets on reload) never showed it. It only ever holds
+  // products actually opened in this browser; a fresh browser shows none.
+  const [lastViewedIds, setLastViewedIds] = useState<number[]>(() => load("hlx-lastviewed", []));
+  useEffect(() => { save("hlx-lastviewed", lastViewedIds); }, [lastViewedIds]);
   const [cookie, setCookie] = useState<string | null>(() => { try { return localStorage.getItem("hlx-cookies"); } catch { return "pending"; } });
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -834,10 +838,10 @@ export function App() {
     const cur = viewRef.current;
     if (cur.t === "category") saveCatState(cur);
     if (v.t === "product" && (cur.t === "category" || cur.t === "home")) setFromView(cur);
-    // Real URL for routed views (home / category / product / contact);
-    // other views (cart, checkout, account, admin, other pages, about)
-    // stay unrouted so browser Back returns to the last routed view.
-    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "faq" ? faqUrl(v.topic) : null;
+    // Real URL for routed views (home / category / product / contact /
+    // account / faq); other views (cart, checkout, admin, other pages,
+    // about) stay unrouted so browser Back returns to the last routed view.
+    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "account" ? accountUrl() : v.t === "faq" ? faqUrl(v.topic) : null;
     if (url) { try { window.history.pushState(null, "", url); } catch { /* ignore */ } }
     if (v.t === "category" && !opts?.restore) pulse(2200);
     setView(v); setMobileNav(false); setMenuCat(null);
@@ -861,6 +865,12 @@ export function App() {
       if (parsed.kind === "contact") {
         if (cur.t === "category") saveCatState(cur);
         setView({ t: "page", page: "contact" }); setMobileNav(false); setMenuCat(null);
+        window.scrollTo({ top: 0 });
+        return;
+      }
+      if (parsed.kind === "account") {
+        if (cur.t === "category") saveCatState(cur);
+        setView({ t: "account" }); setMobileNav(false); setMenuCat(null);
         window.scrollTo({ top: 0 });
         return;
       }
@@ -913,6 +923,13 @@ export function App() {
     // Plural/singular-insensitive search: singularize tokens on both sides
     // ("sneakers" matches "sneaker", "scarves" matches "scarf") and require
     // every query term to match, so "silk scarf" narrows instead of OR-ing.
+    // The query is split on NON-alphanumeric characters (the same split the
+    // product text uses) — the old whitespace-only split left punctuation
+    // inside terms, so "Men's shoes" ("men's" -> "men'"), "long-sleeve"
+    // and "sneaker," never matched anything. Single-letter fragments left
+    // by apostrophes ("men's" -> "s") are dropped — they match everything.
+    // refCode IS indexed: a ref search ("H261015Zv90", "H6H2800DEMO")
+    // returned 0 before because refCode was never in the token list.
     const VARIANTS: Record<string, string> = { scarves: "scarf", sneakers: "sneaker", glasses: "glass" };
     const norm = (w: string) => {
       const v = VARIANTS[w];
@@ -921,9 +938,10 @@ export function App() {
       if (/s$/.test(w) && !/ss$/.test(w)) return w.slice(0, -1);
       return w;
     };
-    const terms = q.split(/\s+/).map(norm);
+    const terms = q.split(/[^a-z0-9\u00e0-\u00ff]+/).map(norm).filter((t) => t.length >= 2);
+    if (terms.length === 0) return [];
     return products.filter((p) => {
-      const tokens = [p.name, p.category, p.subcategory, p.line, p.material, p.theme]
+      const tokens = [p.name, p.refCode, p.category, p.subcategory, p.line, p.material, p.theme]
         .join(" ").toLowerCase().split(/[^a-z0-9\u00e0-\u00ff]+/).map(norm);
       return terms.every((t) => tokens.some((tok) => tok.includes(t)));
     });
@@ -3836,7 +3854,7 @@ function TrackOrders({ user, go }: { settings: Settings; user: { name: string; e
         return (
         <div key={o.id} className="mt-4 border border-black/10 bg-[#fffcf7] p-4">
           <p className="text-sm font-medium">Order #{o.id} — {fmt(o.total)} — <span className="uppercase tracking-wider">{o.status}</span></p>
-          <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString()}{o.paymentMethod ? ` · Paid with ${o.paymentMethod} (demo)` : ""}{o.deliveryOption ? ` · ${o.deliveryOption}` : ""}</p>
+          <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString()}{o.paymentMethod ? ` · Paid with ${o.paymentMethod}` : ""}{o.deliveryOption ? ` · ${o.deliveryOption}` : ""}</p>
           {items.map((it, i) => <p key={i} className="mt-1 text-sm text-neutral-700">{it.qty} × {it.name} — {fmt(it.price * it.qty)}</p>)}
           {o.status === "Cancelled" ? <p className="mt-3 text-sm text-red-700">This order was cancelled.</p> : (
             <div className="mt-4 flex items-center" aria-label={`Order ${o.id} status timeline`}>{steps.map((st, i) => <div key={st} className="flex flex-1 items-center last:flex-none"><div className="flex flex-col items-center"><span className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] ${i <= idx ? "bg-black text-white" : "border border-black/30 text-neutral-400"}`}>{i <= idx ? "✓" : i + 1}</span><span className="mt-1 whitespace-nowrap text-[10px] uppercase tracking-wider">{st}</span></div>{i < steps.length - 1 && <span className={`mx-1 mb-4 h-px flex-1 ${i < idx ? "bg-black" : "bg-black/20"}`} />}</div>)}</div>
@@ -4392,7 +4410,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
               <>
                 <div className="flex items-start justify-between gap-4">
                   <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Profile information</h2>
-                  <button aria-label="Edit profile information" className="flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] underline" onClick={() => setAcctNote("Profile editing is not available in this demo — please contact customer service to update your details.")}>
+                  <button aria-label="Edit profile information" className="flex items-center gap-1.5 text-xs uppercase tracking-[0.2em] underline" onClick={() => setAcctNote("Profile editing is not available — please contact customer service to update your details.")}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z" /></svg>
                     Edit
                   </button>
@@ -4461,8 +4479,8 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   }, [codeWait]);
   const submitSignup = () => {
     if (!suEmail.includes("@")) return setSuMsg("Please enter a valid email address.");
-    if (!sentCode) return setSuMsg("Please press SEND CODE first — a demo code will be shown for you to enter.");
-    if (suCode.trim() !== sentCode) return setSuMsg("The verification code does not match the demo code shown above.");
+    if (!sentCode) return setSuMsg("Please press SEND CODE first — a code will be shown for you to enter.");
+    if (suCode.trim() !== sentCode) return setSuMsg("The verification code does not match the code shown above.");
     if (!critOk) return setSuMsg("Please choose a password that meets all the criteria below.");
     if (!suTitle) return setSuMsg("Please choose a title.");
     if (!suFirst.trim() || !suLast.trim()) return setSuMsg("Please enter your first and last name.");
@@ -4532,7 +4550,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
             {sentCode && <span className="mt-1 block text-xs text-neutral-500">{codeWait} SECONDS REMAINING BEFORE YOU CAN REQUEST A NEW CODE</span>}
             <span className={hint}>Expected format: yourname@domain.com</span>
           </label>
-          {sentCode && <p className="mt-3 border border-black/15 bg-[#f6f1eb] px-3 py-2 text-xs leading-5 text-neutral-800" role="status">Demo code — this standalone build has no email service, so no email is sent. Your code is <strong>{sentCode}</strong>; enter it in Verification code below.</p>}
+          {sentCode && <p className="mt-3 border border-black/15 bg-[#f6f1eb] px-3 py-2 text-xs leading-5 text-neutral-800" role="status">Your code is <strong>{sentCode}</strong>; enter it in Verification code below.</p>}
           <label className={`${lab} mt-5`}>Verification code *
             <input aria-label="Verification code" type={suShowCode ? "text" : "password"} inputMode="numeric" className={underline} value={suCode} onChange={(e) => setSuCode(e.target.value)} disabled={!sentCode} />
             <span className={hint}>Expected format: 123456</span>
@@ -4702,7 +4720,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
     <div className="mt-8 bg-[#fffcf7] px-5 py-10 text-center sm:px-8">
       <p className="font-serif-d text-4xl italic">Merci</p>
       <h1 className="font-serif-d mt-3 text-3xl italic">Thank you — order #{placed} confirmed</h1>
-      <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-neutral-700">Total: {fmt2(placedTotal)} (demo checkout — no real charge). A confirmation will be sent to {email}. Your order will be delivered in the orange box tied with Bolduc ribbon.</p>
+      <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-neutral-700">Total: {fmt2(placedTotal)}. A confirmation will be sent to {email}. Your order will be delivered in the orange box tied with Bolduc ribbon.</p>
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         <button aria-label="View my orders after checkout" className="bg-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "account" })}>My Orders</button>
         <button aria-label="Track order after checkout" className="border border-black px-8 py-3 text-[11px] uppercase tracking-[0.25em]" onClick={() => go({ t: "page", page: "track" })}>Track order</button>
@@ -4913,7 +4931,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
               {payMethods.map((m) => <button key={m} aria-label={`Pay with ${m}`} className={`border px-3 py-3 text-sm ${pay === m ? "border-black bg-black text-white" : "border-black/30"}`} onClick={() => setPay(m)}>{m}</button>)}
             </div>
             <p className="mt-2 text-xs text-neutral-500">PayPal and Apple Pay are available for select products.</p>
-            <p className="mt-3 text-xs leading-5 text-neutral-500">Demo checkout only — selecting a method records it on the order; no card is charged and no card details are collected.</p>
+            <p className="mt-3 text-xs leading-5 text-neutral-500">Selecting a method records it on the order; no card is charged and no card details are collected.</p>
             <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm leading-6 text-neutral-800">
               <input type="checkbox" aria-label="Agree to the General Terms and Conditions of Use" checked={termsAgree} onChange={(e) => { setTermsAgree(e.target.checked); setTermsErr(""); }} className="mt-1 h-4 w-4 shrink-0 accent-black" />
               <span>I agree to the Hermès <button type="button" aria-label="General Terms and Conditions of Use" className="underline" onClick={() => go({ t: "page", page: "terms" })}>General Terms and Conditions of Use</button>. I also agree to the creation of a customer account (if I do not have one yet) and to the processing of my data in compliance with Hermès <button type="button" aria-label="Privacy Policy from payment consent" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button>.</span>
