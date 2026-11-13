@@ -4382,7 +4382,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   // Create-account form (Hermes create-account page layout).
   const [suTitle, setSuTitle] = useState(""); const [suFirst, setSuFirst] = useState(""); const [suLast, setSuLast] = useState("");
   const [suEmail, setSuEmail] = useState(""); const [suCode, setSuCode] = useState(""); const [suShowCode, setSuShowCode] = useState(false);
-  const [suPw, setSuPw] = useState(""); const [suShowPw, setSuShowPw] = useState(false); const [suArea, setSuArea] = useState("US +1"); const [suPhone, setSuPhone] = useState(""); const [suDobMonth, setSuDobMonth] = useState(""); const [suDobDay, setSuDobDay] = useState(""); const [suDobYear, setSuDobYear] = useState(""); const [suMarketing, setSuMarketing] = useState(false);
+  const [suPw, setSuPw] = useState(""); const [suShowPw, setSuShowPw] = useState(false); const [suArea, setSuArea] = useState("US +1"); const [suPhone, setSuPhone] = useState(""); const [suDob, setSuDob] = useState(""); const [suMarketing, setSuMarketing] = useState(false);
   const [suMsg, setSuMsg] = useState(""); const [sentCode, setSentCode] = useState(""); const [codeWait, setCodeWait] = useState(0);
   const login = useMutation({ mutationFn: async () => {
     // Admin Gmail sign-in: the admin panel link was removed from this page
@@ -4393,7 +4393,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     const u = await api.loginUser({ email: liEmail, password: liPw });
     return { ...u, isAdmin: false };
   }, onSuccess: (r) => { setLiMsg(r.message); if (r.ok) { if (r.isAdmin) { save("hlx-admin-auth", { email: liEmail, password: liPw }); go({ t: "admin" }); } else setUser({ name: r.name, email: liEmail }); } } });
-  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobDisplay = suDobMonth && suDobDay && suDobYear ? `${monthNames[Number(suDobMonth) - 1] ?? ""} ${Number(suDobDay)}, ${suDobYear}` : ""; save("hlx-profile", { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }); setUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail }); } } });
+  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobParts = suDob.split("-"); const dobDisplay = dobParts.length === 3 ? `${monthNames[Number(dobParts[1]) - 1] ?? ""} ${Number(dobParts[2])}, ${dobParts[0]}` : ""; save("hlx-profile", { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }); setUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail }); } } });
   const ordersQ = useQuery({ queryKey: ["myorders", user?.email], queryFn: () => api.myOrders({ email: user?.email ?? "" }), enabled: !!user });
   // Signed-in account tabs (§D addendum): exactly five, in this order.
   const [acctTab, setAcctTab] = useState<"orders" | "profile" | "addresses" | "payments" | "reservations">("orders");
@@ -4528,10 +4528,15 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     if (!suFirst.trim() || !suLast.trim()) return setSuMsg("Please enter your first and last name.");
     const digits = suPhone.replace(/\D/g, "").replace(/^1/, "");
     if (!/^\d{10}$/.test(digits)) return setSuMsg("Please enter a 10-digit telephone number.");
-    const dobDate = new Date(Number(suDobYear), Number(suDobMonth) - 1, Number(suDobDay));
-    const dobValid = suDobMonth && suDobDay && suDobYear && dobDate.getFullYear() === Number(suDobYear) && dobDate.getMonth() === Number(suDobMonth) - 1 && dobDate.getDate() === Number(suDobDay);
-    const ageYears = dobValid ? (Date.now() - dobDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000) : 0;
-    if (!dobValid || ageYears < 18) return setSuMsg("Please enter a valid date of birth to confirm that you are at least 18 years of age.");
+    // Date of birth comes from the calendar picker (YYYY-MM-DD), so it is
+    // always complete — month, day and year together. Age is checked by
+    // calendar: the visitor is 18+ when their 18th birthday is today or earlier.
+    const dobParts = suDob.split("-");
+    const dobDate = dobParts.length === 3 ? new Date(Number(dobParts[0]), Number(dobParts[1]) - 1, Number(dobParts[2])) : null;
+    const dobValid = !!dobDate && dobDate.getFullYear() === Number(dobParts[0]) && dobDate.getMonth() === Number(dobParts[1]) - 1 && dobDate.getDate() === Number(dobParts[2]);
+    if (!dobValid) return setSuMsg("Please enter your complete date of birth.");
+    const today = new Date(); const eighteenth = new Date(dobDate.getFullYear() + 18, dobDate.getMonth(), dobDate.getDate());
+    if (eighteenth > today) return setSuMsg("Please enter a valid date of birth to confirm that you are at least 18 years of age.");
     setSuMsg("");
     reg.mutate();
   };
@@ -4639,16 +4644,10 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
             </label>
           </div>
           <div className="mt-5">
-            <span className={lab}>Date of birth *</span>
-            <span className="mt-1 flex gap-3">
-              <select aria-label="Birth month" className={`${underline} min-w-0 flex-1`} value={suDobMonth} onChange={(e) => setSuDobMonth(e.target.value)}>
-                <option value="">Month</option>
-                {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, i) => <option key={m} value={String(i + 1)}>{m}</option>)}
-              </select>
-              <input aria-label="Birth day" type="text" inputMode="numeric" placeholder="Day" className={`${underline} w-16`} value={suDobDay} onChange={(e) => setSuDobDay(e.target.value.replace(/\D/g, "").slice(0, 2))} />
-              <input aria-label="Birth year" type="text" inputMode="numeric" placeholder="Year" className={`${underline} w-20`} value={suDobYear} onChange={(e) => setSuDobYear(e.target.value.replace(/\D/g, "").slice(0, 4))} />
-            </span>
-            <span className={hint}>Please enter a valid date of birth to confirm that you are at least 18 years of age</span>
+            <label className={lab}>Date of birth *
+              <input aria-label="Date of birth" type="date" className={underline} value={suDob} onChange={(e) => setSuDob(e.target.value)} />
+              <span className={hint}>Choose your date of birth from the calendar — you must be at least 18 years of age</span>
+            </label>
           </div>
         </div>
       </div>
