@@ -4422,7 +4422,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
                 </li>
               ))}
             </ul>
-            <button aria-label="Sign out" className="mt-6 border border-black px-8 py-3 text-[11px] uppercase tracking-[0.25em]" onClick={() => setUser(null)}>Sign out</button>
+            <button aria-label="Sign out" className="mt-6 border border-black px-8 py-3 text-[11px] uppercase tracking-[0.25em]" onClick={() => { setUser(null); save("hlx-user", null); setAuthMode("login"); setEmailStep(true); setLiPw(""); setLiMsg(""); go({ t: "account", mode: "login" }); }}>Sign out</button>
           </nav>
           <div>
             {acctTab === "orders" && (
