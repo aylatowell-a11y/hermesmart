@@ -2870,7 +2870,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           </button>
           <div ref={stripRef} className="no-scrollbar flex snap-x snap-mandatory gap-[1px] overflow-x-auto" role="group" aria-label="Product gallery">
             {views.map((v, i) => (
-              <div key={v.label + i} data-panel data-viewsrc={v.src} className={`relative aspect-[3/4] w-[82%] shrink-0 snap-start overflow-hidden bg-[#efe9df] sm:w-[48%] lg:w-[34.8%] ${thumb === i ? "ring-1 ring-black/50" : ""}`}>
+              <div key={v.label + i} data-panel data-viewsrc={v.src} className={`relative aspect-[3/4] w-full shrink-0 snap-start overflow-hidden bg-[#efe9df] sm:w-[48%] lg:w-[34.8%] ${thumb === i ? "ring-1 ring-black/50" : ""}`}>
                 {v.video ? (
                   <button aria-label={`View ${v.label} video`} className="relative block h-full w-full" onClick={() => { if (thumb !== i) setThumb(i); }}>
                     {v.videoSrc ? (
@@ -2899,10 +2899,21 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               )}
             </button>
           )}
-          <div className="absolute bottom-3 left-3 z-20 flex gap-1.5" role="group" aria-label="Gallery thumbnails">
+          <div className="absolute bottom-3 left-3 z-20 hidden gap-1.5 lg:flex" role="group" aria-label="Gallery thumbnails">
             {views.map((v, i) => thumbBtn(v, i))}
           </div>
         </div>
+        {/* Mobile gallery dots — hermes.com mobile PDP shows dots below
+            the photo (no thumbnails); desktop keeps the bottom-left
+            thumbnails above. Tapping a dot scrolls the strip (the [thumb]
+            effect scrolls the selected panel into view). */}
+        {views.length > 1 && (
+          <div className="mt-3 flex justify-center gap-1.5 lg:hidden" role="tablist" aria-label="Product gallery pages">
+            {views.map((v, i) => (
+              <button key={`dot-${i}`} aria-label={`Go to image ${i + 1} of ${views.length}`} aria-current={thumb === i} onClick={() => setThumb(i)} className={`h-[5px] w-[5px] rounded-full ${thumb === i ? "bg-black" : "bg-black/25"}`} />
+            ))}
+          </div>
+        )}
         {/* Buy box — a panel floating over the BOTTOM-RIGHT of the
             gallery on desktop; below the gallery on mobile, as in the
             user's phone videos of hermes.com. */}
