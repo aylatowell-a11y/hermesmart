@@ -5279,6 +5279,21 @@ const NEW_TILE: Record<number, string> = {
   5086: "https://assets.hermes.com/is/image/hermesproduct/004391S%2005_flat_wm_103?wid=750&hei=1000&fit=fit&$product_default_bg$",
   5087: "https://assets.hermes.com/is/image/hermesproduct/087987CK10_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   5088: "https://assets.hermes.com/is/image/hermesproduct/262001N%2036_above_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5089: "https://assets.hermes.com/is/image/hermesproduct/6H2659DZ6N_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5090: "https://assets.hermes.com/is/image/hermesproduct/6H0263D4F8_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5091: "https://assets.hermes.com/is/image/hermesproduct/6H0222D502_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5092: "https://assets.hermes.com/is/image/hermesproduct/6H0135DC02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5093: "https://assets.hermes.com/is/image/hermesproduct/6H0132DA3M_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5094: "https://assets.hermes.com/is/image/hermesproduct/6H4629DJU1_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5095: "https://assets.hermes.com/is/image/hermesproduct/6H0179DOKW_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5096: "https://assets.hermes.com/is/image/hermesproduct/6H2661DUND_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5097: "https://assets.hermes.com/is/image/hermesproduct/6H1109DT02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5098: "https://assets.hermes.com/is/image/hermesproduct/6H0645DAKQ_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5099: "https://assets.hermes.com/is/image/hermesproduct/6H0465DZ5H_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5100: "https://assets.hermes.com/is/image/hermesproduct/6H0270DZ1W_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5101: "https://assets.hermes.com/is/image/hermesproduct/6H0220DCP6_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5102: "https://assets.hermes.com/is/image/hermesproduct/6H0194DCP6_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  5103: "https://assets.hermes.com/is/image/hermesproduct/6H0155DM02_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
 };
 
 const BAG_POOL = [picotinLock18V2, kellyShoulderV2, tablierSellier, boxBag, doubleLonge, neoDoubleSens35, fallbackHandbag];
