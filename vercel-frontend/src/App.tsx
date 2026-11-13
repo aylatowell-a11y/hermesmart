@@ -2860,6 +2860,44 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
     const body = accBodies[it.title];
     return body ? { title: it.title, content: <div className="space-y-1.5">{renderRichLines(body)}</div> } : it;
   });
+  // Buy actions (Personalize / Apple Pay + Add to cart / in-store /
+  // Notify me) — shared by the desktop buy box and the mobile row
+  // after the description, so each device matches the original's
+  // own order (mobile: description first, then the buttons).
+  const buyActions = (
+    isConfigProduct(p) ? (
+            <div className="mt-4">
+              <button aria-label="Personalize" className="font-mono-d flex h-12 w-full items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => setConfigOpen((v) => !v)}>Personalize</button>
+              {configOpen && <p className="mt-4 border border-black/20 p-3 text-sm">Personalization for this article is not available in this store yet. Please call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a> for assistance.</p>}
+            </div>
+          ) : isBuyableStatus(p.status) ? (
+            <div className="mt-4">
+              <div className="flex">
+                {p.applePay && <button aria-label="Buy with Apple Pay" className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border border-black text-xs font-medium uppercase text-black${applePayAvailable ? "" : " max-lg:hidden"}`} onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
+                <button aria-label="Add to cart" className="font-mono-d flex h-12 flex-1 items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
+              </div>
+            </div>
+          ) : p.status === "in_store_only" ? (
+            <p className="mt-4 border border-black/20 p-3 text-sm">This article is available in store only. Please visit a boutique or call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a>.</p>
+          ) : (
+            <div className="mt-4">
+              <p className="text-sm">We will notify you when this product is back in stock</p>
+              {notified ? <p className="mt-3 text-sm font-medium" role="status">{notified}</p> : notifyOpen ? (
+                <div className="mt-3 flex gap-2">
+                  <input aria-label="Email for notify me" type="email" className="min-w-0 flex-1 border border-black/30 px-3 py-3 text-sm" placeholder="Your email" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} />
+                  <button aria-label="Notify me when back in stock" className="flex items-center gap-2 border border-black bg-white px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => { if (notifyEmail.includes("@")) notifyMut.mutate(); }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="1.5" /><path d="m3.5 7 8.5 6 8.5-6" /></svg>Notify me
+                  </button>
+                </div>
+              ) : (
+                <button aria-label="Notify me when back in stock" className="mt-3 flex w-full items-center justify-center gap-2 border border-black bg-white py-3.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => setNotifyOpen(true)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="1.5" /><path d="m3.5 7 8.5 6 8.5-6" /></svg>Notify me
+                </button>
+              )}
+            </div>
+          )
+  );
+
   return (
     <div className="pb-24 lg:pb-24">
       {/* Gallery starts exactly at the header's bottom edge (main already
@@ -3016,37 +3054,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               (measured on hermes.com 2026-11-13: $13,500 sits on its own
               line above [Apple Pay | ADD TO CART], NOT under the name). */}
           <p className="mt-4 hidden text-right text-sm leading-[22px] lg:block">{priceText(p)}</p>
-          {isConfigProduct(p) ? (
-            <div className="mt-4">
-              <button aria-label="Personalize" className="font-mono-d flex h-12 w-full items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => setConfigOpen((v) => !v)}>Personalize</button>
-              {configOpen && <p className="mt-4 border border-black/20 p-3 text-sm">Personalization for this article is not available in this store yet. Please call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a> for assistance.</p>}
-            </div>
-          ) : isBuyableStatus(p.status) ? (
-            <div className="mt-4">
-              <div className="flex">
-                {p.applePay && <button aria-label="Buy with Apple Pay" className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border border-black text-xs font-medium uppercase text-black${applePayAvailable ? "" : " max-lg:hidden"}`} onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
-                <button aria-label="Add to cart" className="font-mono-d flex h-12 flex-1 items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
-              </div>
-            </div>
-          ) : p.status === "in_store_only" ? (
-            <p className="mt-4 border border-black/20 p-3 text-sm">This article is available in store only. Please visit a boutique or call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a>.</p>
-          ) : (
-            <div className="mt-4">
-              <p className="text-sm">We will notify you when this product is back in stock</p>
-              {notified ? <p className="mt-3 text-sm font-medium" role="status">{notified}</p> : notifyOpen ? (
-                <div className="mt-3 flex gap-2">
-                  <input aria-label="Email for notify me" type="email" className="min-w-0 flex-1 border border-black/30 px-3 py-3 text-sm" placeholder="Your email" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} />
-                  <button aria-label="Notify me when back in stock" className="flex items-center gap-2 border border-black bg-white px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => { if (notifyEmail.includes("@")) notifyMut.mutate(); }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="1.5" /><path d="m3.5 7 8.5 6 8.5-6" /></svg>Notify me
-                  </button>
-                </div>
-              ) : (
-                <button aria-label="Notify me when back in stock" className="mt-3 flex w-full items-center justify-center gap-2 border border-black bg-white py-3.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => setNotifyOpen(true)}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="1.5" /><path d="m3.5 7 8.5 6 8.5-6" /></svg>Notify me
-                </button>
-              )}
-            </div>
-          )}
+          <div className="hidden lg:block">{buyActions}</div>
         </div>
       </div>
 
@@ -3067,6 +3075,10 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           {displayRef && <p className="mt-4 text-xs text-[#696969]">Product reference: {displayRef}</p>}
           <p className="mt-4 text-xs text-[#696969]">Like to know more? <button aria-label="Contact Customer Service" className="underline underline-offset-4" onClick={() => go({ t: "page", page: "contact" })}>Contact Customer Service</button></p>
         </section>
+        {/* Mobile buy actions — on the original's mobile PDP the
+            buttons sit AFTER the description (desktop keeps them in the
+            buy box above). */}
+        <div className="lg:hidden">{buyActions}</div>
         <div className="mb-[15px] bg-[#fffcf7e6] px-4 py-2">
           {accItems.map((it, i) => (
             <div key={it.title} className="border-t border-[#f6f1eb] last:border-b">
