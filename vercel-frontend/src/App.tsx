@@ -4393,11 +4393,20 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     const u = await api.loginUser({ email: liEmail, password: liPw });
     return { ...u, isAdmin: false };
   }, onSuccess: (r) => { setLiMsg(r.message); if (r.ok) { if (r.isAdmin) { save("hlx-admin-auth", { email: liEmail, password: liPw }); go({ t: "admin" }); } else setUser({ name: r.name, email: liEmail }); } } });
-  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobParts = suDob.split("-"); const dobDisplay = dobParts.length === 3 ? `${monthNames[Number(dobParts[1]) - 1] ?? ""} ${Number(dobParts[2])}, ${dobParts[0]}` : ""; save("hlx-profile", { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }); setUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail }); } } });
+  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobParts = suDob.split("-"); const dobDisplay = dobParts.length === 3 ? `${monthNames[Number(dobParts[1]) - 1] ?? ""} ${Number(dobParts[2])}, ${dobParts[0]}` : ""; save("hlx-profile", { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }); const newUser = { name: `${suFirst} ${suLast}`.trim(), email: suEmail }; save("hlx-user", newUser); setUser(newUser); go({ t: "home" }); } } });
   const ordersQ = useQuery({ queryKey: ["myorders", user?.email], queryFn: () => api.myOrders({ email: user?.email ?? "" }), enabled: !!user });
   // Signed-in account tabs (§D addendum): exactly five, in this order.
   const [acctTab, setAcctTab] = useState<"orders" | "profile" | "addresses" | "payments" | "reservations">("orders");
   const [acctNote, setAcctNote] = useState("");
+  // Countdown for the SEND CODE button. This hook MUST live here, before the
+  // `if (user)` early return below — a hook after that return breaks the
+  // Rules of Hooks and blanks the whole page whenever the user signs in,
+  // signs up or signs out (found 2026-11-13).
+  useEffect(() => {
+    if (codeWait <= 0) return;
+    const t = window.setTimeout(() => setCodeWait((v) => v - 1), 1000);
+    return () => window.clearTimeout(t);
+  }, [codeWait]);
   if (user) {
     // Phone / date of birth entered at sign-up (saved locally on
     // registration — the clone's account record holds name + email only).
@@ -4514,13 +4523,12 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     setCodeWait(60);
     setSuMsg("");
   };
-  useEffect(() => {
-    if (codeWait <= 0) return;
-    const t = window.setTimeout(() => setCodeWait((v) => v - 1), 1000);
-    return () => window.clearTimeout(t);
-  }, [codeWait]);
   const submitSignup = () => {
     if (!suEmail.includes("@")) return setSuMsg("Please enter a valid email address.");
+    // Already registered? Tell the visitor right away instead of letting
+    // them fill the whole form — they should sign in, not sign up again.
+    const existingUsers = load<{ email?: string }[]>("hv-users", []);
+    if (existingUsers.some((u) => (u.email ?? "").toLowerCase() === suEmail.trim().toLowerCase())) return setSuMsg("An account with this email already exists. Please sign in.");
     if (!sentCode) return setSuMsg("Please press SEND CODE first — a code will be shown for you to enter.");
     if (suCode.trim() !== sentCode) return setSuMsg("The verification code does not match the code shown above.");
     if (!critOk) return setSuMsg("Please choose a password that meets all the criteria below.");
