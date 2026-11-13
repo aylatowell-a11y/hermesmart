@@ -2932,10 +2932,12 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
             user's phone videos of hermes.com. */}
         <div ref={buyBoxRef} className="relative z-10 border border-black/10 bg-[#fffcf7] px-[15px] pb-6 pt-4 lg:absolute lg:bottom-6 lg:right-6 lg:w-[380px] lg:p-[15px]">
           <h1 className="text-base leading-6">{p.name}</h1>
-          {/* Price directly under the product name, left-aligned — as on
-              hermes.com (the user's phone screenshot 2026-11-13: the
-              original shows $13,500 under "Bustier dress", before COLOR). */}
-          <p className="mt-2 text-sm leading-[22px]">{priceText(p)}</p>
+          {/* Price under the name — MOBILE ONLY (lg:hidden). The original's
+              mobile PDP shows the price directly under the title
+              (user's phone screenshot 2026-11-13); its desktop PDP puts
+              the price right-aligned just above the buttons instead
+              (measured on hermes.com 2026-11-13). */}
+          <p className="mt-2 text-sm leading-[22px] lg:hidden">{priceText(p)}</p>
           {p.colors.length > 0 && color && (
             <>
               <div className="mt-4 flex items-baseline justify-between">
@@ -3009,6 +3011,11 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               {p.shippingDelay && selSize && <p className="mt-3 text-xs leading-[18px] text-[#696969]">{p.shippingDelay}</p>}
             </div>
           )}
+          {/* Price — DESKTOP ONLY (hidden lg:block), right-aligned just
+              above the buttons, as on the original's desktop PDP
+              (measured on hermes.com 2026-11-13: $13,500 sits on its own
+              line above [Apple Pay | ADD TO CART], NOT under the name). */}
+          <p className="mt-4 hidden text-right text-sm leading-[22px] lg:block">{priceText(p)}</p>
           {isConfigProduct(p) ? (
             <div className="mt-4">
               <button aria-label="Personalize" className="font-mono-d flex h-12 w-full items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => setConfigOpen((v) => !v)}>Personalize</button>
@@ -3017,7 +3024,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           ) : isBuyableStatus(p.status) ? (
             <div className="mt-4">
               <div className="flex">
-                {p.applePay && applePayAvailable && <button aria-label="Buy with Apple Pay" className="font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border border-black text-xs font-medium uppercase text-black" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
+                {p.applePay && <button aria-label="Buy with Apple Pay" className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border border-black text-xs font-medium uppercase text-black${applePayAvailable ? "" : " max-lg:hidden"}`} onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
                 <button aria-label="Add to cart" className="font-mono-d flex h-12 flex-1 items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
               </div>
             </div>
@@ -3470,7 +3477,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               <button aria-label="Personalize" className="font-mono-d flex h-12 items-center justify-center gap-2 bg-black px-8 text-xs font-medium uppercase tracking-normal text-white" onClick={() => { setConfigOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Personalize</button>
             ) : (
               <>
-                {p.applePay && applePayAvailable && <button aria-label="Buy with Apple Pay" className="font-mono-d flex h-12 items-center justify-center gap-1.5 border border-black px-6 text-xs font-medium uppercase text-black" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
+                {p.applePay && <button aria-label="Buy with Apple Pay" className={`font-mono-d flex h-12 items-center justify-center gap-1.5 border border-black px-6 text-xs font-medium uppercase text-black${applePayAvailable ? "" : " max-lg:hidden"}`} onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
                 <button aria-label="Add to cart" className="font-mono-d flex h-12 items-center justify-center gap-2 bg-black px-8 text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
               </>
             )}
