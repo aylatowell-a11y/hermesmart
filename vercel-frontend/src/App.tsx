@@ -235,10 +235,10 @@ const CAROUSEL_EDITORIAL_DESKTOP: Record<string, { img: string; alt: string }> =
 // confirmed.
 const THEME_GRID_ORDER: Record<string, string[]> = {
   "Belts": ["H081120CK89", "H010439CK55080", "H011790UCAAXS", "id:16"],
-  "Men's Shoes": ["H221898ZHBG", "H261807ZHAF", "H262820ZHNL", "H262834ZAAC"],
+  "Men's Shoes": ["H221898ZHBG", "H261807ZHAF", "H262820ZHNL", "H261881ZHD8390"],
   "Fashion Jewelry": ["H101503Bv00", "H306324FvN2", "H109510Bv00", "H500522FD89"],
   "Silk": ["H004391Sv05", "H061144Sv06", "H251526Sv02", "H891071Sv01"],
-  "Beauty": ["VP25SETD25BUNDLE", "V60875PV007", "V60861VV050", "H104951Mv01"],
+  "Beauty": ["VP25SETD25BUNDLE", "V60875PV007", "H004366Sv05", "H104951Mv01"],
 };
 const fmt = (n: number) => "$" + n.toLocaleString("en-US");
 const priceText = (p: Product) => (p.priceLabel ? p.priceLabel : fmt(p.price));
