@@ -2704,7 +2704,15 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   // sizeOptions must be the one the original shows on landing (34) —
   // with sizes stored [32,34,36,38,40,42] this computes ...DAA332.
   const displaySize = selSize || sizeList[0]?.label || "";
-  const displayRef = p.refCode && needsSize && displaySize ? `${p.refCode}${displaySize}` : p.refCode;
+  // Shoe refs on hermes.com use a SPACE where the refCode has "v" and the
+  // size as tenths (38.5 -> 385): "H261015Zv90" + size 38.5 displays as
+  // "H261015Z 90385" (verified live 2026-11-13). Only for refs containing
+  // "v"; other shoes keep the plain refCode + size form.
+  const displayRef = p.refCode && needsSize && displaySize
+    ? (isShoe && p.refCode.includes("v") && !Number.isNaN(parseFloat(displaySize))
+        ? `${p.refCode.replace("v", " ")}${Math.round(parseFloat(displaySize) * 10)}`
+        : `${p.refCode}${displaySize}`)
+    : p.refCode;
   // Gallery views — EVERY view is a DISTINCT photo whose content matches
   // its label (Detail = extreme close-up, Worn = model wearing it, Above =
   // top-down, Back = rear, Side = profile), shot for that view in
