@@ -2652,6 +2652,20 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
     onBuyBarChange(!!p && isBuyableStatus(p.status) && !buyBoxInView && !nearBottom);
     return () => onBuyBarChange(false);
   }, [buyBoxInView, nearBottom, p?.status, onBuyBarChange]);
+  // Mobile sticky bar: on the original's mobile PDP the sticky ADD TO CART
+  // appears only once BOTH the buy box AND the in-content mobile buttons
+  // (after the description) have scrolled out of view. Gating on the buy
+  // box alone shows it while the in-content button is still on screen —
+  // the "double cart" the user caught on his phone (2026-11-13).
+  const mobileBuyRef = useRef<HTMLDivElement>(null);
+  const [mobileBuyInView, setMobileBuyInView] = useState(true);
+  useEffect(() => {
+    const el = mobileBuyRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const ob = new IntersectionObserver((es) => setMobileBuyInView(!!es[0]?.isIntersecting), { threshold: 0 });
+    ob.observe(el);
+    return () => ob.disconnect();
+  }, []);
   const notifyMut = useMutation({ mutationFn: () => api.requestNotify({ productId: p?.id ?? 0, productName: p?.name ?? "", email: notifyEmail }), onSuccess: () => setNotified("Thank you — we will notify you when this product is back in stock.") });
   // Last viewed: session-only, derived from the App-level id list (never
   // seeded from storage) — the section renders only once at least one
@@ -3078,7 +3092,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
         {/* Mobile buy actions — on the original's mobile PDP the
             buttons sit AFTER the description (desktop keeps them in the
             buy box above). */}
-        <div className="lg:hidden">{buyActions}</div>
+        <div ref={mobileBuyRef} className="lg:hidden">{buyActions}</div>
         <div className="mb-[15px] bg-[#fffcf7e6] px-4 py-2">
           {accItems.map((it, i) => (
             <div key={it.title} className="border-t border-[#f6f1eb] last:border-b">
@@ -3456,7 +3470,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           Out-of-stock products get the NOTIFY ME bar instead, which jumps
           back up to the buy box and opens the email capture. Desktop keeps
           the floating buy card only. */}
-      {isBuyableStatus(p.status) && (
+      {isBuyableStatus(p.status) && !buyBoxInView && !mobileBuyInView && !nearBottom && (
         <div className="fixed inset-x-0 bottom-0 z-40 bg-black pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
           {isConfigProduct(p) ? (
             <button aria-label="Personalize" className="flex w-full items-center justify-center gap-2 bg-black py-4 text-[12px] font-semibold uppercase tracking-[0.22em] text-white" onClick={() => { setConfigOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
