@@ -4384,7 +4384,15 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   const [suEmail, setSuEmail] = useState(""); const [suCode, setSuCode] = useState(""); const [suShowCode, setSuShowCode] = useState(false);
   const [suPw, setSuPw] = useState(""); const [suShowPw, setSuShowPw] = useState(false); const [suArea, setSuArea] = useState("US +1"); const [suPhone, setSuPhone] = useState(""); const [suDobMonth, setSuDobMonth] = useState(""); const [suDobDay, setSuDobDay] = useState(""); const [suDobYear, setSuDobYear] = useState(""); const [suMarketing, setSuMarketing] = useState(false);
   const [suMsg, setSuMsg] = useState(""); const [sentCode, setSentCode] = useState(""); const [codeWait, setCodeWait] = useState(0);
-  const login = useMutation({ mutationFn: () => api.loginUser({ email: liEmail, password: liPw }), onSuccess: (r) => { setLiMsg(r.message); if (r.ok) setUser({ name: r.name, email: liEmail }); } });
+  const login = useMutation({ mutationFn: async () => {
+    // Admin Gmail sign-in: the admin panel link was removed from this page
+    // (user request 2026-11-13) — instead, signing in here with the admin
+    // Gmail + admin password opens the Admin Panel directly.
+    const admin = await api.adminData({ email: liEmail, password: liPw });
+    if (admin.ok) return { ok: true, message: "Signed in.", name: "Admin", isAdmin: true };
+    const u = await api.loginUser({ email: liEmail, password: liPw });
+    return { ...u, isAdmin: false };
+  }, onSuccess: (r) => { setLiMsg(r.message); if (r.ok) { if (r.isAdmin) { save("hlx-admin-auth", { email: liEmail, password: liPw }); go({ t: "admin" }); } else setUser({ name: r.name, email: liEmail }); } } });
   const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobDisplay = suDobMonth && suDobDay && suDobYear ? `${monthNames[Number(suDobMonth) - 1] ?? ""} ${Number(suDobDay)}, ${suDobYear}` : ""; save("hlx-profile", { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }); setUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail }); } } });
   const ordersQ = useQuery({ queryKey: ["myorders", user?.email], queryFn: () => api.myOrders({ email: user?.email ?? "" }), enabled: !!user });
   // Signed-in account tabs (§D addendum): exactly five, in this order.
@@ -4559,7 +4567,6 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
         <button aria-label="Forgot password" className="mt-4 w-full text-center text-xs uppercase tracking-[0.2em] underline" onClick={() => setForgotMsg("This standalone build has no email service, so password reset is unavailable — please create a new account or contact customer service.")}>Forgot your password?</button>
         {forgotMsg && <p className="mt-3 text-center text-xs leading-5 text-neutral-600" role="status">{forgotMsg}</p>}
         <p className="mt-6 text-center text-sm text-neutral-700">New here? <button aria-label="Go to create account" className="underline" onClick={() => { setAuthMode("signup"); setLiMsg(""); setEmailStep(true); setSuEmail(liEmail); }}>Create an account</button></p>
-        <p className="mt-8 border-t border-black/10 pt-4 text-center text-xs text-neutral-500">Store admin? <button aria-label="Sign in to Admin Panel" className="underline" onClick={() => go({ t: "admin" })}>Sign in to Admin Panel</button></p>
       </div>
     );
   }
@@ -4652,7 +4659,6 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
       {suMsg && <p className="mt-6 text-sm text-red-700" role="status">{suMsg}</p>}
       <button aria-label="Create an account" className="mt-8 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white sm:mx-auto sm:block sm:w-80" onClick={submitSignup}>Create an account</button>
       <p className="mt-6 text-center text-sm text-neutral-700">Already have an account? <button aria-label="Go to sign in" className="underline" onClick={() => { setAuthMode("login"); setSuMsg(""); setEmailStep(true); }}>Sign in</button></p>
-      <p className="mt-8 border-t border-black/10 pt-4 text-center text-xs text-neutral-500">Store admin? <button aria-label="Sign in to Admin Panel" className="underline" onClick={() => go({ t: "admin" })}>Sign in to Admin Panel</button></p>
     </div>
   );
 
@@ -5057,6 +5063,16 @@ function AdminChat({ email, password }: { email: string; password: string }) {
 function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { products: Product[]; settings: Settings; qc: ReturnType<typeof useQueryClient>; navOverrides: NavOverrides; setNavOverrides: (n: NavOverrides) => void }) {
   const [pw, setPw] = useState(""); const [adminEmail, setAdminEmail] = useState(""); const [authed, setAuthed] = useState(false); const [tab, setTab] = useState("Dashboard");
   const [msg, setMsg] = useState("");
+  // Auto-sign-in when the admin Gmail was used on the customer sign-in form:
+  // that sign-in stores the admin credentials in hlx-admin-auth, so the
+  // panel opens directly without a second sign-in (user request 2026-11-13).
+  useEffect(() => {
+    const stored = load<{ email?: string; password?: string } | null>("hlx-admin-auth", null);
+    if (!stored?.email || !stored?.password) return;
+    void api.adminData({ email: stored.email, password: stored.password }).then((r) => {
+      if (r.ok) { setAdminEmail(stored.email!); setPw(stored.password!); setAuthed(true); setMsg(""); }
+    });
+  }, []);
   const dataQ = useQuery({ queryKey: ["admin", adminEmail, pw], queryFn: () => api.adminData({ email: adminEmail, password: pw }), enabled: authed });
   const blank = { id: 0, name: "", category: "women", subcategory: "", theme: "Silk", price: 0, priceLabel: "", status: "available" as const, line: "", material: "", modelSize: "", metallicFinish: "", colorsJson: JSON.stringify([{ name: "Etoupe", hex: "#8a7a68", available: true }]), description: "", story: "", tone: "#e9ede8", glyph: "◆" };
   const [form, setForm] = useState(blank);
@@ -5095,7 +5111,7 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-serif-d text-3xl italic">Admin Panel</h1>
-        <button aria-label="Admin sign out" className="border border-black px-5 py-2 text-[11px] uppercase tracking-[0.2em]" onClick={() => { setAuthed(false); setPw(""); setAdminEmail(""); }}>Sign out</button>
+        <button aria-label="Admin sign out" className="border border-black px-5 py-2 text-[11px] uppercase tracking-[0.2em]" onClick={() => { setAuthed(false); setPw(""); setAdminEmail(""); save("hlx-admin-auth", null); }}>Sign out</button>
       </div>
       <div className="no-scrollbar mt-5 flex gap-2 overflow-x-auto">
         {tabs.map((t) => <button key={t} aria-label={`Admin tab ${t}`} className={`shrink-0 border px-4 py-2.5 text-[11px] uppercase tracking-[0.15em] ${tab === t ? "border-black bg-black text-white" : "border-black/30"}`} onClick={() => { setTab(t); dataQ.refetch(); }}>{t}</button>)}
