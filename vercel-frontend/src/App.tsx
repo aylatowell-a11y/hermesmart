@@ -1318,6 +1318,14 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             <div className="mx-auto max-w-[629px] text-center">
               <h2 className="font-serif-d text-[34px] italic leading-snug">Discover the world of Hermès</h2>
             </div>
+            {/* Desktop carousel counter + arrows, top-right (as on hermes.com:
+                "1/15" counter with prev/next arrows; mobile has only the
+                progress line below the carousel). */}
+            <div className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-3">
+              <span className="font-mono-d text-xs font-medium tracking-normal text-black">{activeIdx + 1}/{CAROUSEL_N}</span>
+              <button type="button" aria-label="Previous theme" onClick={() => goToSlide(activeIdx - 1)} className="flex h-8 w-8 items-center justify-center text-xl leading-none text-black">‹</button>
+              <button type="button" aria-label="Next theme" onClick={() => goToSlide(activeIdx + 1)} className="flex h-8 w-8 items-center justify-center text-xl leading-none text-black">›</button>
+            </div>
           </div>
         </div>
         {/* DESKTOP carousel (lg+) — matches hermes.com desktop exactly
@@ -1391,7 +1399,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         </div>
         {/* No counter/arrows on mobile — the original's mobile carousel has only
             the progress line above (verified on hermes.com, phone). The 1/15
-            counter + arrows live only in the desktop heading above (hidden lg:block). */}
+            counter + arrows are in the desktop heading above (hidden lg:block). */}
         {/* The original renders this heading sr-only (visually hidden,
             screen-reader only) — verified in hermes.com's rendered HTML:
             <h2 class="sr-only">Products for the theme Belts</h2>. The 4
