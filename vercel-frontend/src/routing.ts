@@ -35,6 +35,8 @@ const CATEGORY_PATHS: Record<string, string> = {
   "women|belts": "women/belts",
   "women|fall-winter 2026 collection": "women/ready-wear/fall-winter-collection",
   "women|fall-winter 2026": "women/ready-wear/fall-winter-collection",
+  "women|spring-summer 2027 collection": "women/ready-wear/spring-summer-collection",
+  "women|spring-summer 2027": "women/ready-wear/spring-summer-collection",
   "women|spring-summer 2026 collection": "women/ready-wear/spring-summer-collection",
   "women|spring-summer 2026": "women/ready-wear/spring-summer-collection",
   "women|dresses and skirts": "women/ready-wear/dresses-and-skirts",

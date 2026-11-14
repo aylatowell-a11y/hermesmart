@@ -61,7 +61,7 @@ type MegaSection = { heading: string; items: string[] };
 type MegaEntry = { key: string; label: string; caption: string; tone: string; glyph: string; img: string; columns: MegaSection[][] };
 const MEGA_RAW: MegaEntry[] = [
   { key: "women", label: "WOMEN", caption: "SPRING-SUMMER 2027 RUNWAY SHOW", tone: "#e85d1f", glyph: "👗", img: "runway", columns: [
-    [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026 Collection","Spring-Summer 2026 Collection","Coats and jackets","Leather","Dresses and skirts","Tops and shirts","Pants and shorts","Knitwear and twillaines","T-shirts and sweatshirts","Beachwear","Spring-Summer 2027 runway show","Fall-Winter 2026 runway show","Fall-Winter 2026 the second chapter"] }],
+    [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026 Collection","Spring-Summer 2027 Collection","Coats and jackets","Leather","Dresses and skirts","Tops and shirts","Pants and shorts","Knitwear and twillaines","T-shirts and sweatshirts","Beachwear","Spring-Summer 2027 runway show","Fall-Winter 2026 runway show","Fall-Winter 2026 the second chapter"] }],
     [{ heading: "SHOES", items: ["Sandals","Sneakers","Boots and ankle boots","Pumps","Loafers and mules","Ballet flats","View all"] }],
     [{ heading: "SCARVES SHAWLS AND STOLES", items: ["Silk scarves and accessories","Cashmere shawls and stoles","Twilly and other small formats","View all","How to tie your scarf","Styled in Silk"] }, { heading: "FASHION JEWELRY", items: ["Bracelets","Necklaces and pendants","Earrings","Rings","View all"] }],
     [{ heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }, { heading: "HAIR ACCESSORIES", items: [] }],
@@ -110,7 +110,7 @@ const MEGA_RAW: MegaEntry[] = [
 // Desktop mega menu for WOMEN, verified on hermes.com (7 Nov 2026). The shared
 // MEGA_RAW structure still drives the mobile drawer, which follows the user's video.
 const MEGA_DESKTOP_WOMEN: MegaSection[][] = [
-  [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026", "Spring-Summer 2026", "Coats and jackets", "Leather", "Dresses", "Tops and shirts", "Pants and shorts", "Knitwear and sweaters", "T-shirts and polos", "Beachwear", "Discover the runway shows"] }],
+  [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026", "Spring-Summer 2027", "Coats and jackets", "Leather", "Dresses", "Tops and shirts", "Pants and shorts", "Knitwear and sweaters", "T-shirts and polos", "Beachwear", "Discover the runway shows"] }],
   [{ heading: "SHOES", items: ["Fall-Winter 2026", "Sneakers", "Loafers", "Sandals", "Boots", "Pumps", "High heels", "Ballerinas", "Mules"] }, { heading: "SCARVES AND STOLES", items: ["Twillys", "Scarves 90 cm", "Equestrian", "Cashmere", "Stole", "Discover scarf tying"] }],
   [{ heading: "FASHION JEWELRY", items: ["Bracelets", "Earrings", "Necklaces", "Rings", "Pins and brooches", "Hair accessories and combs", "Hairbands and hatbands"] }, { heading: "THE GLOVES' WORLD", items: [] }, { heading: "HATS", items: [] }],
   [{ heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }, { heading: "HAIR ACCESSORIES", items: [] }],
@@ -176,7 +176,7 @@ const NAV: { key: string; label: string; subs: string[] }[] = MEGA_RAW.filter(e=
 const SUBS_BY_CAT: Record<string, string[]> = (() => {
   const m: Record<string, string[]> = {};
   for (const n of NAV) m[n.key] = [...n.subs];
-  m["women"] = [...new Set([...(m["women"] ?? []), "Fall-Winter 2026", "Spring-Summer 2026"])];
+  m["women"] = [...new Set([...(m["women"] ?? []), "Fall-Winter 2026", "Spring-Summer 2027"])];
   return m;
 })();
 const THEMES = ["Silk", "Beauty", "Belts", "Men's Shoes", "Fashion Jewelry", "Fragrances", "Watches", "Leather Goods", "Home"];
@@ -1859,6 +1859,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // own category is what separates them. (Batch 15, 2026-11-11.)
       "fall-winter 2026 collection": (p) => p.line === "Fall-Winter 2026" && p.category === cat,
       "spring-summer 2026 collection": (p) => p.line === "Spring-Summer 2026",
+      "spring-summer 2027 collection": (p) => p.line === "Spring-Summer 2027",
+      "spring-summer 2027": (p) => p.line === "Spring-Summer 2027",
       "scarves shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles",
       "loafers": (p) => /loafer/i.test(p.name),
       "boots": (p) => /boot/i.test(p.name),
@@ -1900,12 +1902,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // Ready-to-Wear pages (Women): the dresses page AND the two season
   // collections and sibling RTW lists from the user's video — they all share
   // the same sideways sub-nav and the COLLECTION-first facet order.
-  const RTW_SUBS = ["Fall-Winter 2026 Collection", "Spring-Summer 2026 Collection", "Coats and jackets", "Leather", "Dresses and skirts", "Tops and shirts", "Pants and shorts", "Knitwear and twillaines", "T-shirts and sweatshirts", "Beachwear"];
+  const RTW_SUBS = ["Fall-Winter 2026 Collection", "Spring-Summer 2027 Collection", "Coats and jackets", "Leather", "Dresses and skirts", "Tops and shirts", "Pants and shorts", "Knitwear and twillaines", "T-shirts and sweatshirts", "Beachwear"];
   // The desktop mega menu shortens the two collections to "Fall-Winter
-  // 2026" / "Spring-Summer 2026" — those subs land on the same collection
+  // 2026" / "Spring-Summer 2027" — those subs land on the same collection
   // pages (matched by line), so they count as RTW pages too and title
   // themselves with the full "… Collection" name.
-  const isCollectionSub = subLow === "fall-winter 2026" || subLow === "spring-summer 2026";
+  const isCollectionSub = subLow === "fall-winter 2026" || subLow === "spring-summer 2026" || subLow === "spring-summer 2027";
   const isRTWPage = cat === "women" && (isDressesPage || isCollectionSub || RTW_SUBS.some((l) => l.toLowerCase() === subLow));
   const isShoesPage = isSneakersPage || /sandals|loafers|derbies|boots|shoes/.test(subLow) || (cat === "men" && !sub);
   // Verified facet orders exist for these two pages only (served facet
@@ -1923,6 +1925,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "fall-winter 2026 collection": "Fall-Winter 2026 Collection",
     "spring-summer 2026": "Spring-Summer 2026 Collection",
     "spring-summer 2026 collection": "Spring-Summer 2026 Collection",
+    "spring-summer 2027": "Spring-Summer 2027 Collection",
+    "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
   };
   const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${sub} Collection` : sub ?? (cat === "women" ? "Women's bags and clutches" : label.charAt(0) + label.slice(1).toLowerCase()));
   const crumbTop = isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isRTWPage ? `${label} | READY-TO-WEAR` : sub ? `${label} | ${sub.toUpperCase()}` : label;
@@ -1947,8 +1951,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // has no Spring-Summer item, and vice versa).
     const rtwList = RTW_SUBS.filter((l) => {
       const ll = l.toLowerCase();
-      if (ll === "spring-summer 2026 collection" && (subLow === "fall-winter 2026 collection" || subLow === "fall-winter 2026")) return false;
-      if (ll === "fall-winter 2026 collection" && (subLow === "spring-summer 2026 collection" || subLow === "spring-summer 2026")) return false;
+      if (ll === "spring-summer 2027 collection" && (subLow === "fall-winter 2026 collection" || subLow === "fall-winter 2026")) return false;
+      if (ll === "fall-winter 2026 collection" && (subLow === "spring-summer 2027 collection" || subLow === "spring-summer 2027")) return false;
       return true;
     });
     siblings = rtwList.map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow || (isCollectionSub && l.toLowerCase() === `${subLow} collection`) || (l === "Dresses and skirts" && isDressesPage && !RTW_SUBS.some((x) => x.toLowerCase() === subLow)) }));
@@ -2042,9 +2046,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // shawl collar (fwPos 1) first on women's. Only a list containing
     // fwPos rows is reordered; every other row has no fwPos, so every
     // other page keeps its exact order.
+    // Spring-Summer 2027 (2026-11-15): the SS rows carry ssPos the same
+    // way (1-87), and the SS collection page lists them in the original's
+    // order. A list with fwPos rows sorts by fwPos; otherwise a list with
+    // ssPos rows sorts by ssPos.
     // Stable sort: rows without fwPos keep their relative order after
     // the positioned rows, so sub-category views keep relative order too.
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
+    else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
   }, [base, sel, onlineOnly, sort, pMin, pMax]);
   // How many of OUR products the staged draft selection would show — the
@@ -2512,7 +2521,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   // Breadcrumb middle crumb: the product's season collection when it has
   // one (the original's product breadcrumb is WOMEN / FALL-WINTER 2026
   // COLLECTION / <name>), otherwise its subcategory.
-  const collName = p.line === "Fall-Winter 2026" ? "Fall-Winter 2026 Collection" : p.line === "Spring-Summer 2026" ? "Spring-Summer 2026 Collection" : null;
+  const collName = p.line === "Fall-Winter 2026" ? "Fall-Winter 2026 Collection" : p.line === "Spring-Summer 2026" ? "Spring-Summer 2026 Collection" : p.line === "Spring-Summer 2027" ? "Spring-Summer 2027 Collection" : null;
   const crumbMid = collName ?? p.subcategory;
   // Finish options (e.g. the Kelly Pocket belt's Gold / Argenté buckle group)
   // ride in a detail line so no schema change is needed; the selected finish
