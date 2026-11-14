@@ -1830,22 +1830,22 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "our collections": (p) => p.category === "watches",
       "women": (p) => p.category === "watches" || p.category === "women",
       "men": (p) => p.category === "watches" || p.category === "men",
-      "straps": (p) => p.category === "watches",
+      "straps": (p) => p.subcategory === "Straps",
       "sandals": (p) => /sandal/i.test(p.name),
       "sneakers": (p) => /sneaker/i.test(p.name),
       "boots and ankle boots": (p) => /boot/i.test(p.name),
       "pumps": (p) => /pump/i.test(p.name),
       "loafers and mules": (p) => /loafer/i.test(p.name),
       "derbies and oxford shoes": (p) => /derby|oxford/i.test(p.name),
-      "rings": (p) => /ring/i.test(p.name) || p.category === "jewelry",
-      "wedding rings": (p) => /ring/i.test(p.name),
+      "rings": (p) => p.category === cat && /\bring\b/i.test(p.name) && !/earring/i.test(p.name),
+      "wedding rings": (p) => p.category === cat && /\bring\b/i.test(p.name) && !/earring/i.test(p.name),
       "bracelets": (p) => /bracelet/i.test(p.name),
       "necklaces and pendants": (p) => /necklace/i.test(p.name),
       "earrings": (p) => /earring/i.test(p.name),
-      "lips": (p) => /lip/i.test(p.name),
-      "face": (p) => p.category === "fragrances",
-      "eyes": (p) => /eye/i.test(p.name),
-      "hands": (p) => /nail|mains/i.test(p.name),
+      "lips": (p) => p.category === cat && /lip/i.test(p.name),
+      "face": (p) => p.category === cat && /face|powder|blush|foundation/i.test(p.name),
+      "eyes": (p) => p.category === cat && /eye/i.test(p.name),
+      "hands": (p) => p.category === cat && /nail|mains/i.test(p.name),
       "blankets and pillows": (p) => p.subcategory === "Blankets and throws",
       "for women": (p) => p.subcategory === "For women" || p.category === "gifts",
       "for men": (p) => p.category === "gifts",
@@ -1870,7 +1870,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "scarves 90 cm": (p) => p.subcategory === "Scarves, shawls and stoles",
       "cashmere": (p) => p.subcategory === "Scarves, shawls and stoles",
       "stole": (p) => p.subcategory === "Scarves, shawls and stoles",
-      "pins and brooches": (p) => p.category === "jewelry",
+      "pins and brooches": (p) => p.category === cat && /\bpin\b|\bbrooch/i.test(p.name),
       // Small leather goods fine subcategories — products carry fineSub
       // ("To Go wallets" / "Wallets" / "Card holders" / "Pouches and
       // cases" / "Customizable") while their subcategory stays "Small
@@ -1879,7 +1879,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "wallets": (p) => p.fineSub === "Wallets",
       "card holders": (p) => p.fineSub === "Card holders",
       "pouches and cases": (p) => p.fineSub === "Pouches and cases",
-      "customizable": (p) => p.fineSub === "Customizable",
+      "customizable": (p) => /customizable/i.test(p.name),
+      // Men's RTW sub-pages — products carry fineSub (the sub-page name)
+      // and subPos (their order on that sub-page); the rows keep their own
+      // subcategory/line, so the FW collection page is unaffected.
+      "coats and parkas": (p) => p.fineSub === "Coats and parkas",
+      "jackets and blazers": (p) => p.fineSub === "Jackets and blazers",
+      "knitwear": (p) => p.fineSub === "Knitwear",
+      "shirts": (p) => p.fineSub === "Shirts",
+      "t-shirts and sweatshirts": (p) => p.fineSub === "T-shirts and sweatshirts",
+      "pants and shorts": (p) => p.fineSub === "Pants and shorts",
+      "beachwear": (p) => p.fineSub === "Beachwear",
     };
     if (syn[low]) return products.filter(syn[low]);
     const strict = (x: Product) => x.subcategory.toLowerCase() === low || x.line.toLowerCase() === low;
@@ -1895,6 +1905,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
 
   // ---- Page identity -------------------------------------------------------
   const subLow = (sub ?? "").toLowerCase();
+  // Men's RTW sub-pages sort by subPos (their own order on that page),
+  // not by fwPos (the FW collection order). The FW collection page itself
+  // is not a sub-page, so it still sorts by fwPos.
+  const isMensRtwSub = cat === "men" && ["coats and parkas", "jackets and blazers", "knitwear", "shirts", "t-shirts and sweatshirts", "pants and shorts", "beachwear"].includes(subLow);
+  // SLG sub-pages sort by slgPos (their own order on that dedicated page),
+  // not by sortOrder. The SLG parent page is not a sub-page, so it keeps
+  // its own order.
+  const isSlgSub = cat === "leather" && ["to go wallets", "wallets", "card holders", "pouches and cases"].includes(subLow);
   const isMensBags = /men's bags/.test(subLow) && !/women's bags/.test(subLow);
   const isBagsPage = /bags and clutches/.test(subLow) || (cat === "women" && !sub);
   const isSneakersPage = /sneaker/.test(subLow);
@@ -2052,10 +2070,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // ssPos rows sorts by ssPos.
     // Stable sort: rows without fwPos keep their relative order after
     // the positioned rows, so sub-category views keep relative order too.
+    // Men's RTW sub-pages (2026-11-15) sort by subPos — their own order
+    // on that page — before the fwPos/ssPos collection orders.
+    // SLG sub-pages (2026-11-15) sort by slgPos — their own order on the
+    // dedicated page — the same way, before fwPos/ssPos.
+    else if (isMensRtwSub && list.some((p) => p.subPos !== undefined)) list = [...list].sort((a, b) => (a.subPos ?? Infinity) - (b.subPos ?? Infinity));
+    else if (isSlgSub && list.some((p) => p.slgPos !== undefined)) list = [...list].sort((a, b) => (a.slgPos ?? Infinity) - (b.slgPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgSub]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
