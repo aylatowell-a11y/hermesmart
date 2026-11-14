@@ -1869,6 +1869,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "cashmere": (p) => p.subcategory === "Scarves, shawls and stoles",
       "stole": (p) => p.subcategory === "Scarves, shawls and stoles",
       "pins and brooches": (p) => p.category === "jewelry",
+      // Small leather goods fine subcategories — products carry fineSub
+      // ("To Go wallets" / "Wallets" / "Card holders" / "Pouches and
+      // cases" / "Customizable") while their subcategory stays "Small
+      // leather goods", so the parent page still lists every row.
+      "to go wallets": (p) => p.fineSub === "To Go wallets",
+      "wallets": (p) => p.fineSub === "Wallets",
+      "card holders": (p) => p.fineSub === "Card holders",
+      "pouches and cases": (p) => p.fineSub === "Pouches and cases",
+      "customizable": (p) => p.fineSub === "Customizable",
     };
     if (syn[low]) return products.filter(syn[low]);
     const strict = (x: Product) => x.subcategory.toLowerCase() === low || x.line.toLowerCase() === low;
