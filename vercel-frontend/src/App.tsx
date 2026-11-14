@@ -18,6 +18,15 @@ const baladeurPosterImgMobile = "https://assets.hermes.com/is/image/hermesedito/
 // the Kelly story text; there is no bracelet version on the homepage.
 const kellyRingsImg = "https://assets.hermes.com/is/image/hermesedito/Bague_Kelly_Push_2_Nov_Phase_1_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 const kellyRingsImgMobile = "https://assets.hermes.com/is/image/hermesedito/Bague_Kelly_Push_2_Nov_Phase_1_9x16?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+// Original Hermes Horsescape High Jewelry homepage banner (hermes.com,
+// verified 2026-11-14 via the homepage content JSON
+// https://www.hermes.com/api/content/homepage?locale=us_en — block
+// "block_full_hero_media", below the Kelly editorial, above the service
+// strip). Desktop source 1920x1080 (16:9), mobile source 1080x1920 (9:16);
+// the homepage shows a cover-crop of the desktop frame. Same Scene7
+// sizing params as the Kelly editorial images.
+const horsescapeImg = "https://assets.hermes.com/is/image/hermesedito/HERMES_HB9_IMG10_1920x1080_CLEAN-2?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const horsescapeImgMobile = "https://assets.hermes.com/is/image/hermesedito/HERMES_HB9_IMG10_1080x1920_CLEAN-1?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 import carriageBlackImg from "./assets/hermes-carriage-black.png";
 import carriageWhiteImg from "./assets/hermes-carriage-white.png";
 import logoBlackImg from "./assets/hermes-logo-black.png";
@@ -238,7 +247,7 @@ const THEME_GRID_ORDER: Record<string, string[]> = {
   "Men's Shoes": ["H221898ZHBG", "H261807ZHAF", "H262820ZHNL", "H261881ZHD8390"],
   "Fashion Jewelry": ["H101503Bv00", "H306324FvN2", "H109510Bv00", "H500522FD89"],
   "Silk": ["H004391Sv05", "H061144Sv06", "H251526Sv02", "H891071Sv01"],
-  "Beauty": ["VP25SETD25BUNDLE", "V60875PV007", "H004366Sv05", "H104951Mv01"],
+  "Beauty": ["VP25SETD25BUNDLE", "V60875PV007", "H104951Mv01", "V60863PV002"],
 };
 const fmt = (n: number) => "$" + n.toLocaleString("en-US");
 const priceText = (p: Product) => (p.priceLabel ? p.priceLabel : fmt(p.price));
@@ -1496,6 +1505,25 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           <div className="absolute inset-x-0 bottom-0 pb-6 pt-6 text-center text-white sm:pb-8 sm:pt-8">
             <p className="font-serif-d mx-auto max-w-3xl px-4 text-[20px] italic leading-[28px]">With each new collection, the Kelly story reinvents itself and reveals new depths. A legendary design, constantly in motion.</p>
             <button aria-label="Discover the Kelly collection" className="font-mono-d mt-4 text-xs font-medium uppercase tracking-normal underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "jewelry" })}>Discover the collection</button>
+          </div>
+        </div>
+      </section>
+      {/* Horsescape High Jewelry banner — on the original it sits below the
+          Kelly editorial and above the service strip (verified 2026-11-14).
+          Full-bleed photo, caption + DISCOVER at the bottom centre; the
+          original's DISCOVER goes to the "Hermès: jeweler of shapes" story
+          page, which the clone does not have — the section links to the
+          jewelry category, as the Kelly board does. */}
+      <section className="relative mb-12 cursor-pointer overflow-hidden lg:mb-16" onClick={() => go({ t: "category", cat: "jewelry" })} aria-label="Into the Horsescape, High Jewelry collection — discover">
+        <div className="relative aspect-[9/16] overflow-hidden sm:aspect-auto">
+          <picture>
+            <source media="(max-width: 640px)" srcSet={horsescapeImgMobile} />
+            <img src={horsescapeImg} alt="Woman in white by the sea with white horse sculptures, wearing Hermès high jewelry" className="block w-full" />
+          </picture>
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 pb-6 pt-6 text-center text-white sm:pb-8 sm:pt-8">
+            <p className="font-serif-d mx-auto max-w-3xl px-4 text-[20px] italic leading-[28px]">Into the Horsescape, High Jewelry collection</p>
+            <button aria-label="Discover the Horsescape High Jewelry collection" className="font-mono-d mt-4 text-xs font-medium uppercase tracking-normal underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "jewelry" })}>Discover</button>
           </div>
         </div>
       </section>
