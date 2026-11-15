@@ -1944,6 +1944,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // (same rule as Scarves/Belts). No tile map: the live list has no
       // repeated tiles, so the dressPos sort alone renders all 78.
       "dresses and skirts": (p) => p.category === cat && p.subcategory === "Dresses and skirts" && (cat === "women" ? p.dressPos !== undefined : true),
+      // Tableware page (cat "home", sub "Tableware") — the original's
+      // live order (534 tiles, extracted 2026-11-15) lives in tabPos;
+      // the page lists exactly those rows. The 117 clone Tableware
+      // rows not on the live list stay in the catalogue but never
+      // appear on the grid (same rule as Scarves/Belts/Dresses).
+      // The 603 Tableware rows that also carry homePos still appear
+      // on the Home parent page — tabPos does not touch homePos.
+      "tableware": (p) => p.subcategory === "Tableware" && p.tabPos !== undefined,
       // Men's Shoes parent page — the original's live order (328
       // tiles, extracted 2026-11-15) lives in menShoePos; the parent lists
       // exactly those rows. The 50 clone rows not on the live list stay
@@ -2072,6 +2080,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // parent page is. The original has NO descriptive paragraph on
   // this page.
   const isFragrancesPage = cat === "fragrances" && !sub;
+  // Tableware page (cat "home", sub "Tableware", 2026-11-15) — sorts
+  // by tabPos (the original's live order, 534 tiles) and carries the
+  // "Gold medals" / "Abyssal beauty" inserts. The original has NO
+  // descriptive paragraph on this page. The Home parent page (cat
+  // "home", no sub) is NOT affected.
+  const isTablewarePage = cat === "home" && subLow === "tableware";
   // Men's Shoes PARENT page only (sub "Shoes") — distinct from the
   // broad isMensShoesPage (filters/carousel), which is also true on
   // the men's main page and sub-pages.
@@ -2277,10 +2291,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // order — the same way (the parent page lists exactly the 272
     // live tiles).
     else if (isFragrancesPage && list.some((p) => p.fragPos !== undefined)) list = [...list].sort((a, b) => (a.fragPos ?? Infinity) - (b.fragPos ?? Infinity));
+    // Tableware (2026-11-15) sorts by tabPos — the original's
+    // order — the same way (the page lists exactly the 534 live tiles).
+    else if (isTablewarePage && list.some((p) => p.tabPos !== undefined)) list = [...list].sort((a, b) => (a.tabPos ?? Infinity) - (b.tabPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isTablewarePage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2444,6 +2461,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     if (isFragrancesPage) return [
       { after: 8, title: "Rouge Brillant Silky", body: "Its creamy texture melts onto the curve of the lips, illuminating them with a light, silky sheen. A new, delicately tinted, high-shine signature." },
       { after: 28, title: "Fragrance Finder", body: "Are you ready to find the perfume that suits you? Express your olfactory preferences and discover the perfect fragrances for you or your loved ones." },
+    ];
+    // Tableware page — the original's two editorial blocks
+    // ("Gold medals" after tile #8, "Abyssal beauty" after tile #28),
+    // verbatim from the live category page text fetch + server HTML,
+    // 2026-11-15. The "Take tables to new depths" link inside
+    // "Abyssal beauty" is a bare discover link, not a text block, so
+    // it cannot be rendered by the text-tile mechanism (known gap).
+    // No descriptive paragraph on the original's page.
+    if (isTablewarePage) return [
+      { after: 8, title: "Gold medals", body: "Bordered by geometric friezes at the crossroads of Art Deco and Ancient Greece, the Mosaique au 24 tableware set adds gold to a collection where design pays homage to the Faubourg Saint-Honoré store." },
+      { after: 28, title: "Abyssal beauty", body: "Vibrant coral, bright seaweed, and shimmering rays of sunlight. Adorn tables to echo marine gardens that bathe beneath the light." },
     ];
     if (cat === "leather") {
       if (subLow === "to go wallets") return [{ after: 8, title: "Minimalist-chic", body: "Compact and structured, To Go wallets assert their style and transform momentum into boldness." }];

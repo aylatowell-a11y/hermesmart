@@ -790,6 +790,7 @@ const NEW_TILE: Record<number, string> = {
   6366: "https://assets.hermes.com/is/image/hermesproduct/107223V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6367: "https://assets.hermes.com/is/image/hermesproduct/60005SV013_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6368: "https://assets.hermes.com/is/image/hermesproduct/60286BV014_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6369: "https://assets.hermes.com/is/image/hermesproduct/103978M%2002_flat_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   43: "https://assets.hermes.com/is/image/hermesproduct/056854WW00_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   591: "https://assets.hermes.com/is/image/hermesproduct/047612WW00_front_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6339: "https://assets.hermes.com/is/image/hermesproduct/templateaw-f34?$cad=0001181+01_composite_105&$brac=0003241O89_composite_105&$product_default_bg$",
