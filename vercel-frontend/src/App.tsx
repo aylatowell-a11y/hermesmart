@@ -2027,6 +2027,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // not by fwPos (the FW collection order). The FW collection page itself
   // is not a sub-page, so it still sorts by fwPos.
   const isMensRtwSub = cat === "men" && ["coats and parkas", "jackets and blazers", "knitwear", "shirts", "t-shirts and sweatshirts", "pants and shorts", "beachwear"].includes(subLow);
+  // Men's RTW parent page (cat "men", sub "Ready-to-wear") — its
+  // descriptive paragraph (verbatim from hermes.com, 2026-11-16).
+  const isMensRtwPage = cat === "men" && subLow === "ready-to-wear";
   // SLG sub-pages sort by slgPos (their own order on that dedicated page),
   // not by sortOrder. The SLG parent page is not a sub-page; it sorts by
   // slgParentPos (the original's live parent order, 2026-11-15).
@@ -3010,6 +3013,28 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           </p>
           <p className="mt-4 text-sm leading-7 text-neutral-700">
             Discover a technical and durable wardrobe. Crafted with the saddle stitch, our saddles, bridles, and tack accessories combine durability and ergonomics in our dedicated horse section. To accompany the effort, Hermès also offers a technical wardrobe for the rider, ranging from show jackets to riding breeches. On the track as in training, Hermès standards ensure an impeccable silhouette and performance in service of equestrian harmony.
+          </p>
+        </div>
+      )}
+
+      {/* Women's Scarves descriptive paragraph — verbatim from
+          hermes.com (category text fetch, 2026-11-16). Parent page
+          only; shown in full, as on the original. */}
+      {isWomensScarvesPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Delve into the colorful, ethereal and sensory world of Hermès scarves. Countless ways to style: The Maison&apos;s emblematic silk scarves are best accessorized using scarf rings, while larger Hermès shawls can be knotted to reflect your creativity. Whether draped around your neck or tied in your hair, glistening rectangle silk scarves and Hermès bandanas offer infinite possibilities to express your style with a touch of effortless elegance.
+          </p>
+        </div>
+      )}
+
+      {/* Men's RTW descriptive paragraph — verbatim from
+          hermes.com (category text fetch, 2026-11-16). Parent page
+          only; shown in full, as on the original. */}
+      {isMensRtwPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Creating suits with clean lines and sensual materials, with a focus on movement to ensure they stand the test of time. Put on a shirt with discreet signatures or daring prints and colors. Then jump into a plain or printed T-shirt for a more casual look. The Hermès men&apos;s ready-to-wear collection offers a wide range of styles to suit a variety of lifestyles and express one&apos;s personality through the seasons.
           </p>
         </div>
       )}
