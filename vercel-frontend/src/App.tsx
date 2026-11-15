@@ -2136,6 +2136,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // subs are already proper case (e.g. "Bags and clutches") and a generic
   // title-case would wrongly capitalise small words ("and").
   const COLLECTION_TITLES: Record<string, string> = {
+    // The two RTW parent pages title themselves "Ready-to-wear" in proper
+    // case (the sub value arrives lowercase from the URL slug map, so
+    // without this the men's title rendered lowercase "ready-to-wear").
+    "ready-to-wear": "Ready-to-wear",
     "fall-winter 2026": "Fall-Winter 2026 Collection",
     "fall-winter 2026 collection": "Fall-Winter 2026 Collection",
     "spring-summer 2026": "Spring-Summer 2026 Collection",
@@ -2811,7 +2815,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           (women's bags only) category description → service strip/footer. */}
       <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && (
           <>
             {" / "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -2823,6 +2827,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             (LEATHER GOODS / Small leather goods) — the middle level would
             duplicate the title, so it is omitted here (2026-11-15). */}
         {sub && isSlgParent && (
+          <>
+            {" / "}
+            <span className="normal-case tracking-normal text-black">{titleText}</span>
+          </>
+        )}
+        {/* The RTW parent pages show 2 levels on the original (WOMEN /
+            Ready-to-wear) — the middle level would duplicate the title
+            (men: "Ready-to-Wear" then "ready-to-wear") or leak the first
+            row's subcategory (women: "Dresses and skirts"), so it is
+            omitted here, like the SLG parent (2026-11-16). */}
+        {sub && (isWomensRtwPage || isMensRtwPage) && (
           <>
             {" / "}
             <span className="normal-case tracking-normal text-black">{titleText}</span>

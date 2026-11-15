@@ -40,6 +40,11 @@ const CATEGORY_PATHS: Record<string, string> = {
   "women|spring-summer 2026 collection": "women/ready-wear/spring-summer-collection",
   "women|spring-summer 2026": "women/ready-wear/spring-summer-collection",
   "women|dresses and skirts": "women/ready-wear/dresses-and-skirts",
+  // The women's RTW PARENT page (2026-11-16): the original's own URL is
+  // /women/ready-wear/ (no "to"). Without this entry the slug fell through
+  // to the generic matcher, found no sub called "ready-wear", and rendered
+  // the women's default page (bags [45]) instead of the [421] parent list.
+  "women|ready-to-wear": "women/ready-wear",
   "women|scarves, shawls and stoles": "women/scarves-shawls-and-stoles",
   "women|shoes": "women/shoes",
   "fashion-jewelry|": "women/fashion-jewelry",
