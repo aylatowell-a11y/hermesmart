@@ -1964,6 +1964,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // dual-lists the 8 fragrances/Make-up cases + mirror, and carries the
   // collapsed editorial block + cross-universe theme carousel.
   const isHomePage = cat === "home" && !sub;
+  // Women's Shoes page (cat "women", sub "Shoes") — sorts by shoePos
+  // (the original's order, 2026-11-15) and carries the descriptive
+  // paragraph. Men's shoes (cat "men") are a separate page and are
+  // NOT affected.
+  const isWomensShoesPage = cat === "women" && subLow === "shoes";
   const isMensBags = /men's bags/.test(subLow) && !/women's bags/.test(subLow);
   const isBagsPage = /bags and clutches/.test(subLow) || (cat === "women" && !sub);
   const isSneakersPage = /sneaker/.test(subLow);
@@ -2133,15 +2138,18 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // dedicated page — the same way, before fwPos/ssPos.
     // Fine jewelry (2026-11-15) sorts by jewPos and fashion jewelry by
     // fashPos — their own original orders — the same way.
+    // Women's Shoes (2026-11-15) sorts by shoePos — the original's
+    // order — the same way (men's shoes are a separate page).
     else if (isMensRtwSub && list.some((p) => p.subPos !== undefined)) list = [...list].sort((a, b) => (a.subPos ?? Infinity) - (b.subPos ?? Infinity));
     else if (isSlgSub && list.some((p) => p.slgPos !== undefined)) list = [...list].sort((a, b) => (a.slgPos ?? Infinity) - (b.slgPos ?? Infinity));
     else if (isJewelryPage && list.some((p) => p.jewPos !== undefined)) list = [...list].sort((a, b) => (a.jewPos ?? Infinity) - (b.jewPos ?? Infinity));
     else if (isFashionJewelryPage && list.some((p) => p.fashPos !== undefined)) list = [...list].sort((a, b) => (a.fashPos ?? Infinity) - (b.fashPos ?? Infinity));
     else if (isHomePage && list.some((p) => p.homePos !== undefined)) list = [...list].sort((a, b) => (a.homePos ?? Infinity) - (b.homePos ?? Infinity));
+    else if (isWomensShoesPage && list.some((p) => p.shoePos !== undefined)) list = [...list].sort((a, b) => (a.shoePos ?? Infinity) - (b.shoePos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2711,6 +2719,20 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             </p>
           )}
           <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setHomeParaOpen(!homeParaOpen)}>{homeParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Women's Shoes descriptive paragraphs — verbatim from
+          hermes.com (category text fetch, 2026-11-15). Parent page
+          only; shown in full, as on the original. */}
+      {isWomensShoesPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            From women&apos;s moccasins with the legendary Roulis buckle to sandals with slender and bold lines, Hermès&apos; shoe collections have a spring in their step. In these timeless models, impeccable craftsmanship is combined with comfort and noble materials.
+          </p>
+          <p className="mt-4 text-sm leading-7 text-neutral-700">
+            Elegant and feminine, our selection is passionate about Hermès&apos; legendary Oran sandals. In this exhilarating mix of casual city sneakers and leather ankle boots with iconic clasps, you are guaranteed to find your signature pair!
+          </p>
         </div>
       )}
 
