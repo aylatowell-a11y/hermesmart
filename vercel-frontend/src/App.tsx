@@ -1891,7 +1891,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // empty-ref stubs + old-season colourways) stay in the catalogue
       // but never appear on the parent grid. Men's scarves (cat "men")
       // are a separate page and are NOT gated by scarfPos.
-      "scarves shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : true),
+      // NOTE: the key MUST carry the commas — subLow is "scarves, shawls
+      // and stoles" (2026-11-15: the comma-less key never matched, so the
+      // page fell through to the strict subcategory match and showed 518).
+      "scarves, shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : true),
       "loafers": (p) => /loafer/i.test(p.name),
       "boots": (p) => /boot/i.test(p.name),
       "mules": (p) => /mule|loafer/i.test(p.name),
