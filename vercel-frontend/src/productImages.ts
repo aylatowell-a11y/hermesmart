@@ -6708,6 +6708,17 @@ const NEW_TILE: Record<number, string> = {
   5120: "https://assets.hermes.com/is/image/hermesproduct/087285CK89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   5121: "https://assets.hermes.com/is/image/hermesproduct/085433CK37_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   5122: "https://assets.hermes.com/is/image/hermesproduct/086888CCV8_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6608: "https://assets.hermes.com/is/image/hermesproduct/6H0673DPP6_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // "Etriers Remix" shirt — ref H6H0673DPP6
+  6609: "https://assets.hermes.com/is/image/hermesproduct/6E0101DAA3_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // Belted cashmere long vest — ref H6E0101DAA3
+  6610: "https://assets.hermes.com/is/image/hermesproduct/4H2700D15H_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // Long cardigan — ref H4H2700D15H
+  6611: "https://assets.hermes.com/is/image/hermesproduct/4H2700D102_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // Long cardigan — ref H4H2700D102
+  6612: "https://assets.hermes.com/is/image/hermesproduct/4H2702D1MV_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // Long cardigan — ref H4H2702D1MV
+  6613: "https://assets.hermes.com/is/image/hermesproduct/4H0602DB90_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // "Mosaique" shirt — ref H4H0602DB90
+  6614: "https://assets.hermes.com/is/image/hermesproduct/4H2610D3DK_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // "H" long-sleeve sweater — ref H4H2610D3DK
+  6615: "https://assets.hermes.com/is/image/hermesproduct/4H0104DBMV_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // Cashmere coat — ref H4H0104DBMV
+  6616: "https://assets.hermes.com/is/image/hermesproduct/4H2601D1MV_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // Cashmere long-sleeve sweater — ref H4H2601D1MV
+  6617: "https://assets.hermes.com/is/image/hermesproduct/4H2700D1MV_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // Long cardigan — ref H4H2700D1MV
+  6618: "https://assets.hermes.com/is/image/hermesproduct/4H2601D102_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$", // Cashmere long-sleeve sweater — ref H4H2601D102
 };
 
 const BAG_POOL = [picotinLock18V2, kellyShoulderV2, tablierSellier, boxBag, doubleLonge, neoDoubleSens35, fallbackHandbag];

@@ -1914,7 +1914,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "for children": (p) => p.category === "gifts",
       "for dogs": (p) => p.subcategory === "Scarves, shawls and stoles" && /chiens/i.test(p.name),
       "dresses": (p) => p.subcategory === "Dresses and skirts",
-      "ready-to-wear": (p) => p.line === "Ready-to-Wear" || p.subcategory === "Dresses and skirts",
+      // Ready-to-wear parent pages (2026-11-16) — the original's live
+      // order lives in wRtwPos (women, 421 tiles) / mRtwPos (men, 207
+      // tiles). The old line/subcategory gate returned only the 84
+      // "Dresses and skirts" rows for both parent pages.
+      "ready-to-wear": (p) => p.category === cat && ((cat === "women" && p.wRtwPos !== undefined) || (cat === "men" && p.mRtwPos !== undefined)),
       // Fall-Winter 2026 is a gendered collection: the women's page (cat
       // "women") shows the women's 330 and the men's page (cat "men") shows
       // the men's 143. Both sets carry the same line value — the product's
@@ -2030,6 +2034,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // Men's RTW parent page (cat "men", sub "Ready-to-wear") — its
   // descriptive paragraph (verbatim from hermes.com, 2026-11-16).
   const isMensRtwPage = cat === "men" && subLow === "ready-to-wear";
+  // Women's RTW parent page (cat "women", sub "Ready-to-wear") — its
+  // own [421] display order (wRtwPos) and descriptive paragraph
+  // (verbatim from hermes.com, 2026-11-16).
+  const isWomensRtwPage = cat === "women" && subLow === "ready-to-wear";
   // SLG sub-pages sort by slgPos (their own order on that dedicated page),
   // not by sortOrder. The SLG parent page is not a sub-page; it sorts by
   // slgParentPos (the original's live parent order, 2026-11-15).
@@ -2310,10 +2318,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Tableware (2026-11-15) sorts by tabPos — the original's
     // order — the same way (the page lists exactly the 534 live tiles).
     else if (isTablewarePage && list.some((p) => p.tabPos !== undefined)) list = [...list].sort((a, b) => (a.tabPos ?? Infinity) - (b.tabPos ?? Infinity));
+    // Women's RTW parent (2026-11-16) sorts by wRtwPos — the original's
+    // order — the same way (the parent lists exactly the 421 live tiles).
+    else if (isWomensRtwPage && list.some((p) => p.wRtwPos !== undefined)) list = [...list].sort((a, b) => (a.wRtwPos ?? Infinity) - (b.wRtwPos ?? Infinity));
+    // Men's RTW parent (2026-11-16) sorts by mRtwPos — the original's
+    // order — the same way (the parent lists exactly the 207 live tiles).
+    else if (isMensRtwPage && list.some((p) => p.mRtwPos !== undefined)) list = [...list].sort((a, b) => (a.mRtwPos ?? Infinity) - (b.mRtwPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isEquestrianPage, isTablewarePage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isEquestrianPage, isTablewarePage, isWomensRtwPage, isMensRtwPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -3035,6 +3049,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         <div className="mx-auto mt-12 max-w-3xl text-center">
           <p className="text-sm leading-7 text-neutral-700">
             Creating suits with clean lines and sensual materials, with a focus on movement to ensure they stand the test of time. Put on a shirt with discreet signatures or daring prints and colors. Then jump into a plain or printed T-shirt for a more casual look. The Hermès men&apos;s ready-to-wear collection offers a wide range of styles to suit a variety of lifestyles and express one&apos;s personality through the seasons.
+          </p>
+        </div>
+      )}
+
+      {/* Women's RTW descriptive paragraph — verbatim from
+          hermes.com (category text fetch, 2026-11-16). Parent page
+          only; shown in full, as on the original. */}
+      {isWomensRtwPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Explore the latest Hermès Women&apos;s Collection: A canvas for personal expression, rendered in the finest materials and versatile designs. Discover meticulously crafted garments and accessories, each designed to become integral to your unique style narrative. A legacy of subtle refinement.
           </p>
         </div>
       )}
