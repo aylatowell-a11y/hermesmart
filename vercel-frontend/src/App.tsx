@@ -1905,6 +1905,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // applies to ALL products, so an ungated men's branch would leak
       // women's belts onto the men's page.
       "belts": (p) => p.category === cat && p.subcategory === "Belts" && (cat === "women" ? p.beltPos !== undefined : true),
+      // Women's Dresses and skirts parent page — the original's live
+      // order (78 tiles, extracted 2026-11-15) lives in dressPos; the
+      // parent lists exactly those rows. The 6 clone rows not on the live
+      // list stay in the catalogue but never appear on the parent grid
+      // (same rule as Scarves/Belts). No tile map: the live list has no
+      // repeated tiles, so the dressPos sort alone renders all 78.
+      "dresses and skirts": (p) => p.category === cat && p.subcategory === "Dresses and skirts" && (cat === "women" ? p.dressPos !== undefined : true),
       "loafers": (p) => /loafer/i.test(p.name),
       "boots": (p) => /boot/i.test(p.name),
       "mules": (p) => /mule|loafer/i.test(p.name),
@@ -1997,6 +2004,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // Men's scarves (cat "men") are a separate page and are NOT affected.
   const isWomensScarvesPage = cat === "women" && subLow === "scarves, shawls and stoles";
   const isWomensBeltsPage = cat === "women" && subLow === "belts";
+  const isWomensDressesPage = cat === "women" && subLow === "dresses and skirts";
   const isMensBags = /men's bags/.test(subLow) && !/women's bags/.test(subLow);
   const isBagsPage = /bags and clutches/.test(subLow) || (cat === "women" && !sub);
   const isSneakersPage = /sneaker/.test(subLow);
@@ -2180,10 +2188,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // order — the same way (men's scarves are a separate page).
     else if (isWomensScarvesPage && list.some((p) => p.scarfPos !== undefined)) list = [...list].sort((a, b) => (a.scarfPos ?? Infinity) - (b.scarfPos ?? Infinity));
     else if (isWomensBeltsPage && list.some((p) => p.beltPos !== undefined)) list = [...list].sort((a, b) => (a.beltPos ?? Infinity) - (b.beltPos ?? Infinity));
+    else if (isWomensDressesPage && list.some((p) => p.dressPos !== undefined)) list = [...list].sort((a, b) => (a.dressPos ?? Infinity) - (b.dressPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isWomensScarvesPage, isWomensBeltsPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
