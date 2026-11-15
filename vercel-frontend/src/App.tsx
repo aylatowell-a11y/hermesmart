@@ -1840,12 +1840,24 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // under fragrances / Make-up (2026-11-15) — they carry homePos
       // and appear on /home/ without a second product row.
       if (cat === "home") return [...catList, ...products.filter((p) => p.category !== "home" && p.homePos !== undefined)];
+      // The women's default page (cat "women", no sub) IS the women's
+      // bags page (routing.ts "women|" → the bags URL, 2026-11-15):
+      // it lists exactly the 45 live tiles from the original's order
+      // (wBagPos); the rows not on the live list stay in the catalogue
+      // but never appear on this page (same rule as Scarves/Belts).
+      if (cat === "women") return products.filter((p) => p.wBagPos !== undefined);
       return catList;
     }
     const low = sub.toLowerCase();
     // Synonym / group mapping so a menu item shows ONLY its own products
     const syn: Record<string, (p: Product) => boolean> = {
-      "women's bags and clutches": (p) => p.subcategory === "Bags and clutches" && (p.category === "women" || p.category === "leather"),
+      // Women's Bags parent page — the original's live order (45
+      // tiles, extracted 2026-11-15) lives in wBagPos; the parent lists
+      // exactly those rows. The 5 clone rows not on the live list stay
+      // in the catalogue but never appear on the parent grid (same rule
+      // as Scarves/Belts/Dresses). Men's bags (sub "Men's bags and
+      // clutches") are a separate page and are NOT gated by wBagPos.
+      "women's bags and clutches": (p) => p.subcategory === "Bags and clutches" && (p.category === "women" || p.category === "leather") && p.wBagPos !== undefined,
       "men's bags and clutches": (p) => p.subcategory === "Bags and clutches" && (p.category === "men" || p.category === "leather"),
       "silk scarves and accessories": (p) => p.subcategory === "Scarves, shawls and stoles",
       "cashmere shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles",
@@ -2014,6 +2026,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const isWomensScarvesPage = cat === "women" && subLow === "scarves, shawls and stoles";
   const isWomensBeltsPage = cat === "women" && subLow === "belts";
   const isWomensDressesPage = cat === "women" && subLow === "dresses and skirts";
+  // Women's Bags parent page (cat "women", no sub — the default page —
+  // or sub "Women's bags and clutches", 2026-11-15) — sorts by wBagPos
+  // (the original's live order, 45 tiles) and carries the descriptive
+  // paragraph + "Equestrian style" insert. The men's bags page (sub
+  // "Men's bags and clutches") is a separate page and is NOT affected.
+  const isWomensBagsPage = (cat === "women" && !sub) || subLow === "women's bags and clutches";
   // Men's Shoes PARENT page only (sub "Shoes") — distinct from the
   // broad isMensShoesPage (filters/carousel), which is also true on
   // the men's main page and sub-pages.
@@ -2205,10 +2223,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (isWomensScarvesPage && list.some((p) => p.scarfPos !== undefined)) list = [...list].sort((a, b) => (a.scarfPos ?? Infinity) - (b.scarfPos ?? Infinity));
     else if (isWomensBeltsPage && list.some((p) => p.beltPos !== undefined)) list = [...list].sort((a, b) => (a.beltPos ?? Infinity) - (b.beltPos ?? Infinity));
     else if (isWomensDressesPage && list.some((p) => p.dressPos !== undefined)) list = [...list].sort((a, b) => (a.dressPos ?? Infinity) - (b.dressPos ?? Infinity));
+    // Women's Bags (2026-11-15) sorts by wBagPos — the original's
+    // order — the same way (men's bags are a separate page).
+    else if (isWomensBagsPage && list.some((p) => p.wBagPos !== undefined)) list = [...list].sort((a, b) => (a.wBagPos ?? Infinity) - (b.wBagPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2350,6 +2371,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       { after: 8, title: "Golden hour", body: "The small leather goods escape the bag for a proper sunbath. They look good with a tan." },
       { after: 28, title: "Charm party", body: "Interrupting the calm of the lines, this charm gallops across the leather." },
     ];
+    // Women's Bags parent page — the original's "Equestrian style"
+    // editorial block sits after tile #28 (verbatim from the live
+    // category page text fetch, 2026-11-15). The Birkin / Constance /
+    // Kelly block after #9 is three product links, not a text block,
+    // so it cannot be rendered by the text-tile mechanism (known gap);
+    // the wide image tiles likewise stay unwired (their image URLs do
+    // not expose in the browser — see the comment above).
+    if (isWomensBagsPage) return [{ after: 28, title: "Equestrian style", body: "Canvas borrows from the codes of the equestrian universe. From the paddock to the pavement, the horse never feels too far away." }];
     if (cat === "leather") {
       if (subLow === "to go wallets") return [{ after: 8, title: "Minimalist-chic", body: "Compact and structured, To Go wallets assert their style and transform momentum into boldness." }];
       if (subLow === "wallets") return [
@@ -2827,6 +2856,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         <div className="mx-auto mt-12 max-w-3xl text-center">
           <p className="text-sm leading-7 text-neutral-700">
             Hermes shoes never misstep and add playful elegance to any men&apos;s silhouette. From city sneakers to cross-country boots, meet your new sole mate. Whether it&apos;s the gallivanting leather of the iconic Izmir sandals or the House&apos;s signature moccasins, step into the world of our men&apos;s shoe collections to find the perfect fit.
+          </p>
+        </div>
+      )}
+
+      {/* Women's Bags descriptive paragraph — verbatim from
+          hermes.com (category text fetch, 2026-11-15). Parent page
+          only; shown in full, as on the original. */}
+      {isWomensBagsPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Dive into the elegance of the Hermès bag and clutch collection for women, a testament to saddlery savoir-faire. From spacious totes in durable canvas to versatile crossbody bags in heritage leathers, every piece exudes sophistication. Adorned with precious palladium or gold-plated hardware, our designs range from large formats to delicate small handbags. Discover our latest architectural silhouettes, including the magnetic Hermès Geta and the timeless Neo Garden.
           </p>
         </div>
       )}
