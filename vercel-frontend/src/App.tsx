@@ -1846,6 +1846,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // (wBagPos); the rows not on the live list stay in the catalogue
       // but never appear on this page (same rule as Scarves/Belts).
       if (cat === "women") return products.filter((p) => p.wBagPos !== undefined);
+      // Watches parent page (cat "watches", no sub, 2026-11-15): it
+      // lists exactly the 370 live tiles from the original's order
+      // (watchPos); the 58 clone rows not on the live list stay in the
+      // catalogue but never appear on this page (same rule as Women's
+      // Bags).
+      if (cat === "watches") return products.filter((p) => p.watchPos !== undefined);
       return catList;
     }
     const low = sub.toLowerCase();
@@ -1871,7 +1877,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "hermessence collection": (p) => p.line === "Hermessence" || p.subcategory === "Perfumes",
       "the women's universe": (p) => p.category === "fragrances",
       "the men's universe": (p) => p.category === "fragrances",
-      "our collections": (p) => p.category === "watches",
+      // Watches "Our collections" view (2026-11-15): the all-watches
+      // list, gated on watchPos like the parent page.
+      "our collections": (p) => p.category === "watches" && p.watchPos !== undefined,
       "women": (p) => p.category === "watches" || p.category === "women",
       "men": (p) => p.category === "watches" || p.category === "men",
       "straps": (p) => p.subcategory === "Straps",
@@ -2045,6 +2053,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // "Kelly in the city" / "Hands-free mode" inserts. The women's
   // bags page is a separate page and is NOT affected.
   const isMensBagsPage = cat === "leather" && subLow === "men's bags and clutches";
+  // Watches parent page (cat "watches", no sub, 2026-11-15) — sorts
+  // by watchPos (the original's live order, 370 tiles) and carries
+  // the descriptive paragraph. The sub-views (Women / Men / Straps)
+  // are NOT gated — their original totals were not measured; only
+  // the parent page is.
+  const isWatchesPage = cat === "watches" && !sub;
   // Men's Shoes PARENT page only (sub "Shoes") — distinct from the
   // broad isMensShoesPage (filters/carousel), which is also true on
   // the men's main page and sub-pages.
@@ -2242,10 +2256,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Men's Bags (2026-11-15) sorts by mBagPos — the original's
     // order — the same way (women's bags are a separate page).
     else if (isMensBagsPage && list.some((p) => p.mBagPos !== undefined)) list = [...list].sort((a, b) => (a.mBagPos ?? Infinity) - (b.mBagPos ?? Infinity));
+    // Watches (2026-11-15) sorts by watchPos — the original's
+    // order — the same way (the parent page lists exactly the 370
+    // live tiles).
+    else if (isWatchesPage && list.some((p) => p.watchPos !== undefined)) list = [...list].sort((a, b) => (a.watchPos ?? Infinity) - (b.watchPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2901,6 +2919,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         <div className="mx-auto mt-12 max-w-3xl text-center">
           <p className="text-sm leading-7 text-neutral-700">
             Step into the functional refinement of the men&apos;s bags collection. Crafted from premium materials, our men&apos;s bags combine timeless style with everyday practicality. Whether you need a sophisticated men&apos;s tote bag for work, a durable men&apos;s backpack for travel, or a sleek men&apos;s messenger bag for daily essentials, Hermès offers a variety of styles to suit your needs. Explore our collection of men&apos;s bags, from classic leather designs to modern interpretations, and find the perfect companion for your lifestyle. Our men&apos;s bags collection features a variety of designs, each crafted with meticulous attention to detail and exceptional quality. From the iconic Kelly Messenger to the versatile Herbag, each bag is a testament to Hermès&apos; commitment to craftsmanship and style. Discover a range of sizes, colors, and materials, ensuring you find the ideal bag for any occasion, whether it&apos;s a casual outing or a formal event. Elevate your style with a men&apos;s bag that reflects your personality and meets your practical needs, while embodying the timeless elegance of Hermès.
+          </p>
+        </div>
+      )}
+
+      {/* Watches descriptive paragraph — verbatim from
+          hermes.com (category text fetch, 2026-11-15). Parent page
+          only; shown in full, as on the original. */}
+      {isWatchesPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Discover Hermès Time, a singular vision of time combining whimsy and rigor. Explore our collections of women&apos;s watches, where elegance is adorned with precious materials and deep black dials. Watchmaking ingenuity is also expressed in our men&apos;s watches, animated by the precision of quartz or poetic complications like the moon phase. From the sporty lines of the Hermès Cut to padlocked icons like the Kelly, each timepiece reflects our savoir-faire. Finally, personalize your style thanks to our interchangeable straps.
           </p>
         </div>
       )}
