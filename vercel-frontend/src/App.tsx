@@ -183,15 +183,17 @@ function catLabel(cat: string): string {
   return CAT_LABELS[cat] ?? NAV.find((n) => n.key === cat)?.label ?? cat.toUpperCase();
 }
 // Sub-page titles render in sentence case on the original, but the `sub`
-// value arrives lowercase from the URL slug map (routing.ts keys), so
-// "dresses and skirts" rendered lowercase in the h1. Capitalise only the
-// first letter — the original writes "Dresses and skirts", "To go
-// wallets", "Scarves, shawls and stoles", not title case. Only the first
-// character is touched, so "T-shirts" stays "T-shirts" and already-proper
-// subs ("Bags and clutches") pass through unchanged. COLLECTION_TITLES
-// still wins first for the season collections and the RTW parents.
+// value arrives in mixed case — lowercase from the URL slug map
+// (routing.ts keys: "dresses and skirts") yet title case from menu
+// labels ("To Go wallets", which rendered with a capital G until this
+// fix). Normalise to sentence case: capitalise the first letter and
+// lowercase the rest — the original writes "Dresses and skirts", "To go
+// wallets", "Scarves, shawls and stoles", not title case. "T-shirts"
+// still renders "T-shirts" and "Hermessence" / "Make-up" are unaffected.
+// COLLECTION_TITLES still wins first for the season collections and the
+// RTW parents.
 function titleCaseSub(s: string): string {
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
 }
 const SUBS_BY_CAT: Record<string, string[]> = (() => {
   const m: Record<string, string[]> = {};
@@ -270,6 +272,19 @@ const THEME_GRID_ORDER: Record<string, string[]> = {
   "Fashion Jewelry": ["H100096FE03", "H306324FvN2", "H100095FE03", "H500522FD89"],
   "Silk": ["H004391Sv05", "H061144Sv06", "H251526Sv02", "H891071Sv01"],
   "Beauty": ["VP25SETD25BUNDLE", "V60875PV007", "H104951Mv01", "V60863PV002"],
+};
+// Homepage theme-grid eyebrow labels — measured on hermes.com's homepage
+// HTML (2026-11-16): only the two Beauty cards carry one, rendered in
+// <span class="product-display-name label-small"> inside .product-text
+// BEFORE the name. .label-small = Overpass Mono, 11px (.6875rem),
+// 14px line-height, weight 500, text-transform uppercase, no letter
+// spacing — the stored text is title case ("Ombres d'Hermès") and the
+// all-caps look comes from the CSS. No other theme grid has an eyebrow
+// (only 3 product-display-name spans exist on the whole homepage and the
+// 3rd is empty). Clone renders it with .font-mono-d + uppercase.
+const BEAUTY_EYEBROWS: Record<number, string> = {
+  31: "Ombres d'Hermès",
+  338: "Limited edition Powders",
 };
 const fmt = (n: number) => "$" + n.toLocaleString("en-US");
 const priceText = (p: Product) => (p.priceLabel ? p.priceLabel : fmt(p.price));
@@ -431,7 +446,7 @@ function cartImageFor(products: Product[], productId: number, name: string, pric
 // bags, etc. never get a quick-buy button.
 function isSneakerProduct(p: Product): boolean { return /sneaker/i.test(p.name); }
 
-function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean; plainTile?: boolean }) {
+function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile, eyebrow }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean; plainTile?: boolean; eyebrow?: string }) {
   const bagIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>;
   // Tile views (hermes.com parity): the tile photo first, then the
   // alternates — the product's gallery views after the first
@@ -592,7 +607,8 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile }: { p: Pr
         </div>
       ) : (
         <>
-          <p className="product-name mt-2 px-2 text-left text-xs leading-5 text-[var(--text)]">{p.name}</p>
+          {eyebrow && <p className="font-mono-d mt-2 block px-2 text-left text-[11px] font-medium uppercase leading-[14px] tracking-normal text-[var(--text)]">{eyebrow}</p>}
+          <p className={`product-name ${eyebrow ? "" : "mt-2 "}px-2 text-left text-xs leading-5 text-[var(--text)]`}>{p.name}</p>
           {p.colors[0] && <p className="sr-only">{p.colors[0].name}</p>}
           <p className="mt-0.5 px-2 text-left text-xs leading-5 text-[var(--text)]">{priceText(p)}</p>
           {onQuickBuy && isBuyableStatus(p.status) && (
@@ -1442,7 +1458,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             is hidden, not the products. */}
         <h2 className="sr-only">PRODUCTS FOR THE THEME {theme.toUpperCase()}</h2>
         <div key={theme} className="-mx-4 mt-6 grid grid-cols-2 gap-x-[2px] gap-y-8 sm:mx-0 lg:mt-8 lg:grid-cols-4 lg:gap-[2px]">
-          {shown.map((p) => <ProductCard key={p.id} p={p} plainTile onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
+          {shown.map((p) => <ProductCard key={p.id} p={p} plainTile eyebrow={theme === "Beauty" ? BEAUTY_EYEBROWS[p.id] : undefined} onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
         </div>
       </div>
       </section>
