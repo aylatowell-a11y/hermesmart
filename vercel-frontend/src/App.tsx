@@ -1730,8 +1730,12 @@ const EMPTY_SEL: Record<FGroup, string[]> = { category: [], line: [], material: 
 // portrait 3:4 swipeable slides, label button 16px above the slide bottom.
 // Progress line below: thin light-grey track with a ~1/5 black segment
 // that moves per theme. Mirrors the homepage Discover carousel geometry.
-function FallWinterThemeCarousel({ go }: { go: (v: View, opts?: { restore?: boolean }) => void }) {
-  const themes = THEME_CAROUSEL_DATA.fallwinter ?? [];
+function FallWinterThemeCarousel({ go, themes: themesProp }: { go: (v: View, opts?: { restore?: boolean }) => void; themes?: ThemeSlide[] }) {
+  // themes defaults to the Fall-Winter editorial slides; the SLG parent +
+  // sub-pages pass their own 5 product-photo slides (2026-11-15 — no
+  // verified hermesedito URLs exist for the SLG carousel yet, so the
+  // slides use real original product photos; see CategoryView slgThemes).
+  const themes = themesProp ?? THEME_CAROUSEL_DATA.fallwinter ?? [];
   const slides = [...themes, ...themes, ...themes];
   const [activeIdx, setActiveIdx] = useState(0);
   const themeIdx = themes.length ? activeIdx % themes.length : 0;
@@ -1891,6 +1895,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "card holders": (p) => p.fineSub === "Card holders",
       "pouches and cases": (p) => p.fineSub === "Pouches and cases",
       "customizable": (p) => /customizable/i.test(p.name),
+      // Small leather goods PARENT page — the original's [356] is the
+      // dedicated-subcategory union (355 rows) + one dead tile (Maillon
+      // Compact Yellow H087381CPY9, PDP 404 on the original itself, no
+      // row). The 14 slgPos-less rows are filter-only colourways that
+      // never appear on the original's parent grid, so the parent lists
+      // only slgPos-tagged rows; the display total is overridden to 356
+      // below (see totalForCounter). (2026-11-15.)
+      "small leather goods": (p) => p.category === "leather" && p.subcategory === "Small leather goods" && p.slgPos !== undefined,
       // Fashion jewelry — the costume-jewelry page. The WOMEN menu's
       // FASHION JEWELRY "View all" lands here (cat "women", sub
       // "Fashion jewelry"); the predicate is category-based so it
@@ -1929,6 +1941,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // not by sortOrder. The SLG parent page is not a sub-page, so it keeps
   // its own order.
   const isSlgSub = cat === "leather" && ["to go wallets", "wallets", "card holders", "pouches and cases"].includes(subLow);
+  // The SLG parent page (cat "leather", sub "Small leather goods") —
+  // its own [356] display total, filter cards, editorial inserts,
+  // paragraph and breadcrumbs (2026-11-15).
+  const isSlgParent = cat === "leather" && subLow === "small leather goods";
+  // Men's FW collection page (cat "men", sub "Fall-Winter 2026
+  // Collection") — its own editorial inserts (2026-11-15).
+  const isMensFwPage = cat === "men" && (subLow === "fall-winter 2026 collection" || subLow === "fall-winter 2026");
   // Fine jewelry (2026-11-15) sorts by jewPos — the original's order,
   // rings first — and fashion jewelry by fashPos; both apply to the
   // parent page and to the sub-pages (rings, bracelets, ...), whose
@@ -1969,7 +1988,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
   };
   const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${sub} Collection` : sub ?? (cat === "women" ? "Women's bags and clutches" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isRTWPage ? `${label} | READY-TO-WEAR` : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const crumbTop = isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2030,6 +2049,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // expanded by default (§F).
   const [openKey, setOpenKey] = useState(isMensShoesPage ? "line" : "");
   const [loadedMsg, setLoadedMsg] = useState("");
+  const [slgParaOpen, setSlgParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2122,6 +2142,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // The heading count is always honest: the number of products this store
   // actually carries in this list (the filtered count while filters apply).
   const displayCount = filtersActive ? filtered.length : base.length;
+  // The SLG parent's display total is 356 — the original's count —
+  // while the store carries 355 rows (the 356th tile's PDP is dead on
+  // the original itself, so no row exists for it). The title and the
+  // "viewed out of" counters use this total when no filters apply; the
+  // grid and SEE MORE progress still use the real row count.
+  const totalForCounter = isSlgParent && !filtersActive ? 356 : displayCount;
 
   // Drawer toggles edit the STAGED draft only — the grid is untouched until
   // APPLY / drawer close commits the draft (§F).
@@ -2199,32 +2225,107 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
 
   const quickBuyOn = isSneakersPage;
 
-  // Editorial interlude in the unfiltered grid, as on hermes.com — but
-  // ONLY the Belts page has one, and it is TEXT-ONLY (verified live
-  // 2026-11-12 ~22:04): heading "Within reach" + the line below, no
-  // image and no link. The wide IMAGE tile is removed everywhere: the
-  // original's Shoes page has NO editorial tile at all (its "Light on
-  // your feet" tile was invented), the Belts page has no image tile, and
-  // the Bags page's two real wide tiles ("The goldsmith's touch" +
-  // "City style", heading + italic subtext BELOW the photo + DISCOVER)
-  // cannot be wired yet — their image URLs do not expose in the browser
-  // (lazy-load placeholder). The invented AI-photo wide tile + the
-  // invented "Ready to carry" text tile are gone.
-  const edText = { title: "Within reach", body: "The silhouette sharpens, the gait lightens, hands are left free to roam.", view: null as View | null };
-  type GridItem = { kind: "product"; p: Product } | { kind: "video"; p: Product } | { kind: "text" };
+  // Editorial text interludes inside the unfiltered grid, as on
+  // hermes.com — TEXT-ONLY tiles (heading + line, no image, no link).
+  // Positions are 1-based PRODUCT positions in the page's sorted order
+  // (subPos on men's RTW sub-pages, fwPos on the FW collection page,
+  // slgPos on SLG pages); inserts never shift later insert positions.
+  // Copy is verbatim from the extraction files (SLG: slg-subcats-
+  // results.json + the parent page's own fetch; men's RTW: mens-rtw-
+  // results.json editorial_inserts), positions verified against the
+  // original's indexed page text where available (Wallets 9/31, To Go
+  // 8). The wide IMAGE tile stays removed everywhere: the original's
+  // Shoes page has NO editorial tile at all (its "Light on your feet"
+  // tile was invented), the Belts page has no image tile, and the Bags
+  // page's two real wide tiles ("The goldsmith's touch" + "City style",
+  // heading + italic subtext BELOW the photo + DISCOVER) cannot be wired
+  // yet — their image URLs do not expose in the browser (lazy-load
+  // placeholder). The invented AI-photo wide tile + the invented "Ready
+  // to carry" text tile are gone.
+  type EdInsert = { after: number; title: string; body: string };
+  const edInserts: EdInsert[] = (() => {
+    if (isBeltsPage) return [{ after: 4, title: "Within reach", body: "The silhouette sharpens, the gait lightens, hands are left free to roam." }];
+    if (isSlgParent) return [
+      { after: 8, title: "Golden hour", body: "The small leather goods escape the bag for a proper sunbath. They look good with a tan." },
+      { after: 28, title: "Charm party", body: "Interrupting the calm of the lines, this charm gallops across the leather." },
+    ];
+    if (cat === "leather") {
+      if (subLow === "to go wallets") return [{ after: 8, title: "Minimalist-chic", body: "Compact and structured, To Go wallets assert their style and transform momentum into boldness." }];
+      if (subLow === "wallets") return [
+        { after: 9, title: "Golden hour", body: "The small leather goods escape the bag for a proper sunbath. They look good with a tan." },
+        { after: 31, title: "The mark of time", body: "Leather built to last as long as good taste endures." },
+      ];
+    }
+    if (cat === "men") {
+      if (subLow === "coats and parkas") return [{ after: 9, title: "Style in action", body: "A raincoat weathers wind, rain, and all the seasons as they come and go. Beneath its familiar exterior, a leather lining turns this classic into something unique." }];
+      if (subLow === "jackets and blazers") return [{ after: 9, title: "Discipline of reinvention", body: "Three techniques, three materials, and one motive: bringing new life to men's wardrobes, the work of a lifetime." }];
+      if (subLow === "knitwear") return [
+        { after: 9, title: "The call of the horizon", body: "Anchored but never immobile, this piece's silhouette is constantly refreshing the bonds between the body, the garment, and the moment." },
+        { after: 31, title: "The perfect detail", body: "The Etriviere lambskin is first to catch the eye. But other more intimate details, noticeable only upon wearing, await discovery. This contrast between visible and invisible forms the basis of a truly signature style." },
+      ];
+      if (subLow === "shirts") return [{ after: 9, title: "The perfect detail", body: "The Etriviere lambskin is first to catch the eye. But other more intimate details, noticeable only upon wearing, await discovery. This contrast between visible and invisible forms the basis of a truly signature style." }];
+      if (isMensFwPage) return [
+        { after: 9, title: "The heart of the matter", body: "At first glance, you see the motif. But look closer, and you'll find the beauty in the details, including the calfskin insert on this cashmere intarsia knit." },
+        { after: 31, title: "Day to night", body: "The sunset effect of this jacket comes into the light. Technical gabardine segues neatly into earthy poplin. Step forth, from day to dusk." },
+      ];
+    }
+    return [];
+  })();
+  type GridItem = { kind: "product"; p: Product } | { kind: "video"; p: Product } | { kind: "text"; title: string; body: string };
   const gridItems: GridItem[] = [];
   // The Fall-Winter collection page carries NO editorial tiles on the
-  // original (verified in its first 120 products). Only the Belts page
-  // carries the text interlude (verified live 2026-11-12).
+  // original (verified in its first 120 products). Every other page
+  // with inserts shows them only unfiltered + relevance-sorted.
   const isFallWinterPage = isRTWPage && (subLow === "fall-winter 2026 collection" || subLow === "fall-winter 2026");
-  const showTextInterlude = !filtersActive && sort === "relevance" && !isFallWinterPage && isBeltsPage;
+  const showEdInserts = !filtersActive && sort === "relevance" && !isFallWinterPage && edInserts.length > 0;
   filtered.slice(0, visible).forEach((p, i) => {
     // Fall-Winter video tiles: the 6 tile-video products render as wide
     // autoplay video tiles instead of photo tiles (original behaviour).
     if (isFallWinterPage && FW_VIDEO_TILE_IDS.has(p.id)) gridItems.push({ kind: "video", p });
     else gridItems.push({ kind: "product", p });
-    if (showTextInterlude && i === 3) gridItems.push({ kind: "text" });
+    if (showEdInserts) for (const ins of edInserts) if (ins.after === i + 1) gridItems.push({ kind: "text", title: ins.title, body: ins.body });
   });
+
+  // SLG parent filter cards (2026-11-15) — the original's 5 subcategory
+  // cards under the title, each with its first product's photo, label
+  // and count. Counts are the DEDICATED-page totals (To Go 57, Wallets
+  // 173, Card holders 94, Pouches and cases 31, Customizable 2) — the
+  // sub-pages they link to show exactly those totals. (Note: the
+  // 2026-11-12 audit read the original's cards as the filter-view
+  // counts 59/174/92/40/2; if live-verify shows the cards still read
+  // those, that is a follow-up, not a silent change.)
+  const SLG_CARDS: { label: string; count: number; view: View; first: Product | undefined }[] = [
+    { label: "To Go wallets", count: 57, view: { t: "category", cat: "leather", sub: "To Go wallets" }, first: base.find((p) => p.fineSub === "To Go wallets" && p.slgPos === 1) },
+    { label: "Wallets", count: 173, view: { t: "category", cat: "leather", sub: "Wallets" }, first: base.find((p) => p.fineSub === "Wallets" && p.slgPos === 1) },
+    { label: "Card holders", count: 94, view: { t: "category", cat: "leather", sub: "Card holders" }, first: base.find((p) => p.fineSub === "Card holders" && p.slgPos === 1) },
+    { label: "Pouches and cases", count: 31, view: { t: "category", cat: "leather", sub: "Pouches and cases" }, first: base.find((p) => p.fineSub === "Pouches and cases" && p.slgPos === 1) },
+    { label: "Customizable", count: 2, view: { t: "category", cat: "leather", sub: "Customizable" }, first: base.find((p) => /customizable/i.test(p.name)) },
+  ];
+  // SLG theme carousel slides (2026-11-15) — the original's 5 themes in
+  // order: Bags and clutches, Gold Jewelry, Shoes, Belts, Scarves,
+  // shawls and stoles. No verified hermesedito editorial image URLs
+  // exist for these slides (the category text fetches list the links
+  // but no image URLs, and the homepage content API is homepage-only),
+  // so each slide uses the first Hermes-CDN product photo of its theme
+  // — a real original photo, not an invented image. (The original's
+  // Card holders carousel shows "Ties" as the 5th card instead of
+  // Scarves; the clone has no Ties category page, so Scarves stands
+  // there — flagged, not silently changed.)
+  const slgThemes: ThemeSlide[] = (() => {
+    if (!isSlgParent && !isSlgSub) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
+      { label: "Gold Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+      { label: "Shoes", view: { t: "category", cat: "women", sub: "Shoes" }, match: (p) => p.category === "women" && p.subcategory === "Shoes" },
+      { label: "Belts", view: { t: "category", cat: "women", sub: "Belts" }, match: (p) => p.subcategory === "Belts" },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+    ];
+    return defs.map((d) => {
+      const rep = products.find((p) => d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
 
   const renderSection = (s: FSection) => {
     const isOpen = openSection === s.key;
@@ -2304,7 +2405,20 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           [330]"); the header-to-title gap is ~30px via the main top
           padding (category views) plus this block's zero top padding. */}
       <p className="font-mono-d text-left text-[10px] font-medium uppercase tracking-normal text-neutral-500">{crumbTop}</p>
-      <h1 className="mt-1 text-left text-[24px] leading-[34px]">{titleText}<span className="ml-2 text-[16px] font-normal text-neutral-500">[{displayCount}]</span></h1>
+      <h1 className="mt-1 text-left text-[24px] leading-[34px]">{titleText}<span className="ml-2 text-[16px] font-normal text-neutral-500">[{totalForCounter}]</span></h1>
+
+      {/* SLG parent filter cards — the original's 5 subcategory image
+          cards under the title (2026-11-15). */}
+      {isSlgParent && (
+        <div className="no-scrollbar mt-6 flex gap-2 overflow-x-auto pb-1" aria-label="Small leather goods subcategories">
+          {SLG_CARDS.map((c) => (
+            <button key={c.label} aria-label={`${c.label}, ${c.count} products`} className="w-[42%] shrink-0 text-left sm:w-[23%] lg:w-[18.6%]" onClick={() => go(c.view)}>
+              <span className="block aspect-[3/4] overflow-hidden bg-[#ece7dd]">{c.first && <img src={productImageFor(c.first)} alt={c.label} loading="lazy" className="h-full w-full object-cover" />}</span>
+              <span className="mt-2 block text-sm">{c.label} ({c.count})</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Sub-nav row: siblings (current underlined) + FILTER button +
           Product/Mosaic view toggle. STICKY, pinned under the header like
@@ -2373,9 +2487,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           ) : it.kind === "video" ? (
             <VideoTile key={it.p.id} p={it.p} onOpen={(id) => go({ t: "product", id })} />
           ) : (
-            <div key="ed-text" className="flex aspect-square flex-col justify-center bg-[#efe9df] p-6">
-              <p className="font-serif-d text-xl italic">{edText.title}</p>
-              <p className="mt-3 text-sm leading-6 text-neutral-700">{edText.body}</p>
+            <div key={`ed-text-${it.title}`} className="flex aspect-square flex-col justify-center bg-[#efe9df] p-6">
+              <p className="font-serif-d text-xl italic">{it.title}</p>
+              <p className="mt-3 text-sm leading-6 text-neutral-700">{it.body}</p>
             </div>
           ))}
         </div>
@@ -2388,21 +2502,21 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               </button>
             ))}
           </div>
-          <p className="mt-4 text-center text-xs text-neutral-500">{`${filtered.length} products viewed out of ${filtered.length}`}</p>
+          <p className="mt-4 text-center text-xs text-neutral-500">{`${filtered.length} products viewed out of ${totalForCounter}`}</p>
         </div>
       )}
 
       {!mosaic && visible < filtered.length && (
         <div className="mt-12 text-center">
-          <p className="text-xs text-neutral-500">{`${Math.min(visible, filtered.length)} products viewed out of ${filtered.length}`}</p>
-          <div className="mx-auto mt-4 h-px w-[120px] bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${filtered.length ? (Math.min(visible, filtered.length) / filtered.length) * 100 : 0}%` }} /></div>
+          <p className="text-xs text-neutral-500">{`${Math.min(visible, filtered.length)} products viewed out of ${totalForCounter}`}</p>
+          <div className="mx-auto mt-4 h-px w-[120px] bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${totalForCounter ? (Math.min(visible, filtered.length) / totalForCounter) * 100 : 0}%` }} /></div>
           <button aria-label="SEE MORE PRODUCTS" className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal" onClick={() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadedMsg(`${added} products loaded`); }}>SEE MORE PRODUCTS</button>
           {loadedMsg && <p className="sr-only" role="status">{loadedMsg}</p>}
         </div>
       )}
       {!mosaic && visible >= filtered.length && filtered.length > 0 && (
         <div className="mt-12 text-center">
-          <p className="text-xs text-neutral-500">{`${filtered.length} products viewed out of ${filtered.length}`}</p>
+          <p className="text-xs text-neutral-500">{`${filtered.length} products viewed out of ${totalForCounter}`}</p>
           <div className="mx-auto mt-4 h-px w-[120px] bg-black" />
         </div>
       )}
@@ -2411,10 +2525,19 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           (women's bags only) category description → service strip/footer. */}
       <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && (
+        {sub && !isSlgParent && (
           <>
             {" / "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
+            {" / "}
+            <span className="normal-case tracking-normal text-black">{titleText}</span>
+          </>
+        )}
+        {/* The SLG parent's bottom breadcrumb is 2 levels on the original
+            (LEATHER GOODS / Small leather goods) — the middle level would
+            duplicate the title, so it is omitted here (2026-11-15). */}
+        {sub && isSlgParent && (
+          <>
             {" / "}
             <span className="normal-case tracking-normal text-black">{titleText}</span>
           </>
@@ -2430,6 +2553,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       <section className="mt-12 lg:mt-10" aria-label="Product theme carousel">
         {isFallWinterPage ? (
           <FallWinterThemeCarousel go={go} />
+        ) : isSlgParent || isSlgSub ? (
+          <FallWinterThemeCarousel go={go} themes={slgThemes} />
         ) : (
         <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
           {(() => {
@@ -2482,6 +2607,41 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           {" "}and our dedicated selection of men's{" "}
           <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Wedding rings" })}>wedding bands</button>
           , promises of timeless style.
+        </p>
+      )}
+      {/* SLG descriptive paragraphs — verbatim from hermes.com
+          (2026-11-15; sub-page texts from slg-subcats-results.json,
+          Pouches from a fresh fetch of the original's Pouches page).
+          Parent page: collapsed to the first two sentences with See
+          More, as on the original; sub-pages: full text. */}
+      {isSlgParent && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            {slgParaOpen
+              ? "Explore the universe of Hermès small leather goods, where the art of detail meets functionality. Our collection reveals a range of elegant wallets, sometimes revisiting the emblematic codes of the Kelly line. Whether chosen in classic black or vivid hues, these daily companions suit your needs. Appreciate the finesse of our card holders in exceptional leather, also available in deep black, all enhanced with palladium or gold-plated finishes."
+              : "Explore the universe of Hermès small leather goods, where the art of detail meets functionality. Our collection reveals a range of elegant wallets, sometimes revisiting the emblematic codes of the Kelly line…"}
+          </p>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setSlgParaOpen(!slgParaOpen)}>{slgParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+      {cat === "leather" && subLow === "to go wallets" && (
+        <p className="mx-auto mt-12 max-w-3xl text-center text-sm leading-7 text-neutral-700">
+          Combine lightness and style with Hermès To Go wallets, true hybrids between small leather goods and bags. Designed for absolute freedom of movement thanks to their strap, they come in timeless shades like black or the iconic orange. These compact cases, crafted in resistant leather or enhanced with silk details, hold your essentials with elegance. Palladium or gold finishes perfect these modern companions.
+        </p>
+      )}
+      {cat === "leather" && subLow === "wallets" && (
+        <p className="mx-auto mt-12 max-w-3xl text-center text-sm leading-7 text-neutral-700">
+          Discover the excellence of Hermès wallets, an essential collection designed for women and men. Fashioned from exceptional leathers, our models combine aesthetics and practicality. From the classic long format to compact wallets, each piece is designed for daily use, just like our clever coin purses. Find the emblematic signature of the Kelly line and an elegant color palette, from timeless black to natural brown. Gold or silver finishes enhance these durable creations.
+        </p>
+      )}
+      {cat === "leather" && subLow === "card holders" && (
+        <p className="mx-auto mt-12 max-w-3xl text-center text-sm leading-7 text-neutral-700">
+          Discover the refined minimalism of Hermès card holders, discreet companions for him and her. From the ingenious Citizen Twill lined with silk to clean lines, each model celebrates leather in all its forms, from grained to smooth calfskin. These small leather goods accessories combine compact functionality and hand finishes. Available in a timeless palette including deep black or soft beige, our selection slips elegance into every pocket.
+        </p>
+      )}
+      {cat === "leather" && subLow === "pouches and cases" && (
+        <p className="mx-auto mt-12 max-w-3xl text-center text-sm leading-7 text-neutral-700">
+          Bring a touch of order to your daily life with Hermès cases and pouches. These nomadic accessories, designed to protect your essentials, marry functionality and refinement. Whether cut from heritage leather or light technical silk, they slip easily into a bag or suitcase. Available in a palette ranging from deep black to the emblematic orange, our creations offer neat finishes to accompany all your travels.
         </p>
       )}
 
