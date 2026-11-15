@@ -1858,7 +1858,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // as Scarves/Belts/Dresses). Men's bags (sub "Men's bags and
       // clutches") are a separate page and are NOT gated by wBagPos.
       "women's bags and clutches": (p) => p.subcategory === "Bags and clutches" && (p.category === "women" || p.category === "leather") && p.wBagPos !== undefined,
-      "men's bags and clutches": (p) => p.subcategory === "Bags and clutches" && (p.category === "men" || p.category === "leather"),
+      // Men's Bags parent page — the original's live order (104
+      // tiles, extracted 2026-11-15) lives in mBagPos; the parent lists
+      // exactly those rows. The gate is mBagPos-only (no category
+      // condition): 5 of the 104 tiles are women-category rows
+      // (dual-tagged, they keep their wBagPos for the women's page).
+      // The 19 clone bag rows not on the original stay in the
+      // catalogue but never appear on the parent grid.
+      "men's bags and clutches": (p) => p.subcategory === "Bags and clutches" && p.mBagPos !== undefined,
       "silk scarves and accessories": (p) => p.subcategory === "Scarves, shawls and stoles",
       "cashmere shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles",
       "hermessence collection": (p) => p.line === "Hermessence" || p.subcategory === "Perfumes",
@@ -2032,6 +2039,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // paragraph + "Equestrian style" insert. The men's bags page (sub
   // "Men's bags and clutches") is a separate page and is NOT affected.
   const isWomensBagsPage = (cat === "women" && !sub) || subLow === "women's bags and clutches";
+  // Men's Bags parent page (cat "leather", sub "Men's bags and
+  // clutches", 2026-11-15) — sorts by mBagPos (the original's live
+  // order, 104 tiles) and carries the descriptive paragraph +
+  // "Kelly in the city" / "Hands-free mode" inserts. The women's
+  // bags page is a separate page and is NOT affected.
+  const isMensBagsPage = cat === "leather" && subLow === "men's bags and clutches";
   // Men's Shoes PARENT page only (sub "Shoes") — distinct from the
   // broad isMensShoesPage (filters/carousel), which is also true on
   // the men's main page and sub-pages.
@@ -2226,10 +2239,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Women's Bags (2026-11-15) sorts by wBagPos — the original's
     // order — the same way (men's bags are a separate page).
     else if (isWomensBagsPage && list.some((p) => p.wBagPos !== undefined)) list = [...list].sort((a, b) => (a.wBagPos ?? Infinity) - (b.wBagPos ?? Infinity));
+    // Men's Bags (2026-11-15) sorts by mBagPos — the original's
+    // order — the same way (women's bags are a separate page).
+    else if (isMensBagsPage && list.some((p) => p.mBagPos !== undefined)) list = [...list].sort((a, b) => (a.mBagPos ?? Infinity) - (b.mBagPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2379,6 +2395,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // the wide image tiles likewise stay unwired (their image URLs do
     // not expose in the browser — see the comment above).
     if (isWomensBagsPage) return [{ after: 28, title: "Equestrian style", body: "Canvas borrows from the codes of the equestrian universe. From the paddock to the pavement, the horse never feels too far away." }];
+    // Men's Bags parent page — the original's two editorial blocks
+    // ("Kelly in the city" after tile #8, "Hands-free mode" after
+    // tile #28), verbatim from the live category page, 2026-11-15.
+    if (isMensBagsPage) return [
+      { after: 8, title: "Kelly in the city", body: "The Kelly Messenger bag, your everyday companion." },
+      { after: 28, title: "Hands-free mode", body: "The Hac a Dos backpack is a modern and functional accessory." },
+    ];
     if (cat === "leather") {
       if (subLow === "to go wallets") return [{ after: 8, title: "Minimalist-chic", body: "Compact and structured, To Go wallets assert their style and transform momentum into boldness." }];
       if (subLow === "wallets") return [
@@ -2867,6 +2890,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         <div className="mx-auto mt-12 max-w-3xl text-center">
           <p className="text-sm leading-7 text-neutral-700">
             Dive into the elegance of the Hermès bag and clutch collection for women, a testament to saddlery savoir-faire. From spacious totes in durable canvas to versatile crossbody bags in heritage leathers, every piece exudes sophistication. Adorned with precious palladium or gold-plated hardware, our designs range from large formats to delicate small handbags. Discover our latest architectural silhouettes, including the magnetic Hermès Geta and the timeless Neo Garden.
+          </p>
+        </div>
+      )}
+
+      {/* Men's Bags descriptive paragraph — verbatim from
+          hermes.com (category text fetch, 2026-11-15). Parent page
+          only; shown in full, as on the original. */}
+      {isMensBagsPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Step into the functional refinement of the men&apos;s bags collection. Crafted from premium materials, our men&apos;s bags combine timeless style with everyday practicality. Whether you need a sophisticated men&apos;s tote bag for work, a durable men&apos;s backpack for travel, or a sleek men&apos;s messenger bag for daily essentials, Hermès offers a variety of styles to suit your needs. Explore our collection of men&apos;s bags, from classic leather designs to modern interpretations, and find the perfect companion for your lifestyle. Our men&apos;s bags collection features a variety of designs, each crafted with meticulous attention to detail and exceptional quality. From the iconic Kelly Messenger to the versatile Herbag, each bag is a testament to Hermès&apos; commitment to craftsmanship and style. Discover a range of sizes, colors, and materials, ensuring you find the ideal bag for any occasion, whether it&apos;s a casual outing or a formal event. Elevate your style with a men&apos;s bag that reflects your personality and meets your practical needs, while embodying the timeless elegance of Hermès.
           </p>
         </div>
       )}
