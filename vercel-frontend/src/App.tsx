@@ -1885,7 +1885,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "spring-summer 2026 collection": (p) => p.line === "Spring-Summer 2026",
       "spring-summer 2027 collection": (p) => p.line === "Spring-Summer 2027",
       "spring-summer 2027": (p) => p.line === "Spring-Summer 2027",
-      "scarves shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles",
+      // Women's Scarves parent page — the original's live order (455
+      // tiles, extracted 2026-11-15) lives in scarfPos; the parent lists
+      // exactly those rows. The 61 clone rows not on the live list (19
+      // empty-ref stubs + old-season colourways) stay in the catalogue
+      // but never appear on the parent grid. Men's scarves (cat "men")
+      // are a separate page and are NOT gated by scarfPos.
+      "scarves shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : true),
       "loafers": (p) => /loafer/i.test(p.name),
       "boots": (p) => /boot/i.test(p.name),
       "mules": (p) => /mule|loafer/i.test(p.name),
@@ -1973,6 +1979,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // paragraph. Men's shoes (cat "men") are a separate page and are
   // NOT affected.
   const isWomensShoesPage = cat === "women" && subLow === "shoes";
+  // Women's Scarves page (cat "women", sub "Scarves, shawls and
+  // stoles") — sorts by scarfPos (the original's order, 2026-11-15).
+  // Men's scarves (cat "men") are a separate page and are NOT affected.
+  const isWomensScarvesPage = cat === "women" && subLow === "scarves, shawls and stoles";
   const isMensBags = /men's bags/.test(subLow) && !/women's bags/.test(subLow);
   const isBagsPage = /bags and clutches/.test(subLow) || (cat === "women" && !sub);
   const isSneakersPage = /sneaker/.test(subLow);
@@ -2152,10 +2162,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (isFashionJewelryPage && list.some((p) => p.fashPos !== undefined)) list = [...list].sort((a, b) => (a.fashPos ?? Infinity) - (b.fashPos ?? Infinity));
     else if (isHomePage && list.some((p) => p.homePos !== undefined)) list = [...list].sort((a, b) => (a.homePos ?? Infinity) - (b.homePos ?? Infinity));
     else if (isWomensShoesPage && list.some((p) => p.shoePos !== undefined)) list = [...list].sort((a, b) => (a.shoePos ?? Infinity) - (b.shoePos ?? Infinity));
+    // Women's Scarves (2026-11-15) sorts by scarfPos — the original's
+    // order — the same way (men's scarves are a separate page).
+    else if (isWomensScarvesPage && list.some((p) => p.scarfPos !== undefined)) list = [...list].sort((a, b) => (a.scarfPos ?? Infinity) - (b.scarfPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isWomensScarvesPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
