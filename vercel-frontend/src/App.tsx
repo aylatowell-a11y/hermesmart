@@ -173,6 +173,13 @@ const NAV: { key: string; label: string; subs: string[] }[] = MEGA_RAW.filter(e=
 // Candidate sub-names per top-level category, for reversing slug category
 // URLs back into views (routing). Built from the nav lists plus the two
 // short collection spellings the desktop mega menu uses.
+// Categories with no mega-menu entry (fashion jewelry lives under the
+// WOMEN menu on the original, at /women/fashion-jewelry/) still need a
+// proper-case label for titles and breadcrumbs.
+const CAT_LABELS: Record<string, string> = { "fashion-jewelry": "Fashion jewelry" };
+function catLabel(cat: string): string {
+  return CAT_LABELS[cat] ?? NAV.find((n) => n.key === cat)?.label ?? cat.toUpperCase();
+}
 const SUBS_BY_CAT: Record<string, string[]> = (() => {
   const m: Record<string, string[]> = {};
   for (const n of NAV) m[n.key] = [...n.subs];
@@ -1259,6 +1266,10 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
     setThemeIdx(idx);
   };
   const themeDest = (t: string): View => {
+    // The Fashion Jewelry carousel theme is the costume-jewelry page
+    // (/women/fashion-jewelry/), not the fine-jewelry page — the first
+    // product carrying that theme may be a fine row, so do not infer it.
+    if (t === "Fashion Jewelry") return { t: "category", cat: "fashion-jewelry" };
     const rep = products.find((p) => p.theme === t);
     return rep ? { t: "category", cat: rep.category } : { t: "home" };
   };
@@ -1678,7 +1689,7 @@ const THEME_CAROUSEL_DATA: Record<string, ThemeSlide[]> = {
   belts: [
     { label: "Shoes", imgMo: ED("U_BELT_FEMME_LV2_P1_MO"), imgDesktop: ED("U_BELT_FEMME_LV2_P1_DESKTOP"), view: { t: "category", cat: "women", sub: "Shoes" } },
     { label: "Scarves, shawls and stoles", imgMo: ED("U_BELT_FEMME_LV2_P2_MO"), imgDesktop: ED("U_BELT_FEMME_LV2_P2_DESKTOP"), view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" } },
-    { label: "Fashion jewelry", imgMo: ED("U_BELT_FEMME_LV2_P3_MO"), imgDesktop: ED("U_BELT_FEMME_LV2_P3_DESKTOP"), view: { t: "category", cat: "jewelry", sub: "Bracelets" } },
+    { label: "Fashion jewelry", imgMo: ED("U_BELT_FEMME_LV2_P3_MO"), imgDesktop: ED("U_BELT_FEMME_LV2_P3_DESKTOP"), view: { t: "category", cat: "fashion-jewelry" } },
     { label: "Ready-to-wear", imgMo: ED("U_BELT_FEMME_LV2_P4_MO"), imgDesktop: ED("U_BELT_FEMME_LV2_P4_DESKTOP"), view: { t: "category", cat: "women", sub: "Ready-to-Wear" } },
     { label: "Small leather goods", imgMo: ED("U_BELT_FEMME_LV2_P5_MO"), imgDesktop: ED("U_BELT_FEMME_LV2_P5_DESKTOP"), view: { t: "category", cat: "leather", sub: "Small leather goods" } },
   ],
@@ -1700,7 +1711,7 @@ const THEME_CAROUSEL_DATA: Record<string, ThemeSlide[]> = {
     { label: "SMALL LEATHER GOODS", imgMo: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P1_DESKTOP-1?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P1_DESKTOP-1?fit=wrap%2C0&wid=3840&resMode=sharp2&op_usm=1%2C1%2C6%2C0", view: { t: "category", cat: "leather", sub: "Small leather goods" } },
     { label: "BELTS", imgMo: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P2_DESKTOP-1?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P2_DESKTOP-1?fit=wrap%2C0&wid=3840&resMode=sharp2&op_usm=1%2C1%2C6%2C0", view: { t: "category", cat: "women", sub: "Belts" } },
     { label: "LOAFERS AND MULES", imgMo: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P3_DESKTOP-1?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P3_DESKTOP-1?fit=wrap%2C0&wid=3840&resMode=sharp2&op_usm=1%2C1%2C6%2C0", view: { t: "category", cat: "women", sub: "Loafers and mules" } },
-    { label: "FASHION JEWELRY", imgMo: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P4_DESKTOP-1?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P4_DESKTOP-1?fit=wrap%2C0&wid=3840&resMode=sharp2&op_usm=1%2C1%2C6%2C0", view: { t: "category", cat: "jewelry" } },
+    { label: "FASHION JEWELRY", imgMo: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P4_DESKTOP-1?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P4_DESKTOP-1?fit=wrap%2C0&wid=3840&resMode=sharp2&op_usm=1%2C1%2C6%2C0", view: { t: "category", cat: "fashion-jewelry" } },
     { label: "HATS AND GLOVES", imgMo: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P5_DESKTOP-1?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/PAP_F_LV2_P5_DESKTOP-1?fit=wrap%2C0&wid=3840&resMode=sharp2&op_usm=1%2C1%2C6%2C0", view: { t: "category", cat: "women", sub: "Hats and gloves" } },
   ],
 };
@@ -1813,7 +1824,7 @@ function FallWinterThemeCarousel({ go }: { go: (v: View, opts?: { restore?: bool
 
 function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, initialVisible, onVisibleChange }: { products: Product[]; cat: string; sub?: string; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product) => void; pinTop: number; stickyTop: number; initialVisible?: number; onVisibleChange?: (n: number) => void }) {
   const nav = NAV.find((n) => n.key === cat);
-  const label = nav?.label ?? cat.toUpperCase();
+  const label = catLabel(cat);
   const base = useMemo(() => {
     const catList = products.filter((p) => p.category === cat);
     if (!sub) return catList;
@@ -1837,11 +1848,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "pumps": (p) => /pump/i.test(p.name),
       "loafers and mules": (p) => /loafer/i.test(p.name),
       "derbies and oxford shoes": (p) => /derby|oxford/i.test(p.name),
-      "rings": (p) => p.category === cat && /\bring\b/i.test(p.name) && !/earring/i.test(p.name),
-      "wedding rings": (p) => p.category === cat && /\bring\b/i.test(p.name) && !/earring/i.test(p.name),
-      "bracelets": (p) => /bracelet/i.test(p.name),
-      "necklaces and pendants": (p) => /necklace/i.test(p.name),
-      "earrings": (p) => /earring/i.test(p.name),
+      "rings": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Rings" || (/\bring\b/i.test(p.name) && !/earring/i.test(p.name))),
+      "wedding rings": (p) => p.category === cat && /wedding/i.test(p.name) && /\bring\b|\bband\b/i.test(p.name),
+      "bracelets": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Bracelets" || (/bracelet|bangle/i.test(p.name) && p.subcategory !== "Rings")),
+      "necklaces and pendants": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Necklaces" || p.subcategory === "Pendants" || (/necklace|pendant/i.test(p.name) && p.subcategory !== "Earrings")),
+      "earrings": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Earrings" || /earring|ear cuff/i.test(p.name)),
       "lips": (p) => p.category === cat && /lip/i.test(p.name),
       "face": (p) => p.category === cat && /face|powder|blush|foundation/i.test(p.name),
       "eyes": (p) => p.category === cat && /eye/i.test(p.name),
@@ -1865,12 +1876,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "loafers": (p) => /loafer/i.test(p.name),
       "boots": (p) => /boot/i.test(p.name),
       "mules": (p) => /mule|loafer/i.test(p.name),
-      "necklaces": (p) => /necklace/i.test(p.name),
+      "necklaces": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Necklaces" || /necklace/i.test(p.name)),
       "twillys": (p) => p.subcategory === "Scarves, shawls and stoles",
       "scarves 90 cm": (p) => p.subcategory === "Scarves, shawls and stoles",
       "cashmere": (p) => p.subcategory === "Scarves, shawls and stoles",
       "stole": (p) => p.subcategory === "Scarves, shawls and stoles",
-      "pins and brooches": (p) => p.category === cat && /\bpin\b|\bbrooch/i.test(p.name),
+      "pins and brooches": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && /\bpin\b|\bbrooch/i.test(p.name),
       // Small leather goods fine subcategories — products carry fineSub
       // ("To Go wallets" / "Wallets" / "Card holders" / "Pouches and
       // cases" / "Customizable") while their subcategory stays "Small
@@ -1880,6 +1891,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "card holders": (p) => p.fineSub === "Card holders",
       "pouches and cases": (p) => p.fineSub === "Pouches and cases",
       "customizable": (p) => /customizable/i.test(p.name),
+      // Fashion jewelry — the costume-jewelry page. The WOMEN menu's
+      // FASHION JEWELRY "View all" lands here (cat "women", sub
+      // "Fashion jewelry"); the predicate is category-based so it
+      // works from any menu.
+      "fashion jewelry": (p) => p.category === "fashion-jewelry",
       // Men's RTW sub-pages — products carry fineSub (the sub-page name)
       // and subPos (their order on that sub-page); the rows keep their own
       // subcategory/line, so the FW collection page is unaffected.
@@ -1913,6 +1929,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // not by sortOrder. The SLG parent page is not a sub-page, so it keeps
   // its own order.
   const isSlgSub = cat === "leather" && ["to go wallets", "wallets", "card holders", "pouches and cases"].includes(subLow);
+  // Fine jewelry (2026-11-15) sorts by jewPos — the original's order,
+  // rings first — and fashion jewelry by fashPos; both apply to the
+  // parent page and to the sub-pages (rings, bracelets, ...), whose
+  // lists keep their original relative order.
+  const isJewelryPage = cat === "jewelry";
+  const isFashionJewelryPage = cat === "fashion-jewelry";
   const isMensBags = /men's bags/.test(subLow) && !/women's bags/.test(subLow);
   const isBagsPage = /bags and clutches/.test(subLow) || (cat === "women" && !sub);
   const isSneakersPage = /sneaker/.test(subLow);
@@ -1974,6 +1996,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       return true;
     });
     siblings = rtwList.map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow || (isCollectionSub && l.toLowerCase() === `${subLow} collection`) || (l === "Dresses and skirts" && isDressesPage && !RTW_SUBS.some((x) => x.toLowerCase() === subLow)) }));
+  } else if (cat === "fashion-jewelry") {
+    // The original's fashion-jewelry sub-pages (WOMEN menu, desktop).
+    siblings = ["Bracelets", "Earrings", "Necklaces", "Rings", "Pins and brooches", "Hair accessories and combs", "Hairbands and hatbands"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
+    siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -2074,12 +2100,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // on that page — before the fwPos/ssPos collection orders.
     // SLG sub-pages (2026-11-15) sort by slgPos — their own order on the
     // dedicated page — the same way, before fwPos/ssPos.
+    // Fine jewelry (2026-11-15) sorts by jewPos and fashion jewelry by
+    // fashPos — their own original orders — the same way.
     else if (isMensRtwSub && list.some((p) => p.subPos !== undefined)) list = [...list].sort((a, b) => (a.subPos ?? Infinity) - (b.subPos ?? Infinity));
     else if (isSlgSub && list.some((p) => p.slgPos !== undefined)) list = [...list].sort((a, b) => (a.slgPos ?? Infinity) - (b.slgPos ?? Infinity));
+    else if (isJewelryPage && list.some((p) => p.jewPos !== undefined)) list = [...list].sort((a, b) => (a.jewPos ?? Infinity) - (b.jewPos ?? Infinity));
+    else if (isFashionJewelryPage && list.some((p) => p.fashPos !== undefined)) list = [...list].sort((a, b) => (a.fashPos ?? Infinity) - (b.fashPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgSub]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgSub, isJewelryPage, isFashionJewelryPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2431,7 +2461,29 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         </div>
         )}
       </section>
-
+      {/* /jewelry/ descriptive paragraph — verbatim from hermes.com
+          (fetched 2026-11-15). Parent page only. The original's inline
+          links go to the matching sub-pages; the Chaîne d'ancre link
+          has no clone page, so it stays plain text. */}
+      {cat === "jewelry" && !sub && (
+        <p className="mx-auto mt-12 max-w-3xl text-center text-sm leading-7 text-neutral-700">
+          Hermès jewelry cultivates a singular art where metal becomes sculpture and the link becomes a signature. Let yourself be seduced by the pure radiance of our{" "}
+          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Rings" })}>white gold rings</button>
+          , true architectural plays of light. Reinvent the way you wear jewelry with boldness: from the classicism of our{" "}
+          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Earrings" })}>earrings</button>
+          {" "}to the affirmed modernity of our{" "}
+          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Earrings" })}>ear cuffs</button>
+          , each piece dresses the face with character. This mastery of form sublimes our{" "}
+          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Necklaces and pendants" })}>silver necklaces</button>
+          {" "}and dialogues with the House's marine heritage, embodied by the iconic Chaîne d'ancre collection. A raw elegance that is also available for men through our{" "}
+          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Bracelets" })}>men's bracelets</button>
+          . Finally, celebrate eternal attachment thanks to our precious{" "}
+          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Wedding rings" })}>wedding rings</button>
+          {" "}and our dedicated selection of men's{" "}
+          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Wedding rings" })}>wedding bands</button>
+          , promises of timeless style.
+        </p>
+      )}
 
       <button aria-label="Filter and sort products" className={`font-mono-d fixed bottom-4 left-1/2 z-40 flex h-12 -translate-x-1/2 items-center gap-2 px-8 text-xs font-medium uppercase tracking-normal shadow-lg ring-1 ring-black/10 lg:hidden ${totalSel > 0 ? "bg-black text-white" : "bg-white"}`} onClick={openDrawer}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2.2" /><circle cx="10" cy="17" r="2.2" /></svg>
@@ -3193,7 +3245,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
       <RelatedRow title="Last viewed products" items={lastViewed} go={go} mt="mt-20 lg:mt-28" hidePrice onQuickBuy={(p) => addToCart(p)} />
 
       <nav aria-label="Breadcrumb" className="font-mono-d mx-auto mt-14 max-w-5xl border-t border-black/10 px-4 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 sm:px-6">
-        <button aria-label={`Breadcrumb ${NAV.find((n) => n.key === p.category)?.label ?? p.category}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category })}>{NAV.find((n) => n.key === p.category)?.label ?? p.category.toUpperCase()}</button>
+        <button aria-label={`Breadcrumb ${catLabel(p.category)}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category })}>{catLabel(p.category)}</button>
         <span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" />
         <button aria-label={`Breadcrumb ${crumbMid}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: crumbMid })}>{crumbMid}</button>
         <span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" />

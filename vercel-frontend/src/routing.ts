@@ -42,6 +42,14 @@ const CATEGORY_PATHS: Record<string, string> = {
   "women|dresses and skirts": "women/ready-wear/dresses-and-skirts",
   "women|scarves, shawls and stoles": "women/scarves-shawls-and-stoles",
   "women|shoes": "women/shoes",
+  "fashion-jewelry|": "women/fashion-jewelry",
+  "fashion-jewelry|bracelets": "women/fashion-jewelry/bracelets",
+  "fashion-jewelry|earrings": "women/fashion-jewelry/earrings",
+  "fashion-jewelry|necklaces": "women/fashion-jewelry/necklaces",
+  "fashion-jewelry|rings": "women/fashion-jewelry/rings",
+  "fashion-jewelry|pins and brooches": "women/fashion-jewelry/pins-and-brooches",
+  "fashion-jewelry|hair accessories and combs": "women/fashion-jewelry/hair-accessories-and-combs",
+  "fashion-jewelry|hairbands and hatbands": "women/fashion-jewelry/hairbands-and-hatbands",
   "women|bracelets": "women/fashion-jewelry/bracelets",
   // The women's default page (cat "women", no sub) IS the women's bags page.
   "women|": "leather-goods/bags-and-clutches/womens-bags-and-clutches",
@@ -66,7 +74,7 @@ for (const [key, path] of Object.entries(CATEGORY_PATHS)) {
   if (!REVERSE_PATHS[path]) REVERSE_PATHS[path] = sub ? { cat, sub } : { cat };
 }
 
-export const TOP_CATS = ["women", "men", "leather", "jewelry", "watches", "fragrances", "home", "equestrian", "gifts", "about"];
+export const TOP_CATS = ["women", "men", "leather", "jewelry", "fashion-jewelry", "watches", "fragrances", "home", "equestrian", "gifts", "about"];
 
 export function categoryUrl(cat: string, sub?: string): string {
   const key = `${cat}|${(sub ?? "").toLowerCase()}`;
