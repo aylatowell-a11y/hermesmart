@@ -46,6 +46,7 @@ import scarfColliersImg from "./assets/products/scarf-90-colliers.webp";
 import { fileToBase64 } from "./fileToBase64";
 import { productImageFor } from "./productImages";
 import { HOME_TILE_ORDER } from "./homeTiles";
+import { BELT_TILE_ORDER } from "./beltTiles";
 import { galleryForProduct, hiResHermes } from "./galleryImages";
 import { accountUrl, categoryUrl, contactUrl, faqUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
 
@@ -1895,6 +1896,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // and stoles" (2026-11-15: the comma-less key never matched, so the
       // page fell through to the strict subcategory match and showed 518).
       "scarves, shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : true),
+      // Women's Belts parent page — the original's live order (266
+      // tiles, extracted 2026-11-15) lives in beltPos; the parent lists
+      // exactly those rows. The 101 clone rows not on the live list stay
+      // in the catalogue but never appear on the parent grid (same rule
+      // as Scarves). Men's belts (cat "men") are NOT gated by beltPos.
+      // NOTE: the predicate is category-aware in BOTH branches — the syn
+      // applies to ALL products, so an ungated men's branch would leak
+      // women's belts onto the men's page.
+      "belts": (p) => p.category === cat && p.subcategory === "Belts" && (cat === "women" ? p.beltPos !== undefined : true),
       "loafers": (p) => /loafer/i.test(p.name),
       "boots": (p) => /boot/i.test(p.name),
       "mules": (p) => /mule|loafer/i.test(p.name),
@@ -1986,6 +1996,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // stoles") — sorts by scarfPos (the original's order, 2026-11-15).
   // Men's scarves (cat "men") are a separate page and are NOT affected.
   const isWomensScarvesPage = cat === "women" && subLow === "scarves, shawls and stoles";
+  const isWomensBeltsPage = cat === "women" && subLow === "belts";
   const isMensBags = /men's bags/.test(subLow) && !/women's bags/.test(subLow);
   const isBagsPage = /bags and clutches/.test(subLow) || (cat === "women" && !sub);
   const isSneakersPage = /sneaker/.test(subLow);
@@ -2168,10 +2179,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Women's Scarves (2026-11-15) sorts by scarfPos — the original's
     // order — the same way (men's scarves are a separate page).
     else if (isWomensScarvesPage && list.some((p) => p.scarfPos !== undefined)) list = [...list].sort((a, b) => (a.scarfPos ?? Infinity) - (b.scarfPos ?? Infinity));
+    else if (isWomensBeltsPage && list.some((p) => p.beltPos !== undefined)) list = [...list].sort((a, b) => (a.beltPos ?? Infinity) - (b.beltPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isWomensScarvesPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isWomensScarvesPage, isWomensBeltsPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2188,19 +2200,24 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // their current order. Any filter or sort switches back to the
   // ordinary row list (same rule as the editorial inserts).
   const homeTilesActive = isHomePage && !filtersActive && sort === "relevance";
+  // Women's Belts tile grid (2026-11-15): same mechanism as Home — the
+  // original repeats identical tiles (266 tiles, 177 distinct rows), so
+  // the grid renders one tile per live position from BELT_TILE_ORDER.
+  const beltTilesActive = isWomensBeltsPage && !filtersActive && sort === "relevance";
   const gridList = useMemo(() => {
-    if (!homeTilesActive) return filtered;
+    if (!homeTilesActive && !beltTilesActive) return filtered;
     const byId = new Map(base.map((p) => [p.id, p]));
     const tiles: Product[] = [];
-    for (const t of HOME_TILE_ORDER) { const p = byId.get(t.id); if (p) tiles.push(p); }
+    const order = homeTilesActive ? HOME_TILE_ORDER : BELT_TILE_ORDER;
+    for (const t of order) { const p = byId.get(t.id); if (p) tiles.push(p); }
     const placed = new Set(tiles.map((p) => p.id));
     for (const p of filtered) if (!placed.has(p.id)) tiles.push(p);
     return tiles;
-  }, [homeTilesActive, base, filtered]);
+  }, [homeTilesActive, beltTilesActive, base, filtered]);
   // The heading count is always honest: the number of products this store
   // actually carries in this list (the filtered count while filters apply).
   // On the expanded Home grid the count is tiles, not rows.
-  const displayCount = filtersActive ? filtered.length : homeTilesActive ? gridList.length : base.length;
+  const displayCount = filtersActive ? filtered.length : homeTilesActive || beltTilesActive ? gridList.length : base.length;
   // The SLG parent's display total is 354 — the original's live count
   // (2026-11-15) — and the store carries exactly those 354 rows
   // (slgParentPos 1–354). The title and the "viewed out of" counters use
@@ -2342,7 +2359,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // autoplay video tiles instead of photo tiles (original behaviour).
     // Home colourway tiles (2026-11-15): duplicate rows need a unique
     // React key — the live tile position — or the grid drops repeats.
-    const tileKey = homeTilesActive ? `home-tile-${i + 1}` : undefined;
+    const tileKey = homeTilesActive || beltTilesActive ? `${homeTilesActive ? "home" : "belt"}-tile-${i + 1}` : undefined;
     if (isFallWinterPage && FW_VIDEO_TILE_IDS.has(p.id)) gridItems.push({ kind: "video", p, tileKey });
     else gridItems.push({ kind: "product", p, tileKey });
     if (showEdInserts) for (const ins of edInserts) if (ins.after === i + 1) gridItems.push({ kind: "text", title: ins.title, body: ins.body });
@@ -2588,7 +2605,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         <div>
           <div className="mt-8 columns-2 gap-2 sm:columns-4 lg:columns-7">
             {gridList.map((p, i) => (
-              <button key={homeTilesActive ? `home-tile-${i + 1}` : p.id} aria-label={p.name} className="mb-2 block w-full break-inside-avoid overflow-hidden" style={{ background: p.tone }} onClick={() => go({ t: "product", id: p.id })}>
+              <button key={homeTilesActive || beltTilesActive ? `${homeTilesActive ? "home" : "belt"}-tile-${i + 1}` : p.id} aria-label={p.name} className="mb-2 block w-full break-inside-avoid overflow-hidden" style={{ background: p.tone }} onClick={() => go({ t: "product", id: p.id })}>
                 <img src={productImageFor(p)} alt={p.name} loading="lazy" className={`w-full object-cover ${MOSAIC_ASPECTS[i % MOSAIC_ASPECTS.length] ?? "aspect-square"}`} />
               </button>
             ))}
