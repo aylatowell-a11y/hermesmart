@@ -2288,17 +2288,18 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
 
   // SLG parent filter cards (2026-11-15) — the original's 5 subcategory
   // cards under the title, each with its first product's photo, label
-  // and count. Counts are the DEDICATED-page totals (To Go 57, Wallets
-  // 173, Card holders 94, Pouches and cases 31, Customizable 2) — the
-  // sub-pages they link to show exactly those totals. (Note: the
-  // 2026-11-12 audit read the original's cards as the filter-view
-  // counts 59/174/92/40/2; if live-verify shows the cards still read
-  // those, that is a follow-up, not a silent change.)
+  // and count. Counts are the ORIGINAL's live card counts, read on the
+  // original's SLG parent page 2026-11-15 (To Go 58, Wallets 174, Card
+  // holders 94, Pouches and cases 39, Customizable 2) — these are the
+  // filter-view counts, NOT the dedicated-page totals: the sub-pages
+  // they link to show the dedicated totals (57 / 173 / 94 / 31 / 2).
+  // Wallets' +1 is the dead Maillon tile (PDP 404 on the original);
+  // Pouches' +8 are filter-only tiles not on the dedicated page.
   const SLG_CARDS: { label: string; count: number; view: View; first: Product | undefined }[] = [
-    { label: "To Go wallets", count: 57, view: { t: "category", cat: "leather", sub: "To Go wallets" }, first: base.find((p) => p.fineSub === "To Go wallets" && p.slgPos === 1) },
-    { label: "Wallets", count: 173, view: { t: "category", cat: "leather", sub: "Wallets" }, first: base.find((p) => p.fineSub === "Wallets" && p.slgPos === 1) },
+    { label: "To Go wallets", count: 58, view: { t: "category", cat: "leather", sub: "To Go wallets" }, first: base.find((p) => p.fineSub === "To Go wallets" && p.slgPos === 1) },
+    { label: "Wallets", count: 174, view: { t: "category", cat: "leather", sub: "Wallets" }, first: base.find((p) => p.fineSub === "Wallets" && p.slgPos === 1) },
     { label: "Card holders", count: 94, view: { t: "category", cat: "leather", sub: "Card holders" }, first: base.find((p) => p.fineSub === "Card holders" && p.slgPos === 1) },
-    { label: "Pouches and cases", count: 31, view: { t: "category", cat: "leather", sub: "Pouches and cases" }, first: base.find((p) => p.fineSub === "Pouches and cases" && p.slgPos === 1) },
+    { label: "Pouches and cases", count: 39, view: { t: "category", cat: "leather", sub: "Pouches and cases" }, first: base.find((p) => p.fineSub === "Pouches and cases" && p.slgPos === 1) },
     { label: "Customizable", count: 2, view: { t: "category", cat: "leather", sub: "Customizable" }, first: base.find((p) => /customizable/i.test(p.name)) },
   ];
   // SLG theme carousel slides (2026-11-15) — the original's 5 themes in
