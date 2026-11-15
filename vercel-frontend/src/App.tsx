@@ -182,20 +182,16 @@ const CAT_LABELS: Record<string, string> = { "fashion-jewelry": "Fashion jewelry
 function catLabel(cat: string): string {
   return CAT_LABELS[cat] ?? NAV.find((n) => n.key === cat)?.label ?? cat.toUpperCase();
 }
-// Sub-page titles render in proper case on the original, but the `sub`
+// Sub-page titles render in sentence case on the original, but the `sub`
 // value arrives lowercase from the URL slug map (routing.ts keys), so
-// "dresses and skirts" rendered lowercase in the h1. Title-case it here,
-// keeping small words lowercase (except first/last) — "Dresses and
-// skirts", "To Go Wallets", "Pouches and Cases". Only the first letter of
-// each word is touched, so "T-shirts" stays "T-shirts" and already-proper
+// "dresses and skirts" rendered lowercase in the h1. Capitalise only the
+// first letter — the original writes "Dresses and skirts", "To go
+// wallets", "Scarves, shawls and stoles", not title case. Only the first
+// character is touched, so "T-shirts" stays "T-shirts" and already-proper
 // subs ("Bags and clutches") pass through unchanged. COLLECTION_TITLES
 // still wins first for the season collections and the RTW parents.
-const SMALL_TITLE_WORDS = new Set(["and", "or", "of", "the", "for", "to", "in", "on", "a", "an"]);
 function titleCaseSub(s: string): string {
-  return s.split(" ").map((w, i, arr) => {
-    if (i > 0 && i < arr.length - 1 && SMALL_TITLE_WORDS.has(w.toLowerCase())) return w.toLowerCase();
-    return w ? w.charAt(0).toUpperCase() + w.slice(1) : w;
-  }).join(" ");
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 const SUBS_BY_CAT: Record<string, string[]> = (() => {
   const m: Record<string, string[]> = {};
