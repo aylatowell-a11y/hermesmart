@@ -768,6 +768,10 @@ const RTW_TILE: Record<number, string> = {
 // Hermes tile photos, hotlinked from assets.hermes.com (user instruction
 // 2026-11-09). Every URL was HEAD-checked (HTTP 200) before wiring.
 const NEW_TILE: Record<number, string> = {
+  6148: "https://assets.hermes.com/is/image/hermesproduct/315003M%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6149: "https://assets.hermes.com/is/image/hermesproduct/036987CKS3_front_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6150: "https://assets.hermes.com/is/image/hermesproduct/046000CKS3_front_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6151: "https://assets.hermes.com/is/image/hermesproduct/102668M%2058_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6078: "https://assets.hermes.com/is/image/hermesproduct/262024Z%2002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6079: "https://assets.hermes.com/is/image/hermesproduct/262069Z%2002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6080: "https://assets.hermes.com/is/image/hermesproduct/262218Z%2002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",

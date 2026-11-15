@@ -1851,6 +1851,10 @@ const FH_BRIDE_A_BRAC = [V("Front", brideABracCase)];
 // carry videoSrc -> /videos/fw-video-<SKU>.mp4 (original Hermes HLS
 // converted to MP4, staged in public/videos/ 2026-11-11).
 const NEW_GALLERY: Record<number, { label: string; src: string; videoSrc?: string }[]> = {
+  6148: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/315003M%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" }, { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/315003M%2001_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$" }],
+  6149: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/036987CKS3_front_101?$product_default_bg$" }],
+  6150: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/046000CKS3_front_101?$product_default_bg$" }],
+  6151: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/102668M%2058_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$" }],
   6078: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/262024Z%2002_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/262024Z%2002_worn_102?$product_default_bg$" }, { label: "Side", src: "https://assets.hermes.com/is/image/hermesproduct/262024Z%2002_side_wm_104?$product_default_bg$" }],
   6079: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/262069Z%2002_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/262069Z%2002_worn_102?$product_default_bg$" }, { label: "Side", src: "https://assets.hermes.com/is/image/hermesproduct/262069Z%2002_side_wm_104?$product_default_bg$" }],
   6080: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/262218Z%2002_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/262218Z%2002_worn_103?$product_default_bg$" }, { label: "Side", src: "https://assets.hermes.com/is/image/hermesproduct/262218Z%2002_side_wm_104?$product_default_bg$" }],
