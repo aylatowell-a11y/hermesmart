@@ -45,6 +45,7 @@ import saddleBridleImg from "./assets/products/saddle-bridle.webp";
 import scarfColliersImg from "./assets/products/scarf-90-colliers.webp";
 import { fileToBase64 } from "./fileToBase64";
 import { productImageFor } from "./productImages";
+import { HOME_TILE_ORDER } from "./homeTiles";
 import { galleryForProduct, hiResHermes } from "./galleryImages";
 import { accountUrl, categoryUrl, contactUrl, faqUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
 
@@ -187,16 +188,18 @@ const SUBS_BY_CAT: Record<string, string[]> = (() => {
   return m;
 })();
 const THEMES = ["Silk", "Beauty", "Belts", "Men's Shoes", "Fashion Jewelry", "Fragrances", "Watches", "Leather Goods", "Home"];
-// Discover carousel — verified on hermes.com (7 Nov 2026) by clicking controls 1–15:
-// 15 controls, but only 5 themes, repeated three times in this exact order.
-// Every repeat shows the SAME products at the SAME prices — no extra themes.
+// Discover carousel — verified on hermes.com (7 Nov 2026) by clicking controls 1–15,
+// re-verified live 2026-11-15: 15 slides, but only 5 themes, repeated three times
+// in this exact order. Every repeat shows the SAME products at the SAME prices.
+// The original shows NO visible numeric counter (only a segmented progress bar
+// under the carousel); each slide is labelled by its theme position, e.g.
+// "Belts, 1 of 5" — the 1/15 numbering lives only in the page structure.
 const CAROUSEL_BASE_THEMES = ["Belts", "Men's Shoes", "Fashion Jewelry", "Silk", "Beauty"];
 const CAROUSEL_THEMES: string[] = Array.from({ length: 15 }, (_, i) => CAROUSEL_BASE_THEMES[i % CAROUSEL_BASE_THEMES.length] ?? "Belts");
 // Discover carousel editorial photos — the ORIGINAL hermes.com homepage
 // (block_fetish, NOV_PHASE_1, re-verified 2026-11-10 via the translate
 // proxy): one editorial/MODEL photo per theme, NOT a product photo. The
-// homepage JSON holds exactly 5 slides; the original's counter runs
-// 1/15–15/15 because the 5 themes repeat 3× (slides 1/6/11 Belts,
+// homepage JSON holds exactly 5 slides; the 5 themes repeat 3× (slides 1/6/11 Belts,
 // 2/7/12 Men's shoes, …), exactly as CAROUSEL_THEMES repeats them —
 // nothing extra added, nothing invented. All 10 URLs below were fetched
 // (HTTP 200) and VIEWED: the 3x4 portrait crop is the original's mobile
@@ -251,8 +254,8 @@ const CAROUSEL_EDITORIAL_DESKTOP: Record<string, { img: string; alt: string }> =
 // confirmed.
 const THEME_GRID_ORDER: Record<string, string[]> = {
   "Belts": ["H081120CK89", "H010439CK55080", "H011790UCAAXS", "id:16"],
-  "Men's Shoes": ["H221898ZHBG", "H261807ZHAF", "H262820ZHNL", "H261881ZHD8390"],
-  "Fashion Jewelry": ["H101503Bv00", "H306324FvN2", "H109510Bv00", "H500522FD89"],
+  "Men's Shoes": ["H261807ZHAF", "H262820ZHNL", "H262834ZAAC", "H261881ZHD8390"],
+  "Fashion Jewelry": ["H100096FE03", "H306324FvN2", "H100095FE03", "H500522FD89"],
   "Silk": ["H004391Sv05", "H061144Sv06", "H251526Sv02", "H891071Sv01"],
   "Beauty": ["VP25SETD25BUNDLE", "V60875PV007", "H104951Mv01", "V60863PV002"],
 };
@@ -1338,11 +1341,11 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             <div className="mx-auto max-w-[629px] text-center">
               <h2 className="font-serif-d text-[34px] italic leading-snug">Discover the world of Hermès</h2>
             </div>
-            {/* Desktop carousel counter + arrows, top-right (as on hermes.com:
-                "1/15" counter with prev/next arrows; mobile has only the
-                progress line below the carousel). */}
+            {/* Desktop carousel arrows, top-right. The original shows NO visible
+                numeric counter here — only the segmented progress bar below the
+                carousel (verified live 2026-11-15); mobile has only the
+                progress line below the carousel. */}
             <div className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-3">
-              <span className="font-mono-d text-xs font-medium tracking-normal text-black">{activeIdx + 1}/{CAROUSEL_N}</span>
               <button type="button" aria-label="Previous theme" onClick={() => goToSlide(activeIdx - 1)} className="flex h-8 w-8 items-center justify-center text-xl leading-none text-black">‹</button>
               <button type="button" aria-label="Next theme" onClick={() => goToSlide(activeIdx + 1)} className="flex h-8 w-8 items-center justify-center text-xl leading-none text-black">›</button>
             </div>
@@ -1370,7 +1373,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
               if (!ed) return null;
               const isActive = off === 0;
               return (
-                <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${logicalIdx + 1} of ${CAROUSEL_THEMES.length}`} onClick={() => goToSlide(logicalIdx)}
+                <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${(logicalIdx % 5) + 1} of 5`} onClick={() => goToSlide(logicalIdx)}
                   className="relative h-full shrink-0 overflow-hidden transition-[width] duration-500 ease-out"
                   style={{ width: isActive ? "60.8vw" : 185 }}>
                   <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
@@ -1401,7 +1404,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
               if (!ed) return null;
               const isActive = off === 0;
               return (
-                <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${logicalIdx + 1} of ${CAROUSEL_THEMES.length}`}
+                <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${(logicalIdx % 5) + 1} of 5`}
                   onClick={() => { if (suppressClickRef.current) return; if (!isActive) goToSlide(logicalIdx); }}
                   className="relative h-full shrink-0 cursor-pointer overflow-hidden transition-[width] duration-500 ease-out"
                   style={{ width: isActive ? "73vw" : 64 }}>
@@ -2159,9 +2162,26 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
 
   const totalSel = (Object.keys(EMPTY_SEL) as FGroup[]).reduce((n, g) => n + sel[g].length, 0) + (onlineOnly ? 1 : 0) + (priceNarrowed ? 1 : 0);
   const filtersActive = totalSel > 0;
+  // Home colourway tiles (2026-11-15): in the default state (no
+  // filters, relevance sort) the Home parent grid renders one tile per
+  // live position from HOME_TILE_ORDER — the original shows one tile
+  // per colourway — followed by the rows the original has dropped, in
+  // their current order. Any filter or sort switches back to the
+  // ordinary row list (same rule as the editorial inserts).
+  const homeTilesActive = isHomePage && !filtersActive && sort === "relevance";
+  const gridList = useMemo(() => {
+    if (!homeTilesActive) return filtered;
+    const byId = new Map(base.map((p) => [p.id, p]));
+    const tiles: Product[] = [];
+    for (const t of HOME_TILE_ORDER) { const p = byId.get(t.id); if (p) tiles.push(p); }
+    const placed = new Set(tiles.map((p) => p.id));
+    for (const p of filtered) if (!placed.has(p.id)) tiles.push(p);
+    return tiles;
+  }, [homeTilesActive, base, filtered]);
   // The heading count is always honest: the number of products this store
   // actually carries in this list (the filtered count while filters apply).
-  const displayCount = filtersActive ? filtered.length : base.length;
+  // On the expanded Home grid the count is tiles, not rows.
+  const displayCount = filtersActive ? filtered.length : homeTilesActive ? gridList.length : base.length;
   // The SLG parent's display total is 356 — the original's count —
   // while the store carries 355 rows (the 356th tile's PDP is dead on
   // the original itself, so no row exists for it). The title and the
@@ -2291,18 +2311,21 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     }
     return [];
   })();
-  type GridItem = { kind: "product"; p: Product } | { kind: "video"; p: Product } | { kind: "text"; title: string; body: string };
+  type GridItem = { kind: "product"; p: Product; tileKey?: string } | { kind: "video"; p: Product; tileKey?: string } | { kind: "text"; title: string; body: string };
   const gridItems: GridItem[] = [];
   // The Fall-Winter collection page carries NO editorial tiles on the
   // original (verified in its first 120 products). Every other page
   // with inserts shows them only unfiltered + relevance-sorted.
   const isFallWinterPage = isRTWPage && (subLow === "fall-winter 2026 collection" || subLow === "fall-winter 2026");
   const showEdInserts = !filtersActive && sort === "relevance" && !isFallWinterPage && edInserts.length > 0;
-  filtered.slice(0, visible).forEach((p, i) => {
+  gridList.slice(0, visible).forEach((p, i) => {
     // Fall-Winter video tiles: the 6 tile-video products render as wide
     // autoplay video tiles instead of photo tiles (original behaviour).
-    if (isFallWinterPage && FW_VIDEO_TILE_IDS.has(p.id)) gridItems.push({ kind: "video", p });
-    else gridItems.push({ kind: "product", p });
+    // Home colourway tiles (2026-11-15): duplicate rows need a unique
+    // React key — the live tile position — or the grid drops repeats.
+    const tileKey = homeTilesActive ? `home-tile-${i + 1}` : undefined;
+    if (isFallWinterPage && FW_VIDEO_TILE_IDS.has(p.id)) gridItems.push({ kind: "video", p, tileKey });
+    else gridItems.push({ kind: "product", p, tileKey });
     if (showEdInserts) for (const ins of edInserts) if (ins.after === i + 1) gridItems.push({ kind: "text", title: ins.title, body: ins.body });
   });
 
@@ -2527,14 +2550,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         )}
       </div>
 
-      {filtered.length === 0 && <p className="py-16 text-center text-sm text-neutral-600">{sub ? `No articles in “${sub}” in this store yet.` : "No articles match these filters. Clear a filter to see more."}</p>}
+      {gridList.length === 0 && <p className="py-16 text-center text-sm text-neutral-600">{sub ? `No articles in “${sub}” in this store yet.` : "No articles match these filters. Clear a filter to see more."}</p>}
 
       {!mosaic ? (
         <div className="carousel-full-bleed mt-8 grid grid-cols-2 gap-[2px] lg:grid-cols-4">
           {gridItems.map((it) => it.kind === "product" ? (
-            <ProductCard key={it.p.id} p={it.p} colourInName onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
+            <ProductCard key={it.tileKey ?? it.p.id} p={it.p} colourInName onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
           ) : it.kind === "video" ? (
-            <VideoTile key={it.p.id} p={it.p} onOpen={(id) => go({ t: "product", id })} />
+            <VideoTile key={it.tileKey ?? it.p.id} p={it.p} onOpen={(id) => go({ t: "product", id })} />
           ) : (
             <div key={`ed-text-${it.title}`} className="flex aspect-square flex-col justify-center bg-[#efe9df] p-6">
               <p className="font-serif-d text-xl italic">{it.title}</p>
@@ -2545,27 +2568,27 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       ) : (
         <div>
           <div className="mt-8 columns-2 gap-2 sm:columns-4 lg:columns-7">
-            {filtered.map((p, i) => (
-              <button key={p.id} aria-label={p.name} className="mb-2 block w-full break-inside-avoid overflow-hidden" style={{ background: p.tone }} onClick={() => go({ t: "product", id: p.id })}>
+            {gridList.map((p, i) => (
+              <button key={homeTilesActive ? `home-tile-${i + 1}` : p.id} aria-label={p.name} className="mb-2 block w-full break-inside-avoid overflow-hidden" style={{ background: p.tone }} onClick={() => go({ t: "product", id: p.id })}>
                 <img src={productImageFor(p)} alt={p.name} loading="lazy" className={`w-full object-cover ${MOSAIC_ASPECTS[i % MOSAIC_ASPECTS.length] ?? "aspect-square"}`} />
               </button>
             ))}
           </div>
-          <p className="mt-4 text-center text-xs text-neutral-500">{`${filtered.length} products viewed out of ${totalForCounter}`}</p>
+          <p className="mt-4 text-center text-xs text-neutral-500">{`${gridList.length} products viewed out of ${totalForCounter}`}</p>
         </div>
       )}
 
-      {!mosaic && visible < filtered.length && (
+      {!mosaic && visible < gridList.length && (
         <div className="mt-12 text-center">
-          <p className="text-xs text-neutral-500">{`${Math.min(visible, filtered.length)} products viewed out of ${totalForCounter}`}</p>
-          <div className="mx-auto mt-4 h-px w-[120px] bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${totalForCounter ? (Math.min(visible, filtered.length) / totalForCounter) * 100 : 0}%` }} /></div>
-          <button aria-label="SEE MORE PRODUCTS" className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal" onClick={() => { const next = Math.min(visible + 40, filtered.length); const added = next - visible; setVisible(next); setLoadedMsg(`${added} products loaded`); }}>SEE MORE PRODUCTS</button>
+          <p className="text-xs text-neutral-500">{`${Math.min(visible, gridList.length)} products viewed out of ${totalForCounter}`}</p>
+          <div className="mx-auto mt-4 h-px w-[120px] bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${totalForCounter ? (Math.min(visible, gridList.length) / totalForCounter) * 100 : 0}%` }} /></div>
+          <button aria-label="SEE MORE PRODUCTS" className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal" onClick={() => { const next = Math.min(visible + 40, gridList.length); const added = next - visible; setVisible(next); setLoadedMsg(`${added} products loaded`); }}>SEE MORE PRODUCTS</button>
           {loadedMsg && <p className="sr-only" role="status">{loadedMsg}</p>}
         </div>
       )}
-      {!mosaic && visible >= filtered.length && filtered.length > 0 && (
+      {!mosaic && visible >= gridList.length && gridList.length > 0 && (
         <div className="mt-12 text-center">
-          <p className="text-xs text-neutral-500">{`${filtered.length} products viewed out of ${totalForCounter}`}</p>
+          <p className="text-xs text-neutral-500">{`${gridList.length} products viewed out of ${totalForCounter}`}</p>
           <div className="mx-auto mt-4 h-px w-[120px] bg-black" />
         </div>
       )}
@@ -3107,12 +3130,16 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   // Shoe refs on hermes.com use a SPACE where the refCode has "v" and the
   // size as tenths (38.5 -> 385): "H261015Zv90" + size 38.5 displays as
   // "H261015Z 90385" (verified live 2026-11-13). Only for refs containing
-  // "v"; other shoes keep the plain refCode + size form.
+  // "v"; other shoes keep the plain refCode + size form. The space-for-"v"
+  // rule is general, not shoes-only: the original's PDPs show "H061144S 05"
+  // (Turf Twilly) and "H123405B 00XS" (Contour bracelet) — the "v" in a
+  // refCode is the URL form of a space in the reference (verified live
+  // 2026-11-15), so both display branches below space it out.
   const displayRef = p.refCode && needsSize && displaySize
     ? (isShoe && p.refCode.includes("v") && !Number.isNaN(parseFloat(displaySize))
         ? `${p.refCode.replace("v", " ")}${Math.round(parseFloat(displaySize) * 10)}`
-        : `${p.refCode}${displaySize}`)
-    : p.refCode;
+        : `${p.refCode.replace("v", " ")}${displaySize}`)
+    : p.refCode.replace("v", " ");
   // Gallery views — EVERY view is a DISTINCT photo whose content matches
   // its label (Detail = extreme close-up, Worn = model wearing it, Above =
   // top-down, Back = rear, Side = profile), shot for that view in
@@ -3422,12 +3449,12 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                 <span className="flex flex-col items-start leading-snug"><span className={selSize ? "text-neutral-500" : ""}>Select a size</span>{selSize ? <span className="underline underline-offset-4">{selSize}</span> : null}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
               </button>
-              <div className="mt-2 flex justify-end">
+              {p.category !== "jewelry" && p.category !== "fashion-jewelry" && (<div className="mt-2 flex justify-end">
                 <button aria-label="Size guide" className="flex items-center gap-1.5 text-xs underline underline-offset-2" onClick={() => setSizeGuideOpen(true)}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="2" y="9" width="20" height="7" rx="1" /><path d="M6.5 9v3.5M11 9v3.5M15.5 9v3.5M20 9v3.5" /></svg>
                   Size Guide
                 </button>
-              </div>
+              </div>)}
               {sizeGone && <p className="mt-1.5 text-xs font-medium text-red-700" role="status">The desired size is no longer available</p>}
               {/* Shipping-delay line: the original's buy card shows it ONLY
                   once a size is chosen (live measurement 2026-11-11 23:21:
@@ -3619,12 +3646,12 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                 </div>
               ))}
             </div>
-            <div className="flex justify-end border-t border-[#f6f1eb] px-5 py-4">
+            {p.category !== "jewelry" && p.category !== "fashion-jewelry" && (<div className="flex justify-end border-t border-[#f6f1eb] px-5 py-4">
               <button aria-label="Open size guide" className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] underline" onClick={() => { setSizeDrawer(false); if (isShoeSize) { go({ t: "page", page: "guides" }); return; } setSizeGuideOpen(true); }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21l-4-4Z" /><path d="M8 16l1.5 1.5M11 13l1.5 1.5M14 10l1.5 1.5" /></svg>
                 Size guide
               </button>
-            </div>
+            </div>)}
           </div>
         </div>
       )}
@@ -4633,7 +4660,10 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
   const services: { title: string; body: React.ReactNode; page: string }[] = [
     { title: "STANDARD DELIVERY", page: "shipping", body: <>{settings.serviceDeliveryBody || "Free standard delivery. Hermès offers several fast and secure delivery options."}</> },
     { title: "RETURNS", page: "returns", body: settings.serviceReturnsBody ? <>{settings.serviceReturnsBody}</> : <>Free returns within 30 days. See conditions and procedure in our return<button aria-label="Return FAQs" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "returns" }); }}>FAQs</button>.</> },
-    { title: "CUSTOMER SERVICE", page: "contact", body: <>{settings.serviceHours}<br /><a aria-label="Call Hermès customer service" className="underline underline-offset-2" href={`tel:${settings.phone}`} onClick={(e) => e.stopPropagation()}>{settings.phone}</a> | <button aria-label="Contact us from footer" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Contact us</button></> },
+    // Footer CUSTOMER SERVICE card: the original's footer reads "Monday to Saturday
+    // 10 AM - 9 PM" with no EST (verified from hermes.com's own footer data
+    // 2026-11-15). The contact page keeps the EST form via settings.serviceHours.
+    { title: "CUSTOMER SERVICE", page: "contact", body: <>Monday to Saturday 10 AM - 9 PM<br /><a aria-label="Call Hermès customer service" className="underline underline-offset-2" href={`tel:${settings.phone}`} onClick={(e) => e.stopPropagation()}>{settings.phone}</a> | <button aria-label="Contact us from footer" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Contact us</button></> },
     { title: "SECURED PAYMENT", page: "payment", body: <>{settings.servicePaymentBody || "All the transactions made on Hermes.com are secured"}</> },
   ];
   const newsletterForm = (boxed: boolean) => done ? <p className="mt-3 text-sm font-medium" role="status">{done}</p> : boxed ? (
