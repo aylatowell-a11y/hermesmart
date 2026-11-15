@@ -1831,7 +1831,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const label = catLabel(cat);
   const base = useMemo(() => {
     const catList = products.filter((p) => p.category === cat);
-    if (!sub) return catList;
+    if (!sub) {
+      // Home parent page also lists the 8 cases/mirror rows that live
+      // under fragrances / Make-up (2026-11-15) — they carry homePos
+      // and appear on /home/ without a second product row.
+      if (cat === "home") return [...catList, ...products.filter((p) => p.category !== "home" && p.homePos !== undefined)];
+      return catList;
+    }
     const low = sub.toLowerCase();
     // Synonym / group mapping so a menu item shows ONLY its own products
     const syn: Record<string, (p: Product) => boolean> = {
@@ -1954,6 +1960,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // lists keep their original relative order.
   const isJewelryPage = cat === "jewelry";
   const isFashionJewelryPage = cat === "fashion-jewelry";
+  // Home parent page (cat "home", no sub) — sorts by homePos (2026-11-15),
+  // dual-lists the 8 fragrances/Make-up cases + mirror, and carries the
+  // collapsed editorial block + cross-universe theme carousel.
+  const isHomePage = cat === "home" && !sub;
   const isMensBags = /men's bags/.test(subLow) && !/women's bags/.test(subLow);
   const isBagsPage = /bags and clutches/.test(subLow) || (cat === "women" && !sub);
   const isSneakersPage = /sneaker/.test(subLow);
@@ -1987,7 +1997,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "spring-summer 2027": "Spring-Summer 2027 Collection",
     "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
   };
-  const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${sub} Collection` : sub ?? (cat === "women" ? "Women's bags and clutches" : label.charAt(0) + label.slice(1).toLowerCase()));
+  const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${sub} Collection` : sub ?? (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
   const crumbTop = isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
@@ -2050,6 +2060,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [openKey, setOpenKey] = useState(isMensShoesPage ? "line" : "");
   const [loadedMsg, setLoadedMsg] = useState("");
   const [slgParaOpen, setSlgParaOpen] = useState(false);
+  const [homeParaOpen, setHomeParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2126,10 +2137,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (isSlgSub && list.some((p) => p.slgPos !== undefined)) list = [...list].sort((a, b) => (a.slgPos ?? Infinity) - (b.slgPos ?? Infinity));
     else if (isJewelryPage && list.some((p) => p.jewPos !== undefined)) list = [...list].sort((a, b) => (a.jewPos ?? Infinity) - (b.jewPos ?? Infinity));
     else if (isFashionJewelryPage && list.some((p) => p.fashPos !== undefined)) list = [...list].sort((a, b) => (a.fashPos ?? Infinity) - (b.fashPos ?? Infinity));
+    else if (isHomePage && list.some((p) => p.homePos !== undefined)) list = [...list].sort((a, b) => (a.homePos ?? Infinity) - (b.homePos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgSub, isJewelryPage, isFashionJewelryPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2320,6 +2332,34 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       { label: "Shoes", view: { t: "category", cat: "women", sub: "Shoes" }, match: (p) => p.category === "women" && p.subcategory === "Shoes" },
       { label: "Belts", view: { t: "category", cat: "women", sub: "Belts" }, match: (p) => p.subcategory === "Belts" },
       { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+    ];
+    return defs.map((d) => {
+      const rep = products.find((p) => d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  // Home theme carousel slides (2026-11-15) — the original's 5
+  // cross-universe cards in order: Small leather goods, Rider,
+  // Horizons Ateliers, Jewelry, Timepieces. No verified hermesedito
+  // editorial image URLs exist for these slides (the category text
+  // fetches list the links but no image URLs, and the homepage
+  // content API is homepage-only), so each slide uses the first
+  // Hermes-CDN product photo of its theme — a real original photo,
+  // not an invented image. (FLAGGED: the original's exact
+  // destinations for Rider / Horizons Ateliers were not captured in
+  // home-page-findings.json — Rider links to the Equestrian universe
+  // page, Horizons Ateliers to the About page, the closest existing
+  // pages in the clone.)
+  const homeThemes: ThemeSlide[] = (() => {
+    if (!isHomePage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Rider", view: { t: "category", cat: "equestrian" }, match: (p) => p.category === "equestrian" },
+      { label: "Horizons Ateliers", view: { t: "about" }, match: (p) => p.category === "home" },
+      { label: "Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+      { label: "Timepieces", view: { t: "category", cat: "watches" }, match: (p) => p.category === "watches" },
     ];
     return defs.map((d) => {
       const rep = products.find((p) => d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
@@ -2556,6 +2596,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <FallWinterThemeCarousel go={go} />
         ) : isSlgParent || isSlgSub ? (
           <FallWinterThemeCarousel go={go} themes={slgThemes} />
+        ) : isHomePage ? (
+          <FallWinterThemeCarousel go={go} themes={homeThemes} />
         ) : (
         <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
           {(() => {
@@ -2644,6 +2686,32 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         <p className="mx-auto mt-12 max-w-3xl text-center text-sm leading-7 text-neutral-700">
           Bring a touch of order to your daily life with Hermès cases and pouches. These nomadic accessories, designed to protect your essentials, marry functionality and refinement. Whether cut from heritage leather or light technical silk, they slip easily into a bag or suitcase. Available in a palette ranging from deep black to the emblematic orange, our creations offer neat finishes to accompany all your travels.
         </p>
+      )}
+      {/* /home/ descriptive paragraphs — verbatim from hermes.com
+          (home-page-findings.json, 2026-11-15). Parent page only.
+          Collapsed by default to the first two sentences with See
+          More, as on the original; expands to all 3 paragraphs. */}
+      {isHomePage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {homeParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Living with Hermès means inviting a certain sense of poise and purity into the heart of one&apos;s intimacy. The home is not a mere backdrop, but a territory of expression where every object contributes to harmony. This vision of the interior draws from the Hermès heritage, where function dictates form and where premium materials including leather, silk, wood, or porcelain, become vessels for lasting emotion. It is a quest for balance between the structure of space and the warmth of the home, creating a sensory refuge where time seems to stand still.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                Comfort takes shape through textures that invite the touch and warm the atmosphere. Within this inventory of softness, pillows provide colorful and graphic punctuation to seating, while cashmere or wool throws wrap moments of rest in incomparable warmth. This requirement for well-being extends to the most personal moments with our collection of pouches and bath linens, transforming a visit to the bathroom into a true self-care ritual. Each fiber is selected for its hold and suppleness, guaranteeing both aesthetic and sensory longevity.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                The life of the home comes alive through sharing, particularly during meals where aesthetics meet conviviality. Hand-painted porcelain plates dialogue with the crystalline brilliance of glassware, creating tables that are narrative landscapes in their own right. This desire to structure beauty continues in the furniture, where creations combine technicality and elegance. The selection of furniture and lighting defines the contours of a room, notably offering sofas and daybeds with clean lines for a soulful seat. The freedom of imagination flourishes within Petit h, a workshop of metamorphosis where the House&apos;s materials invent a new destiny for themselves in the form of unexpected curiosities.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Living with Hermès means inviting a certain sense of poise and purity into the heart of one&apos;s intimacy. The home is not a mere backdrop, but a territory of expression where every object contributes to harmony…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setHomeParaOpen(!homeParaOpen)}>{homeParaOpen ? "See less" : "See More"}</button>
+        </div>
       )}
 
       <button aria-label="Filter and sort products" className={`font-mono-d fixed bottom-4 left-1/2 z-40 flex h-12 -translate-x-1/2 items-center gap-2 px-8 text-xs font-medium uppercase tracking-normal shadow-lg ring-1 ring-black/10 lg:hidden ${totalSel > 0 ? "bg-black text-white" : "bg-white"}`} onClick={openDrawer}>
