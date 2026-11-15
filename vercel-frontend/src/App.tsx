@@ -1904,14 +1904,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "card holders": (p) => p.fineSub === "Card holders",
       "pouches and cases": (p) => p.fineSub === "Pouches and cases",
       "customizable": (p) => /customizable/i.test(p.name),
-      // Small leather goods PARENT page — the original's [356] is the
-      // dedicated-subcategory union (355 rows) + one dead tile (Maillon
-      // Compact Yellow H087381CPY9, PDP 404 on the original itself, no
-      // row). The 14 slgPos-less rows are filter-only colourways that
-      // never appear on the original's parent grid, so the parent lists
-      // only slgPos-tagged rows; the display total is overridden to 356
-      // below (see totalForCounter). (2026-11-15.)
-      "small leather goods": (p) => p.category === "leather" && p.subcategory === "Small leather goods" && p.slgPos !== undefined,
+      // Small leather goods PARENT page — the original's live order
+      // (354 tiles, extracted 2026-11-15) lives in slgParentPos; the
+      // parent lists exactly those rows. The two slgPos rows not on the
+      // parent page (id1380 Tarmac, id1427 Maillon) stay on their
+      // dedicated sub-pages only. The dead tile H087381CPY9 is gone from
+      // the original's page. The 13 remaining slgPos-less rows are
+      // filter-only colourways that never appear on the parent grid.
+      // The display total is overridden to 354 below (see totalForCounter).
+      "small leather goods": (p) => p.category === "leather" && p.subcategory === "Small leather goods" && p.slgParentPos !== undefined,
       // Fashion jewelry — the costume-jewelry page. The WOMEN menu's
       // FASHION JEWELRY "View all" lands here (cat "women", sub
       // "Fashion jewelry"); the predicate is category-based so it
@@ -1947,11 +1948,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // is not a sub-page, so it still sorts by fwPos.
   const isMensRtwSub = cat === "men" && ["coats and parkas", "jackets and blazers", "knitwear", "shirts", "t-shirts and sweatshirts", "pants and shorts", "beachwear"].includes(subLow);
   // SLG sub-pages sort by slgPos (their own order on that dedicated page),
-  // not by sortOrder. The SLG parent page is not a sub-page, so it keeps
-  // its own order.
+  // not by sortOrder. The SLG parent page is not a sub-page; it sorts by
+  // slgParentPos (the original's live parent order, 2026-11-15).
   const isSlgSub = cat === "leather" && ["to go wallets", "wallets", "card holders", "pouches and cases"].includes(subLow);
   // The SLG parent page (cat "leather", sub "Small leather goods") —
-  // its own [356] display total, filter cards, editorial inserts,
+  // its own [354] display total, filter cards, editorial inserts,
   // paragraph and breadcrumbs (2026-11-15).
   const isSlgParent = cat === "leather" && subLow === "small leather goods";
   // Men's FW collection page (cat "men", sub "Fall-Winter 2026
@@ -2138,12 +2139,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Men's RTW sub-pages (2026-11-15) sort by subPos — their own order
     // on that page — before the fwPos/ssPos collection orders.
     // SLG sub-pages (2026-11-15) sort by slgPos — their own order on the
-    // dedicated page — the same way, before fwPos/ssPos.
+    // dedicated page — the same way, before fwPos/ssPos. The SLG PARENT
+    // page sorts by slgParentPos — the original's live parent order.
     // Fine jewelry (2026-11-15) sorts by jewPos and fashion jewelry by
     // fashPos — their own original orders — the same way.
     // Women's Shoes (2026-11-15) sorts by shoePos — the original's
     // order — the same way (men's shoes are a separate page).
     else if (isMensRtwSub && list.some((p) => p.subPos !== undefined)) list = [...list].sort((a, b) => (a.subPos ?? Infinity) - (b.subPos ?? Infinity));
+    else if (isSlgParent && list.some((p) => p.slgParentPos !== undefined)) list = [...list].sort((a, b) => (a.slgParentPos ?? Infinity) - (b.slgParentPos ?? Infinity));
     else if (isSlgSub && list.some((p) => p.slgPos !== undefined)) list = [...list].sort((a, b) => (a.slgPos ?? Infinity) - (b.slgPos ?? Infinity));
     else if (isJewelryPage && list.some((p) => p.jewPos !== undefined)) list = [...list].sort((a, b) => (a.jewPos ?? Infinity) - (b.jewPos ?? Infinity));
     else if (isFashionJewelryPage && list.some((p) => p.fashPos !== undefined)) list = [...list].sort((a, b) => (a.fashPos ?? Infinity) - (b.fashPos ?? Infinity));
@@ -2152,7 +2155,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2182,12 +2185,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // actually carries in this list (the filtered count while filters apply).
   // On the expanded Home grid the count is tiles, not rows.
   const displayCount = filtersActive ? filtered.length : homeTilesActive ? gridList.length : base.length;
-  // The SLG parent's display total is 356 — the original's count —
-  // while the store carries 355 rows (the 356th tile's PDP is dead on
-  // the original itself, so no row exists for it). The title and the
-  // "viewed out of" counters use this total when no filters apply; the
-  // grid and SEE MORE progress still use the real row count.
-  const totalForCounter = isSlgParent && !filtersActive ? 356 : displayCount;
+  // The SLG parent's display total is 354 — the original's live count
+  // (2026-11-15) — and the store carries exactly those 354 rows
+  // (slgParentPos 1–354). The title and the "viewed out of" counters use
+  // this total when no filters apply; the grid and SEE MORE progress
+  // still use the real row count.
+  const totalForCounter = isSlgParent && !filtersActive ? 354 : displayCount;
 
   // Drawer toggles edit the STAGED draft only — the grid is untouched until
   // APPLY / drawer close commits the draft (§F).
@@ -2340,9 +2343,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // Pouches' +8 are filter-only tiles not on the dedicated page.
   const SLG_CARDS: { label: string; count: number; view: View; first: Product | undefined }[] = [
     { label: "To Go wallets", count: 58, view: { t: "category", cat: "leather", sub: "To Go wallets" }, first: base.find((p) => p.fineSub === "To Go wallets" && p.slgPos === 1) },
-    { label: "Wallets", count: 174, view: { t: "category", cat: "leather", sub: "Wallets" }, first: base.find((p) => p.fineSub === "Wallets" && p.slgPos === 1) },
+    { label: "Wallets", count: 173, view: { t: "category", cat: "leather", sub: "Wallets" }, first: base.find((p) => p.fineSub === "Wallets" && p.slgPos === 1) },
     { label: "Card holders", count: 94, view: { t: "category", cat: "leather", sub: "Card holders" }, first: base.find((p) => p.fineSub === "Card holders" && p.slgPos === 1) },
-    { label: "Pouches and cases", count: 39, view: { t: "category", cat: "leather", sub: "Pouches and cases" }, first: base.find((p) => p.fineSub === "Pouches and cases" && p.slgPos === 1) },
+    { label: "Pouches and cases", count: 38, view: { t: "category", cat: "leather", sub: "Pouches and cases" }, first: base.find((p) => p.fineSub === "Pouches and cases" && p.slgPos === 1) },
     { label: "Customizable", count: 2, view: { t: "category", cat: "leather", sub: "Customizable" }, first: base.find((p) => /customizable/i.test(p.name)) },
   ];
   // SLG theme carousel slides (2026-11-15) — the original's 5 themes in
