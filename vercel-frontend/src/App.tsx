@@ -1857,6 +1857,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // (fragPos); the 40 clone rows not on the live list stay in the
       // catalogue but never appear on this page (same rule as Watches).
       if (cat === "fragrances") return products.filter((p) => p.fragPos !== undefined);
+      // Equestrian parent page (cat "equestrian", no sub, 2026-11-16):
+      // it lists exactly the 149 live tiles from the original's order
+      // (eqPos); the 5 clone rows not on the live list stay in the
+      // catalogue but never appear on this page (same rule as Watches).
+      if (cat === "equestrian") return products.filter((p) => p.eqPos !== undefined);
       return catList;
     }
     const low = sub.toLowerCase();
@@ -2080,6 +2085,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // parent page is. The original has NO descriptive paragraph on
   // this page.
   const isFragrancesPage = cat === "fragrances" && !sub;
+  // Equestrian parent page (cat "equestrian", no sub, 2026-11-16) —
+  // sorts by eqPos (the original's live order, 149 tiles) and
+  // carries the descriptive paragraph (two paragraphs, verbatim).
+  const isEquestrianPage = cat === "equestrian" && !sub;
   // Tableware page (cat "home", sub "Tableware", 2026-11-15) — sorts
   // by tabPos (the original's live order, 534 tiles) and carries the
   // "Gold medals" / "Abyssal beauty" inserts. The original has NO
@@ -2291,13 +2300,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // order — the same way (the parent page lists exactly the 272
     // live tiles).
     else if (isFragrancesPage && list.some((p) => p.fragPos !== undefined)) list = [...list].sort((a, b) => (a.fragPos ?? Infinity) - (b.fragPos ?? Infinity));
+    // Equestrian (2026-11-16) sorts by eqPos — the original's
+    // order — the same way (the parent page lists exactly the 149
+    // live tiles).
+    else if (isEquestrianPage && list.some((p) => p.eqPos !== undefined)) list = [...list].sort((a, b) => (a.eqPos ?? Infinity) - (b.eqPos ?? Infinity));
     // Tableware (2026-11-15) sorts by tabPos — the original's
     // order — the same way (the page lists exactly the 534 live tiles).
     else if (isTablewarePage && list.some((p) => p.tabPos !== undefined)) list = [...list].sort((a, b) => (a.tabPos ?? Infinity) - (b.tabPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isTablewarePage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isEquestrianPage, isTablewarePage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2983,6 +2996,20 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         <div className="mx-auto mt-12 max-w-3xl text-center">
           <p className="text-sm leading-7 text-neutral-700">
             Discover Hermès Time, a singular vision of time combining whimsy and rigor. Explore our collections of women&apos;s watches, where elegance is adorned with precious materials and deep black dials. Watchmaking ingenuity is also expressed in our men&apos;s watches, animated by the precision of quartz or poetic complications like the moon phase. From the sporty lines of the Hermès Cut to padlocked icons like the Kelly, each timepiece reflects our savoir-faire. Finally, personalize your style thanks to our interchangeable straps.
+          </p>
+        </div>
+      )}
+
+      {/* Equestrian descriptive paragraphs — verbatim from
+          hermes.com (category text fetch, 2026-11-16). Parent page
+          only; shown in full, as on the original. */}
+      {isEquestrianPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Equestrianism has been the beating heart of Hermès since 1837. Our equipment combines the heritage of the saddler-harnesser with the high technicality of top-level sport. Each piece is the result of a quest for precision, embodied notably in our bespoke equestrian service, designed to meet the specific needs of every horse-and-rider pair.
+          </p>
+          <p className="mt-4 text-sm leading-7 text-neutral-700">
+            Discover a technical and durable wardrobe. Crafted with the saddle stitch, our saddles, bridles, and tack accessories combine durability and ergonomics in our dedicated horse section. To accompany the effort, Hermès also offers a technical wardrobe for the rider, ranging from show jackets to riding breeches. On the track as in training, Hermès standards ensure an impeccable silhouette and performance in service of equestrian harmony.
           </p>
         </div>
       )}
