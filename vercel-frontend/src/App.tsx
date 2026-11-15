@@ -1852,6 +1852,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // catalogue but never appear on this page (same rule as Women's
       // Bags).
       if (cat === "watches") return products.filter((p) => p.watchPos !== undefined);
+      // Fragrances parent page (cat "fragrances", no sub, 2026-11-15):
+      // it lists exactly the 272 live tiles from the original's order
+      // (fragPos); the 40 clone rows not on the live list stay in the
+      // catalogue but never appear on this page (same rule as Watches).
+      if (cat === "fragrances") return products.filter((p) => p.fragPos !== undefined);
       return catList;
     }
     const low = sub.toLowerCase();
@@ -2059,6 +2064,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // are NOT gated — their original totals were not measured; only
   // the parent page is.
   const isWatchesPage = cat === "watches" && !sub;
+  // Fragrances parent page (cat "fragrances", no sub, 2026-11-15) —
+  // sorts by fragPos (the original's live order, 272 tiles) and
+  // carries the "Rouge Brillant Silky" / "Fragrance Finder" inserts.
+  // The sub-views (Make-up / Perfumes / Hermessence / universes) are
+  // NOT gated — their original totals were not measured; only the
+  // parent page is. The original has NO descriptive paragraph on
+  // this page.
+  const isFragrancesPage = cat === "fragrances" && !sub;
   // Men's Shoes PARENT page only (sub "Shoes") — distinct from the
   // broad isMensShoesPage (filters/carousel), which is also true on
   // the men's main page and sub-pages.
@@ -2260,10 +2273,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // order — the same way (the parent page lists exactly the 370
     // live tiles).
     else if (isWatchesPage && list.some((p) => p.watchPos !== undefined)) list = [...list].sort((a, b) => (a.watchPos ?? Infinity) - (b.watchPos ?? Infinity));
+    // Fragrances (2026-11-15) sorts by fragPos — the original's
+    // order — the same way (the parent page lists exactly the 272
+    // live tiles).
+    else if (isFragrancesPage && list.some((p) => p.fragPos !== undefined)) list = [...list].sort((a, b) => (a.fragPos ?? Infinity) - (b.fragPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2419,6 +2436,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     if (isMensBagsPage) return [
       { after: 8, title: "Kelly in the city", body: "The Kelly Messenger bag, your everyday companion." },
       { after: 28, title: "Hands-free mode", body: "The Hac a Dos backpack is a modern and functional accessory." },
+    ];
+    // Fragrances parent page — the original's two editorial blocks
+    // ("Rouge Brillant Silky" after tile #8, "Fragrance Finder" after
+    // tile #28), verbatim from the live category page text fetch,
+    // 2026-11-15. No descriptive paragraph on the original's page.
+    if (isFragrancesPage) return [
+      { after: 8, title: "Rouge Brillant Silky", body: "Its creamy texture melts onto the curve of the lips, illuminating them with a light, silky sheen. A new, delicately tinted, high-shine signature." },
+      { after: 28, title: "Fragrance Finder", body: "Are you ready to find the perfume that suits you? Express your olfactory preferences and discover the perfect fragrances for you or your loved ones." },
     ];
     if (cat === "leather") {
       if (subLow === "to go wallets") return [{ after: 8, title: "Minimalist-chic", body: "Compact and structured, To Go wallets assert their style and transform momentum into boldness." }];
