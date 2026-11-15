@@ -2840,37 +2840,45 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
 
       {/* Below the grid: linked breadcrumb → Product theme carousel →
           (women's bags only) category description → service strip/footer. */}
+      {/* Bottom breadcrumb — measured on hermes.com's Fall-Winter page
+          (2026-11-16, screenshot): "WOMEN | READY-TO-WEAR | FALL-WINTER
+          2026 COLLECTION" — " | " separators, ALL segments in capitals,
+          first two underlined links, last plain text. The clone previously
+          used " / " separators with a title-case last segment — fixed here
+          site-wide (the nav's uppercase class renders the last segment in
+          caps once normal-case is dropped). */}
       <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
-        <button aria-label={`Breadcrumb ${label}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat })}>{label}</button>
+        <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
         {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && (
           <>
-            {" / "}
-            <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
-            {" / "}
-            <span className="normal-case tracking-normal text-black">{titleText}</span>
+            {" | "}
+            <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
+            {" | "}
+            <span className="tracking-normal text-black">{titleText}</span>
           </>
         )}
         {/* The SLG parent's bottom breadcrumb is 2 levels on the original
-            (LEATHER GOODS / Small leather goods) — the middle level would
-            duplicate the title, so it is omitted here (2026-11-15). */}
+            (LEATHER GOODS | SMALL LEATHER GOODS) — the middle level would
+            duplicate the title, so it is omitted here (2026-11-15; pipe +
+            all-caps form per the 2026-11-16 Fall-Winter measurement). */}
         {sub && isSlgParent && (
           <>
-            {" / "}
-            <span className="normal-case tracking-normal text-black">{titleText}</span>
+            {" | "}
+            <span className="tracking-normal text-black">{titleText}</span>
           </>
         )}
-        {/* The RTW parent pages show 2 levels on the original (WOMEN /
-            Ready-to-wear) — the middle level would duplicate the title
+        {/* The RTW parent pages show 2 levels on the original (WOMEN |
+            READY-TO-WEAR) — the middle level would duplicate the title
             (men: "Ready-to-Wear" then "ready-to-wear") or leak the first
             row's subcategory (women: "Dresses and skirts"), so it is
             omitted here, like the SLG parent (2026-11-16). */}
         {sub && (isWomensRtwPage || isMensRtwPage) && (
           <>
-            {" / "}
-            <span className="normal-case tracking-normal text-black">{titleText}</span>
+            {" | "}
+            <span className="tracking-normal text-black">{titleText}</span>
           </>
         )}
-        {!sub && (<>{" / "}<span className="normal-case tracking-normal text-black">{titleText}</span></>)}
+        {!sub && (<>{" | "}<span className="tracking-normal text-black">{titleText}</span></>)}
       </nav>
 
       {/* Product theme carousel — the original's category page has this swiper
