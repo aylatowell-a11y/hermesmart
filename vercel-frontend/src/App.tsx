@@ -1912,6 +1912,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // (same rule as Scarves/Belts). No tile map: the live list has no
       // repeated tiles, so the dressPos sort alone renders all 78.
       "dresses and skirts": (p) => p.category === cat && p.subcategory === "Dresses and skirts" && (cat === "women" ? p.dressPos !== undefined : true),
+      // Men's Shoes parent page — the original's live order (328
+      // tiles, extracted 2026-11-15) lives in menShoePos; the parent lists
+      // exactly those rows. The 50 clone rows not on the live list stay
+      // in the catalogue but never appear on the parent grid (same rule
+      // as Scarves/Belts/Dresses). Women's shoes (cat "women") are NOT
+      // gated — that page shows [701] = 689 live + 12 kept rows.
+      // NOTE: the key MUST be exactly "shoes" — subLow is "shoes" for
+      // both the women's and men's Shoes pages (Scarves comma lesson).
+      "shoes": (p) => p.category === cat && p.subcategory === "Shoes" && (cat === "men" ? p.menShoePos !== undefined : true),
       "loafers": (p) => /loafer/i.test(p.name),
       "boots": (p) => /boot/i.test(p.name),
       "mules": (p) => /mule|loafer/i.test(p.name),
@@ -2005,6 +2014,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const isWomensScarvesPage = cat === "women" && subLow === "scarves, shawls and stoles";
   const isWomensBeltsPage = cat === "women" && subLow === "belts";
   const isWomensDressesPage = cat === "women" && subLow === "dresses and skirts";
+  // Men's Shoes PARENT page only (sub "Shoes") — distinct from the
+  // broad isMensShoesPage (filters/carousel), which is also true on
+  // the men's main page and sub-pages.
+  const isMensShoesParentPage = cat === "men" && subLow === "shoes";
   const isMensBags = /men's bags/.test(subLow) && !/women's bags/.test(subLow);
   const isBagsPage = /bags and clutches/.test(subLow) || (cat === "women" && !sub);
   const isSneakersPage = /sneaker/.test(subLow);
@@ -2184,6 +2197,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (isFashionJewelryPage && list.some((p) => p.fashPos !== undefined)) list = [...list].sort((a, b) => (a.fashPos ?? Infinity) - (b.fashPos ?? Infinity));
     else if (isHomePage && list.some((p) => p.homePos !== undefined)) list = [...list].sort((a, b) => (a.homePos ?? Infinity) - (b.homePos ?? Infinity));
     else if (isWomensShoesPage && list.some((p) => p.shoePos !== undefined)) list = [...list].sort((a, b) => (a.shoePos ?? Infinity) - (b.shoePos ?? Infinity));
+    // Men's Shoes (2026-11-15) sorts by menShoePos — the original's
+    // order — the same way (women's shoes are a separate page).
+    else if (isMensShoesParentPage && list.some((p) => p.menShoePos !== undefined)) list = [...list].sort((a, b) => (a.menShoePos ?? Infinity) - (b.menShoePos ?? Infinity));
     // Women's Scarves (2026-11-15) sorts by scarfPos — the original's
     // order — the same way (men's scarves are a separate page).
     else if (isWomensScarvesPage && list.some((p) => p.scarfPos !== undefined)) list = [...list].sort((a, b) => (a.scarfPos ?? Infinity) - (b.scarfPos ?? Infinity));
@@ -2192,7 +2208,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2800,6 +2816,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           </p>
           <p className="mt-4 text-sm leading-7 text-neutral-700">
             Elegant and feminine, our selection is passionate about Hermès&apos; legendary Oran sandals. In this exhilarating mix of casual city sneakers and leather ankle boots with iconic clasps, you are guaranteed to find your signature pair!
+          </p>
+        </div>
+      )}
+
+      {/* Men's Shoes descriptive paragraph — verbatim from
+          hermes.com (category text fetch, 2026-11-15). Parent page
+          only; shown in full, as on the original. */}
+      {isMensShoesParentPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Hermes shoes never misstep and add playful elegance to any men&apos;s silhouette. From city sneakers to cross-country boots, meet your new sole mate. Whether it&apos;s the gallivanting leather of the iconic Izmir sandals or the House&apos;s signature moccasins, step into the world of our men&apos;s shoe collections to find the perfect fit.
           </p>
         </div>
       )}
