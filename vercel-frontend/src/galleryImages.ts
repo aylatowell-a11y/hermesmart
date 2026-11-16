@@ -1242,7 +1242,7 @@ const HAT_SET = [
 ];
 const KNIT_SET = [
   V("Worn", "https://assets.hermes.com/is/image/hermesproduct/6H2643DLA3_worn_101?$product_default_bg$"),
-  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/6H2632DFAK_worn_101?$product_default_bg$"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/6H2742D6A3_worn_101?$product_default_bg$"),
   V("Worn", "https://assets.hermes.com/is/image/hermesproduct/6H2800DEMO_worn_101?$product_default_bg$"),
 ];
 const BLANKET_SET = [V("Front", blanketFlat), V("Folded", blanketFolded), V("In situ", blanketInSitu), V("Detail", blanketDetail)];
@@ -1282,11 +1282,13 @@ function typeSet(p: GalleryProduct): { label: string; src: string }[] {
   if (sub === "shoes" || /sneaker|boot|loafer|mule|derby|sandal|espadrille|pump|ballerina/.test(n)) return SHOE_SET;
   if (sub === "belts" || /belt/.test(n)) return BELT_SET;
   if (sub.includes("dress") || /dress|skirt|caftan/.test(n)) return DRESS_SET;
+  // "key ring" contains the word "ring", so the jewelry line below would
+  // catch key rings — test them first.
+  if (/key ring/.test(n) || sub.includes("key ring")) return KEYRING_SET;
   if (p.category === "jewelry" || /necklace|bracelet|earring|bangle|\bring\b/.test(n)) return JEWELRY_SET;
   if (sub.includes("bag") || sub.includes("leather") || /bag|tote|sac|kelly|birkin|picotin|bolide|clutch|pouch|wallet|case/.test(n)) return BAG_SET;
   if (/\btie\b|\bties\b/.test(n) || sub.includes("tie")) return TIE_SET;
   if (/mitten|glove/.test(n)) return MITTEN_SET;
-  if (/key ring/.test(n) || sub.includes("key ring")) return KEYRING_SET;
   if (/collar|leash/.test(n)) return DOGTACK_SET;
   if (/\bcap\b|\bhat\b|bucket hat/.test(n)) return HAT_SET;
   if (/knit|sweater|twillaine|cardigan/.test(n) || sub.includes("knit")) return KNIT_SET;

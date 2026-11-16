@@ -6990,10 +6990,16 @@ export function productImageFor(p: { id?: number; price?: number; name: string; 
   }
   if (/blanket|throw|pillow|cushion/.test(n)) return avalonBlanket;
   if (/plate|tableware|porcelain|glass|carafe|teapot|cup|bowl|vase/.test(n)) return mosaiquePlates;
-  if (/saddle|bridle|tack|horse/.test(n)) return saddleBridle;
-  // Dog collars/leashes (Gifts pool rows 437–439) fell through to the
-  // saddle photo. Pool photo: Medor dog leash (id6749), real Hermes photo.
+  // NOTE: n is name + subcategory, so the saddle branch below also matches
+  // subcategory "Tack" — dog collars/leashes and the Paddock cap (all Tack)
+  // must be tested BEFORE it, or they get the saddle photo.
+  // Dog collars/leashes (Gifts pool rows 437–439). Pool photo: Medor dog
+  // leash (id6749), real Hermes photo.
   if (/collar|leash/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/800696EJS3_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+  // Real Hermes cap photo (Max CDS cap id6663) replaces the generated
+  // bucketHat placeholder for hat/cap rows with no own photo.
+  if (/bucket hat|\bhat\b|cap/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/262066N%2002_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+  if (/saddle|bridle|tack|horse/.test(n)) return saddleBridle;
   // Ready-to-wear is model-worn, as on hermes.com: dresses rotate through
   // the model-worn dress photos, coats/knits/pants/hats get their own
   // model-worn shots instead of one flat product photo for everything.
@@ -7004,9 +7010,6 @@ export function productImageFor(p: { id?: number; price?: number; name: string; 
   if (/knit|sweater|twillaine|cardigan/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/6H2643DLA3_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
   if (/jogging|pants|trousers/.test(n)) return hJoggingPants;
   if (/breeches/.test(n)) return dressageBreeches;
-  // Real Hermes cap photo (Max CDS cap id6663) replaces the generated
-  // bucketHat placeholder for hat/cap rows with no own photo.
-  if (/bucket hat|\bhat\b|cap/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/262066N%2002_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
   // Mittens/gloves (Gifts pool row 317 Lionel mittens) fell through to
   // BAG_POOL. Pool photo: Baltimore mittens, Black (id6802), real photo.
   if (/mitten|glove/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/202048G%2002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
