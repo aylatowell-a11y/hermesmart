@@ -12,12 +12,6 @@ const heroBenchImgMobile = "https://assets.hermes.com/is/image/hermesedito/Cover
 // The video itself is served from public/videos/ as MP4 (see BOARD d).
 const baladeurPosterImg = "https://assets.hermes.com/is/image/hermesedito/Hero_Baladeur_Cover_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 const baladeurPosterImgMobile = "https://assets.hermes.com/is/image/hermesedito/Hero_Baladeur_Cover_9x16?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
-// Original Hermes Kelly editorial (hermes.com homepage, verified 2026-11-10):
-// two stacked gold Kelly RINGS (one plain, one diamond-pavé) on an orange /
-// terracotta background. "Bague" = ring — this is what hermes.com shows for
-// the Kelly story text; there is no bracelet version on the homepage.
-const kellyRingsImg = "https://assets.hermes.com/is/image/hermesedito/Bague_Kelly_Push_2_Nov_Phase_1_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
-const kellyRingsImgMobile = "https://assets.hermes.com/is/image/hermesedito/Bague_Kelly_Push_2_Nov_Phase_1_9x16?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 // Original Hermes Horsescape High Jewelry homepage banner (hermes.com,
 // verified 2026-11-14 via the homepage content JSON
 // https://www.hermes.com/api/content/homepage?locale=us_en — block
@@ -1516,46 +1510,13 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         </div>
       </section>
 
-      {/* BOARD e) KELLY EDITORIAL — full-bleed photographic board, as on
-          hermes.com: two stacked gold Kelly RINGS (one plain, one pavé-set
-          with diamonds) on an orange background; the whole image is a link
-          to Jewelry, as on the original. PHONE measurements (user's
-          screenshot of hermes.com, 720×1640, photo 174–1543px — all four
-          gold edges fit within 2px): the original does NOT show the 9:16
-          file at natural size — it shows the centre ~87% zoomed ~1.15×,
-          bottom-anchored (top ~6.7% cropped, bottom ~0.6%, sides ~6.7%),
-          in a container ~1.90× as tall as wide (720×1369), so the rings
-          render ~15% larger and sit at ~27–64% of the height. The text is
-          3 lines at ~18px Playfair italic (measured with the real font:
-          18px gives the original's exact line breaks at 306/315/299px;
-          the old 24px wrapped to 4 lines and crept up to the rings), line
-          height ~31px, first line top at ~81% of the height, with a clear
-          ~17% gap below the rings. The bottom ~38% carries a dark
-          gradient (measured: ~0% at 65% height → ~77% black at the very
-          bottom) — the rendered original is much darker at the bottom
-          than the raw file. The CTA is ~12px with tight tracking
-          (~0.05em; measured 181px wide — the old 0.3em rendered ~253px).
-          DESKTOP is untouched: natural 16:9, 28px text, no gradient,
-          live-verified 2026-11-10. */}
-      <section className="relative mb-12 cursor-pointer overflow-hidden lg:mb-16" style={{ background: "#2e1c11" }} onClick={() => go({ t: "category", cat: "jewelry" })} aria-label="The Kelly story — discover the collection">
-        <div className="relative aspect-[720/1369] overflow-hidden sm:aspect-auto">
-          <picture>
-            <source media="(max-width: 640px)" srcSet={kellyRingsImgMobile} />
-            <img src={kellyRingsImg} alt="Two gold Kelly rings, one pavé-set with diamonds, on an orange background" className="absolute bottom-[-0.7%] left-1/2 block w-[115.3%] max-w-none -translate-x-1/2 sm:static sm:bottom-auto sm:w-full sm:max-w-full sm:translate-x-0" />
-          </picture>
-          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/75 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 pb-6 pt-6 text-center text-white sm:pb-8 sm:pt-8">
-            <p className="font-serif-d mx-auto max-w-3xl px-4 text-[20px] italic leading-[28px]">With each new collection, the Kelly story reinvents itself and reveals new depths. A legendary design, constantly in motion.</p>
-            <button aria-label="Discover the Kelly collection" className="font-mono-d mt-4 text-xs font-medium uppercase tracking-normal underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "jewelry" })}>Discover the collection</button>
-          </div>
-        </div>
-      </section>
       {/* Horsescape High Jewelry banner — on the original it sits below the
-          Kelly editorial and above the service strip (verified 2026-11-14).
+          Baladeur board and above the service strip (Kelly editorial removed
+          from the original homepage 2026-11-16; verified via homepage JSON).
           Full-bleed photo, caption + DISCOVER at the bottom centre; the
           original's DISCOVER goes to the "Hermès: jeweler of shapes" story
           page, which the clone does not have — the section links to the
-          jewelry category, as the Kelly board does. */}
+          jewelry category (as the removed Kelly board did). */}
       <section className="relative mb-12 cursor-pointer overflow-hidden lg:mb-16" onClick={() => go({ t: "category", cat: "jewelry" })} aria-label="Into the Horsescape, High Jewelry collection — discover">
         <div className="relative aspect-[9/16] overflow-hidden sm:aspect-auto">
           <picture>
