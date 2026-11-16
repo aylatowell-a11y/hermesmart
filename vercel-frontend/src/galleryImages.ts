@@ -1223,6 +1223,28 @@ const TIE_SET = [
   V("Worn", "https://assets.hermes.com/is/image/hermesproduct/006431T%2004_worn_104?$product_default_bg$"),
   V("Folded", "https://assets.hermes.com/is/image/hermesproduct/006431T%2004_folded_wm_103?$product_default_bg$"),
 ];
+// Pool sets for the remaining Gifts tile-only rows (no own CDN views).
+// Donors are real Hermes photos of the same product type.
+const MITTEN_SET = [
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/202048G%20AT_worn_101?$product_default_bg$"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/202048G%2002_front_wm_101?$product_default_bg$"),
+];
+const KEYRING_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/100223FJ00_front_wm_101?$product_default_bg$"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/100125FJ00_front_wm_102?$product_default_bg$"),
+];
+const DOGTACK_SET = [
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/800696EJS3_front_wm_101?$product_default_bg$"),
+  V("Front", "https://assets.hermes.com/is/image/hermesproduct/800696EJS3_front_wm_102?$product_default_bg$"),
+];
+const HAT_SET = [
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/262066N%2002_worn_101?$product_default_bg$"),
+];
+const KNIT_SET = [
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/6H2643DLA3_worn_101?$product_default_bg$"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/6H2632DFAK_worn_101?$product_default_bg$"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/6H2800DEMO_worn_101?$product_default_bg$"),
+];
 const BLANKET_SET = [V("Front", blanketFlat), V("Folded", blanketFolded), V("In situ", blanketInSitu), V("Detail", blanketDetail)];
 const DRESS_SET = [V("Worn", longFront), V("Worn", longCloseup), V("Worn", longBack), V("Worn", longThreeQuarter), V("Detail", longDetail)];
 const RTW_SET = [V("Front", longFront), V("Worn", longCloseup), V("Back", longBack), V("Detail", longDetail)];
@@ -1263,6 +1285,11 @@ function typeSet(p: GalleryProduct): { label: string; src: string }[] {
   if (p.category === "jewelry" || /necklace|bracelet|earring|bangle|\bring\b/.test(n)) return JEWELRY_SET;
   if (sub.includes("bag") || sub.includes("leather") || /bag|tote|sac|kelly|birkin|picotin|bolide|clutch|pouch|wallet|case/.test(n)) return BAG_SET;
   if (/\btie\b|\bties\b/.test(n) || sub.includes("tie")) return TIE_SET;
+  if (/mitten|glove/.test(n)) return MITTEN_SET;
+  if (/key ring/.test(n) || sub.includes("key ring")) return KEYRING_SET;
+  if (/collar|leash/.test(n)) return DOGTACK_SET;
+  if (/\bcap\b|\bhat\b|bucket hat/.test(n)) return HAT_SET;
+  if (/knit|sweater|twillaine|cardigan/.test(n) || sub.includes("knit")) return KNIT_SET;
   if (sub.includes("ready") || p.category === "women" || p.category === "men" || p.category === "equestrian") return RTW_SET;
   if (p.category === "home") return BLANKET_SET;
   return GENERIC_SET;

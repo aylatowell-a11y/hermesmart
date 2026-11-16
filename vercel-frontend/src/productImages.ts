@@ -83,7 +83,6 @@ import kellyShoulderV2 from "./assets/products/media-generation-kelly-shoulder-v
 import bouncingSneakerBlancV2 from "./assets/products/media-generation-bouncing-sneaker-blanc-v2-0-9b68bad6-780d-4f64-87f1-71a10c0a4ec5.webp";
 import scarf90V2 from "./assets/products/media-generation-scarf-90-v2-0-e276bf81-c4cf-4816-943a-c8b9fc448073.webp";
 import coatModel from "./assets/products/media-generation-coat-model-0-164b7c6b-118b-423e-a88b-4e9b30e5dcc6.webp";
-import knitSweaterModel from "./assets/products/media-generation-knit-sweater-model-0-5b7a8563-80ef-4613-a424-2b68dcaeef78.webp";
 import bucketHat from "./assets/products/media-generation-bucket-hat-0-7948e42f-bff2-45fe-a622-9d13b7feaeaa.webp";
 import lipCareMask from "./assets/products/media-generation-lip-care-mask-0-199ce1ff-a7c8-4d6b-acdd-4f68b986eb57.webp";
 import dressageBreeches from "./assets/products/media-generation-dressage-breeches-0-b89930e2-4652-4260-aefa-73bf37b7cf5f.webp";
@@ -6977,6 +6976,10 @@ export function productImageFor(p: { id?: number; price?: number; name: string; 
     if (/leather|thalassa/.test(n)) return miniThalassaBracelet;
     return clicClacHBracelet;
   }
+  // "key ring" contains "ring" — this must sit before the /ring/ branch
+  // or a key ring gets the bracelet photo. Pool photo: Labyrinth key ring
+  // (id6706), real Hermes photo, for Gifts pool row 58 (AirTag key ring).
+  if (/key ring/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/100223FJ00_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
   if (/ring/.test(n)) return chaineDancreContourBracelet;
   if (/lipstick|lip/.test(n)) return /gift|set|care/.test(n) ? rougeLipCareSet : matteLipstickRoseBoise;
   if (/eye shadow|eyeshadow|ombres|mascara|face|powder|blush|foundation/.test(n)) return ombresEyeShadow;
@@ -6988,15 +6991,25 @@ export function productImageFor(p: { id?: number; price?: number; name: string; 
   if (/blanket|throw|pillow|cushion/.test(n)) return avalonBlanket;
   if (/plate|tableware|porcelain|glass|carafe|teapot|cup|bowl|vase/.test(n)) return mosaiquePlates;
   if (/saddle|bridle|tack|horse/.test(n)) return saddleBridle;
+  // Dog collars/leashes (Gifts pool rows 437–439) fell through to the
+  // saddle photo. Pool photo: Medor dog leash (id6749), real Hermes photo.
+  if (/collar|leash/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/800696EJS3_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
   // Ready-to-wear is model-worn, as on hermes.com: dresses rotate through
   // the model-worn dress photos, coats/knits/pants/hats get their own
   // model-worn shots instead of one flat product photo for everything.
   if (/dress|skirt|caftan/.test(n)) return pick(DRESS_POOL, seed);
   if (/coat|parka/.test(n)) return coatModel;
-  if (/knit|sweater|twillaine|cardigan/.test(n)) return knitSweaterModel;
+  // Real Hermes knit photo (Long-sleeve sweater id4787) replaces the
+  // generated knitSweaterModel placeholder for knit rows with no own photo.
+  if (/knit|sweater|twillaine|cardigan/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/6H2643DLA3_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
   if (/jogging|pants|trousers/.test(n)) return hJoggingPants;
   if (/breeches/.test(n)) return dressageBreeches;
-  if (/bucket hat|\bhat\b|cap/.test(n)) return bucketHat;
+  // Real Hermes cap photo (Max CDS cap id6663) replaces the generated
+  // bucketHat placeholder for hat/cap rows with no own photo.
+  if (/bucket hat|\bhat\b|cap/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/262066N%2002_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+  // Mittens/gloves (Gifts pool row 317 Lionel mittens) fell through to
+  // BAG_POOL. Pool photo: Baltimore mittens, Black (id6802), real photo.
+  if (/mitten|glove/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/202048G%2002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
   if (/jacket|shirt|top|t-shirt|blouse/.test(n)) return riderJacket;
   if (/gift card/.test(n)) return giftCard;
   if (/gift set/.test(n)) return silkGiftSet;
