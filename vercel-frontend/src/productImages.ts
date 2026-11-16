@@ -7007,6 +7007,10 @@ export function productImageFor(p: { id?: number; price?: number; name: string; 
     if (/caramel|tan|gold|fauve|naturel/.test(col)) return pick([lePetitSac, tablierSellier, videpoches], seed);
     return pick(BAG_POOL, seed);
   }
+  // Ties with no own CDN views (Gifts tile-only rows pos 316 + 357) fell
+  // through to BAG_POOL — a black handbag photo for a tie. Pool photo is
+  // the Metallerie Equestre tie 7cm, Blue (id6684), a real Hermes tie photo.
+  if (/\btie\b|\bties\b/.test(n) || (p.subcategory ?? "").toLowerCase().includes("tie")) return "https://assets.hermes.com/is/image/hermesproduct/006431T%2004_wornsquare_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
   if (p.category === "jewelry") return pick(JEWEL_POOL, seed);
   if (p.category === "watches") return pick(WATCH_POOL, seed);
   if (p.category === "fragrances") return pick(PERFUME_POOL, seed);

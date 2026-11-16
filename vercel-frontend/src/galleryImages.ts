@@ -1213,6 +1213,16 @@ const PERFUME_SET = [V("Front", perfFront), V("Detail", perfDetail), V("Side", p
 const JEWELRY_SET = [V("Front", jewFront), V("Worn", jewWorn), V("Detail", jewDetail)];
 const SCARF_SET = [V("Flat", scarfFlat), V("Worn", scarfWorn), V("Detail", scarfDetail)];
 const BELT_SET = [V("Front", beltFront), V("Worn", beltWorn), V("Detail", beltDetail)];
+// Pool photos for ties with no own CDN views (e.g. Gifts tile-only rows
+// pos 316 Deux Par Deux tie 7cm + pos 357 H Trefles tie 8cm — 310 HEAD
+// probes across all sku/view forms found zero views for their refs).
+// Donor is the Metallerie Equestre tie 7cm, Blue (id6684) — real Hermes
+// tie photos, hotlinked; a tie photo beats the RTW model-worn set.
+const TIE_SET = [
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/006431T%2004_wornsquare_wm_101?$product_default_bg$"),
+  V("Worn", "https://assets.hermes.com/is/image/hermesproduct/006431T%2004_worn_104?$product_default_bg$"),
+  V("Folded", "https://assets.hermes.com/is/image/hermesproduct/006431T%2004_folded_wm_103?$product_default_bg$"),
+];
 const BLANKET_SET = [V("Front", blanketFlat), V("Folded", blanketFolded), V("In situ", blanketInSitu), V("Detail", blanketDetail)];
 const DRESS_SET = [V("Worn", longFront), V("Worn", longCloseup), V("Worn", longBack), V("Worn", longThreeQuarter), V("Detail", longDetail)];
 const RTW_SET = [V("Front", longFront), V("Worn", longCloseup), V("Back", longBack), V("Detail", longDetail)];
@@ -1252,6 +1262,7 @@ function typeSet(p: GalleryProduct): { label: string; src: string }[] {
   if (sub.includes("dress") || /dress|skirt|caftan/.test(n)) return DRESS_SET;
   if (p.category === "jewelry" || /necklace|bracelet|earring|bangle|\bring\b/.test(n)) return JEWELRY_SET;
   if (sub.includes("bag") || sub.includes("leather") || /bag|tote|sac|kelly|birkin|picotin|bolide|clutch|pouch|wallet|case/.test(n)) return BAG_SET;
+  if (/\btie\b|\bties\b/.test(n) || sub.includes("tie")) return TIE_SET;
   if (sub.includes("ready") || p.category === "women" || p.category === "men" || p.category === "equestrian") return RTW_SET;
   if (p.category === "home") return BLANKET_SET;
   return GENERIC_SET;
