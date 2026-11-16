@@ -160,6 +160,8 @@ const BOUNCING_BLANC = [
 // Files live in vercel-frontend/public/videos/ (served at /videos/...).
 const MID_DRESS_VIDEO = "/videos/mid-dress.mp4";
 const LONG_DRESS_VIDEO = "/videos/long-dress.mp4";
+const BOUNCING_1275_VIDEO = "/videos/bouncing-1275-blanc.mp4";
+const JACKSON_VIDEO = "/videos/jackson-sandal.mp4";
 
 const MID_NOIR = [V("Worn", midFront), V("Video", midFront, MID_DRESS_VIDEO), V("Worn", midCloseup), V("Worn", midBack), V("Worn", midThreeQuarter), V("Worn", midSide), V("Worn", midFront2)];
 // The Gorgeous Blue colourway has its own three model-worn photos (front /
@@ -198,15 +200,24 @@ const NAXOS_SET = [
 // Jackson sandal — ORIGINAL Hermes photos, hotlinked from assets.hermes.com
 // (user instruction 2026-11-09). Ref H242948ZHC9, beige/black, $1,500.
 // Views verified: 101 = front, 103 = model wearing (104/105/106, worn_102 do not exist).
+// Jackson sandal — video view added 2026-11-16: original Hermès clip,
+// hosted on the store itself as /videos/jackson-sandal.mp4 (same route as
+// the dress MP4s). Poster is the Front photo, as for the dresses.
 const JACKSON_SET = [
   V("Front", HERMES_IMG + "242948ZHC9_front_wm_101" + HERMES_Q),
+  V("Video", HERMES_IMG + "242948ZHC9_front_wm_101" + HERMES_Q, JACKSON_VIDEO),
   V("Worn", HERMES_IMG + "242948ZHC9_worn_103" + HERMES_Q),
 ];
 // Bouncing sneaker $1,275, Blanc — ref H242810ZH90. Views: 101 front,
 // 103 worn (worn_102 does NOT exist), 104 side, 105 back, 106 detail,
 // 107 above. All six visually confirmed: white Bouncing, black "H" heel.
+// Video view added 2026-11-16: original Hermès clip, hosted on the store
+// itself as /videos/bouncing-1275-blanc.mp4 (same route as the dress MP4s).
+// Poster is the Front photo, as for the dresses. Blanc colourway only —
+// no Noir clip exists, so SHOE_BOUNCING_1275_NOIR is unchanged.
 const SHOE_BOUNCING_1275_BLANC = [
   V("Front", HERMES_IMG + "242810ZH90_front_wm_101" + HERMES_Q),
+  V("Video", HERMES_IMG + "242810ZH90_front_wm_101" + HERMES_Q, BOUNCING_1275_VIDEO),
   V("Worn", HERMES_IMG + "242810ZH90_worn_103" + HERMES_Q),
   V("Side", HERMES_IMG + "242810ZH90_side_wm_104" + HERMES_Q),
   V("Back", HERMES_IMG + "242810ZH90_back_wm_105" + HERMES_Q),
