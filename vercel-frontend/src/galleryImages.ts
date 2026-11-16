@@ -8051,6 +8051,8 @@ const NEW_GALLERY: Record<number, { label: string; src: string; videoSrc?: strin
   6807: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/049676CKAA_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/049676CKAA_worn_1?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/049676CKAA_worn_102?$product_default_bg$" }],
   6808: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/115424B%2000_front_wm_101?$product_default_bg$" }],
   6809: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/105117B%2000_front_wm_101?$product_default_bg$" }],
+  6810: [{ label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/6H2822DCL1_worn_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/6H2822DCL1_worn_102?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/6H2822DCL1_worn_103?$product_default_bg$" }],
+  6811: [{ label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/6H2602D14C_worn_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/6H2602D14C_worn_102?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/6H2602D14C_worn_103?$product_default_bg$" }],
 };
 
 // PDP full-photo quality (user complaint 2026-11-11, "koi compromise
