@@ -1889,6 +1889,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // (eqPos); the 5 clone rows not on the live list stay in the
       // catalogue but never appear on this page (same rule as Watches).
       if (cat === "equestrian") return products.filter((p) => p.eqPos !== undefined);
+      // Gifts parent page (cat "gifts", no sub, 2026-11-16): it lists
+      // exactly the 592 live tiles from the original's order (giftPos);
+      // the 6,216 clone rows not on the live list stay in the catalogue
+      // but never appear on this page (same rule as Equestrian). The
+      // two pre-existing gift rows (id48 Gift card, id49 Silk gift set)
+      // are NOT on the original's Gifts page and carry no giftPos.
+      if (cat === "gifts") return products.filter((p) => p.giftPos !== undefined);
       return catList;
     }
     const low = sub.toLowerCase();
@@ -2127,6 +2134,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // sorts by eqPos (the original's live order, 149 tiles) and
   // carries the descriptive paragraph (two paragraphs, verbatim).
   const isEquestrianPage = cat === "equestrian" && !sub;
+  // Gifts parent page (cat "gifts", no sub, 2026-11-16) — sorts by
+  // giftPos (the original's live order, 592 tiles) and carries the
+  // "Living in color" / "Time travelers" inserts + the 3-paragraph
+  // description (collapsed + See More, as on the original). The
+  // original shows NO sub-nav buttons and NO "GIFTS" eyebrow here.
+  const isGiftsPage = cat === "gifts" && !sub;
   // Tableware page (cat "home", sub "Tableware", 2026-11-15) — sorts
   // by tabPos (the original's live order, 534 tiles) and carries the
   // "Gold medals" / "Abyssal beauty" inserts. The original has NO
@@ -2175,7 +2188,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
   };
   const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2206,6 +2219,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // The original's fashion-jewelry sub-pages (WOMEN menu, desktop).
     siblings = ["Bracelets", "Earrings", "Necklaces", "Rings", "Pins and brooches", "Hair accessories and combs", "Hairbands and hatbands"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
+  } else if (isGiftsPage) {
+    // The original's Gifts parent page has NO sub-navigation buttons
+    // (verified live 2026-11-16) — the siblings row stays empty. The
+    // sticky bar itself (FILTER + Product/Mosaic toggle) still renders.
+    siblings = [];
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -2238,6 +2256,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [loadedMsg, setLoadedMsg] = useState("");
   const [slgParaOpen, setSlgParaOpen] = useState(false);
   const [homeParaOpen, setHomeParaOpen] = useState(false);
+  const [giftParaOpen, setGiftParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2355,10 +2374,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Men's RTW parent (2026-11-16) sorts by mRtwPos — the original's
     // order — the same way (the parent lists exactly the 207 live tiles).
     else if (isMensRtwPage && list.some((p) => p.mRtwPos !== undefined)) list = [...list].sort((a, b) => (a.mRtwPos ?? Infinity) - (b.mRtwPos ?? Infinity));
+    // Gifts (2026-11-16) sorts by giftPos — the original's order —
+    // the same way (the parent page lists exactly the 592 live tiles).
+    else if (isGiftsPage && list.some((p) => p.giftPos !== undefined)) list = [...list].sort((a, b) => (a.giftPos ?? Infinity) - (b.giftPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isEquestrianPage, isTablewarePage, isWomensRtwPage, isMensRtwPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isEquestrianPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2534,6 +2556,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       { after: 8, title: "Gold medals", body: "Bordered by geometric friezes at the crossroads of Art Deco and Ancient Greece, the Mosaique au 24 tableware set adds gold to a collection where design pays homage to the Faubourg Saint-Honoré store." },
       { after: 28, title: "Abyssal beauty", body: "Vibrant coral, bright seaweed, and shimmering rays of sunlight. Adorn tables to echo marine gardens that bathe beneath the light." },
     ];
+    // Gifts parent page — the original's two editorial blocks
+    // ("Living in color" after tile #8, "Time travelers" after tile
+    // #28), verbatim from the live category page, 2026-11-16. The
+    // "Living in color" body ends with TWO periods, as on the original.
+    if (isGiftsPage) return [
+      { after: 8, title: "Living in color", body: "For city riders whose red matters as much as what is wrapped in orange.." },
+      { after: 28, title: "Time travelers", body: "Icons that move through decades without shedding their appeal." },
+    ];
     if (cat === "leather") {
       if (subLow === "to go wallets") return [{ after: 8, title: "Minimalist-chic", body: "Compact and structured, To Go wallets assert their style and transform momentum into boldness." }];
       if (subLow === "wallets") return [
@@ -2644,6 +2674,37 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     }).filter((s) => s.imgMo);
   })();
 
+  // Gifts theme carousel slides (2026-11-16) — the original's 5
+  // cross-universe cards in order: Fashion jewelry, Silk scarves and
+  // accessories, Hair accessories, Small leather goods, Decorative
+  // objects and games. No verified hermesedito editorial image URLs
+  // exist for these slides (the category text fetches list the links
+  // but no image URLs, and the homepage content API is homepage-only),
+  // so each slide uses the first Hermes-CDN product photo of its theme
+  // — a real original photo, not an invented image. FLAGGED: no
+  // hair-accessory products exist in the catalogue (every "hair"-named
+  // product is a fragrance), so the Hair accessories slide uses a
+  // fashion-jewelry stand-in photo; and the Decorative objects slide
+  // prefers a games-named home product (e.g. a change tray) but falls
+  // back to any home Decor photo. Each slide gets a distinct photo.
+  const giftsThemes: ThemeSlide[] = (() => {
+    if (!isGiftsPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean; pick?: () => Product | undefined }[] = [
+      { label: "Fashion jewelry", view: { t: "category", cat: "fashion-jewelry" }, match: (p) => p.category === "fashion-jewelry" },
+      { label: "Silk scarves and accessories", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Hair accessories", view: { t: "category", cat: "fashion-jewelry", sub: "Hair accessories and combs" }, match: (p) => p.category === "fashion-jewelry" },
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Decorative objects and games", view: { t: "category", cat: "home" }, match: (p) => p.category === "home" && p.subcategory === "Decor", pick: () => products.find((p) => p.category === "home" && /poker|chess|backgammon|game|change tray/i.test(p.name) && productImageFor(p).startsWith("https://assets.hermes.com")) ?? products.find((p) => p.category === "home" && p.subcategory === "Decor" && productImageFor(p).startsWith("https://assets.hermes.com")) },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = d.pick ? d.pick() : products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
   const renderSection = (s: FSection) => {
     const isOpen = openSection === s.key;
     const group = s.group;
@@ -2721,7 +2782,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           LEFT-aligned, as on hermes.com ("Fall-Winter 2026 Collection
           [330]"); the header-to-title gap is ~30px via the main top
           padding (category views) plus this block's zero top padding. */}
-      <p className="font-mono-d text-left text-[10px] font-medium uppercase tracking-normal text-neutral-500">{crumbTop}</p>
+      {crumbTop !== "" && <p className="font-mono-d text-left text-[10px] font-medium uppercase tracking-normal text-neutral-500">{crumbTop}</p>}
       <h1 className="mt-1 text-left text-[24px] leading-[34px]">{titleText}<span className="ml-2 text-[16px] font-normal text-neutral-500">[{totalForCounter}]</span></h1>
 
       {/* SLG parent filter cards — the original's 5 subcategory image
@@ -2893,6 +2954,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <FallWinterThemeCarousel go={go} themes={slgThemes} />
         ) : isHomePage ? (
           <FallWinterThemeCarousel go={go} themes={homeThemes} />
+        ) : isGiftsPage ? (
+          <FallWinterThemeCarousel go={go} themes={giftsThemes} />
         ) : (
         <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
           {(() => {
@@ -3111,6 +3174,37 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <p className="text-sm leading-7 text-neutral-700">
             Explore the latest Hermès Women&apos;s Collection: A canvas for personal expression, rendered in the finest materials and versatile designs. Discover meticulously crafted garments and accessories, each designed to become integral to your unique style narrative. A legacy of subtle refinement.
           </p>
+        </div>
+      )}
+
+      {/* Gifts descriptive paragraphs — verbatim from hermes.com
+          (live category page, 2026-11-16). Parent page only; collapsed
+          to the first two sentences of paragraph 1 with See More, as on
+          the original. NOTE: an earlier gifts-paragraph.txt variant
+          ("object of character" / "quiet vibration of the hand" /
+          "piece of silverware" / "art of gifting") differs from the
+          live page; it is preserved at gifts-paragraph-old-variant.txt
+          and must NOT be used. The live text is in gifts-paragraph.txt. */}
+      {isGiftsPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {giftParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Gifting at Hermès is an act of sharing: a story, a moment of poise, and the resonance of centuries-old craftsmanship. It is far more than a simple gesture; it is a meeting between a thoughtful intention and an object of exceptional beauty.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                Finding the perfect gift is a sensory journey. From the narrative folds of a silk scarf to the shimmer of a fine jewel, every gift carries a touch of emotion and meaning.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                To ensure your surprise is as flawless as the object within, we invite you to explore our guidance dedicated to choosing the ideal gift—each idea chosen to celebrate and enchant.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Gifting at Hermès is an act of sharing: a story, a moment of poise, and the resonance of centuries-old craftsmanship. It is far more than a simple gesture; it is a meeting between a thoughtful intention and an object of exceptional beauty…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftParaOpen(!giftParaOpen)}>{giftParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
 
