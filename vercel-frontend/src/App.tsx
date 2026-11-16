@@ -158,6 +158,12 @@ function megaTarget(entry: MegaEntry, overrides: NavOverrides, heading: string, 
   }
   if (item) {
     if (item === "How to tie your scarf" || item === "Discover scarf tying") return { t: "page", page: "guides" };
+    // "Hair accessories and combs" (FASHION JEWELRY section of the
+    // WOMEN menu, 2026-11-16) is the original's women's Hair
+    // accessories page — it lives at /women/hair-accessories/, not
+    // under fashion-jewelry, so it resolves to the women's hair page
+    // instead of an empty fashion-jewelry sub-page.
+    if (item === "Hair accessories and combs") return { t: "category", cat: "women", sub: "Hair accessories" };
     if (item === "Discover the runway shows") return { t: "category", cat: dest, sub: "Ready-to-Wear" };
     return { t: "category", cat: dest, sub: item === "View all" ? headingToSub(heading) : item };
   }
@@ -1948,6 +1954,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // (same rule as Scarves/Belts). No tile map: the live list has no
       // repeated tiles, so the dressPos sort alone renders all 78.
       "dresses and skirts": (p) => p.category === cat && p.subcategory === "Dresses and skirts" && (cat === "women" ? p.dressPos !== undefined : true),
+      // Women's Hair accessories page — the original's live order (26
+      // tiles, extracted 2026-11-16) lives in hairPos; the page lists
+      // exactly those rows. The WOMEN menu "HAIR ACCESSORIES" heading
+      // resolves here via megaTarget (headingToSub), and the
+      // fashion-jewelry "Hair accessories and combs" item is redirected
+      // here too (see megaTarget).
+      "hair accessories": (p) => p.category === "women" && p.hairPos !== undefined,
       // Tableware page (cat "home", sub "Tableware") — the original's
       // live order (534 tiles, extracted 2026-11-15) lives in tabPos;
       // the page lists exactly those rows. The 117 clone Tableware
@@ -2101,6 +2114,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // description (collapsed + See More, as on the original). The
   // original shows NO sub-nav buttons and NO "GIFTS" eyebrow here.
   const isGiftsPage = cat === "gifts" && !sub;
+  // Hair accessories page (cat "women", sub "Hair accessories",
+  // 2026-11-16) — sorts by hairPos (the original's live order, 26
+  // tiles) and lives at /us/en/category/women/hair-accessories/ on the
+  // original. The original has NO descriptive paragraph on this page.
+  const isHairPage = cat === "women" && subLow === "hair accessories";
   // Tableware page (cat "home", sub "Tableware", 2026-11-15) — sorts
   // by tabPos (the original's live order, 534 tiles) and carries the
   // "Gold medals" / "Abyssal beauty" inserts. The original has NO
@@ -2178,7 +2196,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     siblings = rtwList.map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow || (isCollectionSub && l.toLowerCase() === `${subLow} collection`) || (l === "Dresses and skirts" && isDressesPage && !RTW_SUBS.some((x) => x.toLowerCase() === subLow)) }));
   } else if (cat === "fashion-jewelry") {
     // The original's fashion-jewelry sub-pages (WOMEN menu, desktop).
-    siblings = ["Bracelets", "Earrings", "Necklaces", "Rings", "Pins and brooches", "Hair accessories and combs", "Hairbands and hatbands"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
+    siblings = ["Bracelets", "Earrings", "Necklaces", "Rings", "Pins and brooches", "Hair accessories and combs", "Hairbands and hatbands"].map((l) => ({ label: l, view: (l === "Hair accessories and combs" ? { t: "category", cat: "women", sub: "Hair accessories" } : { t: "category", cat, sub: l }) as View, current: l.toLowerCase() === subLow }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
   } else if (isGiftsPage) {
     // The original's Gifts parent page has NO sub-navigation buttons
@@ -2338,10 +2356,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Gifts (2026-11-16) sorts by giftPos — the original's order —
     // the same way (the parent page lists exactly the 592 live tiles).
     else if (isGiftsPage && list.some((p) => p.giftPos !== undefined)) list = [...list].sort((a, b) => (a.giftPos ?? Infinity) - (b.giftPos ?? Infinity));
+    // Hair accessories (2026-11-16) sorts by hairPos — the original's
+    // order — the same way (the page lists exactly the 26 live tiles).
+    else if (isHairPage && list.some((p) => p.hairPos !== undefined)) list = [...list].sort((a, b) => (a.hairPos ?? Infinity) - (b.hairPos ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isEquestrianPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isEquestrianPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2642,18 +2663,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // exist for these slides (the category text fetches list the links
   // but no image URLs, and the homepage content API is homepage-only),
   // so each slide uses the first Hermes-CDN product photo of its theme
-  // — a real original photo, not an invented image. FLAGGED: no
-  // hair-accessory products exist in the catalogue (every "hair"-named
-  // product is a fragrance), so the Hair accessories slide uses a
-  // fashion-jewelry stand-in photo; and the Decorative objects slide
-  // prefers a games-named home product (e.g. a change tray) but falls
-  // back to any home Decor photo. Each slide gets a distinct photo.
+  // — a real original photo, not an invented image. The Hair
+  // accessories slide uses a real hair-accessory photo (the 26 hair
+  // rows carry hairPos since 2026-11-16); and the Decorative objects
+  // slide prefers a games-named home product (e.g. a change tray) but
+  // falls back to any home Decor photo. Each slide gets a distinct photo.
   const giftsThemes: ThemeSlide[] = (() => {
     if (!isGiftsPage) return [];
     const defs: { label: string; view: View; match: (p: Product) => boolean; pick?: () => Product | undefined }[] = [
       { label: "Fashion jewelry", view: { t: "category", cat: "fashion-jewelry" }, match: (p) => p.category === "fashion-jewelry" },
       { label: "Silk scarves and accessories", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
-      { label: "Hair accessories", view: { t: "category", cat: "fashion-jewelry", sub: "Hair accessories and combs" }, match: (p) => p.category === "fashion-jewelry" },
+      { label: "Hair accessories", view: { t: "category", cat: "women", sub: "Hair accessories" }, match: (p) => p.hairPos !== undefined },
       { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
       { label: "Decorative objects and games", view: { t: "category", cat: "home" }, match: (p) => p.category === "home" && p.subcategory === "Decor", pick: () => products.find((p) => p.category === "home" && /poker|chess|backgammon|game|change tray/i.test(p.name) && productImageFor(p).startsWith("https://assets.hermes.com")) ?? products.find((p) => p.category === "home" && p.subcategory === "Decor" && productImageFor(p).startsWith("https://assets.hermes.com")) },
     ];

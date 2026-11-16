@@ -45,6 +45,9 @@ const CATEGORY_PATHS: Record<string, string> = {
   // to the generic matcher, found no sub called "ready-wear", and rendered
   // the women's default page (bags [45]) instead of the [421] parent list.
   "women|ready-to-wear": "women/ready-wear",
+  // Women's Hair accessories page (2026-11-16) — the original's own
+  // URL is /women/hair-accessories/ (26 tiles, hairPos order).
+  "women|hair accessories": "women/hair-accessories",
   "women|scarves, shawls and stoles": "women/scarves-shawls-and-stoles",
   "women|shoes": "women/shoes",
   "fashion-jewelry|": "women/fashion-jewelry",
