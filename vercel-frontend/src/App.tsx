@@ -42,7 +42,7 @@ import { productImageFor } from "./productImages";
 import { HOME_TILE_ORDER } from "./homeTiles";
 import { BELT_TILE_ORDER } from "./beltTiles";
 import { galleryForProduct, hiResHermes } from "./galleryImages";
-import { accountUrl, categoryUrl, contactUrl, faqUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
+import { accountUrl, categoryUrl, contactUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
 
 type Product = ApiResponse<typeof api, "getStorefront">["products"][number];
 type Settings = ApiResponse<typeof api, "getStorefront">["settings"];
@@ -686,6 +686,14 @@ export function App() {
     if (parsed && parsed.kind === "contact") return { view: { t: "page", page: "contact" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "account") return { view: { t: "account" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "faq") return { view: { t: "faq", topic: parsed.topic } as View, productRef: null as string | null };
+    // routing.ts only parses the payment FAQ topic; every other FAQ topic
+    // (and the /us/en/faq/ landing) is resolved here from the path.
+    if (!parsed) {
+      const clean = window.location.pathname.replace(/^\/+/, "").replace(/\/+$/, "");
+      if (clean === "us/en/faq" || clean === "faq") return { view: { t: "faq", topic: "index" } as View, productRef: null as string | null };
+      const fm = clean.replace(/^us\/en\//, "").match(/^faq\/([a-z-]+)\/([a-z0-9-]+)$/);
+      if (fm && FAQ_BY_SLUG[fm[2]]) return { view: { t: "faq", topic: fm[2] } as View, productRef: null as string | null };
+    }
     if (parsed && parsed.kind === "home") return { view: { t: "home" } as View, productRef: null as string | null };
     return { view: null as View | null, productRef: productRefFromPath(window.location.pathname) };
   }, []);
@@ -895,7 +903,7 @@ export function App() {
     // Real URL for routed views (home / category / product / contact /
     // account / faq); other views (cart, checkout, admin, other pages,
     // about) stay unrouted so browser Back returns to the last routed view.
-    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "account" ? accountUrl() : v.t === "faq" ? faqUrl(v.topic) : null;
+    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "account" ? accountUrl() : v.t === "faq" ? faqPath(v.topic) : null;
     if (url) { try { window.history.pushState(null, "", url); } catch { /* ignore */ } }
     if (v.t === "category" && !opts?.restore) pulse(2200);
     setView(v); setMobileNav(false); setMenuCat(null);
@@ -908,7 +916,25 @@ export function App() {
   useEffect(() => {
     const onPop = () => {
       const parsed = parseUrl(window.location.pathname, productsRef.current, SUBS_BY_CAT);
-      if (!parsed) return;
+      if (!parsed) {
+        // routing.ts only parses the payment FAQ topic — resolve the other
+        // FAQ topics and the FAQ landing here, the same as on initial load.
+        const clean = window.location.pathname.replace(/^\/+/, "").replace(/\/+$/, "");
+        const cur = viewRef.current;
+        if (clean === "us/en/faq" || clean === "faq") {
+          if (cur.t === "category") saveCatState(cur);
+          setView({ t: "faq", topic: "index" }); setMobileNav(false); setMenuCat(null);
+          window.scrollTo({ top: 0 });
+          return;
+        }
+        const fm = clean.replace(/^us\/en\//, "").match(/^faq\/([a-z-]+)\/([a-z0-9-]+)$/);
+        if (fm && FAQ_BY_SLUG[fm[2]]) {
+          if (cur.t === "category") saveCatState(cur);
+          setView({ t: "faq", topic: fm[2] }); setMobileNav(false); setMenuCat(null);
+          window.scrollTo({ top: 0 });
+        }
+        return;
+      }
       const cur = viewRef.current;
       if (parsed.kind === "home") {
         if (cur.t === "category") saveCatState(cur);
@@ -1203,7 +1229,7 @@ export function App() {
         {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} pinTop={pinTop} stickyTop={subNavTop} initialVisible={catStateRef.current[catKey(view.cat, view.sub)]?.visible ?? 40} onVisibleChange={(n) => { const k = catKey(view.cat, view.sub); const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 }; catStateRef.current[k] = { ...prev, visible: n }; }} />}
         {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} from={fromView} lastViewedIds={lastViewedIds} onBuyBarChange={setBuyBarVisible} onViewed={(pid) => setLastViewedIds((prev) => [pid, ...prev.filter((x) => x !== pid)].slice(0, 9))} />}
         {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} />}
-        {view.t === "faq" && <FaqPage topic={view.topic} go={go} />}
+        {view.t === "faq" && <FaqPage key={view.topic} topic={view.topic} go={go} />}
         {view.t === "about" && <AboutPage go={go} />}
         {view.t === "account" && <AccountView key={view.mode ?? "login"} user={user} setUser={setUser} go={go} mode={view.mode} />}
         {view.t === "checkout" && <CheckoutView cart={pricedCart} setCart={setCart} user={user} go={go} total={cartTotal} settings={settings} products={products} />}
@@ -4353,7 +4379,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
 }
 
 const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
-  { title: "SERVICES", links: [["Contact us", "contact"], ["FAQ", "faq"], ["Find a store", "stores"], ["Stores selling beauty products", "stores"], ["Stores selling Apple Watch Hermès", "stores"], ["Gifting", "gifting"], ["Made to measure", "measure"], ["Maintenance and repair", "maintenance"], ["User guides", "guides"]] },
+  { title: "SERVICES", links: [["Contact us", "contact"], ["FAQ", "faq:index"], ["Find a store", "stores"], ["Stores selling beauty products", "stores"], ["Stores selling Apple Watch Hermès", "stores"], ["Gifting", "gifting"], ["Made to measure", "measure"], ["Maintenance and repair", "maintenance"], ["User guides", "guides"]] },
   { title: "ORDERS", links: [["Payment", "faq:payment"], ["Shipping", "shipping"], ["Collect in store", "collect"], ["Track orders", "track"], ["Returns and exchanges", "returns"]] },
   { title: "LA MAISON HERMÈS", links: [["Sustainable development", "sustainability"], ["The Hermès Foundation", "foundation"], ["Join Hermès", "join"], ["Finance & Governance", "finance"], ["Our partner brands", "partners"]] },
   { title: "LEGAL", links: [["Terms and conditions", "terms"], ["Privacy & cookies", "privacy"], ["Binding Corporate Rules (BCRs)", "bcr"], ["California Transparency in Supply Chain Act", "california"], ["Transparency in coverage", "coverage"], ["Do Not Sell/Share My Personal Information", "donotsell"], ["Legal issues", "legal"], ["Accessibility", "accessibility"], ["Hermès Sitemap", "sitemap"]] },
@@ -4493,63 +4519,478 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
 // a left sidebar of 4 groups (only one expanded at a time; ONLINE SHOPPING
 // expanded on load), the topic's accordions (single-open, + / − at right,
 // the URL hash #4605…#4610 follows the open question), and a centred
-// "More questions?" card overlapping a wide still-life photo. Only the
-// Payment topic has its questions + answers so far; the other sidebar items
-// point at the closest existing page until their own FAQ topic is built.
+// "More questions?" card overlapping a wide still-life photo. All 24 topics
+// are built (2026-11-16): questions + answers verbatim from hermes.com —
+// the 5 online-shopping / account topics from the page HTML, the rest from
+// the original's text; hashes are the original's question-ids where known
+// (browsing 4584-4586, orders 4587-4589, gifting 4597-4601, delivery
+// 4590-4596 + 402126, collect-store 4602-4603, payment 4605-4610,
+// returns 4615/4617-4619, trade 4611-4614, account-creation 4624). Topics
+// fetched as text only have no hash — opening a question there leaves the
+// URL fragment untouched. Inline [label](target) markers render as links:
+// contact / account / stores / privacy / terms / home go to the clone page,
+// anything starting http(s):// or mailto: opens as an external link.
 // Sidebar item order and wording are the original's own.
-const FAQ_GROUPS: { key: string; label: string; icon: "bag" | "person" | "box" | "h"; items: string[] }[] = [
-  { key: "online-shopping", label: "ONLINE SHOPPING", icon: "bag", items: ["Browsing", "Orders", "Gifting", "Delivery", "Collect in store", "Payment", "Returns and exchanges", "Trade Program"] },
-  { key: "customer-account", label: "CUSTOMER ACCOUNT", icon: "person", items: ["Account creation", "Forgotten password", "Settings and cancellation"] },
-  { key: "products", label: "PRODUCTS", icon: "box", items: ["Availability", "Size guide", "Care and repair", "Authentication", "Stores selling beauty products", "Orange boxes", "Bespoke", "Apple Watch Hermès"] },
-  { key: "house", label: "THE HOUSE OF HERMÈS", icon: "h", items: ["Newsletter - advertising emails", "Manufacture", "House of Hermès", "Cookies", "Security and Data Protection"] },
+type FaqBlock = { t: "p" | "li" | "h"; text: string };
+type FaqQa = { q: string; hash?: string; blocks: FaqBlock[] };
+type FaqTopic = { slug: string; group: string; label: string; qas: FaqQa[] };
+const FAQ_TOPICS: FaqTopic[] = [
+  { slug: "browsing", group: "online-shopping", label: "Browsing", qas: [
+    { q: "What is the availability status of items on the site?", hash: "4584", blocks: [
+      { t: "p", text: "All items for sale on the Hermes.com e-boutique are available. If you wish to order a significant number of a particular item, please [contact us](contact) by email or telephone at 800-441-4488, option 1, Monday through Friday from 9:00 a.m. to 6 p.m. and Saturday from 10 a.m. to 6 p.m EST." },
+    ] },
+    { q: "What do I need for optimum browsing when visiting Hermes.com?", hash: "4585", blocks: [
+      { t: "p", text: "To make your experience at Hermes.com as pleasant as possible, we recommend using the latest generation of your browser. If you access our website using an older version, we cannot guarantee that all of its features will function properly. Please note that your browser must accept cookies and be SSL compatible with standard browsing mode enabled. Hermes.com does not support private browsing mode at this time." },
+    ] },
+    { q: "How accurate is color display on the Internet?", hash: "4586", blocks: [
+      { t: "p", text: "Each product is photographed with precise attention to detail, and the colors shown should accurately depict each product. However, it is possible that colors may vary slightly from one screen to another due to monitor display settings." },
+    ] },
+  ] },
+  { slug: "orders", group: "online-shopping", label: "Orders", qas: [
+    { q: "How may I get assistance with my online order?", hash: "4587", blocks: [
+      { t: "p", text: "Please [contact us](contact) by email or telephone at 800-441-4488, option 1, Monday through Friday from 9:00 a.m. to 6 p.m. and Saturday from 10 a.m. to 6 p.m EST." },
+    ] },
+    { q: "How do I change information on my order after it has been placed?", hash: "4588", blocks: [
+      { t: "p", text: "Please [contact us](contact) as soon as possible by telephone at 1-800-441-4488 Monday through Friday from 9 am to 9 pm EST and Saturday from 10 am to 9 pm EST. Orders with personalized product cannot be modified or canceled after the order is placed." },
+    ] },
+    { q: "I just finalized my order but I still have not received the order summary.", hash: "4589", blocks: [
+      { t: "p", text: "You may experience a short delay after you have placed your order and before you receive the order summary. You should also check your \"Spam\" inbox, as the message may have been redirected depending on your email settings. If you still have not received an email, please [contact us](contact)." },
+    ] },
+  ] },
+  { slug: "gifting", group: "online-shopping", label: "Gifting", qas: [
+    { q: "Will my order be gift wrapped?", hash: "4597", blocks: [
+      { t: "p", text: "Your purchases are delivered in an orange box tied with a Bolduc ribbon, with the exception of fragrances, makeup and beauty products, books, certain equestrian and bulky items." },
+    ] },
+    { q: "Can I use a gift card or store credit for an online purchase?", hash: "4598", blocks: [
+      { t: "p", text: "Hermès gift cards and store credits may not be used on the Hermes.com website. Please consult the conditions listed on your gift card for its terms of use in stores." },
+    ] },
+    { q: "Can I include a personalized gift message with my purchase?", hash: "4599", blocks: [
+      { t: "p", text: "When viewing the items in your cart before checking out, you may include a blank or printed card and priceless invoice. Personalized messages should only be written in English language characters to guarantee accuracy. Use of other characters or images may not print correctly." },
+    ] },
+    { q: "Will my gift order include an invoice where the price of the items are not shown?", hash: "4600", blocks: [
+      { t: "p", text: "An order will be considered a \"gift\" if the civil status, last name or first name of the invoicing information is different from that of the delivery information. In this specific case, an invoice where the price of the items are not shown will be included in the package that is sent to the gift recipient. To request an invoice where the price is not shown, even if your invoicing information is identical to your delivery information, please [contact us](contact) as soon as possible by email or telephone at 800-441-4488, option 1, Monday through Friday from 9:00 a.m. to 6 p.m. and Saturday from 10 a.m. to 6 p.m EST." },
+    ] },
+    { q: "If I give a gift to someone, can that person exchange it for something else?", hash: "4601", blocks: [
+      { t: "p", text: "Accompanied with an invoice or priceless invoice, a gift may be exchanged for an item of equal or greater value. The difference must be paid at the time of the exchange. Online orders are eligible for a pre-paid return shipping label through your online account or please [contact us](contact)." },
+    ] },
+  ] },
+  { slug: "delivery", group: "online-shopping", label: "Delivery", qas: [
+    { q: "How much is the delivery?", hash: "4590", blocks: [
+      { t: "p", text: "Enjoy complimentary Ground shipping on all items up to $2,000.\nExpress delivery is required for orders greater than $2,000.\nItems greater than $25,000 will require White Glove delivery.\nDelivery costs depend on the service you select:\nExpress 2 day service will cost $35, Standard Overnight service will cost $60, Priority Overnight service will cost $70, and Saturday Delivery service will cost $85.\nWhite Glove delivery will cost $500.\nFor furniture, a transportation fee of 6% of the retail subtotal of the order, excluding sales tax, and not to exceed $5,000, will be charged when your Product is ready to ship." },
+    ] },
+    { q: "How long will delivery take?", hash: "4591", blocks: [
+      { t: "p", text: "Orders ship Monday through Friday with the exception of national holidays. Orders with expedited delivery must reach us before 2 p.m. (Eastern Standard Time) to ship same day unless an item is subject to a ship delay. Orders with personalized product are required to ship Ground and will have a shipping delay of 12 weeks." },
+      { t: "p", text: "Orders ship in their entirety to the delivery address entered at the time of checkout. If one or more items have a shipping delay, the order will ship when all items are available." },
+      { t: "p", text: "Overnight and Saturday delivery are not available options for Hawaii and Alaska." },
+      { t: "p", text: "Ground: Orders will ship within two business days from the date placed. Allow one to ten business days for delivery once in transit.\n2 Day: Allow two business days for delivery.\nOvernight: Expected delivery is the following business day.\nPriority Overnight: Expected delivery is the following business day between 10 a.m. and 2 p.m. in most areas.\nSaturday Delivery: Orders must be placed between Thursday 2 p.m. and Friday 1:59 p.m. (Eastern Standard Time).\nIn-Store Pickup: Orders will ship from our distribution center to the store selected at checkout.You will be notified by email when your order is available in-store. Orders ship FedEx 2 Day with a $35 shipping fee, except personalized items, which are required to ship via FedEx Ground. Please note, select items are not available for in-store pickup." },
+    ] },
+    { q: "How do I track delivery of my order?", hash: "4592", blocks: [
+      { t: "p", text: "To track your order, click the \"your account\" link located at the top right of the Hermes.com website. Log in, then use the menu to track your order. If necessary, please feel free to [contact us](contact) by email or telephone at 800-441-4488, option 1, Monday through Friday from 9 am to 9 pm EST and Saturday from 10 am to 9 pm EST." },
+    ] },
+    { q: "Are there any delivery restrictions?", hash: "4593", blocks: [
+      { t: "p", text: "Items purchased may only be shipped within the continental US and to Alaska and Hawaii. Orders may not be shipped to PO boxes, APO/DPO/FPO addresses, Puerto Rico, freight forwarders, or to any address outside of the United States.\nOrders for personalized product are restricted to Ground delivery.\nOrders shipping to Hawaii and Alaska are restricted to Ground or 2 Day delivery. Standard Overnight, Priority Overnight, and Saturday delivery are not available shipping methods.\nOrders greater than $2,000 require Express delivery with their associated shipping fees: 2 Day for $35, Standard Overnight for $60, Priority Overnight for $70, or Saturday delivery for $85.\nOrders greater than $25,000 require White Glove delivery with a $500 shipping fee.\nOrders ship in their entirety to the delivery address entered at the time of checkout. If one or more items have a shipping delay, the order will ship when all items are available. To ship to multiple addresses, please place a separate order for each delivery address.\nSmall leather goods and handbags may not be shipped to Alaska, Delaware, Montana, New Hampshire, and Oregon.\nPython and lizard products may not be shipped to California. Shearling may not be shipped to select areas in California.\nFragrance, beauty products, AirTags and power banks are required to ship Ground service.\nFurniture and lighting are required to ship Freight delivery." },
+    ] },
+    { q: "Are shipping fees refundable?", hash: "4594", blocks: [
+      { t: "p", text: "The shipping costs for expedited delivery charged at the time of purchase are non-refundable. If an item is exchanged, the shipping fee for the first delivery will not be refunded. Exchange orders will ship with complimentary Ground service except when the order is shipping to a store pickup or is greater than $2,000. These orders require Express shipping and will deliver via FedEx 2 Day with a fee of $35." },
+    ] },
+    { q: "Is a signature required for delivery of my order?", hash: "4595", blocks: [
+      { t: "p", text: "A signature is required upon receipt of your package." },
+    ] },
+    { q: "I am on a business trip. Can you deliver to my hotel?", hash: "4596", blocks: [
+      { t: "p", text: "We can indeed deliver to your hotel. Please provide the name and address of your hotel, as well as the dates that you will be staying there, in the \"comments\" area when you place your order so that our Customer Service can have your package delivered within the given time frame. If we are unable to deliver within this time frame, we will contact you to give you prior notice." },
+    ] },
+    { q: "I have a problem with the condition of my package. How may I get assistance?", hash: "402126", blocks: [
+      { t: "p", text: "You should check that your delivery has no visible signs of damage or tampering. If you notice damage, signs of tampering, or other discrepancies with the box, you may:" },
+      { t: "li", text: "Refuse delivery and not accept it in that condition" },
+      { t: "p", text: "If you must accept it:" },
+      { t: "li", text: "Write clear exception remarks on the FedEx proof of delivery – e.g., “Box crushed, tape cut open on one side”." },
+      { t: "li", text: "Please [contact us](contact) by email or telephone at 800-441-4488, option 1, Monday through Saturday from 10 a.m. to 9 p.m. EST." },
+    ] },
+  ] },
+  { slug: "collect-store", group: "online-shopping", label: "Collect in store", qas: [
+    { q: "Can I collect my order in a store?", hash: "4602", blocks: [
+      { t: "p", text: "Orders will ship from our distribution center to the store selected at checkout. The distribution center is closed on weekends and national holidays. Some products are required to ship FedEx Ground. Please allow one to ten business days for delivery. Select orders will require FedEx 2 Day delivery with a $35 shipping fee. You will receive an email confirming when your purchase is ready for pick-up. Appointments can be scheduled if available but are not required." },
+      { t: "p", text: "Please bring:" },
+      { t: "li", text: "The email informing you of the availability of your order (either printed or on your phone)" },
+      { t: "li", text: "Proof of identification" },
+      { t: "p", text: "You have 14 days to collect your order from the date of the e-mail informing you that it is available in-store." },
+    ] },
+    { q: "Can a third party collect my order in a store?", hash: "4603", blocks: [
+      { t: "p", text: "Yes, an option for third party pick-up is available if the first and last name of the individual is designated in the required fields prior to the order being placed. Please note, a copy of the order confirmation and a valid photo ID will be required at the time of pick-up. The name on the ID must match the name entered on the order for the package to be retrieved." },
+    ] },
+  ] },
+  { slug: "payment", group: "online-shopping", label: "Payment", qas: [
+    { q: "Which means of payment are accepted by Hermes.com?", hash: "4605", blocks: [
+      { t: "p", text: "You can only pay for your purchases with a credit or charge card: MasterCard®, Visa®, American Express®. Diners Club®, CarteBlanche®, JCB®, Discover®, Accel®, Pulse®, Nyce®, Star® and China Union Pay®. You should enter your credit card or charge card number, its expiry date and its card verification number on the relevant page. Payments via Paypal® and Apple Pay® are accepted for select products." },
+    ] },
+    { q: "Is my payment secure?", hash: "4606", blocks: [
+      { t: "p", text: "All the transactions made on the Hermes.com website are secure. The padlock symbol next to the address bar of the page beginning with \"https\" indicates that you are in a secure setting. HERMÈS INTERNATIONAL has also established specific security measures to protect your personal information from non-authorized access and use. However, you should never consider the transmission of data by Internet to be 100% secure. Any information that you make available online can potentially be recuperated and used by third parties." },
+    ] },
+    { q: "Do you accept international credit cards?", hash: "4607", blocks: [
+      { t: "p", text: "We accept international credit cards; however, when placing your order, you must enter the international billing address that is linked to your credit card." },
+    ] },
+    { q: "Can I place an order using a bank card that is not my own?", hash: "4608", blocks: [
+      { t: "p", text: "Yes, in this case please indicate the billing address associated with the card." },
+    ] },
+    { q: "When will my credit card be debited?", hash: "4609", blocks: [
+      { t: "p", text: "Your payment will only be debited when your order is shipped, except for personalized products and for pre-orders. In this case, your payment will be debited at the time the order is placed." },
+    ] },
+    { q: "What is the security code on my payment card?", hash: "4610", blocks: [
+      { t: "p", text: "A unique code made up of 3 or 4 digits secures remote sale transactions. This code can be found:" },
+      { t: "li", text: "on the back of your credit card in the signature field. It is made up of 3 digits (Visa or MasterCard, for example)." },
+      { t: "li", text: "or on front, above your card number. It is made up of 4 digits (American Express, for example)." },
+    ] },
+  ] },
+  { slug: "returns-and-exchanges", group: "online-shopping", label: "Returns and exchanges", qas: [
+    { q: "How do I return or exchange an item ordered via Hermes.com?", hash: "4615", blocks: [
+      { t: "p", text: "Your order will be accepted for refund or exchange if returned in original condition and packaging, and within thirty (30) days from the delivery date, with the exception of personalized product which is not eligible for return. The Hermès Sellier tag must be intact, attached, and free of any alteration or damage where applicable. The returned item(s) must be accompanied by the receipt or a copy. Returning a product for exchange or refund is complimentary. In order to do this, you must return the articles via FedEx® using the pre-paid return label provided through your Hermes.com account. Exchange orders will ship with complimentary Ground service except when the order is shipping to a store pickup or is greater than $2,000. These orders require Express shipping and will deliver via FedEx 2 Day with a fee of $35." },
+      { t: "p", text: "If you wish to return an item received as a gift, you may exchange it for an item(s) of equal value. Please [contact us](contact), Customer Service will send you the pre-paid return label by email." },
+      { t: "p", text: "Returns brought to an Hermès store in the United States are only eligible for exchange or store credit." },
+      { t: "p", text: "The following conditions apply to fragrance returns:" },
+      { t: "li", text: "The product must not be open and must be returned in its original packaging (with transparent film)," },
+      { t: "li", text: "when returning products that may have been damaged during delivery, the client must ensure that the bottle is still hermetically sealed (if this is not the case, [contact us](contact))." },
+      { t: "p", text: "The following conditions apply to shoes:\nShoes must be returned in their original packaging and the sole must not be damaged or marked." },
+      { t: "p", text: "The following conditions apply to Apple Watches:\nThe Apple Watch Hermès must be returned to Hermes.com in its original packaging and cannot have already been paired or synced with an electronic device." },
+      { t: "p", text: "The following conditions apply to Apple AirTag Hermès returns:\nIf you have ordered an Apple AirTag Hermès, you must return the AirTag with the leather accessory. The Apple AirTag Hermès must be returned in its original packaging and the battery activation protection must not have been removed. When the activation protection is removed the battery activates and is automatically non-sellable. The Apple AirTag Hermès serial number must be the same as the one listed on the original invoice.\nReturning your Apple AirTag Hermès in store must be done in the same country stated in the delivery address." },
+      { t: "p", text: "The following conditions apply to books, office, and writing products returns:\nBooks, office, and writing products must be returned in their original packaging. If the item is sealed in transparent film, the film must remain unopened and fully intact. If the film is torn or removed, the item will not be accepted for refund or exchange." },
+      { t: "p", text: "Products may also be exchanged or returned for a store credit at any Hermès store in the United States within thirty (30) calendar days from the date of delivery. Hermès stores do not offer refunds on any goods purchased on Hermes.com. You will find the list of Hermès stores by clicking on [Find a store](stores) or listed on the back of the invoice.\nConnect to your account and select \"return or exchange items\" in the selection \"your orders\"." },
+      { t: "p", text: "Within your Hermes.com account, you can:" },
+      { t: "li", text: "choose the articles to return as well as the reason for the return;" },
+      { t: "li", text: "download and print your pre-paid return label." },
+      { t: "p", text: "If you are unable or do not wish to use the pre-paid label service, please [contact us](contact) to obtain authorization for your return. You can then return your package by a carrier of your choice to the following address:\nH.O.P.\nAttn: Internet Returns and Exchanges\n101 Herrod Boulevard\nDayton, New Jersey 08810\nIn this case, it is your responsibility to obtain proof that the goods have been returned, and to return the goods by a registered carrier of your choice, which gives proof of posting and delivery. The cost of returning the goods, including shipping and insurance, shall be borne by you. Hermès United States is not responsible for items returned to Hermes.com which are lost, damaged, misdirected or delivered late." },
+      { t: "p", text: "For any further information, please [contact us](contact) by email or telephone at 800-441-4488, option 1, Monday through Saturday from 10 a.m. to 9 p.m. EST or consult our General Terms and Conditions of Sale and Use." },
+    ] },
+    { q: "If I give a gift to someone, can that person exchange it for something else?", hash: "4617", blocks: [
+      { t: "p", text: "Accompanied with an invoice or priceless invoice, a gift may be exchanged for an item of equal or greater value. The difference must be paid at the time of the exchange. Online orders are eligible for a pre-paid return shipping label through your online account or please [contact us](contact)." },
+    ] },
+    { q: "Can I return or exchange an item in store?", hash: "4618", blocks: [
+      { t: "p", text: "Items may be exchanged or returned for store credit at an Hermès location in the United States within thirty calendar days following the delivery. A list of Hermès stores can be found by clicking on [Find a store](stores)." },
+    ] },
+    { q: "How long will my refund take?", hash: "4619", blocks: [
+      { t: "p", text: "We aim to process returns within 7 to 10 business days from delivery to our distribution center. You will receive a confirmation email when complete." },
+    ] },
+  ] },
+  { slug: "trade-program", group: "online-shopping", label: "Trade Program", qas: [
+    { q: "Does Hermès have a trade program for interior designers and architects?", hash: "4611", blocks: [
+      { t: "p", text: "If you are an interior designer or architect inquiring about our trade program, you may email our dedicated advisor, [emi.miura@hermes.com](mailto:emi.miura@hermes.com), with your contact information. We will be in touch to provide you with eligibility requirements and other detailed information." },
+    ] },
+    { q: "Who is eligible for a trade account?", hash: "4612", blocks: [
+      { t: "p", text: "Accredited interior designers and architects are welcome to join the Hermès trade program. Retailers, commercial developers, and product designers may not be eligible." },
+    ] },
+    { q: "Are trade customers required to pay sales tax?", hash: "4613", blocks: [
+      { t: "p", text: "Hermès is required to collect sales tax in accordance with state laws. If you have further questions, you may contact us at [service.us@hermes.com](mailto:service.us@hermes.com)." },
+    ] },
+    { q: "Can I request special delivery for my order?", hash: "4614", blocks: [
+      { t: "p", text: "Orders requiring special delivery will be arranged on your behalf. All other purchases will ship via FedEx with signature required upon delivery. For additional information, you may [contact us](contact)." },
+    ] },
+  ] },
+  { slug: "account-creation", group: "customer-account", label: "Account creation", qas: [
+    { q: "Why create an account on Hermes.com?", hash: "4624", blocks: [
+      { t: "p", text: "Access your information at any time, from all your devices:" },
+      { t: "li", text: "Go to your cart" },
+      { t: "li", text: "Manage your address book and preferred store location" },
+      { t: "li", text: "Request a return or (free) exchange of an order" },
+      { t: "li", text: "Go to your order history and download the related invoices" },
+      { t: "li", text: "Manage your newsletter subscription" },
+      { t: "li", text: "Update your personal data" },
+    ] },
+  ] },
+  { slug: "forgotten-password", group: "customer-account", label: "Forgotten password", qas: [
+    { q: "How do I log in if I've forgotten my password?", blocks: [
+      { t: "p", text: "Click \"your account\" at the top right of the Hermes.com website, then click \"forgotten your password?\". After entering the email address linked to your account, an email will be sent to you allowing you to re-set your password." },
+    ] },
+  ] },
+  { slug: "settings-and-cancellation", group: "customer-account", label: "Settings and cancellation", qas: [
+    { q: "How do I make changes or cancel my Hermes.com account?", blocks: [
+      { t: "p", text: "Simply sign in to “your account” and, by navigating the menu on the right:" },
+      { t: "li", text: "change the email address and/or password associated with your account" },
+      { t: "li", text: "edit or delete saved addresses" },
+      { t: "li", text: "manage your subscriptions to our newsletter" },
+      { t: "p", text: "To delete your Hermes.com account, please contact Customer Service by telephone or email via the “[Contact us](contact)” page." },
+    ] },
+  ] },
+  { slug: "availability", group: "products", label: "Availability", qas: [
+    { q: "Where can I purchase Hermès leather goods?", blocks: [
+      { t: "p", text: "Hermès leather goods may be purchased exclusively at Hermès stores and Hermes.com. The Kelly, Birkin, and Constance handbags are sold exclusively in Hermès stores. We invite you to visit your local [store](stores) to discuss availability and recommend making an appointment if available." },
+    ] },
+    { q: "How often are items replenished?", blocks: [
+      { t: "p", text: "Our products are created by hand and must meet strict quality criteria from selecting the natural materials to the production of the completed item. We invite you to visit the website frequently and your local store. You may also [contact us](contact) to review available products." },
+    ] },
+    { q: "Why can't I find an item on the website?", blocks: [
+      { t: "p", text: "Each Hermès store is free to choose their own assortment. The Hermes.com site offers a selection of products that are all in stock. As our offering is constantly being updated, we invite you to check back regularly. You may search our site by entering your request in the \"search an item\" field located at the top left of your screen. Our Customer Service department is at your disposal to assist, [contact us](contact) by email or telephone at 800-441-4488, option 1, Monday through Friday from 9:00 a.m. to 6 p.m. and Saturday from 10 a.m. to 6 p.m EST." },
+    ] },
+  ] },
+  { slug: "size-guide", group: "products", label: "Size guide", qas: [
+    { q: "Which size of enamel bracelets shall I order?", blocks: [
+      { t: "p", text: "Our enamel bracelets are available in several sizes that correspond to a bracelet's diameter. Bracelets are available in 65 mm and 70 mm versions, as well as in a 62 mm version for some models. The Clic Clac and Clic H bracelets are available in small (PM = 6 cm) and large (GM = 6.5 cm)." },
+    ] },
+    { q: "Which belt size shall I order?", blocks: [
+      { t: "p", text: "Belts are sized in centimetres. In order to determine your Hermès belt size, we recommend measuring one of your own belts from the base of the tongue to the hole you use most. You can also measure your waist circumference at the point where you normally position your belts. For example, if your waist measures 85 cm, your Hermès belt size would be 85." },
+    ] },
+  ] },
+  { slug: "care-and-repair", group: "products", label: "Care and repair", qas: [
+    { q: "How do I care for my Apple Watch Hermès watch and bracelet?", blocks: [
+      { t: "p", text: "You may drop off your Hermès watch at the authorized dealer where it was purchased or at any Hermès store in your country. To repair your device, call Apple or visit an Apple store or authorized Apple service centre (the repair options available may vary depending on the country and repair may be limited to the country of purchase)." },
+    ] },
+    { q: "What warranty does my Apple Watch Hermès have?", blocks: [
+      { t: "h", text: "Apple One-Year Limited Warranty Summary" },
+      { t: "p", text: "Apple warrants the included Apple-branded hardware product and Apple-branded accessories against defects in materials and workmanship for one year from the date of original retail purchase. Apple does not warrant against normal wear and tear, nor damage caused by accident or abuse. To obtain service, call Apple or visit an Apple Retail Store or an Apple Authorized Service Provider—available service options are dependent on the country in which service is requested and may be restricted to the original country of sale. Call charges and international shipping charges may apply, depending on the location. Subject to the full terms and detailed information on obtaining service available at [https://www.apple.com/legal/warranty/](https://www.apple.com/legal/warranty/) and [https://support.apple.com/](https://support.apple.com/), if you submit a valid claim under this warranty, Apple will either repair, replace, or refund your hardware product at its own discretion. Warranty benefits are in addition to rights provided under local consumer laws. You may be required to furnish proof of purchase details when making a claim under this warranty." },
+      { t: "h", text: "AppleCare+" },
+      { t: "p", text: "AppleCare+ is additional coverage for Apple Watch Hermès. To learn more, visit Apple online or head to an Apple Store nearest to you." },
+      { t: "h", text: "Hermès Watch Band Warranty" },
+      { t: "p", text: "Hermès shall deliver to the customer a watch band that is free from manufacturing defects at the time of delivery, that is to say that the product will be fit for the normal use expected for this kind of product and will have the features set out at the time of the order and its acceptance. This warranty does not cover normal wear and tear, or any damage resulting from an accident, negligence, or improper handling. Nor does it apply, on a more general basis, if there is evidence of improper use or misuse. This warranty may only be exercised on condition that the customer does so within the statutory period applicable to the country of purchase as from the delivery of the goods. Any quality claim concerning a watch band must be addressed to the Hermès store of the purchase or to any Hermès store, the address of which can be found at [the following link](https://www.hermes.com/us/en/find-store/). If a valid claim is submitted, the customer may choose to have the watch band repaired or replaced, or may request a credit, unless one of these choices leads to a patently disproportionate cost for Hermès. The repair or replacement of a watch band will occur at no cost to the customer and shall be without prejudice to possible damages in the event that the customer should be entitled to such." },
+    ] },
+    { q: "How do I repair an Hermès item?", blocks: [
+      { t: "p", text: "Our workshops are able to respond to numerous repair and refurbishment requests for Hermès products. We invite you to visit your nearest Hermès store to have your object examined by one of our sales consultants. They will then provide an estimate and waiting period for the planned repair. For any questions, please [contact us](contact) or visit one of our stores." },
+    ] },
+    { q: "How do I clean my Hermès scarf or tie?", blocks: [
+      { t: "p", text: "We recommend that you avoid washing your scarves and ties and instead entrust them to your dry cleaner, who will clean them professionally and pay careful attention to their hand-rolled edges. Also, remember that any printing on silk may be damaged by the rain." },
+    ] },
+    { q: "How do I care for my Hermès bag or leather good?", blocks: [
+      { t: "p", text: "Leather is a living material that evolves, changes colour, softens, and becomes patinated over time. It should be protected from humidity and prolonged exposure to light or extreme heat. It is not recommended to use care products available on the market that are not adapted to Hermès leathers. The best way to maintain your bag is to regularly return it to our workshops to be cleaned and, if needed, restitched and repolished." },
+    ] },
+    { q: "How do I care for my jewelry?", blocks: [
+      { t: "p", text: "Precious metals and natural stones are highly resistant materials, and with some simple care, you will be able to preserve and protect your jewelry for many years to come. You can maintain its original beauty and reduce the potential for damage by removing your jewelry prior to exercising, washing your hands, swimming, or engaging in any other physical activities. Forcible contact with any type of surface area could cause damage to varying degrees. Wearing or storing jewelry in close contact with each other can result in unwanted scratches and marks. Lastly, exposure to certain environmental conditions may accelerate the natural oxidation process. As a precautionary measure, you should avoid exposing your jewelry to humidity, moisture, intense heat, and any other extreme environments. Please review the following care tips to preserve your Hermès jewelry." },
+    ] },
+    { q: "How do I care for my Hermès watch?", blocks: [
+      { t: "p", text: "You may bring your Hermès watch to the authorised retailer where you purchased the watch or to an Hermès store in your country. Maintain your timepiece. Please do not hesitate to [contact us](contact) for any assistance." },
+    ] },
+    { q: "What warranty does my Hermès watch have?", blocks: [
+      { t: "p", text: "Your Hermès watch has a five (5) year worldwide coverage once you get this International Warranty booklet filled in, dated, and signed by the retailer on the day of purchase of your Hermès watch. The benefits given to you by our International Warranty are in addition to other rights and remedies you may have under your country's consumer law, in relation to the Hermès watch to which the International Warranty relates. Our International Warranty does not exclude, restrict or modify any statutory rights or remedies which cannot be excluded. During the applicable International Warranty period of five (5) years, Hermès will make good on any production fault by repairing or replacing the affected watch or part thereof, provided that notice of any claimed defect has been given to Hermès within the International Warranty period of five (5) years. Any claim made under our International Warranty must be addressed to the certified retailer where you purchased your Hermès watch or to your local Hermès store, together with the International Warranty original booklet filled in, dated and signed. This International Warranty may not be transferred to any subsequent owners of your Hermès watch." },
+      { t: "h", text: "Limits of the International Warranty" },
+      { t: "p", text: "Any claims on damages or production faults presented under the terms of the International Warranty must be identified and confirmed by La Montre Hermès S.A. or by an official or recognized Hermès repair center. The International Warranty does not cover any damage resulting from normal wear and tear (including watches that have a surface treatment such as plating, PVD, DLC, etc.) or any damage resulting from an accident, negligence or improper handling. On a more general basis, the International Warranty does not apply if there is evidence of misuse or abuse. Any intervention performed by a center other than an official or recognized Hermès repair center is not covered and voids the La Montre Hermès S.A. International Warranty." },
+      { t: "h", text: "USA & Canada Specific Warranty Provisions" },
+      { t: "p", text: "Please note that in addition to the Hermès International Warranty as set out above, the following Specific USA & Canada Warranty Provisions shall apply to Hermès watches bought and submitted for replacement or repair in the USA or Canada. Some States in the USA do not allow limitations on how long an implied warranty lasts, so the above limitation of five (5) years, may not apply to you. Some States in the USA do not allow the exclusion or limitation of incidental or consequential damages, so the above limitations or exclusions may not apply to you. Your Hermès International Warranty gives you specific legal rights, and you may also have other rights specifically in the USA which vary from state to state." },
+    ] },
+    { q: "How do I care for my saddle?", blocks: [
+      { t: "p", text: "Saddle leather is a living material that evolves, changes colour, softens, and becomes patinated over time. It should be protected and maintained with care. Please do not hesitate to visit the dedicated page for more information or to contact our experts for any assistance." },
+    ] },
+  ] },
+  { slug: "authentication", group: "products", label: "Authentication", qas: [
+    { q: "How do I authenticate an Hermès product?", blocks: [
+      { t: "p", text: "The only way to guarantee the authenticity of an Hermès product is by making your purchase through our official website [Hermes.com](home), at an Hermès store or through an authorized distributor (corner store in a department store, authorized watch dealer, etc.). An original invoice is created at the time of purchase for both online and in-store purchases. We cannot guarantee nor verify the authenticity of an item purchased outside of an official Hermès point of sale." },
+    ] },
+  ] },
+  { slug: "stores-selling-beauty-products", group: "products", label: "Stores selling beauty products", qas: [
+    { q: "Where can I find Hermès Beauty?", blocks: [
+      { t: "p", text: "Hermès Beauty is available at Hermes.com or in select stores. Click [here](stores) for a list of retail locations." },
+    ] },
+  ] },
+  { slug: "orange-boxes", group: "products", label: "Orange boxes", qas: [
+    { q: "Will my order be delivered in an orange box?", blocks: [
+      { t: "p", text: "Your purchases are delivered in an orange box tied with a Bolduc ribbon, with the exception of fragrances, books, certain equestrian and bulky items." },
+    ] },
+    { q: "Are the orange boxes available for purchase?", blocks: [
+      { t: "p", text: "The orange boxes are created for the products they contain and are not available for individual sale." },
+    ] },
+  ] },
+  { slug: "bespoke", group: "products", label: "Bespoke", qas: [
+    { q: "How can I order a bespoke object?", blocks: [
+      { t: "p", text: "To create a customized object, begin by providing us with a detailed explanation of what you would like. We will respond within a month with an agreement in principle, a price estimate, and the expected waiting period. Our team of designers will design this unique object for you. Please visit an [Hermès store](stores) or [contact us](contact) by email or telephone at 800-441-4488." },
+    ] },
+    { q: "How do I order a custom-fit saddle?", blocks: [
+      { t: "p", text: "With its saddles, Hermès seeks to bring together horse and rider. For a custom-fit saddle, we suggest making an appointment with one of our saddle experts to organize testing and have your equipment made to measure. From the first meeting to the final adjustments, we help you to choose the best model for your riding style, and adapt your saddle to suit your preferences, your body shape and your horse. Once you have made your choice, the saddle will be crafted by a single artisan in our workshop based at 24 Rue de Faubourg Saint Honoré. It will be delivered to you within 3 to 4 months. This service is complementary. For more information, consult our dedicated webpage or [contact our Customer Service](contact)." },
+    ] },
+  ] },
+  { slug: "apple-watch-hermes", group: "products", label: "Apple Watch Hermès", qas: [
+    { q: "What does GPS + Cellular mean?", blocks: [
+      { t: "p", text: "Apple Watch Hermès (GPS + Cellular) features built-in cellular, giving you the freedom to stay fully connected with just your Apple Watch. You can make and receive phone calls, reply to messages, and get notifications even when you don’t have your iPhone with you." },
+    ] },
+    { q: "How do I set up cellular service on my Apple Watch Hermès?", blocks: [
+      { t: "p", text: "When you pair your Apple Watch Hermès (GPS + Cellular) with your iPhone, you will be prompted to set up cellular service with your provider. Or you can set up service later using the Watch app on your iPhone." },
+    ] },
+    { q: "How do I receive calls on my Apple Watch Hermès (GPS + Cellular)?", blocks: [
+      { t: "p", text: "Apple Watch Hermès shares the same number as your iPhone. When you receive a phone call and your Apple Watch is set up and powered on, it rings whether or not your iPhone is nearby." },
+    ] },
+    { q: "How much does cellular service cost?", blocks: [
+      { t: "p", text: "While service plans vary by carrier, many offer free or special trials for Apple Watch Hermès. Learn more about carriers and promotions on [www.apple.com/watch/cellular](https://www.apple.com/watch/cellular)." },
+    ] },
+    { q: "Apple Watch Hermès (GPS + Cellular) internationally?", blocks: [
+      { t: "p", text: "Can I use my Apple Watch Hermès (GPS + Cellular) does not support international roaming. But you'll still be able to complete a call to emergency services almost anywhere in the world. Just press and hold the side button on Apple Watch Hermès with cellular and you'll be connected to the help you need, even if you're nowhere near your iPhone." },
+    ] },
+    { q: "Is Apple Watch Hermès available to purchase in-store?", blocks: [
+      { t: "p", text: "Please contact your local store to confirm availability. You may click here for store hours and contact information." },
+    ] },
+    { q: "How can I find out if my iPhone service plan is eligible for Apple Watch Hermès (GPS + Cellular)?", blocks: [
+      { t: "p", text: "You can contact your service provider for more details or see participating carriers and eligibility on Apple website. We recommend buying your Apple Watch Hermes in your country of residence in order to fully enjoy the features of your Apple Watch Hermes." },
+    ] },
+  ] },
+  { slug: "newsletter-advertising-emails", group: "maison-hermes", label: "Newsletter - advertising emails", qas: [
+    { q: "Why sign up for our newsletter?", blocks: [
+      { t: "p", text: "The Hermès newsletter is an easy way to stay up to date with our latest news: events, fashion shows, exhibitions or new items. We are committed to keeping the frequency of our emails low, and to never communicating your email address to third parties." },
+    ] },
+    { q: "How can I sign up to your newsletter?", blocks: [
+      { t: "p", text: "You can register directly by clicking the “receive our newsletter” link on Hermes.com. If you have an Hermes.com account, you can manage your newsletter subscription via the dedicated section in your customer account." },
+    ] },
+    { q: "How can I stop receiving promotional communications (newsletters, invitations, etc.) from Hermès?", blocks: [
+      { t: "p", text: "You can, at any time, easily unsubscribe:" },
+      { t: "li", text: "By managing your newsletter subscription in your Hermes.com account;" },
+      { t: "li", text: "By clicking on the \"unsubscribe\" link included in each promotional e-mail we send you;" },
+      { t: "li", text: "[Contact us](contact) by email or telephone at 800-441-4488, option 1, Monday through Friday from 9:00 a.m. to 6 p.m. and Saturday from 10 a.m. to 6 p.m EST.." },
+      { t: "p", text: "Your request may take a few days to become fully effective, which means that you may still receive promotional communications within days of unsubscribing." },
+    ] },
+  ] },
+  { slug: "manufacture", group: "maison-hermes", label: "Manufacture", qas: [
+    { q: "Why are certain models not offered in stores?", blocks: [
+      { t: "p", text: "Each Hermès store has the freedom to select their product offerings. As such, certain models/colours are not sold in every store." },
+    ] },
+    { q: "Does Hermès offer customization services?", blocks: [
+      { t: "p", text: "Hermès offers different customization services such as simple marking of your initials on leather goods, the customized production of an existing bag or a custom creation. To find out more, please contact our in-store sales consultants." },
+    ] },
+    { q: "Can you give me more information on CITES?", blocks: [
+      { t: "p", text: "Some of our items in precious materials (crocodile, alligator, lizard, etc.) cannot leave their country of purchase without a CITES certificate (Convention on International Trade in Endangered Species of Wild Fauna and Flora). Upon request, the certificate will be provided by your Hermès store and may require a few weeks to be established. The CITES certificate is valid for a limited period. You may need to renew your request with your local authorities if you wish to travel once again with your item. We invite you to check with local authorities whether any exceptions may apply." },
+    ] },
+    { q: "Where can I find additional information about Hermès items?", blocks: [
+      { t: "p", text: "If you are unable to find the information you need on our website, please feel free to contact our in-store sales consultants." },
+    ] },
+    { q: "Where are Hermès products manufactured? What kind of fabrics do you use?", blocks: [
+      { t: "p", text: "The vast majority of Hermès products are manufactured at our production sites in France. Our bags, luggage and small leather goods are produced by our artisans at approximately 12 French leather goods manufacturing facilities. All of our silk items (notably, ties and scarves) are woven and printed at our factories in the region of Lyon, the birthplace of silk. Hermès also makes use of specific expertise, such as watchmaking from Switzerland, cashmere from Mongolia, lacquer from Vietnam and wool from Scotland." },
+    ] },
+  ] },
+  { slug: "house-hermes", group: "maison-hermes", label: "House of Hermès", qas: [
+    { q: "How can I get financial information?", blocks: [
+      { t: "p", text: "For all questions pertaining to our financial information, please visit [finance.hermes.com](https://finance.hermes.com)." },
+    ] },
+    { q: "How can I know more about the House of Hermès?", blocks: [
+      { t: "p", text: "Since 1837, Hermès has been an independent, family-owned French house. Please visit our dedicated About Hermès page to learn more about the history, efforts, and values of Hermès. And subscribe to our newsletter to stay up to date with current collections, stories, and surprises." },
+    ] },
+    { q: "How can I find out more about Hermès’ generous initiatives?", blocks: [
+      { t: "p", text: "For all questions related to requests for philanthropic support or if you wish to contact the Fondation d’entreprise Hermès, please visit the ‘Contact’ section on the [fondationdentreprisehermes.org](https://www.fondationdentreprisehermes.org) website." },
+    ] },
+    { q: "What is Hermès’ sustainable development policy?", blocks: [
+      { t: "p", text: "When it comes to sustainable development, Hermès’ mission is to strengthen our corporate project around the authenticity of each product and the application of our house’s ethics to all aspects of our business. By authenticity, we especially mean respecting natural raw materials and developing artisanal skills, essentially in France. Formalized in a charter, our corporate ethics enhance Hermès’ relationships with its staff, suppliers, customers and shareholders. Hermès is an attentive, concerned and committed company which conducts its business in a way that respects its ecological, social, economic and cultural environment. Our commitments and initiatives are detailed in our section dedicated to sustainable development." },
+    ] },
+    { q: "What is Hermès doing to combat counterfeiting?", blocks: [
+      { t: "p", text: "The Hermès Group is very active in the fight against counterfeiting. A team of legal experts is responsible for protecting the Group's creations and defending them against any violations. This team carries out many actions, which include both preventative measures (training and lobbying) and coercive measures (administrative, civil and criminal proceedings). These actions are implemented worldwide with special attention given to the Internet, which currently represents the primary vehicle for the sale of counterfeit products. You can contact us and help us in this fight by bringing any questionable websites to our attention." },
+    ] },
+    { q: "I would like to work for Hermès, how do I apply for a position?", blocks: [
+      { t: "p", text: "Consult our employment offers or make a speculative application by visiting our website." },
+    ] },
+  ] },
+  { slug: "cookies", group: "maison-hermes", label: "Cookies", qas: [
+    { q: "Information about Cookies", blocks: [
+      { t: "p", text: "Please refer to our Cookies section." },
+    ] },
+  ] },
+  { slug: "security-and-data-protection", group: "maison-hermes", label: "Security and Data Protection", qas: [
+    { q: "Is the Hermes.com server secure?", blocks: [
+      { t: "p", text: "HERMÈS INTERNATIONAL has implemented security measures to protect the personal information you provide against unauthorised access and use. Please be aware, however, that no data transmission over the Internet is 100% secure and any information disclosed online can potentially be collected and used by persons other than the intended recipient." },
+    ] },
+    { q: "What are Binding Corporate Rules (BCR)?", blocks: [
+      { t: "p", text: "“The protection of personal data and the respect for people's privacy are major challenges for the Hermès Group and essential elements in maintaining a relationship of trust. In this context, the Hermès Group has adopted and implemented Binding Corporate Rules (BCR). BCRs are a data protection policy to ensure an appropriate level of protection for personal data transferred throughout Hermès Group entities, wherever they are located. BCRs are a tool recognized in Article 47 of the General Data Protection Regulation (\"\"GDPR\"\")*. They are legally binding and must be respected by all signatory entities of the Hermès Group, regardless of their country of establishment, as well as by all their employees. Our BCRs include:" },
+      { t: "li", text: "The appointment of a data protection officer;" },
+      { t: "li", text: "Commitments to data security;" },
+      { t: "li", text: "An audit program to verify the application of BCRs;" },
+      { t: "li", text: "An internal program to manage customer requests for their data;" },
+      { t: "li", text: "A training program for our employees involved in the processing of our customers' personal data;" },
+      { t: "li", text: "The publication of the BCRs on the Internet and on our Intranet, and the provision of a copy of them on request." },
+      { t: "p", text: "To consult the full text of our BCRs, click here." },
+      { t: "p", text: "* The GDPR is a European regulation that regulates the processing of personal data within the European Union. It was adopted on April 27 2016 and became mandatory on May 25 2018. The GDPR rules include giving individuals more control over their personal data and strengthening the role of national data protection authorities." },
+    ] },
+    { q: "How can I exercise my rights concerning my personal data?", blocks: [
+      { t: "p", text: "In accordance with the applicable regulations, you have the right to request access, rectification, erasure and portability of your personal data, to restrict or oppose its processing. A summary of these rights is available in our Privacy Policy, which can be accessed by [clicking here](privacy). Please note that your rights are only applicable to your own personal data. For example, you will not be able to request access to someone else's data. Therefore, if you exercise any of the rights mentioned above, you will be asked to let us know which right you wish to exercise and to provide us with certain information so that we can identify you (for example: copy of an identity card, passport or other legally recognized identity document). These measures will allow us to process your request by protecting you against fraudulent requests from third parties and in compliance with regulations. When you request access, rectification or deletion of your data, for example, we will provide you with the requested information as soon as possible after receipt of your request, but no later than one month. This period may be longer if your request is complex or occurs in a context justifying such an extension. We will inform you if this is the case. We will comply with your requests to the extent required by law; in some cases, we may be legally required or permitted to retain your data. In such a case, we will inform you. To exercise your rights, you can [contact our Customer Service](contact). If you have any questions or concerns about data processing, you can also contact our Group Data Protection Officer, whose contact details can be found in our Privacy Policy." },
+    ] },
+    { q: "How can I get more information about my data management and rights?", blocks: [
+      { t: "p", text: "You can obtain more information about the data we collect and use and your rights by consulting our Privacy Policy, which can be accessed by [clicking here](privacy). You can also access the full text of our BCRs by clicking here. Finally, if you feel that your answers are not included in these documents, you can [contact our Customer Service](contact) or write to our Data Protection Officer whose contact details are provided in our Privacy Policy, under the heading \"How to Contact Us\"." },
+    ] },
+  ] },
 ];
-// Interim destinations for sidebar items without their own FAQ topic page.
-const FAQ_ITEM_VIEW: Record<string, View> = {
-  "Delivery": { t: "page", page: "shipping" },
-  "Collect in store": { t: "page", page: "collect" },
-  "Returns and exchanges": { t: "page", page: "returns" },
-  "Gifting": { t: "page", page: "gifting" },
-  "Orders": { t: "page", page: "track" },
-  "Size guide": { t: "page", page: "guides" },
-  "Stores selling beauty products": { t: "page", page: "stores" },
-  "Care and repair": { t: "page", page: "maintenance" },
-  "Bespoke": { t: "page", page: "measure" },
-  "Apple Watch Hermès": { t: "page", page: "stores" },
-  "Orange boxes": { t: "page", page: "gifting" },
-  "Cookies": { t: "page", page: "privacy" },
-  "Security and Data Protection": { t: "page", page: "privacy" },
+const FAQ_BY_SLUG: Record<string, FaqTopic> = Object.fromEntries(FAQ_TOPICS.map((t) => [t.slug, t]));
+// Sidebar label -> topic slug (the original's sidebar wording).
+const FAQ_LABEL_TO_SLUG: Record<string, string> = {
+  "Browsing": "browsing",
+  "Orders": "orders",
+  "Gifting": "gifting",
+  "Delivery": "delivery",
+  "Collect in store": "collect-store",
+  "Payment": "payment",
+  "Returns and exchanges": "returns-and-exchanges",
+  "Trade Program": "trade-program",
+  "Account creation": "account-creation",
+  "Forgotten password": "forgotten-password",
+  "Settings and cancellation": "settings-and-cancellation",
+  "Availability": "availability",
+  "Size guide": "size-guide",
+  "Care and repair": "care-and-repair",
+  "Authentication": "authentication",
+  "Stores selling beauty products": "stores-selling-beauty-products",
+  "Orange boxes": "orange-boxes",
+  "Bespoke": "bespoke",
+  "Apple Watch Hermès": "apple-watch-hermes",
+  "Newsletter - advertising emails": "newsletter-advertising-emails",
+  "Manufacture": "manufacture",
+  "House of Hermès": "house-hermes",
+  "Cookies": "cookies",
+  "Security and Data Protection": "security-and-data-protection",
 };
-// Payment FAQ — all 6 questions + answers verbatim from the original
-// (hashes #4605–#4610). Note the site's own spellings: "CarteBlanche®"
-// (no space) and "Paypal®".
-const PAYMENT_QAS: { q: string; hash: string; intro: string; bullets?: string[] }[] = [
-  { q: "Which means of payment are accepted by Hermes.com?", hash: "4605", intro: "You can only pay for your purchases with a credit or charge card: MasterCard®, Visa®, American Express®. Diners Club®, CarteBlanche®, JCB®, Discover®, Accel®, Pulse®, Nyce®, Star® and China Union Pay®. You should enter your credit card or charge card number, its expiry date and its card verification number on the relevant page. Payments via Paypal® and Apple Pay® are accepted for select products." },
-  { q: "Is my payment secure?", hash: "4606", intro: "All the transactions made on the Hermes.com website are secure. The padlock symbol next to the address bar of the page beginning with \"https\" indicates that you are in a secure setting. HERMÈS INTERNATIONAL has also established specific security measures to protect your personal information from non-authorized access and use. However, you should never consider the transmission of data by Internet to be 100% secure. Any information that you make available online can potentially be recuperated and used by third parties." },
-  { q: "Do you accept international credit cards?", hash: "4607", intro: "We accept international credit cards; however, when placing your order, you must enter the international billing address that is linked to your credit card." },
-  { q: "Can I place an order using a bank card that is not my own?", hash: "4608", intro: "Yes, in this case please indicate the billing address associated with the card." },
-  { q: "When will my credit card be debited?", hash: "4609", intro: "Your payment will only be debited when your order is shipped, except for personalized products and for pre-orders. In this case, your payment will be debited at the time the order is placed." },
-  { q: "What is the security code on my payment card?", hash: "4610", intro: "A unique code made up of 3 or 4 digits secures remote sale transactions. This code can be found:", bullets: ["on the back of your credit card in the signature field. It is made up of 3 digits (Visa or MasterCard, for example).", "or on front, above your card number. It is made up of 4 digits (American Express, for example)."] },
-];
+// The original's FAQ topic URL: /us/en/faq/<group>/<slug>/ (the landing page
+// is /us/en/faq/); routing.ts only knows the payment topic, so the full path
+// is computed here and the App-level route fallbacks resolve direct loads.
+function faqPath(topic: string): string {
+  if (topic === "index") return "/us/en/faq/";
+  const t = FAQ_BY_SLUG[topic];
+  return t ? `/us/en/faq/${t.group}/${t.slug}/` : `/us/en/faq/online-shopping/${topic}/`;
+}
+
 // "More questions?" photo — the original's own FAQ banner image
 // (banniere-faq.png), found in the page's HTML: a still-life of grey
 // crates, orange tape rings and wooden shelves. Served at the original's
 // own 440px-high variant.
 const FAQ_MORE_QUESTIONS_IMG = "https://assets.hermes.com/is/image/hermesedito/banniere-faq.png?fit=hfit&hei=440";
 
+// Sidebar groups — the original's own order, labels and items. The 4th
+// group's URL slug is "maison-hermes" (verified from the original's links).
+const FAQ_GROUPS: { key: string; label: string; icon: "bag" | "person" | "box" | "h"; items: string[] }[] = [
+  { key: "online-shopping", label: "ONLINE SHOPPING", icon: "bag", items: ["Browsing", "Orders", "Gifting", "Delivery", "Collect in store", "Payment", "Returns and exchanges", "Trade Program"] },
+  { key: "customer-account", label: "CUSTOMER ACCOUNT", icon: "person", items: ["Account creation", "Forgotten password", "Settings and cancellation"] },
+  { key: "products", label: "PRODUCTS", icon: "box", items: ["Availability", "Size guide", "Care and repair", "Authentication", "Stores selling beauty products", "Orange boxes", "Bespoke", "Apple Watch Hermès"] },
+  { key: "maison-hermes", label: "THE HOUSE OF HERMÈS", icon: "h", items: ["Newsletter - advertising emails", "Manufacture", "House of Hermès", "Cookies", "Security and Data Protection"] },
+];
+
+// Inline links inside FAQ answers: [label](target) — contact / account /
+// stores / privacy / terms / home navigate inside the clone; anything
+// starting with http(s):// or mailto: opens externally.
+function faqRich(text: string, go: (v: View, opts?: { restore?: boolean }) => void): React.ReactNode {
+  const parts = text.split(/\[([^\]]+)\]\(([^)]+)\)/g);
+  if (parts.length === 1) return text;
+  const out: React.ReactNode[] = [];
+  const pageFor: Record<string, View> = {
+    contact: { t: "page", page: "contact" },
+    account: { t: "account" },
+    stores: { t: "page", page: "stores" },
+    privacy: { t: "page", page: "privacy" },
+    terms: { t: "page", page: "terms" },
+    home: { t: "home" },
+  };
+  for (let i = 0; i < parts.length; i++) {
+    if (i % 3 === 0) { if (parts[i]) out.push(parts[i]); continue; }
+    if (i % 3 === 1) continue; // label — rendered with its target below
+    const label = parts[i - 1] ?? "";
+    const target = parts[i] ?? "";
+    const view = pageFor[target];
+    if (view) out.push(<button key={i} type="button" className="underline underline-offset-2" onClick={() => go(view)}>{label}</button>);
+    else out.push(<a key={i} href={target} target="_blank" rel="noreferrer" className="underline underline-offset-2">{label}</a>);
+  }
+  return <>{out}</>;
+}
+
 function FaqPage({ topic, go }: { topic: string; go: (v: View, opts?: { restore?: boolean }) => void }) {
-  const [openGroup, setOpenGroup] = useState("online-shopping");
+  const active = FAQ_BY_SLUG[topic];
+  const isLanding = topic === "index" || !active;
+  const qas = active?.qas ?? [];
+  const [openGroup, setOpenGroup] = useState(active?.group ?? "online-shopping");
   const [openQa, setOpenQa] = useState(() => {
     if (typeof window === "undefined") return 0;
     const h = window.location.hash.replace("#", "");
-    const i = PAYMENT_QAS.findIndex((x) => x.hash === h);
+    const i = qas.findIndex((x) => x.hash === h);
     return i >= 0 ? i : 0;
   });
-  // Today only the "payment" topic has its questions + answers; routing
-  // only ever produces that topic (see routing.ts).
-  const activeItem = topic === "payment" ? "Payment" : "";
+  const activeItem = active?.label ?? "";
   const openQuestion = (i: number) => {
     setOpenQa(i);
-    try { window.history.replaceState(null, "", `#${PAYMENT_QAS[i]?.hash ?? "4605"}`); } catch { /* ignore */ }
+    const hash = qas[i]?.hash;
+    if (!hash) return; // topics fetched as text only have no hash — leave the fragment alone
+    try { window.history.replaceState(null, "", `#${hash}`); } catch { /* ignore */ }
   };
   const groupIcon = (icon: "bag" | "person" | "box" | "h") => {
     if (icon === "h") return <span className="font-serif-d text-[15px] leading-none">H</span>;
@@ -4579,13 +5020,13 @@ function FaqPage({ topic, go }: { topic: string; go: (v: View, opts?: { restore?
                 {openGroup === g.key && (
                   <div className="pb-2">
                     {g.items.map((item) => {
-                      const active = item === activeItem;
+                      const isActive = item === activeItem;
                       return (
                         <button
                           key={item}
-                          aria-current={active ? "page" : undefined}
-                          className={`block w-full py-2 pl-7 pr-4 text-left text-sm hover:underline ${active ? "font-bold text-black" : "text-[#696969]"}`}
-                          onClick={() => { if (active) return; go(FAQ_ITEM_VIEW[item] ?? { t: "page", page: "faq" }); }}
+                          aria-current={isActive ? "page" : undefined}
+                          className={`block w-full py-2 pl-7 pr-4 text-left text-sm hover:underline ${isActive ? "font-bold text-black" : "text-[#696969]"}`}
+                          onClick={() => { if (isActive) return; go({ t: "faq", topic: FAQ_LABEL_TO_SLUG[item] ?? "payment" }); }}
                         >
                           {item}
                         </button>
@@ -4598,27 +5039,52 @@ function FaqPage({ topic, go }: { topic: string; go: (v: View, opts?: { restore?
           </div>
         </div>
         <div className="bg-[#fffcf7] px-6 py-6 sm:px-8">
-          <h1 className="text-base font-bold uppercase tracking-[0.2em]">Payment</h1>
-          <div className="mt-2">
-            {PAYMENT_QAS.map((qa, i) => (
-              <div key={qa.hash} className="border-b border-[#f6f1eb]">
-                <button
-                  aria-expanded={openQa === i}
-                  className="flex w-full items-center justify-between gap-4 py-4 text-left"
-                  onClick={() => openQuestion(i)}
-                >
-                  <span className="text-[15px] font-bold text-black">{qa.q}</span>
-                  <span aria-hidden="true" className="shrink-0 text-xl font-light leading-none">{openQa === i ? "−" : "+"}</span>
-                </button>
-                {openQa === i && (
-                  <div className="pb-5 text-sm leading-6 text-neutral-700">
-                    <p>{qa.intro}</p>
-                    {qa.bullets?.map((b, j) => <p key={j} className="mt-2 pl-4">•&nbsp;&nbsp;{b}</p>)}
+          {isLanding ? (
+            <>
+              <h1 className="text-base font-bold uppercase tracking-[0.2em]">Have a question?</h1>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">To learn more about our expertise or actions and also about the security and confidentiality of the data you provide to us.</p>
+              <h2 className="mt-8 text-base font-bold uppercase tracking-[0.2em]">Categories</h2>
+              {FAQ_GROUPS.map((g) => (
+                <div key={g.key} className="mt-6">
+                  <p className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.18em]"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-black/20">{groupIcon(g.icon)}</span>{g.label}</p>
+                  <div className="mt-2 pl-10">
+                    {g.items.map((item) => (
+                      <button key={item} className="block py-1 text-left text-sm text-[#696969] hover:underline" onClick={() => go({ t: "faq", topic: FAQ_LABEL_TO_SLUG[item] ?? "payment" })}>{item}</button>
+                    ))}
                   </div>
-                )}
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <h1 className="text-base font-bold uppercase tracking-[0.2em]">{active.label}</h1>
+              <div className="mt-2">
+                {qas.map((qa, i) => (
+                  <div key={qa.hash ?? `${active.slug}-${i}`} className="border-b border-[#f6f1eb]">
+                    <button
+                      aria-expanded={openQa === i}
+                      className="flex w-full items-center justify-between gap-4 py-4 text-left"
+                      onClick={() => openQuestion(i)}
+                    >
+                      <span className="text-[15px] font-bold text-black">{qa.q}</span>
+                      <span aria-hidden="true" className="shrink-0 text-xl font-light leading-none">{openQa === i ? "−" : "+"}</span>
+                    </button>
+                    {openQa === i && (
+                      <div className="pb-5 text-sm leading-6 text-neutral-700">
+                        {qa.blocks.map((b, j) => b.t === "li" ? (
+                          <p key={j} className="mt-2 whitespace-pre-line pl-4">•&nbsp;&nbsp;{faqRich(b.text, go)}</p>
+                        ) : b.t === "h" ? (
+                          <p key={j} className="mt-4 font-bold text-black">{faqRich(b.text, go)}</p>
+                        ) : (
+                          <p key={j} className={j === 0 ? "whitespace-pre-line" : "mt-2 whitespace-pre-line"}>{faqRich(b.text, go)}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
       </div>
       {/* "More questions?" — the original's white card centred over the
@@ -4684,7 +5150,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
               <h2 className="text-[15px] font-bold text-black">Customer Service</h2>
               <p className="mt-4 text-sm leading-7 text-neutral-700">{settings.serviceHours} :</p>
               <p className="text-sm leading-7"><a aria-label="Call Hermès customer service" className="underline underline-offset-4" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
-              <p className="mt-4 text-sm leading-7 text-neutral-700">The answer to your question can certainly be found in the <a href="/us/en/faq/" aria-label="Frequently asked questions" className="font-bold underline underline-offset-4" onClick={(e) => { e.preventDefault(); go({ t: "page", page: "faq" }); }}>FAQs</a></p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">The answer to your question can certainly be found in the <a href="/us/en/faq/" aria-label="Frequently asked questions" className="font-bold underline underline-offset-4" onClick={(e) => { e.preventDefault(); go({ t: "faq", topic: "index" }); }}>FAQs</a></p>
               <p className="mt-4 text-sm leading-7 text-neutral-700">You can also contact us outside public holidays:</p>
               <p className="mt-6 text-right text-xs text-neutral-600">* Required information</p>
               <ContactForm settings={settings} go={go} />
@@ -5034,7 +5500,10 @@ function ChatBubble({ settings, go, view, buyBarVisible }: { settings: Settings;
                 <div className="mt-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-neutral-500"><span className="h-px flex-1 bg-black/10" aria-hidden="true" />Today<span className="h-px flex-1 bg-black/10" aria-hidden="true" /></div>
                 <div className="mt-3 max-h-[50vh] space-y-2 overflow-y-auto">
                   <div className="max-w-[85%] bg-[#f6f1eb] px-3 py-2 text-sm leading-5">
-                    Welcome to Hermès.com Live Chat! We are delighted to assist you and a Client Specialist will be with you shortly.
+                    {/* The admin "Chat welcome message" setting (Admin Panel >
+                        Theme & Settings) overrides the original's verbatim
+                        welcome; empty means the original's text stands. */}
+                    {(settings.chatWelcome ?? "").trim() || "Welcome to Hermès.com Live Chat! We are delighted to assist you and a Client Specialist will be with you shortly."}
                     <p className="mt-1 text-right text-[10px] text-neutral-500">{chatOpenedAt}</p>
                   </div>
                   {msgs.map((m) => m.from === "customer" ? (
