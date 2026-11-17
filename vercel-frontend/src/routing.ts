@@ -72,6 +72,15 @@ const CATEGORY_PATHS: Record<string, string> = {
   "leather|women's bags and clutches": "leather-goods/bags-and-clutches/womens-bags-and-clutches",
   "leather|men's bags and clutches": "leather-goods/bags-and-clutches/mens-bags-and-clutches",
   "leather|small leather goods": "leather-goods/small-leather-goods",
+  // Leather Accessories / Luggage sub-pages (2026-11-17) — the original's
+  // own URLs. Charms / Travel accessories / Suitcases are the new pages;
+  // Straps + Reading and writing get entries too so the Charms sub-nav
+  // siblings link to the original's URLs (not the generic /leather/ slugs).
+  "leather|charms": "leather-goods/accessories/charms",
+  "leather|straps": "leather-goods/accessories/straps",
+  "leather|reading and writing": "leather-goods/accessories/reading-and-writing",
+  "leather|travel accessories": "leather-goods/luggage/travel-accessories",
+  "leather|suitcases and travel bags": "leather-goods/luggage/suitcases-and-travel-bags",
   "men|shoes": "men/shoes",
   "men|ready-to-wear": "men/ready-wear",
   "men|fall-winter 2026 collection": "men/ready-wear/fall-winter-collection",
@@ -96,6 +105,9 @@ const CATEGORY_PATHS: Record<string, string> = {
   "fragrances|accessories": "make-up/accessories",
   "home|": "home",
   "home|tableware": "home/tableware",
+  // Home Tech universe page (2026-11-17) — the original's own URL
+  // /home-art-living/tech-universe/ (40 tiles, techPos order).
+  "home|tech universe": "home-art-living/tech-universe",
   // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's
   // own URLs; without these the generic slug fallback still resolved
   // them, but the explicit entries keep the routing table truthful.

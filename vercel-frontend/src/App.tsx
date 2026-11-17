@@ -1962,6 +1962,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "the men's universe": (p) => p.category === "fragrances" && p.mUniPos !== undefined,
       "fragrances": (p) => p.category === "fragrances" && p.frgViewPos !== undefined,
       "make-up": (p) => p.category === "fragrances" && p.mkPos !== undefined,
+      // Leather Accessories / Luggage + Home Tech universe (2026-11-17).
+      // Field-only gates (NOT category-gated like the fragrances syns):
+      // these pages' rows span categories — travelacc has leather +
+      // fashion-jewelry rows (Paddock + AirTags), suitcases has leather +
+      // women + men rows (id82/67/62 stay women, id6305 stays men), tech
+      // has home + leather + fashion-jewelry rows. The keys only ever
+      // fire on their own page (no other menu sub shares these names).
+      "charms": (p) => p.charmPos !== undefined,
+      "travel accessories": (p) => p.travAccPos !== undefined,
+      "suitcases and travel bags": (p) => p.suitPos !== undefined,
+      "tech universe": (p) => p.techPos !== undefined,
       // Watches "Our collections" view (2026-11-15): the all-watches
       // list, gated on watchPos like the parent page.
       "our collections": (p) => p.category === "watches" && p.watchPos !== undefined,
@@ -2213,6 +2224,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const isAccPage = cat === "fragrances" && subLow === "accessories";
   const isMakeupPage = cat === "fragrances" && subLow === "make-up";
   const isFragViewPage = cat === "fragrances" && subLow === "fragrances";
+  // Leather Accessories / Luggage + Home Tech universe sub-pages
+  // (2026-11-17) — the original's live orders live in charmPos
+  // (Charms 15), travAccPos (Travel accessories 20), suitPos
+  // (Suitcases and travel bags 26), techPos (Tech universe 40).
+  const isCharmsPage = cat === "leather" && subLow === "charms";
+  const isTravAccPage = cat === "leather" && subLow === "travel accessories";
+  const isSuitcasesPage = cat === "leather" && subLow === "suitcases and travel bags";
+  const isTechPage = cat === "home" && subLow === "tech universe";
   // Equestrian parent page (cat "equestrian", no sub, 2026-11-16) —
   // sorts by eqPos (the original's live order, 149 tiles) and
   // carries the descriptive paragraph (two paragraphs, verbatim).
@@ -2281,7 +2300,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
   };
   const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : isCharmsPage ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2342,6 +2361,19 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     const sibList = isMkPage ? ["Lips", "Face", "Eyes", "Hands", "Accessories"] : ["Hermessence collection", "The Women's Universe", "The Men's Universe", "Bath"];
     siblings = sibList.map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
     siblings.push({ label: "View all", view: { t: "category", cat, sub: isMkPage ? "Make-up" : "Fragrances" } as View, current: isMkPage ? subLow === "make-up" : subLow === "fragrances" });
+  } else if (isCharmsPage) {
+    // The original's Charms sub-nav (SSR HTML, 2026-11-17): Charms /
+    // Straps / Reading and writing — NO "View all" (the Accessories
+    // section has none on the original).
+    siblings = ["Charms", "Straps", "Reading and writing"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
+  } else if (isTravAccPage || isSuitcasesPage) {
+    // The original's Luggage sub-nav (SSR HTML, 2026-11-17): Suitcases
+    // and travel bags / Travel accessories — NO "View all".
+    siblings = ["Suitcases and travel bags", "Travel accessories"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
+  } else if (isTechPage) {
+    // The original's Tech universe page has NO sub-navigation row at all
+    // (no filter-siblings-categories nav in the SSR HTML, 2026-11-17).
+    siblings = [];
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -2376,6 +2408,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [homeParaOpen, setHomeParaOpen] = useState(false);
   const [giftParaOpen, setGiftParaOpen] = useState(false);
   const [bathParaOpen, setBathParaOpen] = useState(false);
+  const [charmParaOpen, setCharmParaOpen] = useState(false);
+  const [travAccParaOpen, setTravAccParaOpen] = useState(false);
+  const [suitParaOpen, setSuitParaOpen] = useState(false);
+  const [techParaOpen, setTechParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2493,6 +2529,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (isAccPage && list.some((p) => p.accPos !== undefined)) list = [...list].sort((a, b) => (a.accPos ?? Infinity) - (b.accPos ?? Infinity));
     else if (isMakeupPage && list.some((p) => p.mkPos !== undefined)) list = [...list].sort((a, b) => (a.mkPos ?? Infinity) - (b.mkPos ?? Infinity));
     else if (isFragViewPage && list.some((p) => p.frgViewPos !== undefined)) list = [...list].sort((a, b) => (a.frgViewPos ?? Infinity) - (b.frgViewPos ?? Infinity));
+    // Leather Accessories / Luggage + Home Tech universe (2026-11-17)
+    // sort by their own position field — the original's live order.
+    else if (isCharmsPage && list.some((p) => p.charmPos !== undefined)) list = [...list].sort((a, b) => (a.charmPos ?? Infinity) - (b.charmPos ?? Infinity));
+    else if (isTravAccPage && list.some((p) => p.travAccPos !== undefined)) list = [...list].sort((a, b) => (a.travAccPos ?? Infinity) - (b.travAccPos ?? Infinity));
+    else if (isSuitcasesPage && list.some((p) => p.suitPos !== undefined)) list = [...list].sort((a, b) => (a.suitPos ?? Infinity) - (b.suitPos ?? Infinity));
+    else if (isTechPage && list.some((p) => p.techPos !== undefined)) list = [...list].sort((a, b) => (a.techPos ?? Infinity) - (b.techPos ?? Infinity));
     // Equestrian (2026-11-16) sorts by eqPos — the original's
     // order — the same way (the parent page lists exactly the 149
     // live tiles).
@@ -2521,7 +2563,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -3070,12 +3112,25 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           caps once normal-case is dropped). */}
       <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
             {" | "}
             <span className="tracking-normal text-black">{titleText}</span>
+          </>
+        )}
+        {/* The original's breadcrumb for the leather Accessories / Luggage
+            sub-pages ends at the SECTION (LEATHER GOODS | ACCESSORIES /
+            LEATHER GOODS | LUGGAGE), and Tech universe shows only HOME AND
+            ART OF LIVING — verified from the SSR HTML rendered breadcrumb
+            + JSON-LD trail, 2026-11-17. The leaf name is the title, not a
+            breadcrumb level (the rows' subcategory would leak the wrong
+            section here: Small leather goods / Bags and clutches / Decor). */}
+        {sub && (isCharmsPage || isTravAccPage || isSuitcasesPage) && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">{isCharmsPage ? "ACCESSORIES" : "LUGGAGE"}</span>
           </>
         )}
         {/* The SLG parent's bottom breadcrumb is 2 levels on the original
@@ -3354,6 +3409,91 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             </p>
           )}
           <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setBathParaOpen(!bathParaOpen)}>{bathParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Charms descriptive paragraph — verbatim from hermes.com
+          (SSR HTML, 2026-11-17). Charms page only; below the grid with
+          See More, as on the original (the paragraph sits behind an
+          expander there). NOTE: "[bag accessories]" is literal in the
+          original's own text — it is not a link and not an extraction
+          artifact, so it is rendered verbatim. */}
+      {isCharmsPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {charmParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Infuse a touch of whimsy into your leather goods with the Hermès bag charm collection. Handcrafted in Milo lambskin or Epsom calfskin like the Oran Nano charm, these playful companions often celebrate the House&apos;s equestrian universe. Explore our complete selection of [bag accessories] to personalize your allure with boldness. Available in a palette of vibrant colors and varied shapes, these objects of curiosity bring a unique and colorful signature to every handle.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Infuse a touch of whimsy into your leather goods with the Hermès bag charm collection. Handcrafted in Milo lambskin or Epsom calfskin like the Oran Nano charm, these playful companions often celebrate the House&apos;s equestrian universe.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setCharmParaOpen(!charmParaOpen)}>{charmParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Travel accessories descriptive paragraph — verbatim from
+          hermes.com (SSR HTML, 2026-11-17). Travel accessories page
+          only; below the grid with See More, as on the original. NOTE:
+          the original's paragraph links "black" and "orange" to
+          pre-filtered colour views; the clone renders them as plain
+          text (no facet-link support in paragraph blocks). */}
+      {isTravAccPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {travAccParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Perfect the art of the getaway with Hermès travel accessories. Thought out for organization and serenity, our collection protects your essentials. From passport covers to functional pouches, these nomadic companions, fashioned in leather or technical textiles, marry durability and elegance. Whether dressed in deep black or the iconic orange, they bring a distinctive signature to your luggage for a journey without a false note.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Perfect the art of the getaway with Hermès travel accessories. Thought out for organization and serenity, our collection protects your essentials.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTravAccParaOpen(!travAccParaOpen)}>{travAccParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Suitcases descriptive paragraph — verbatim from hermes.com
+          (SSR HTML, 2026-11-17). Suitcases page only; below the grid
+          with See More, as on the original. NOTE: the original's
+          paragraph links "4-wheeled suitcases" and "beige" to
+          pre-filtered views; the clone renders them as plain text. */}
+      {isSuitcasesPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {suitParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Celebrate the art of movement with Hermès suitcases, ideal companions for great departures. Combining lightness and robustness, our 4-wheeled suitcases in technical canvas and leather facilitate every stopover. Their silent wheels and ergonomic handles promise absolute fluidity. From cabin to hold, opt for a clean aesthetic available in timeless nuances, such as natural beige. An invitation to travel the world with functional elegance.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Celebrate the art of movement with Hermès suitcases, ideal companions for great departures. Combining lightness and robustness, our 4-wheeled suitcases in technical canvas and leather facilitate every stopover.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setSuitParaOpen(!suitParaOpen)}>{suitParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Tech universe descriptive paragraphs — verbatim from hermes.com
+          (SSR HTML, 2026-11-17). Tech universe page only; below the
+          grid with See More, as on the original. */}
+      {isTechPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {techParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Hermès tech accessories combine the precision of digital innovation with the excellence of leather craftsmanship. Designed to protect and enhance your communication tools, our iPhone cases, Paddock chargers, and AirTag accessories are fashioned from calfskins—such as Barenia or Epsom leather—selected for their durability and unique feel. Each piece is studied to guarantee perfect ergonomics and optimal protection against daily use, while preserving the finesse of the connected object.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                This selection meets the needs of contemporary mobility with an absolute commitment to quality. Our tech accessories integrate essential features, such as wireless charging compatibility, without ever compromising the clean aesthetic unique to Hermès. Whether it is wrapped cases or carrying straps, the use of the saddle stitch and refined finishes transforms a technological tool into an object of character. Choosing a Hermès tech accessory means opting for durability that traverses innovation cycles with constant elegance.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Hermès tech accessories combine the precision of digital innovation with the excellence of leather craftsmanship. Designed to protect and enhance your communication tools, our iPhone cases, Paddock chargers, and AirTag accessories are fashioned from calfskins—such as Barenia or Epsom leather—selected for their durability and unique feel.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTechParaOpen(!techParaOpen)}>{techParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
 
