@@ -78,6 +78,22 @@ const CATEGORY_PATHS: Record<string, string> = {
   "men|fall-winter 2026": "men/ready-wear/fall-winter-collection",
   "watches|": "watches",
   "fragrances|": "fragrances-and-make-up",
+  // Fragrances sub-pages (2026-11-17) — the original's own URLs
+  // (/fragrances/art-living/ is the Bath page; /fragrances/women/ and
+  // /fragrances/men/ are the universes; the make-up sub-pages live
+  // under /make-up/). Without these the generic slug fallback resolved
+  // some of them, but Bath had no route at all (the Bath [0] bug).
+  "fragrances|bath": "fragrances/art-living",
+  "fragrances|the women's universe": "fragrances/women",
+  "fragrances|the men's universe": "fragrances/men",
+  "fragrances|hermessence collection": "fragrances/hermessence-collection",
+  "fragrances|fragrances": "fragrances",
+  "fragrances|make-up": "make-up",
+  "fragrances|lips": "make-up/lips",
+  "fragrances|face": "make-up/face",
+  "fragrances|eyes": "make-up/eyes",
+  "fragrances|hands": "make-up/hands",
+  "fragrances|accessories": "make-up/accessories",
   "home|": "home",
   "home|tableware": "home/tableware",
   // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's

@@ -1930,9 +1930,20 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "men's bags and clutches": (p) => p.subcategory === "Bags and clutches" && p.mBagPos !== undefined,
       "silk scarves and accessories": (p) => p.subcategory === "Scarves, shawls and stoles",
       "cashmere shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles",
-      "hermessence collection": (p) => p.line === "Hermessence" || p.subcategory === "Perfumes",
-      "the women's universe": (p) => p.category === "fragrances",
-      "the men's universe": (p) => p.category === "fragrances",
+      // Fragrances sub-pages (2026-11-17) — each page lists exactly its
+      // own live tiles, gated on its own position field (Bath 54 bathPos,
+      // Women's Universe 97 wUniPos, Men's Universe 90 mUniPos,
+      // Hermessence 38 hermPos, Lips 30 lipsPos, Face 11 facePos, Eyes 15
+      // eyesPos, Hands 30 handsPos, Accessories 24 accPos, Make-up 96
+      // mkPos, Fragrances 177 frgViewPos). The old ungated / regex syns
+      // returned the whole category or the wrong products (the Bath [0]
+      // bug the user reported 2026-11-17).
+      "bath": (p) => p.category === "fragrances" && p.bathPos !== undefined,
+      "hermessence collection": (p) => p.category === "fragrances" && p.hermPos !== undefined,
+      "the women's universe": (p) => p.category === "fragrances" && p.wUniPos !== undefined,
+      "the men's universe": (p) => p.category === "fragrances" && p.mUniPos !== undefined,
+      "fragrances": (p) => p.category === "fragrances" && p.frgViewPos !== undefined,
+      "make-up": (p) => p.category === "fragrances" && p.mkPos !== undefined,
       // Watches "Our collections" view (2026-11-15): the all-watches
       // list, gated on watchPos like the parent page.
       "our collections": (p) => p.category === "watches" && p.watchPos !== undefined,
@@ -1950,10 +1961,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "bracelets": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Bracelets" || (/bracelet|bangle/i.test(p.name) && p.subcategory !== "Rings")),
       "necklaces and pendants": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Necklaces" || p.subcategory === "Pendants" || (/necklace|pendant/i.test(p.name) && p.subcategory !== "Earrings")),
       "earrings": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Earrings" || /earring|ear cuff/i.test(p.name)),
-      "lips": (p) => p.category === cat && /lip/i.test(p.name),
-      "face": (p) => p.category === cat && /face|powder|blush|foundation/i.test(p.name),
-      "eyes": (p) => p.category === cat && /eye/i.test(p.name),
-      "hands": (p) => p.category === cat && /nail|mains/i.test(p.name),
+      "lips": (p) => p.category === cat && p.lipsPos !== undefined,
+      "face": (p) => p.category === cat && p.facePos !== undefined,
+      "eyes": (p) => p.category === cat && p.eyesPos !== undefined,
+      "hands": (p) => p.category === cat && p.handsPos !== undefined,
+      "accessories": (p) => p.category === cat && p.accPos !== undefined,
       "blankets and pillows": (p) => p.subcategory === "Blankets and throws",
       "for women": (p) => p.subcategory === "For women" || p.category === "gifts",
       "for men": (p) => p.category === "gifts",
@@ -2148,11 +2160,28 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // Fragrances parent page (cat "fragrances", no sub, 2026-11-15) —
   // sorts by fragPos (the original's live order, 272 tiles) and
   // carries the "Rouge Brillant Silky" / "Fragrance Finder" inserts.
-  // The sub-views (Make-up / Perfumes / Hermessence / universes) are
-  // NOT gated — their original totals were not measured; only the
-  // parent page is. The original has NO descriptive paragraph on
-  // this page.
+  // The sub-pages (Bath / universes / Hermessence / Lips / Face / Eyes
+  // / Hands / Accessories / Make-up / Fragrances, 2026-11-17) are each
+  // gated on their own position field and sorted by it (see the
+  // isBathPage etc. flags below). The original has NO descriptive
+  // paragraph on this page.
   const isFragrancesPage = cat === "fragrances" && !sub;
+  // Fragrances sub-pages (2026-11-17) — the original's live orders live
+  // in bathPos / wUniPos / mUniPos / hermPos / lipsPos / facePos /
+  // eyesPos / handsPos / accPos / mkPos / frgViewPos (Bath 54, Women's
+  // Universe 97, Men's Universe 90, Hermessence 38, Lips 30, Face 11,
+  // Eyes 15, Hands 30, Accessories 24, Make-up 96, Fragrances 177).
+  const isBathPage = cat === "fragrances" && subLow === "bath";
+  const isWomensUniPage = cat === "fragrances" && subLow === "the women's universe";
+  const isMensUniPage = cat === "fragrances" && subLow === "the men's universe";
+  const isHermPage = cat === "fragrances" && subLow === "hermessence collection";
+  const isLipsPage = cat === "fragrances" && subLow === "lips";
+  const isFacePage = cat === "fragrances" && subLow === "face";
+  const isEyesPage = cat === "fragrances" && subLow === "eyes";
+  const isHandsPage = cat === "fragrances" && subLow === "hands";
+  const isAccPage = cat === "fragrances" && subLow === "accessories";
+  const isMakeupPage = cat === "fragrances" && subLow === "make-up";
+  const isFragViewPage = cat === "fragrances" && subLow === "fragrances";
   // Equestrian parent page (cat "equestrian", no sub, 2026-11-16) —
   // sorts by eqPos (the original's live order, 149 tiles) and
   // carries the descriptive paragraph (two paragraphs, verbatim).
@@ -2266,6 +2295,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       { label: "Rider", view: { t: "category", cat, sub: "Rider" } as View, current: isRiderPage },
     ];
     siblings.push({ label: "View all", view: { t: "category", cat }, current: isEquestrianPage });
+  } else if (cat === "fragrances" && sub) {
+    // The original's sub-nav is per-section (2026-11-17): FRAGRANCES
+    // pages list Hermessence / The Women's Universe / The Men's Universe
+    // / Bath / View all; MAKE-UP pages list Lips / Face / Eyes / Hands /
+    // Accessories / View all. (The old full-menu list is what the user
+    // saw wrong on the Bath page.) The parent page (no sub) keeps the
+    // full menu list via the `nav` branch below.
+    const isMkPage = ["lips", "face", "eyes", "hands", "accessories", "make-up"].includes(subLow);
+    const sibList = isMkPage ? ["Lips", "Face", "Eyes", "Hands", "Accessories"] : ["Hermessence collection", "The Women's Universe", "The Men's Universe", "Bath"];
+    siblings = sibList.map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
+    siblings.push({ label: "View all", view: { t: "category", cat, sub: isMkPage ? "Make-up" : "Fragrances" } as View, current: isMkPage ? subLow === "make-up" : subLow === "fragrances" });
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -2403,6 +2443,19 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // order — the same way (the parent page lists exactly the 272
     // live tiles).
     else if (isFragrancesPage && list.some((p) => p.fragPos !== undefined)) list = [...list].sort((a, b) => (a.fragPos ?? Infinity) - (b.fragPos ?? Infinity));
+    // Fragrances sub-pages (2026-11-17) sort by their own position
+    // field — the original's live order for each page.
+    else if (isBathPage && list.some((p) => p.bathPos !== undefined)) list = [...list].sort((a, b) => (a.bathPos ?? Infinity) - (b.bathPos ?? Infinity));
+    else if (isWomensUniPage && list.some((p) => p.wUniPos !== undefined)) list = [...list].sort((a, b) => (a.wUniPos ?? Infinity) - (b.wUniPos ?? Infinity));
+    else if (isMensUniPage && list.some((p) => p.mUniPos !== undefined)) list = [...list].sort((a, b) => (a.mUniPos ?? Infinity) - (b.mUniPos ?? Infinity));
+    else if (isHermPage && list.some((p) => p.hermPos !== undefined)) list = [...list].sort((a, b) => (a.hermPos ?? Infinity) - (b.hermPos ?? Infinity));
+    else if (isLipsPage && list.some((p) => p.lipsPos !== undefined)) list = [...list].sort((a, b) => (a.lipsPos ?? Infinity) - (b.lipsPos ?? Infinity));
+    else if (isFacePage && list.some((p) => p.facePos !== undefined)) list = [...list].sort((a, b) => (a.facePos ?? Infinity) - (b.facePos ?? Infinity));
+    else if (isEyesPage && list.some((p) => p.eyesPos !== undefined)) list = [...list].sort((a, b) => (a.eyesPos ?? Infinity) - (b.eyesPos ?? Infinity));
+    else if (isHandsPage && list.some((p) => p.handsPos !== undefined)) list = [...list].sort((a, b) => (a.handsPos ?? Infinity) - (b.handsPos ?? Infinity));
+    else if (isAccPage && list.some((p) => p.accPos !== undefined)) list = [...list].sort((a, b) => (a.accPos ?? Infinity) - (b.accPos ?? Infinity));
+    else if (isMakeupPage && list.some((p) => p.mkPos !== undefined)) list = [...list].sort((a, b) => (a.mkPos ?? Infinity) - (b.mkPos ?? Infinity));
+    else if (isFragViewPage && list.some((p) => p.frgViewPos !== undefined)) list = [...list].sort((a, b) => (a.frgViewPos ?? Infinity) - (b.frgViewPos ?? Infinity));
     // Equestrian (2026-11-16) sorts by eqPos — the original's
     // order — the same way (the parent page lists exactly the 149
     // live tiles).
@@ -2431,7 +2484,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -3234,6 +3287,19 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         <div className="mx-auto mt-12 max-w-3xl text-center">
           <p className="text-sm leading-7 text-neutral-700">
             Explore a technical silhouette for performance. The Hermès rider&apos;s wardrobe is designed like a second skin, combining timeless elegance with textile innovation. Our show jackets, riding breeches, and technical polos are studied to offer total freedom of movement. Each ergonomic cut and breathable fabric aims to accompany the effort with discretion, allowing the rider to focus on the accuracy of their aids and the precision of their course.
+          </p>
+        </div>
+      )}
+
+      {/* Bath descriptive line — the original's Bath page carries
+          "Scented bath and body care ritual" (2026-11-17). Bath page
+          only; shown in full. (Whether the original places it below
+          the grid or under the title is unverified — the live verify
+          will check placement.) */}
+      {isBathPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Scented bath and body care ritual
           </p>
         </div>
       )}

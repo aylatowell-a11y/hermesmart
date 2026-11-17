@@ -6922,6 +6922,19 @@ const NEW_TILE: Record<number, string> = {
   6835: "https://assets.hermes.com/is/image/hermesproduct/261025G%20H7_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6836: "https://assets.hermes.com/is/image/hermesproduct/251054G%20Z6_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6837: "https://assets.hermes.com/is/image/hermesproduct/261036G%20G3_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6841: "https://assets.hermes.com/is/image/hermesproduct/117484V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6842: "https://assets.hermes.com/is/image/hermesproduct/111231V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6843: "https://assets.hermes.com/is/image/hermesproduct/113468V0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6844: "https://assets.hermes.com/is/image/hermesproduct/60572CV018_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6845: "https://assets.hermes.com/is/image/hermesproduct/60001MV023_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6846: "https://assets.hermes.com/is/image/hermesproduct/60346HV007_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6847: "https://assets.hermes.com/is/image/hermesproduct/60267TV083_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6848: "https://assets.hermes.com/is/image/hermesproduct/60001SV019_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6849: "https://assets.hermes.com/is/image/hermesproduct/60447PV003_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6850: "https://assets.hermes.com/is/image/hermesproduct/60165PV019_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6851: "https://assets.hermes.com/is/image/hermesproduct/60570CV087_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6852: "https://assets.hermes.com/is/image/hermesproduct/60267TV021_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6853: "https://assets.hermes.com/is/image/hermesproduct/60001MV011_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
 };
 
 const BAG_POOL = [picotinLock18V2, kellyShoulderV2, tablierSellier, boxBag, doubleLonge, neoDoubleSens35, fallbackHandbag];
