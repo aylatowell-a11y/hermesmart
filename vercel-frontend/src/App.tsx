@@ -5191,6 +5191,37 @@ function FaqPage({ topic, go }: { topic: string; go: (v: View, opts?: { restore?
   );
 }
 
+function BespokeHero() {
+  // Hero film for the bespoke equestrian page — the original's own film,
+  // autoplay muted loop with Pause + Enable sound controls, the same
+  // pattern as the Baladeur board (2026-11-17).
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [muted, setMuted] = useState(true);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => { const v = videoRef.current; if (!v) return; v.muted = muted; if (paused) v.pause(); else v.play().catch(() => {}); }, [muted, paused]);
+  return (
+    <div className="relative">
+      <video ref={videoRef} src="/videos/bespoke-equestrian-hero.mp4" className="aspect-video w-full object-cover" autoPlay muted loop playsInline aria-label="The Hermès saddle film" />
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-6 pb-6 pt-16 text-white sm:px-10">
+        <h1 className="font-serif-d text-2xl italic sm:text-4xl">The Hermès saddle, savoir-faire and performance</h1>
+        <p className="mt-3 max-w-2xl text-sm leading-7">180 years of expertise in creating sports saddles that fit horses perfectly and meet all their riders&apos; expectations.</p>
+      </div>
+      <div className="absolute bottom-[10px] right-[10px] z-10 flex items-center gap-[5px]">
+        <button aria-label={paused ? "Play video" : "Pause video"} aria-pressed={paused} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setPaused(!paused)}>
+          {paused
+            ? <svg width="10" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>
+            : <svg width="10" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>}
+        </button>
+        <button aria-label={muted ? "Enable sound" : "Mute"} aria-pressed={!muted} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setMuted(!muted)}>
+          {muted
+            ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16 9l6 6M22 9l-6 6" /></svg>
+            : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function InfoPage({ page, settings, go, user }: { page: string; settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; user: { name: string; email: string } | null }) {
   if (page === "sitemap") {
     return (
@@ -5277,13 +5308,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
       <div className="mx-auto px-4 py-6 sm:py-8">
         <div className="mx-auto w-full max-w-[1280px]">
           <button aria-label="Back" className="font-mono-d mb-4 text-xs font-medium uppercase tracking-[0.15em] text-black" onClick={back}>← BACK</button>
-          <div className="relative">
-            <video src="/videos/bespoke-equestrian-hero.mp4" className="aspect-video w-full object-cover" autoPlay muted loop playsInline aria-label="The Hermès saddle film" />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-6 pb-6 pt-16 text-white sm:px-10">
-              <h1 className="font-serif-d text-2xl italic sm:text-4xl">The Hermès saddle, savoir-faire and performance</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7">180 years of expertise in creating sports saddles that fit horses perfectly and meet all their riders&apos; expectations.</p>
-            </div>
-          </div>
+          <BespokeHero />
           <div className="mx-auto mt-12 max-w-3xl text-center">
             <h2 className="font-serif-d text-2xl italic">Our range of saddles</h2>
             <p className="mt-4 text-sm leading-7 text-neutral-700">The Hermès saddle is where the House&apos;s expertise originates from. Each saddle is doubly custom-made and has its own identity. It harmoniously offers both its rider and horse a uniquely different riding experience.</p>
