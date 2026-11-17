@@ -685,6 +685,7 @@ export function App() {
     if (parsed && parsed.kind === "category") return { view: { t: "category", cat: parsed.cat, sub: parsed.sub } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "contact") return { view: { t: "page", page: "contact" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "account") return { view: { t: "account" } as View, productRef: null as string | null };
+    if (parsed && parsed.kind === "cart") return { view: { t: "cart" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "faq") return { view: { t: "faq", topic: parsed.topic } as View, productRef: null as string | null };
     // routing.ts only parses the payment FAQ topic; every other FAQ topic
     // (and the /us/en/faq/ landing) is resolved here from the path.
@@ -901,9 +902,11 @@ export function App() {
     if (cur.t === "category") saveCatState(cur);
     if (v.t === "product" && (cur.t === "category" || cur.t === "home")) setFromView(cur);
     // Real URL for routed views (home / category / product / contact /
-    // account / faq); other views (cart, checkout, admin, other pages,
-    // about) stay unrouted so browser Back returns to the last routed view.
-    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "account" ? accountUrl() : v.t === "faq" ? faqPath(v.topic) : null;
+    // account / faq / cart); other views (checkout, admin, other pages,
+    // about) stay unrouted. The cart IS routed — the original's cart is
+    // a full page at /us/en/cart/, and without its own history entry
+    // browser Back from the cart skipped the product page entirely.
+    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "account" ? accountUrl() : v.t === "cart" ? "/us/en/cart/" : v.t === "faq" ? faqPath(v.topic) : null;
     if (url) { try { window.history.pushState(null, "", url); } catch { /* ignore */ } }
     if (v.t === "category" && !opts?.restore) pulse(2200);
     setView(v); setMobileNav(false); setMenuCat(null);
@@ -951,6 +954,12 @@ export function App() {
       if (parsed.kind === "account") {
         if (cur.t === "category") saveCatState(cur);
         setView({ t: "account" }); setMobileNav(false); setMenuCat(null);
+        window.scrollTo({ top: 0 });
+        return;
+      }
+      if (parsed.kind === "cart") {
+        if (cur.t === "category") saveCatState(cur);
+        setView({ t: "cart" }); setMobileNav(false); setMenuCat(null);
         window.scrollTo({ top: 0 });
         return;
       }

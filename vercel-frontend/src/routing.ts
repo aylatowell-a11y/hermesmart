@@ -16,7 +16,8 @@ export type ParsedRoute =
   | { kind: "product"; id: number }
   | { kind: "faq"; topic: string }
   | { kind: "contact" }
-  | { kind: "account" };
+  | { kind: "account" }
+  | { kind: "cart" };
 
 export function slugify(s: string): string {
   return s
@@ -143,6 +144,10 @@ export function parseUrl(
   if (clean === "") return { kind: "home" };
   if (clean === "contact-us") return { kind: "contact" };
   if (clean === "account") return { kind: "account" };
+  // The cart is a full page on the original (/us/en/cart/) — routed so
+  // browser Back from it returns to the page the user came from
+  // (2026-11-17: unrouted, Back skipped the product page entirely).
+  if (clean === "cart") return { kind: "cart" };
   if (clean.startsWith("faq/online-shopping/")) {
     const topic = clean.slice("faq/online-shopping/".length).split("/")[0] ?? "";
     // Only the Payment FAQ page is built so far; other topics fall back
