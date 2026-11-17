@@ -2562,7 +2562,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     (!s.material.length || s.material.includes(matVal(p))) &&
     (!s.modelSize.length || s.modelSize.includes(p.modelSize)) &&
     (!s.finish.length || s.finish.includes(finishVal(p))) &&
-    (!s.size.length || p.sizeOptions.some((sz) => s.size.includes(sz.label))) &&
+    (!s.size.length || (p.sizeOptions ?? []).some((sz) => s.size.includes(sz.label))) &&
     (!s.color.length || p.colors.some((c) => s.color.includes(colorFamily(c.name)))) &&
     (!s.width.length || s.width.includes(beltWidthBucket(p.modelSize))) &&
     (!s.personalize.length || (isBeltKit(p) && s.personalize.includes("Yes"))) &&
@@ -2765,7 +2765,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     return [...m.entries()].map(([value, count]) => ({ value, count })).sort((a, b) => a.value.localeCompare(b.value));
   };
   const sizeCount = new Map<string, number>();
-  for (const p of base) for (const s of p.sizeOptions) sizeCount.set(s.label, (sizeCount.get(s.label) ?? 0) + 1);
+  for (const p of base) for (const s of (p.sizeOptions ?? [])) sizeCount.set(s.label, (sizeCount.get(s.label) ?? 0) + 1);
   const sizeOpts = [...sizeCount.entries()].map(([value, count]) => ({ value, count })).sort((a, b) => (parseFloat(a.value) - parseFloat(b.value)) || a.value.localeCompare(b.value));
   const famMap = new Map<string, { count: number; hex: string }>();
   for (const p of base) {
