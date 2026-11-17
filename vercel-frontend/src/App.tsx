@@ -2047,6 +2047,19 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // fashion-jewelry (Bags and clutches + Key rings) — a category
       // gate hid them live (page showed [38]).
       "luggage": (p) => p.luggagePos !== undefined,
+      // Group 5 (2026-11-17) — Men's Ties, bow ties and pocket squares
+      // [488], Men's Scarves [146] and the Ties and scarves parent
+      // [634]. FIELD-ONLY gates (the Group 4 category-gate trap): the
+      // menScarfPos rows SPAN categories — the 27 exact-matched men's
+      // scarves are category "women" rows (shared with the women's
+      // scarves page) while the new rows are category "men"; the
+      // menTiesPos rows span men (ties) + women (scarves). A
+      // `p.category === cat` gate would hide them live. The tiePos
+      // rows are all category "men" but the key only ever fires on
+      // this page, so field-only is used for all three.
+      "ties, bow ties and pocket squares": (p) => p.tiePos !== undefined,
+      "scarves": (p) => cat === "men" ? p.menScarfPos !== undefined : p.subcategory === "Scarves, shawls and stoles" && p.scarfPos !== undefined,
+      "ties and scarves": (p) => p.menTiesPos !== undefined,
       "blankets and pillows": (p) => p.textilesPos !== undefined,
       "decorative objects and games": (p) => p.objectsPos !== undefined,
       "sports and outdoor": (p) => p.sportsPos !== undefined,
@@ -2078,13 +2091,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // NOTE: the key MUST carry the commas — subLow is "scarves, shawls
       // and stoles" (2026-11-15: the comma-less key never matched, so the
       // page fell through to the strict subcategory match and showed 518).
-      "scarves, shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : true),
+      // Group 5 (2026-11-17): the men's branch is now menScarfPos-gated
+      // — the old `true` branch returned ALL 526 scarf-subcategory rows
+      // on the men's page (the homepage carousel's "Scarves" tile links
+      // here with sub "Scarves, shawls and stoles", cat "men").
+      "scarves, shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : cat === "men" ? p.menScarfPos !== undefined : true),
       // Alias keys (2026-11-17): the mobile menu heading is "Scarves
       // shawls and stoles" (no commas) and the desktop heading is
       // "Scarves and stoles" — both missed the comma key above and
       // rendered EMPTY. Same predicate as the comma key.
-      "scarves shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : true),
-      "scarves and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : true),
+      "scarves shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : cat === "men" ? p.menScarfPos !== undefined : true),
+      "scarves and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : cat === "men" ? p.menScarfPos !== undefined : true),
       // Women's Belts parent page — the original's live order (266
       // tiles, extracted 2026-11-15) lives in beltPos; the parent lists
       // exactly those rows. The 101 clone rows not on the live list stay
@@ -2299,6 +2316,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // subcategory "Straps" (category leather); the flag gates the section
   // sub-nav / breadcrumbs the same way as Charms / Reading and writing.
   const isStrapsPage = cat === "leather" && subLow === "straps";
+  // Group 5 empty pages (2026-11-17) — the original's live orders live
+  // in tiePos (Ties, bow ties and pocket squares 488), menScarfPos
+  // (Men's Scarves 146), menTiesPos (Ties and scarves parent 634 —
+  // first 40 verified from the SSR; positions 41..634 not yet
+  // extracted live, see the Group 5 build report). The men's Scarves
+  // page also resolves via sub "Scarves, shawls and stoles" (the
+  // homepage carousel tile links there) and its comma-less aliases.
+  const isTiesPage = cat === "men" && subLow === "ties, bow ties and pocket squares";
+  const isMensScarvesPage = cat === "men" && (subLow === "scarves" || subLow === "scarves, shawls and stoles" || subLow === "scarves shawls and stoles" || subLow === "scarves and stoles");
+  const isMenTiesParentPage = cat === "men" && subLow === "ties and scarves";
   // Group 1 empty pages (2026-11-17) — the original's live orders live
   // in furnPos (Furniture 161), twillyPos (Twilly 96), childPos
   // (Children 70), balletPos (Ballet flats 42), wondersPos (The
@@ -2393,7 +2420,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
   };
   const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : (isCharmsPage || isLeatherAccPage || isStrapsPage) ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage || isLuggagePage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isBeachPage || isWomensAccPage) ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : (isCharmsPage || isLeatherAccPage || isStrapsPage) ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage || isLuggagePage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isBeachPage || isWomensAccPage) ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : (isTiesPage || isMensScarvesPage) ? "MEN | TIES AND SCARVES" : isMenTiesParentPage ? label : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2520,6 +2547,19 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // same as Tech universe / Children. Without this branch the `nav`
     // default below would show the menu subs + "View all".
     siblings = [];
+  } else if (isTiesPage || isMensScarvesPage) {
+    // Group 5 (2026-11-17): the original's Ties and scarves sub-nav
+    // (SSR HTML): Ties, bow ties and pocket squares / Scarves — NO
+    // "View all". The parent page has NO sub-nav row at all (see the
+    // isMenTiesParentPage branch below). The Scarves item is current
+    // for every scarves alias sub (the homepage carousel links with
+    // sub "Scarves, shawls and stoles").
+    siblings = ["Ties, bow ties and pocket squares", "Scarves"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow || (l === "Scarves" && ["scarves, shawls and stoles", "scarves shawls and stoles", "scarves and stoles"].includes(subLow)) }));
+  } else if (isMenTiesParentPage) {
+    // The original's Ties and scarves parent page has NO sub-navigation
+    // row at all (no filter-siblings-categories nav in the SSR HTML,
+    // 2026-11-17) — same as Tech universe / Children.
+    siblings = [];
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -2572,6 +2612,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [leatherAccParaOpen, setLeatherAccParaOpen] = useState(false);
   const [luggageParaOpen, setLuggageParaOpen] = useState(false);
   const [womensAccParaOpen, setWomensAccParaOpen] = useState(false);
+  const [tiesParaOpen, setTiesParaOpen] = useState(false);
+  const [menTiesParentParaOpen, setMenTiesParentParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2710,6 +2752,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (isLeatherAccPage && list.some((p) => p.leatherAccPos !== undefined)) list = [...list].sort((a, b) => (a.leatherAccPos ?? Infinity) - (b.leatherAccPos ?? Infinity));
     else if (isLuggagePage && list.some((p) => p.luggagePos !== undefined)) list = [...list].sort((a, b) => (a.luggagePos ?? Infinity) - (b.luggagePos ?? Infinity));
     else if (isWomensAccPage && list.some((p) => p.wAccPos !== undefined)) list = [...list].sort((a, b) => (a.wAccPos ?? Infinity) - (b.wAccPos ?? Infinity));
+    // Group 5 empty pages (2026-11-17) sort by their own position
+    // field — the original's live order for each page. The parent
+    // (menTiesPos) is PARTIAL: only positions 1..40 are verified
+    // (SSR first-40); rows without a menTiesPos sort to the end in
+    // stable (catalogue) order until the parent order 41..634 is
+    // extracted live — see the Group 5 build report.
+    else if (isTiesPage && list.some((p) => p.tiePos !== undefined)) list = [...list].sort((a, b) => (a.tiePos ?? Infinity) - (b.tiePos ?? Infinity));
+    else if (isMensScarvesPage && list.some((p) => p.menScarfPos !== undefined)) list = [...list].sort((a, b) => (a.menScarfPos ?? Infinity) - (b.menScarfPos ?? Infinity));
+    else if (isMenTiesParentPage && list.some((p) => p.menTiesPos !== undefined)) list = [...list].sort((a, b) => (a.menTiesPos ?? Infinity) - (b.menTiesPos ?? Infinity));
     // Group 1 empty pages (2026-11-17) sort by their own position
     // field — the original's live order for each page.
     else if (isFurnPage && list.some((p) => p.furnPos !== undefined)) list = [...list].sort((a, b) => (a.furnPos ?? Infinity) - (b.furnPos ?? Infinity));
@@ -2753,7 +2804,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isTiesPage, isMensScarvesPage, isMenTiesParentPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -3321,7 +3372,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           caps once normal-case is dropped). */}
       <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -3352,6 +3403,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <>
             {" | "}
             <span className="tracking-normal text-black">{titleText}</span>
+          </>
+        )}
+        {/* Group 5 (2026-11-17): the original's bottom breadcrumb for
+            all three Ties and scarves pages is 2 levels (MEN | TIES
+            AND SCARVES, SSR HTML breadcrumb trail) — the middle level
+            would leak the first row's subcategory (Ties / Scarves,
+            shawls and stoles), so it is omitted here. */}
+        {sub && (isTiesPage || isMensScarvesPage || isMenTiesParentPage) && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">TIES AND SCARVES</span>
           </>
         )}
         {/* Group 1 (2026-11-17): the original's rendered bottom
@@ -3780,6 +3842,46 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             </p>
           )}
           <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWomensAccParaOpen(!womensAccParaOpen)}>{womensAccParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Men's Ties, bow ties and pocket squares descriptive paragraph
+          — verbatim from hermes.com (SSR HTML, 2026-11-17). Ties page
+          only; below the grid with See More, as on the original. The
+          parent page carries the SAME paragraph on the original, so it
+          gets its own block + state below. The Men's Scarves page has
+          NO paragraph on the original (no seo-text in its SSR HTML) —
+          same as Children / Ballet / Twilly. */}
+      {isTiesPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {tiesParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              From silk ties with cheerful motifs to silk pocket squares and multicolored silk bow ties, Hermès' collection of silk accessories for men offers chic ways to accentuate any silhouette. Whether you prefer bright colors or muted tones, playful, equestrian or graphic motifs, small or large sizes... our collections are designed to suit your mood and personality.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              From silk ties with cheerful motifs to silk pocket squares and multicolored silk bow ties, Hermès' collection of silk accessories for men offers chic ways to accentuate any silhouette.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTiesParaOpen(!tiesParaOpen)}>{tiesParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Men's Ties and scarves parent descriptive paragraph — the
+          SAME verbatim text as the Ties page on the original (SSR HTML,
+          2026-11-17). Parent page only. */}
+      {isMenTiesParentPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {menTiesParentParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              From silk ties with cheerful motifs to silk pocket squares and multicolored silk bow ties, Hermès' collection of silk accessories for men offers chic ways to accentuate any silhouette. Whether you prefer bright colors or muted tones, playful, equestrian or graphic motifs, small or large sizes... our collections are designed to suit your mood and personality.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              From silk ties with cheerful motifs to silk pocket squares and multicolored silk bow ties, Hermès' collection of silk accessories for men offers chic ways to accentuate any silhouette.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setMenTiesParentParaOpen(!menTiesParentParaOpen)}>{menTiesParentParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
 

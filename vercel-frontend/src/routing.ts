@@ -110,6 +110,21 @@ const CATEGORY_PATHS: Record<string, string> = {
   "men|ready-to-wear": "men/ready-wear",
   "men|fall-winter 2026 collection": "men/ready-wear/fall-winter-collection",
   "men|fall-winter 2026": "men/ready-wear/fall-winter-collection",
+  // Men's Ties and scarves (Group 5, 2026-11-17) — the original's own
+  // URLs under /men/ties-stoles-and-scarves/. "men|scarves" is listed
+  // FIRST so the reverse lookup of
+  // /men/ties-stoles-and-scarves/stoles-and-scarves/ returns sub
+  // "Scarves" (REVERSE_PATHS is first-writer-wins); the "scarves,
+  // shawls and stoles" alias (homepage carousel tile) resolves to the
+  // same URL. The old generic URLs (/men/scarves-shawls-and-stoles/
+  // etc.) still resolve to the same views via the generic matcher —
+  // no duplicate page is created.
+  "men|ties, bow ties and pocket squares": "men/ties-stoles-and-scarves/ties-bow-ties-and-pocket-squares",
+  "men|scarves": "men/ties-stoles-and-scarves/stoles-and-scarves",
+  "men|scarves, shawls and stoles": "men/ties-stoles-and-scarves/stoles-and-scarves",
+  "men|scarves shawls and stoles": "men/ties-stoles-and-scarves/stoles-and-scarves",
+  "men|scarves and stoles": "men/ties-stoles-and-scarves/stoles-and-scarves",
+  "men|ties and scarves": "men/ties-stoles-and-scarves",
   "watches|": "watches",
   "fragrances|": "fragrances-and-make-up",
   // Fragrances sub-pages (2026-11-17) — the original's own URLs
