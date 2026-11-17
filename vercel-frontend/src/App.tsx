@@ -63,7 +63,7 @@ const MEGA_RAW: MegaEntry[] = [
     [{ heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }, { heading: "HAIR ACCESSORIES", items: [] }],
   ]},
   { key: "men", label: "MEN", caption: "MEN'S READY-TO-WEAR", tone: "#c8a97e", glyph: "🧥", img: "mensLeatherJacket", columns: [
-    [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026 Collection","Spring-Summer 2026 Collection","Coats and parkas","Jackets and blazers","Knitwear","Shirts","T-shirts and sweatshirts","Pants and shorts","Beachwear","Fall-Winter 2026 runway show"] }],
+    [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026 Collection","Coats and parkas","Jackets and blazers","Knitwear","Shirts","T-shirts and sweatshirts","Pants and shorts","Beachwear","Fall-Winter 2026 runway show"] }],
     [{ heading: "SHOES", items: ["Sneakers","Sandals","Loafers and mules","Derbies and Oxford shoes","Boots and ankle boots","View all"] }],
     [{ heading: "TIES AND SCARVES", items: ["Ties, bow ties and pocket squares","Scarves","Styled in Silk"] }, { heading: "FASHION JEWELRY", items: [] }, { heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }],
   ]},
@@ -1940,7 +1940,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "for men": (p) => p.category === "gifts",
       "for children": (p) => p.category === "gifts",
       "for dogs": (p) => p.subcategory === "Scarves, shawls and stoles" && /chiens/i.test(p.name),
-      "dresses": (p) => p.subcategory === "Dresses and skirts",
+      "dresses": (p) => p.category === cat && p.subcategory === "Dresses and skirts" && (cat === "women" ? p.dressPos !== undefined : true),
       // Ready-to-wear parent pages (2026-11-16) — the original's live
       // order lives in wRtwPos (women, 421 tiles) / mRtwPos (men, 207
       // tiles). The old line/subcategory gate returned only the 84
@@ -2103,7 +2103,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // Men's scarves (cat "men") are a separate page and are NOT affected.
   const isWomensScarvesPage = cat === "women" && subLow === "scarves, shawls and stoles";
   const isWomensBeltsPage = cat === "women" && subLow === "belts";
-  const isWomensDressesPage = cat === "women" && subLow === "dresses and skirts";
+  const isWomensDressesPage = cat === "women" && (subLow === "dresses and skirts" || subLow === "dresses");
   // Women's Bags parent page (cat "women", no sub — the default page —
   // or sub "Women's bags and clutches", 2026-11-15) — sorts by wBagPos
   // (the original's live order, 45 tiles) and carries the descriptive
@@ -2185,6 +2185,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // case (the sub value arrives lowercase from the URL slug map, so
     // without this the men's title rendered lowercase "ready-to-wear").
     "ready-to-wear": "Ready-to-wear",
+    "dresses": "Dresses and skirts",
     "fall-winter 2026": "Fall-Winter 2026 Collection",
     "fall-winter 2026 collection": "Fall-Winter 2026 Collection",
     "spring-summer 2026": "Spring-Summer 2026 Collection",
@@ -5310,7 +5311,7 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
     <div className="min-h-screen bg-[#fcf7f1]">
       <div className="mx-auto max-w-[1290px] px-4 py-6 sm:px-6">
         <div className="relative flex items-start">
-          <button aria-label="Back to store from cart" className="flex h-10 items-center gap-1.5 text-sm" onClick={() => go({ t: "home" })}>
+          <button aria-label="Back to store from cart" className="flex h-10 items-center gap-1.5 text-sm" onClick={() => { if (window.history.length > 1) window.history.back(); else go({ t: "home" }); }}>
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg><span className="hidden sm:inline">Back</span>
           </button>
           <span className="absolute left-1/2 top-0 -translate-x-1/2"><HermesLogo settings={settings} variant="brand" /></span>
