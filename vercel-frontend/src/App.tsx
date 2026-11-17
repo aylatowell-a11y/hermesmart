@@ -1973,6 +1973,22 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "travel accessories": (p) => p.travAccPos !== undefined,
       "suitcases and travel bags": (p) => p.suitPos !== undefined,
       "tech universe": (p) => p.techPos !== undefined,
+      // Group 1 empty pages (2026-11-17). Field-only gates (NOT
+      // category-gated): these pages' rows span categories — furniture /
+      // cases / office / children are home rows (Decor, Furniture,
+      // Blankets and throws), ballet rows are women Shoes rows, wonders /
+      // precious are jewelry rows, reading rows are home Decor rows.
+      // The keys only ever fire on their own page (no other menu sub
+      // shares these names).
+      "furniture, lighting and rugs": (p) => p.furnPos !== undefined,
+      "twilly and other small formats": (p) => p.twillyPos !== undefined,
+      "children and baby": (p) => p.childPos !== undefined,
+      "ballet flats": (p) => p.balletPos !== undefined,
+      "the wonders": (p) => p.wondersPos !== undefined,
+      "precious moments": (p) => p.preciousPos !== undefined,
+      "cases and bath linens": (p) => p.casesPos !== undefined,
+      "office and writing": (p) => p.officePos !== undefined,
+      "reading and writing": (p) => p.readingPos !== undefined,
       // Watches "Our collections" view (2026-11-15): the all-watches
       // list, gated on watchPos like the parent page.
       "our collections": (p) => p.category === "watches" && p.watchPos !== undefined,
@@ -2232,6 +2248,20 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const isTravAccPage = cat === "leather" && subLow === "travel accessories";
   const isSuitcasesPage = cat === "leather" && subLow === "suitcases and travel bags";
   const isTechPage = cat === "home" && subLow === "tech universe";
+  // Group 1 empty pages (2026-11-17) — the original's live orders live
+  // in furnPos (Furniture 161), twillyPos (Twilly 96), childPos
+  // (Children 70), balletPos (Ballet flats 42), wondersPos (The
+  // Wonders 19), preciousPos (Precious moments 21), casesPos (Cases
+  // 96), officePos (Office 139), readingPos (Reading and writing 76).
+  const isFurnPage = cat === "home" && subLow === "furniture, lighting and rugs";
+  const isTwillyPage = cat === "women" && subLow === "twilly and other small formats";
+  const isChildPage = cat === "home" && subLow === "children and baby";
+  const isBalletPage = cat === "women" && subLow === "ballet flats";
+  const isWondersPage = cat === "jewelry" && subLow === "the wonders";
+  const isPreciousPage = cat === "jewelry" && subLow === "precious moments";
+  const isCasesPage = cat === "home" && subLow === "cases and bath linens";
+  const isOfficePage = cat === "home" && subLow === "office and writing";
+  const isReadingPage = cat === "leather" && subLow === "reading and writing";
   // Equestrian parent page (cat "equestrian", no sub, 2026-11-16) —
   // sorts by eqPos (the original's live order, 149 tiles) and
   // carries the descriptive paragraph (two paragraphs, verbatim).
@@ -2292,6 +2322,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // without this the men's title rendered lowercase "ready-to-wear").
     "ready-to-wear": "Ready-to-wear",
     "dresses": "Dresses and skirts",
+    "the wonders": "The Wonders",
     "fall-winter 2026": "Fall-Winter 2026 Collection",
     "fall-winter 2026 collection": "Fall-Winter 2026 Collection",
     "spring-summer 2026": "Spring-Summer 2026 Collection",
@@ -2300,7 +2331,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
   };
   const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : isCharmsPage ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : isCharmsPage ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage) ? `${label} | HOME` : isChildPage ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage) ? `${label} | COLLECTIONS` : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2361,10 +2392,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     const sibList = isMkPage ? ["Lips", "Face", "Eyes", "Hands", "Accessories"] : ["Hermessence collection", "The Women's Universe", "The Men's Universe", "Bath"];
     siblings = sibList.map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
     siblings.push({ label: "View all", view: { t: "category", cat, sub: isMkPage ? "Make-up" : "Fragrances" } as View, current: isMkPage ? subLow === "make-up" : subLow === "fragrances" });
-  } else if (isCharmsPage) {
+  } else if (isCharmsPage || isReadingPage) {
     // The original's Charms sub-nav (SSR HTML, 2026-11-17): Charms /
     // Straps / Reading and writing — NO "View all" (the Accessories
-    // section has none on the original).
+    // section has none on the original). The Reading and writing page
+    // shows the same section sub-nav (Group 1, 2026-11-17).
     siblings = ["Charms", "Straps", "Reading and writing"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
   } else if (isTravAccPage || isSuitcasesPage) {
     // The original's Luggage sub-nav (SSR HTML, 2026-11-17): Suitcases
@@ -2374,6 +2406,38 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // The original's Tech universe page has NO sub-navigation row at all
     // (no filter-siblings-categories nav in the SSR HTML, 2026-11-17).
     siblings = [];
+  } else if (isFurnPage || isCasesPage || isOfficePage) {
+    // The original's Home sub-nav (SSR HTML, 2026-11-17): the same 5
+    // items on all three pages — Blankets and pillows / Decorative
+    // objects and games / Furniture, lighting and rugs / Office and
+    // writing / Cases and bath linens — NO "View all".
+    siblings = ["Blankets and pillows", "Decorative objects and games", "Furniture, lighting and rugs", "Office and writing", "Cases and bath linens"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
+  } else if (isChildPage) {
+    // The original's Children and baby page has NO sub-navigation row
+    // at all (no filter-siblings-categories nav in the SSR HTML,
+    // 2026-11-17) — same as Tech universe.
+    siblings = [];
+  } else if (isBalletPage) {
+    // The original's Women's Shoes sub-nav (SSR HTML, 2026-11-17):
+    // Sandals / Sneakers / Boots and ankle boots / Pumps / Loafers and
+    // mules / Ballet flats / View all.
+    siblings = ["Sandals", "Sneakers", "Boots and ankle boots", "Pumps", "Loafers and mules", "Ballet flats"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
+    siblings.push({ label: "View all", view: { t: "category", cat, sub: "Shoes" }, current: false });
+  } else if (isTwillyPage) {
+    // The original's Scarves sub-nav (SSR HTML, 2026-11-17): Silk
+    // scarves and accessories / Cashmere shawls and stoles / Twilly and
+    // other small formats / View all. (Silk / Cashmere pages are
+    // wrong-content until Group 3 builds their live lists — the links
+    // land on the scarves parent content for now.)
+    siblings = ["Silk scarves and accessories", "Cashmere shawls and stoles", "Twilly and other small formats"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
+    siblings.push({ label: "View all", view: { t: "category", cat, sub: "Scarves, shawls and stoles" }, current: false });
+  } else if (isWondersPage || isPreciousPage) {
+    // The original's Jewelry Collections sub-nav (SSR HTML,
+    // 2026-11-17): Kelly / Chaînes d'ancre / Equestrian / The Wonders /
+    // Precious moments — NO "View all". (Kelly / Equestrian / Chaînes
+    // d'ancre pages are not built yet — their links show the
+    // dead-collection message until Group 2 / the menu-gap build.)
+    siblings = ["Kelly", "Chaînes d'ancre", "Equestrian", "The Wonders", "Precious moments"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -2412,6 +2476,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [travAccParaOpen, setTravAccParaOpen] = useState(false);
   const [suitParaOpen, setSuitParaOpen] = useState(false);
   const [techParaOpen, setTechParaOpen] = useState(false);
+  const [furnParaOpen, setFurnParaOpen] = useState(false);
+  const [casesParaOpen, setCasesParaOpen] = useState(false);
+  const [officeParaOpen, setOfficeParaOpen] = useState(false);
+  const [wondersParaOpen, setWondersParaOpen] = useState(false);
+  const [preciousParaOpen, setPreciousParaOpen] = useState(false);
+  const [readingParaOpen, setReadingParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2490,6 +2560,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (isMensRtwSub && list.some((p) => p.subPos !== undefined)) list = [...list].sort((a, b) => (a.subPos ?? Infinity) - (b.subPos ?? Infinity));
     else if (isSlgParent && list.some((p) => p.slgParentPos !== undefined)) list = [...list].sort((a, b) => (a.slgParentPos ?? Infinity) - (b.slgParentPos ?? Infinity));
     else if (isSlgSub && list.some((p) => p.slgPos !== undefined)) list = [...list].sort((a, b) => (a.slgPos ?? Infinity) - (b.slgPos ?? Infinity));
+    // Jewelry Collections sub-pages (2026-11-17) sort by their own
+    // position field — BEFORE the jewPos branch, because isJewelryPage
+    // (cat === "jewelry") is also true here and these rows carry jewPos.
+    else if (isWondersPage && list.some((p) => p.wondersPos !== undefined)) list = [...list].sort((a, b) => (a.wondersPos ?? Infinity) - (b.wondersPos ?? Infinity));
+    else if (isPreciousPage && list.some((p) => p.preciousPos !== undefined)) list = [...list].sort((a, b) => (a.preciousPos ?? Infinity) - (b.preciousPos ?? Infinity));
     else if (isJewelryPage && list.some((p) => p.jewPos !== undefined)) list = [...list].sort((a, b) => (a.jewPos ?? Infinity) - (b.jewPos ?? Infinity));
     else if (isFashionJewelryPage && list.some((p) => p.fashPos !== undefined)) list = [...list].sort((a, b) => (a.fashPos ?? Infinity) - (b.fashPos ?? Infinity));
     else if (isHomePage && list.some((p) => p.homePos !== undefined)) list = [...list].sort((a, b) => (a.homePos ?? Infinity) - (b.homePos ?? Infinity));
@@ -2535,6 +2610,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (isTravAccPage && list.some((p) => p.travAccPos !== undefined)) list = [...list].sort((a, b) => (a.travAccPos ?? Infinity) - (b.travAccPos ?? Infinity));
     else if (isSuitcasesPage && list.some((p) => p.suitPos !== undefined)) list = [...list].sort((a, b) => (a.suitPos ?? Infinity) - (b.suitPos ?? Infinity));
     else if (isTechPage && list.some((p) => p.techPos !== undefined)) list = [...list].sort((a, b) => (a.techPos ?? Infinity) - (b.techPos ?? Infinity));
+    // Group 1 empty pages (2026-11-17) sort by their own position
+    // field — the original's live order for each page.
+    else if (isFurnPage && list.some((p) => p.furnPos !== undefined)) list = [...list].sort((a, b) => (a.furnPos ?? Infinity) - (b.furnPos ?? Infinity));
+    else if (isTwillyPage && list.some((p) => p.twillyPos !== undefined)) list = [...list].sort((a, b) => (a.twillyPos ?? Infinity) - (b.twillyPos ?? Infinity));
+    else if (isChildPage && list.some((p) => p.childPos !== undefined)) list = [...list].sort((a, b) => (a.childPos ?? Infinity) - (b.childPos ?? Infinity));
+    else if (isBalletPage && list.some((p) => p.balletPos !== undefined)) list = [...list].sort((a, b) => (a.balletPos ?? Infinity) - (b.balletPos ?? Infinity));
+    else if (isCasesPage && list.some((p) => p.casesPos !== undefined)) list = [...list].sort((a, b) => (a.casesPos ?? Infinity) - (b.casesPos ?? Infinity));
+    else if (isOfficePage && list.some((p) => p.officePos !== undefined)) list = [...list].sort((a, b) => (a.officePos ?? Infinity) - (b.officePos ?? Infinity));
+    else if (isReadingPage && list.some((p) => p.readingPos !== undefined)) list = [...list].sort((a, b) => (a.readingPos ?? Infinity) - (b.readingPos ?? Infinity));
     // Equestrian (2026-11-16) sorts by eqPos — the original's
     // order — the same way (the parent page lists exactly the 149
     // live tiles).
@@ -2563,7 +2647,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCasesPage, isOfficePage, isReadingPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2777,6 +2861,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     ];
     if (isRiderPage) return [
       { after: 9, title: "Steadfast companion", body: "From stable to street, the bag doesn't miss a beat. In hand, on shoulder, it follows your lead." },
+    ];
+    // Children and baby page — the original's two editorial blocks
+    // ("Building blocks" after tile #8, "Fauna of fun" after tile #28),
+    // verbatim from the live category page text fetch + SSR HTML,
+    // 2026-11-17. No descriptive paragraph on the original's page.
+    if (isChildPage) return [
+      { after: 8, title: "Building blocks", body: "Round, square, rectangle. Learning begins in orange boxes." },
+      { after: 28, title: "Fauna of fun", body: "This colorful little herd has swapped jungle and forest for the comfort of an indoor enclosure." },
     ];
     return [];
   })();
@@ -3112,7 +3204,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           caps once normal-case is dropped). */}
       <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCasesPage && !isOfficePage && !isReadingPage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -3127,10 +3219,41 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             + JSON-LD trail, 2026-11-17. The leaf name is the title, not a
             breadcrumb level (the rows' subcategory would leak the wrong
             section here: Small leather goods / Bags and clutches / Decor). */}
-        {sub && (isCharmsPage || isTravAccPage || isSuitcasesPage) && (
+        {sub && (isCharmsPage || isTravAccPage || isSuitcasesPage || isReadingPage) && (
           <>
             {" | "}
-            <span className="tracking-normal text-black">{isCharmsPage ? "ACCESSORIES" : "LUGGAGE"}</span>
+            <span className="tracking-normal text-black">{(isCharmsPage || isReadingPage) ? "ACCESSORIES" : "LUGGAGE"}</span>
+          </>
+        )}
+        {/* Group 1 (2026-11-17): the original's rendered bottom
+            breadcrumb ends at the SECTION for these pages (SSR HTML
+            rendered breadcrumb + JSON-LD trail): Home subs → HOME AND
+            ART OF LIVING | HOME, Children → HOME AND ART OF LIVING
+            only (like Tech universe), Ballet → WOMEN | SHOES, Twilly →
+            WOMEN | SCARVES, SHAWLS AND STOLES, Wonders / Precious →
+            JEWELRY | COLLECTIONS. */}
+        {sub && (isFurnPage || isCasesPage || isOfficePage) && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">HOME</span>
+          </>
+        )}
+        {sub && isBalletPage && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">SHOES</span>
+          </>
+        )}
+        {sub && isTwillyPage && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">SCARVES, SHAWLS AND STOLES</span>
+          </>
+        )}
+        {sub && (isWondersPage || isPreciousPage) && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">COLLECTIONS</span>
           </>
         )}
         {/* The SLG parent's bottom breadcrumb is 2 levels on the original
@@ -3494,6 +3617,146 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             </p>
           )}
           <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTechParaOpen(!techParaOpen)}>{techParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Furniture descriptive paragraphs — verbatim from hermes.com
+          (SSR HTML, 2026-11-17). Furniture page only; below the grid
+          with See More, as on the original. */}
+      {isFurnPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {furnParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Hermès furniture is defined by a constant search for balance, where structure dialogues with comfort in absolute purity. Each piece of furniture is designed to integrate into the architecture of a space while asserting its own personality. This approach prioritizes premium materials, such as saddle leather or solid oak, to create pieces that endure over time. At the heart of the living room, sofas and daybeds offer generous volumes and exemplary poise, providing seating that is both supple and structured, perfect for conversation or daydreaming.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                The table is the gathering point of domestic life, a place for meeting and creation. Our tables are designed as platforms for exchange, combining solid construction with the fineness of finishes. To complete these living spaces, armchairs and ottomans provide elegant modularity, allowing the space to be reorganized according to the needs of the moment. Each piece is a tribute to the hand of the cabinetmaker and the upholsterer, where every joint and every stitch bears witness to uncompromising excellence. Around the table, chairs ensure perfect support, combining visual lightness with robustness. Finally, rugs, through their patterns and weaves, provide an acoustic and sensory dimension essential to the harmony of an interior.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                The atmosphere of a room is perfected by the reflections and textures within it. Hermès mirrors do more than reflect reality; they capture light with frames crafted as works of art. Together, these elements compose a score where beauty and utility meet in total serenity.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Hermès furniture is defined by a constant search for balance, where structure dialogues with comfort in absolute purity. Each piece of furniture is designed to integrate into the architecture of a space while asserting its own personality.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setFurnParaOpen(!furnParaOpen)}>{furnParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Cases and bath linens descriptive paragraphs — verbatim from
+          hermes.com (SSR HTML, 2026-11-17). Cases page only; below the
+          grid with See More, as on the original. */}
+      {isCasesPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {casesParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Bath time is a quiet interlude, a return to oneself that demands the most delicate materials. Hermès designs its linens with particular attention to fiber length and loop density, guaranteeing perfect absorption and an incomparable plush sensation. The contact of the fiber against the skin is a promise of comfort.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                Our towel collection explores a palette of subtle, elegant colors, often punctuated by discreet graphic signatures. From guest towels to generous bath sheets, each piece is designed to last and maintain its suppleness wash after wash. This textile harmony brings a visual structure to the bathroom, creating a private spa atmosphere where elegance resides in the simplicity of the gesture.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                To extend this well-being beyond the home or to organize beauty essentials, our pouches are indispensable companions. Whether in durable technical canvas or supple leather, they combine practicality with aesthetics. Their compartments and closures are studied for fluid use, protecting your bottles and accessories with silent efficiency. Choosing these objects means adopting an art of travel and organization where every detail is designed to simplify life while embellishing it.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Bath time is a quiet interlude, a return to oneself that demands the most delicate materials. Hermès designs its linens with particular attention to fiber length and loop density, guaranteeing perfect absorption and an incomparable plush sensation.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setCasesParaOpen(!casesParaOpen)}>{casesParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Office and writing descriptive paragraphs — verbatim from
+          hermes.com (SSR HTML, 2026-11-17). Office page only; below the
+          grid with See More, as on the original. */}
+      {isOfficePage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {officeParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                The office is a territory apart, a place where the mind focuses and thoughts take shape. At Hermès, office accessories are designed to transform organization into a daily pleasure, favoring leather for its soft touch and reassuring patina.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                In a digital world, the House provides a tactile and enduring response to contemporary needs. Even computer use gains elegance thanks to our grained leather mouse pads, offering a perfect glide and lasting comfort for the wrist. To never lose sight of what moves us, leather-wrapped photo frames protect memories with minimalist elegance. These objects create a link between the past and the present, anchoring work in a personal and sensitive dimension.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                The House&apos;s high standards also apply to the most technical objects, granting them an unexpected aesthetic dimension. Our charging objects, combining technology with premium leather, hide artifice behind the beauty of the material. By choosing these office accessories, you opt for a work environment where every gesture is supported by artisanal excellence, making precision a supreme form of intellectual freedom.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              The office is a territory apart, a place where the mind focuses and thoughts take shape. At Hermès, office accessories are designed to transform organization into a daily pleasure, favoring leather for its soft touch and reassuring patina.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setOfficeParaOpen(!officeParaOpen)}>{officeParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* The Wonders descriptive paragraph — verbatim from hermes.com
+          (SSR HTML, 2026-11-17). The Wonders page only; below the grid
+          with See More, as on the original. NOTE: "[gold jewelry]" and
+          "[silver jewelry]" are literal in the original's own text (facet
+          links there) — rendered verbatim as plain text. */}
+      {isWondersPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {wondersParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Hermès icons become talismans in this collection dedicated to the House&apos;s emblems. Padlocks, keys, miniature bags, and Ex-Libris signatures become precious amulets to keep close to you. Collect these symbols of luck and style through our delicate [gold jewelry], or opt for the modernity of our [silver jewelry]. A play of lively and protective miniatures that tells the story of Hermès in a confidential format.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Hermès icons become talismans in this collection dedicated to the House&apos;s emblems. Padlocks, keys, miniature bags, and Ex-Libris signatures become precious amulets to keep close to you.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWondersParaOpen(!wondersParaOpen)}>{wondersParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Precious moments descriptive paragraph — verbatim from
+          hermes.com (SSR HTML, 2026-11-17). Precious moments page only;
+          below the grid with See More, as on the original. NOTE: "[gold
+          jewelry]" and "[silver jewelry]" are literal in the original's
+          own text — rendered verbatim as plain text. */}
+      {isPreciousPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {preciousParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Celebrate emotion and unbreakable bonds with the Precious Moments collection. Each creation is a promise, designed to mark unforgettable moments, from engagement to anniversaries. Let your heart speak with the eternal radiance and setting of our [gold jewelry], or choose the symbolic purity of our [silver jewelry]. Exceptional adornments that combine jewelry finesse with the strength of feelings to accompany throughout your life.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Celebrate emotion and unbreakable bonds with the Precious Moments collection. Each creation is a promise, designed to mark unforgettable moments, from engagement to anniversaries.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setPreciousParaOpen(!preciousParaOpen)}>{preciousParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Reading and writing descriptive paragraph — verbatim from
+          hermes.com (live text fetch, 2026-11-17; the SSR HTML for this
+          page is the 770-byte shell, so no paragraph was extractable
+          from it). Reading page only; below the grid with See More, as
+          on the original. NOTE: "[leather reading accessories]" is
+          literal in the original's own text (a facet link there) —
+          rendered verbatim as plain text. */}
+      {isReadingPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {readingParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Cultivate the art of the word with Hermès reading and writing accessories. From notebooks with neat binding to rechargeable leather covers, each object invites you to put your thoughts on paper. Discover our [leather reading accessories] which combine functionality and aesthetics: paperweights, pencil cases, or colorful bookmarks.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Cultivate the art of the word with Hermès reading and writing accessories. From notebooks with neat binding to rechargeable leather covers, each object invites you to put your thoughts on paper.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setReadingParaOpen(!readingParaOpen)}>{readingParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
 

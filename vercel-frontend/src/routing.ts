@@ -56,6 +56,13 @@ const CATEGORY_PATHS: Record<string, string> = {
   // Women's Hair accessories page (2026-11-16) — the original's own
   // URL is /women/hair-accessories/ (26 tiles, hairPos order).
   "women|hair accessories": "women/hair-accessories",
+  // Women's Ballet flats page (Group 1, 2026-11-17) — the original's
+  // own URL /women/shoes/ballet-flats/ (42 tiles, balletPos order).
+  "women|ballet flats": "women/shoes/ballet-flats",
+  // Women's Twilly page (Group 1, 2026-11-17) — the original's own
+  // URL /women/scarves-shawls-and-stoles/twillys-and-other-small-formats/
+  // (96 tiles, twillyPos order).
+  "women|twilly and other small formats": "women/scarves-shawls-and-stoles/twillys-and-other-small-formats",
   "women|scarves, shawls and stoles": "women/scarves-shawls-and-stoles",
   "women|shoes": "women/shoes",
   "fashion-jewelry|": "women/fashion-jewelry",
@@ -108,11 +115,23 @@ const CATEGORY_PATHS: Record<string, string> = {
   // Home Tech universe page (2026-11-17) — the original's own URL
   // /home-art-living/tech-universe/ (40 tiles, techPos order).
   "home|tech universe": "home-art-living/tech-universe",
+  // Group 1 Home pages (2026-11-17) — the original's own URLs.
+  // Furniture 161 tiles (furnPos), Cases 96 (casesPos), Office 139
+  // (officePos), Children 70 (childPos).
+  "home|furniture, lighting and rugs": "home/furniture-and-lighting",
+  "home|cases and bath linens": "home/cases-and-bath-linen",
+  "home|office and writing": "home/office-and-writing",
+  "home|children and baby": "home-art-living/children-and-baby",
   // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's
   // own URLs; without these the generic slug fallback still resolved
   // them, but the explicit entries keep the routing table truthful.
   "equestrian|horse": "equestrian/horse",
   "equestrian|rider": "equestrian/rider",
+  // Jewelry Collections sub-pages (Group 1, 2026-11-17) — the
+  // original's own URLs. The Wonders 19 tiles (wondersPos), Precious
+  // moments 21 (preciousPos).
+  "jewelry|the wonders": "jewelry/collections/wonders",
+  "jewelry|precious moments": "jewelry/collections/precious-moments",
 };
 
 const REVERSE_PATHS: Record<string, { cat: string; sub?: string }> = {};

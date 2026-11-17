@@ -7001,6 +7001,17 @@ const NEW_TILE: Record<number, string> = {
   1451: "https://assets.hermes.com/is/image/hermesproduct/0003621%20CU_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   1462: "https://assets.hermes.com/is/image/hermesproduct/0003911%20BB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   1483: "https://assets.hermes.com/is/image/hermesproduct/0002741%2037_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6904: "https://assets.hermes.com/is/image/hermesproduct/900098M%2002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6905: "https://assets.hermes.com/is/image/hermesproduct/104353M%2002_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6906: "https://assets.hermes.com/is/image/hermesproduct/036986CK37_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6907: "https://assets.hermes.com/is/image/hermesproduct/313052M%2002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6908: "https://assets.hermes.com/is/image/hermesproduct/313101M%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6909: "https://assets.hermes.com/is/image/hermesproduct/102503M%2063_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6910: "https://assets.hermes.com/is/image/hermesproduct/038546CA37_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6911: "https://assets.hermes.com/is/image/hermesproduct/322956M%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6912: "https://assets.hermes.com/is/image/hermesproduct/038540CAX9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6913: "https://assets.hermes.com/is/image/hermesproduct/460247M%2003_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  6914: "https://assets.hermes.com/is/image/hermesproduct/311350M%2001_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
 };
 
 const BAG_POOL = [picotinLock18V2, kellyShoulderV2, tablierSellier, boxBag, doubleLonge, neoDoubleSens35, fallbackHandbag];

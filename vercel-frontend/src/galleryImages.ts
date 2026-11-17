@@ -8167,6 +8167,17 @@ const NEW_GALLERY: Record<number, { label: string; src: string; videoSrc?: strin
   1451: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/0003621%20CU_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" }, { label: "Side", src: "https://assets.hermes.com/is/image/hermesproduct/0003621%20CU_side_wm_104?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
   1462: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/0003911%20BB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
   1483: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/0002741%2037_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6904: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/900098M%2002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" }, { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/900098M%2002_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6905: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/104353M%2002_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6906: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/036986CK37_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6907: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/313052M%2002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" }, { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/313052M%2002_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6908: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/313101M%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" }, { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/313101M%2001_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6909: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/102503M%2063_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6910: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/038546CA37_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6911: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/322956M%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" }, { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/322956M%2001_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6912: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/038540CAX9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6913: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/460247M%2003_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/460247M%2003_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6914: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/311350M%2001_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
 };
 
 // PDP full-photo quality (user complaint 2026-11-11, "koi compromise
