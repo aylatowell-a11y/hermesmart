@@ -2026,16 +2026,27 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // women Accessories / Hats and gloves (115, wAccPos) and the
       // fragrances make-up Accessories (24, accPos). Branch on cat, or
       // the leather page falls through to the fragrances predicate and
-      // renders [] (the dead-collection message).
-      "accessories": (p) => p.category === cat && (cat === "leather" ? p.leatherAccPos !== undefined : cat === "women" ? p.wAccPos !== undefined : p.accPos !== undefined),
+      // renders [] (the dead-collection message). FIELD-ONLY gates for
+      // leather/women (2026-11-17 fix): their rows SPAN categories —
+      // 76 of the 107 leather rows are category "home" (Decor agendas
+      // and notebooks) and 9 of the 115 women's rows are category
+      // "home" (beach Textiles). A `p.category === cat` gate hid them
+      // all live (Accessories showed [31], Hats [106]).
+      "accessories": (p) => (cat === "leather" ? p.leatherAccPos !== undefined : cat === "women" ? p.wAccPos !== undefined : p.category === cat && p.accPos !== undefined),
       // Women's Hats and gloves page (Group 4, 2026-11-17) — the
-      // original's live order (115 tiles) lives in wAccPos. The MEN's
-      // Hats and gloves page shares the sub name, so the men branch
-      // replicates the strict fallback (subcategory/line match, 9 rows).
-      "hats and gloves": (p) => cat === "women" ? p.category === "women" && p.wAccPos !== undefined : p.category === cat && (p.subcategory.toLowerCase() === "hats and gloves" || p.line.toLowerCase() === "hats and gloves"),
+      // original's live order (115 tiles) lives in wAccPos. FIELD-ONLY
+      // gate for women (2026-11-17 fix): 9 of the 115 rows are
+      // category "home" (beach Textiles dual-tags) — a category gate
+      // hid them live (page showed [106]). The MEN's Hats and gloves
+      // page shares the sub name, so the men branch replicates the
+      // strict fallback (subcategory/line match, 9 rows).
+      "hats and gloves": (p) => cat === "women" ? p.wAccPos !== undefined : p.category === cat && (p.subcategory.toLowerCase() === "hats and gloves" || p.line.toLowerCase() === "hats and gloves"),
       // Leather Luggage page (Group 4, 2026-11-17) — the original's
-      // live order (48 tiles) lives in luggagePos.
-      "luggage": (p) => p.category === cat && p.luggagePos !== undefined,
+      // live order (48 tiles) lives in luggagePos. FIELD-ONLY gate
+      // (2026-11-17 fix): 10 of the 48 rows are category women / men /
+      // fashion-jewelry (Bags and clutches + Key rings) — a category
+      // gate hid them live (page showed [38]).
+      "luggage": (p) => p.luggagePos !== undefined,
       "blankets and pillows": (p) => p.textilesPos !== undefined,
       "decorative objects and games": (p) => p.objectsPos !== undefined,
       "sports and outdoor": (p) => p.sportsPos !== undefined,
@@ -6732,8 +6743,9 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   // Which form shows first: "signup" when opened from the header "Sign up"
   // option, "login" otherwise. The visitor can switch inside the page.
   const [authMode, setAuthMode] = useState<"login" | "signup">(mode ?? "login");
-  // Sign-in form.
-  const [liEmail, setLiEmail] = useState(""); const [liPw, setLiPw] = useState(""); const [liMsg, setLiMsg] = useState(""); const [emailStep, setEmailStep] = useState(true);
+  // Sign-in form. After a fresh sign-up the visitor lands here (not signed
+  // in yet) with their new email prefilled — see "hlx-just-registered".
+  const [liEmail, setLiEmail] = useState(() => load<{ email?: string }>("hlx-just-registered", {}).email ?? ""); const [liPw, setLiPw] = useState(""); const [liMsg, setLiMsg] = useState(() => load("hlx-just-registered", null) ? "Your account has been created. Please sign in." : ""); const [emailStep, setEmailStep] = useState(true);
   const [forgotMsg, setForgotMsg] = useState("");
   // Create-account form (Hermes create-account page layout).
   const [suTitle, setSuTitle] = useState(""); const [suFirst, setSuFirst] = useState(""); const [suLast, setSuLast] = useState("");
@@ -6748,8 +6760,8 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     if (admin.ok) return { ok: true, message: "Signed in.", name: "Admin", isAdmin: true };
     const u = await api.loginUser({ email: liEmail, password: liPw });
     return { ...u, isAdmin: false };
-  }, onSuccess: (r) => { setLiMsg(r.message); if (r.ok) { if (r.isAdmin) { save("hlx-admin-auth", { email: liEmail, password: liPw }); go({ t: "admin" }); } else setUser({ name: r.name, email: liEmail }); } } });
-  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobParts = suDob.split("-"); const dobDisplay = dobParts.length === 3 ? `${monthNames[Number(dobParts[1]) - 1] ?? ""} ${Number(dobParts[2])}, ${dobParts[0]}` : ""; save("hlx-profile", { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }); const newUser = { name: `${suFirst} ${suLast}`.trim(), email: suEmail }; save("hlx-user", newUser); setUser(newUser); go({ t: "home" }); } } });
+  }, onSuccess: (r) => { setLiMsg(r.message); if (r.ok) { if (r.isAdmin) { save("hlx-admin-auth", { email: liEmail, password: liPw }); go({ t: "admin" }); } else { setUser({ name: r.name, email: liEmail }); go({ t: "home" }); } } } });
+  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobParts = suDob.split("-"); const dobDisplay = dobParts.length === 3 ? `${monthNames[Number(dobParts[1]) - 1] ?? ""} ${Number(dobParts[2])}, ${dobParts[0]}` : ""; save("hlx-profile", { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }); save("hlx-just-registered", { email: suEmail }); go({ t: "account", mode: "login" }); } } });
   const ordersQ = useQuery({ queryKey: ["myorders", user?.email], queryFn: () => api.myOrders({ email: user?.email ?? "" }), enabled: !!user });
   // Signed-in account tabs (§D addendum): exactly five, in this order.
   const [acctTab, setAcctTab] = useState<"orders" | "profile" | "addresses" | "payments" | "reservations">("orders");
@@ -6763,6 +6775,9 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     const t = window.setTimeout(() => setCodeWait((v) => v - 1), 1000);
     return () => window.clearTimeout(t);
   }, [codeWait]);
+  // Consume the just-registered flag once (it only ever shows on the first
+  // login-form mount after sign-up).
+  useEffect(() => { if (load("hlx-just-registered", null)) save("hlx-just-registered", null); }, []);
   if (user) {
     // Phone / date of birth entered at sign-up (saved locally on
     // registration — the clone's account record holds name + email only).
