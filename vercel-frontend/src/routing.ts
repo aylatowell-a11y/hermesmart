@@ -56,6 +56,16 @@ const CATEGORY_PATHS: Record<string, string> = {
   // Women's Hair accessories page (2026-11-16) — the original's own
   // URL is /women/hair-accessories/ (26 tiles, hairPos order).
   "women|hair accessories": "women/hair-accessories",
+  // Group 4 (2026-11-17) — the women's Hats and gloves page: the
+  // original's own URL is /women/accessories/ (the menu heading is
+  // "Hats and gloves"). "women|hats and gloves" is listed FIRST so the
+  // reverse lookup of /women/accessories/ returns sub "Hats and
+  // gloves" (REVERSE_PATHS is first-writer-wins); "women|accessories"
+  // keeps a direct sub-"Accessories" view on the same URL. The old
+  // generic URL /women/hats-and-gloves/ still resolves to the same
+  // view via the generic matcher — no duplicate page.
+  "women|hats and gloves": "women/accessories",
+  "women|accessories": "women/accessories",
   // Women's Ballet flats page (Group 1, 2026-11-17) — the original's
   // own URL /women/shoes/ballet-flats/ (42 tiles, balletPos order).
   "women|ballet flats": "women/shoes/ballet-flats",
@@ -86,6 +96,14 @@ const CATEGORY_PATHS: Record<string, string> = {
   "leather|charms": "leather-goods/accessories/charms",
   "leather|straps": "leather-goods/accessories/straps",
   "leather|reading and writing": "leather-goods/accessories/reading-and-writing",
+  // Group 4 (2026-11-17) — the Accessories / Luggage PARENT pages:
+  // the original's own URLs are /leather-goods/accessories/ and
+  // /leather-goods/luggage/ (the sub-pages hang under them). The old
+  // generic URLs /leather/accessories/ and /leather/luggage/ still
+  // resolve to the same views via the generic matcher (the headings
+  // are in the leather NAV subs), so no duplicate page is created.
+  "leather|accessories": "leather-goods/accessories",
+  "leather|luggage": "leather-goods/luggage",
   "leather|travel accessories": "leather-goods/luggage/travel-accessories",
   "leather|suitcases and travel bags": "leather-goods/luggage/suitcases-and-travel-bags",
   "men|shoes": "men/shoes",

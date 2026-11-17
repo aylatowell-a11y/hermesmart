@@ -2000,7 +2000,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "our collections": (p) => p.category === "watches" && p.watchPos !== undefined,
       "women": (p) => p.category === "watches" || p.category === "women",
       "men": (p) => p.category === "watches" || p.category === "men",
-      "straps": (p) => p.subcategory === "Straps",
+      // Group 4 (2026-11-17) — "Straps" is TWO pages sharing one sub
+      // name: leather bag straps (16, category leather) under
+      // ACCESSORIES, and watch straps (50, category watches) under
+      // TIMEPIECES. Gate on cat, or the leather Straps page shows 50
+      // watch straps and the watches page gains 16 bag straps.
+      "straps": (p) => p.subcategory === "Straps" && p.category === cat,
       "sandals": (p) => /sandal/i.test(p.name),
       "sneakers": (p) => /sneaker/i.test(p.name),
       "boots and ankle boots": (p) => /boot/i.test(p.name),
@@ -2016,7 +2021,21 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "face": (p) => p.category === cat && p.facePos !== undefined,
       "eyes": (p) => p.category === cat && p.eyesPos !== undefined,
       "hands": (p) => p.category === cat && p.handsPos !== undefined,
-      "accessories": (p) => p.category === cat && p.accPos !== undefined,
+      // Group 4 (2026-11-17) — "accessories" is THREE different pages
+      // sharing one sub name: leather Accessories (107, leatherAccPos),
+      // women Accessories / Hats and gloves (115, wAccPos) and the
+      // fragrances make-up Accessories (24, accPos). Branch on cat, or
+      // the leather page falls through to the fragrances predicate and
+      // renders [] (the dead-collection message).
+      "accessories": (p) => p.category === cat && (cat === "leather" ? p.leatherAccPos !== undefined : cat === "women" ? p.wAccPos !== undefined : p.accPos !== undefined),
+      // Women's Hats and gloves page (Group 4, 2026-11-17) — the
+      // original's live order (115 tiles) lives in wAccPos. The MEN's
+      // Hats and gloves page shares the sub name, so the men branch
+      // replicates the strict fallback (subcategory/line match, 9 rows).
+      "hats and gloves": (p) => cat === "women" ? p.category === "women" && p.wAccPos !== undefined : p.category === cat && (p.subcategory.toLowerCase() === "hats and gloves" || p.line.toLowerCase() === "hats and gloves"),
+      // Leather Luggage page (Group 4, 2026-11-17) — the original's
+      // live order (48 tiles) lives in luggagePos.
+      "luggage": (p) => p.category === cat && p.luggagePos !== undefined,
       "blankets and pillows": (p) => p.textilesPos !== undefined,
       "decorative objects and games": (p) => p.objectsPos !== undefined,
       "sports and outdoor": (p) => p.sportsPos !== undefined,
@@ -2257,6 +2276,18 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const isTravAccPage = cat === "leather" && subLow === "travel accessories";
   const isSuitcasesPage = cat === "leather" && subLow === "suitcases and travel bags";
   const isTechPage = cat === "home" && subLow === "tech universe";
+  // Group 4 empty pages (2026-11-17) — the original's live orders live
+  // in leatherAccPos (Accessories 107), luggagePos (Luggage 48),
+  // wAccPos (Women's Hats and gloves 115). The women's page resolves
+  // via sub "Hats and gloves" (the WOMEN menu heading) or "Accessories"
+  // (the original's own URL /women/accessories/).
+  const isLeatherAccPage = cat === "leather" && subLow === "accessories";
+  const isLuggagePage = cat === "leather" && subLow === "luggage";
+  const isWomensAccPage = cat === "women" && (subLow === "hats and gloves" || subLow === "accessories");
+  // Leather Straps page (Group 4) — the 16 bag straps now carry
+  // subcategory "Straps" (category leather); the flag gates the section
+  // sub-nav / breadcrumbs the same way as Charms / Reading and writing.
+  const isStrapsPage = cat === "leather" && subLow === "straps";
   // Group 1 empty pages (2026-11-17) — the original's live orders live
   // in furnPos (Furniture 161), twillyPos (Twilly 96), childPos
   // (Children 70), balletPos (Ballet flats 42), wondersPos (The
@@ -2351,7 +2382,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
   };
   const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : isCharmsPage ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isBeachPage) ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : (isCharmsPage || isLeatherAccPage || isStrapsPage) ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage || isLuggagePage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isBeachPage || isWomensAccPage) ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2412,11 +2443,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     const sibList = isMkPage ? ["Lips", "Face", "Eyes", "Hands", "Accessories"] : ["Hermessence collection", "The Women's Universe", "The Men's Universe", "Bath"];
     siblings = sibList.map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
     siblings.push({ label: "View all", view: { t: "category", cat, sub: isMkPage ? "Make-up" : "Fragrances" } as View, current: isMkPage ? subLow === "make-up" : subLow === "fragrances" });
-  } else if (isCharmsPage || isReadingPage) {
+  } else if (isCharmsPage || isReadingPage || isStrapsPage) {
     // The original's Charms sub-nav (SSR HTML, 2026-11-17): Charms /
     // Straps / Reading and writing — NO "View all" (the Accessories
     // section has none on the original). The Reading and writing page
-    // shows the same section sub-nav (Group 1, 2026-11-17).
+    // shows the same section sub-nav (Group 1, 2026-11-17); the Straps
+    // page is the same section's third sub-page (Group 4, 2026-11-17).
     siblings = ["Charms", "Straps", "Reading and writing"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
   } else if (isTravAccPage || isSuitcasesPage) {
     // The original's Luggage sub-nav (SSR HTML, 2026-11-17): Suitcases
@@ -2470,6 +2502,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // at all (no filter-siblings-categories nav in the SSR HTML,
     // 2026-11-17) — same as Tech universe / Children.
     siblings = [];
+  } else if (isLeatherAccPage || isLuggagePage || isWomensAccPage) {
+    // Group 4 (2026-11-17): the original's Accessories / Luggage /
+    // Women's Hats and gloves parent pages have NO sub-navigation row
+    // at all (no filter-siblings-categories nav in the SSR HTML) —
+    // same as Tech universe / Children. Without this branch the `nav`
+    // default below would show the menu subs + "View all".
+    siblings = [];
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -2519,6 +2558,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [textilesParaOpen, setTextilesParaOpen] = useState(false);
   const [sportsParaOpen, setSportsParaOpen] = useState(false);
   const [beachParaOpen, setBeachParaOpen] = useState(false);
+  const [leatherAccParaOpen, setLeatherAccParaOpen] = useState(false);
+  const [luggageParaOpen, setLuggageParaOpen] = useState(false);
+  const [womensAccParaOpen, setWomensAccParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2652,6 +2694,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (isTravAccPage && list.some((p) => p.travAccPos !== undefined)) list = [...list].sort((a, b) => (a.travAccPos ?? Infinity) - (b.travAccPos ?? Infinity));
     else if (isSuitcasesPage && list.some((p) => p.suitPos !== undefined)) list = [...list].sort((a, b) => (a.suitPos ?? Infinity) - (b.suitPos ?? Infinity));
     else if (isTechPage && list.some((p) => p.techPos !== undefined)) list = [...list].sort((a, b) => (a.techPos ?? Infinity) - (b.techPos ?? Infinity));
+    // Group 4 empty pages (2026-11-17) sort by their own position
+    // field — the original's live order for each page.
+    else if (isLeatherAccPage && list.some((p) => p.leatherAccPos !== undefined)) list = [...list].sort((a, b) => (a.leatherAccPos ?? Infinity) - (b.leatherAccPos ?? Infinity));
+    else if (isLuggagePage && list.some((p) => p.luggagePos !== undefined)) list = [...list].sort((a, b) => (a.luggagePos ?? Infinity) - (b.luggagePos ?? Infinity));
+    else if (isWomensAccPage && list.some((p) => p.wAccPos !== undefined)) list = [...list].sort((a, b) => (a.wAccPos ?? Infinity) - (b.wAccPos ?? Infinity));
     // Group 1 empty pages (2026-11-17) sort by their own position
     // field — the original's live order for each page.
     else if (isFurnPage && list.some((p) => p.furnPos !== undefined)) list = [...list].sort((a, b) => (a.furnPos ?? Infinity) - (b.furnPos ?? Infinity));
@@ -2695,7 +2742,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -3263,7 +3310,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           caps once normal-case is dropped). */}
       <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -3272,16 +3319,28 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           </>
         )}
         {/* The original's breadcrumb for the leather Accessories / Luggage
-            sub-pages ends at the SECTION (LEATHER GOODS | ACCESSORIES /
-            LEATHER GOODS | LUGGAGE), and Tech universe shows only HOME AND
-            ART OF LIVING — verified from the SSR HTML rendered breadcrumb
-            + JSON-LD trail, 2026-11-17. The leaf name is the title, not a
+            sub-pages AND the two parent pages ends at the SECTION
+            (LEATHER GOODS | ACCESSORIES / LEATHER GOODS | LUGGAGE), and
+            Tech universe shows only HOME AND ART OF LIVING — verified
+            from the SSR HTML rendered breadcrumb + JSON-LD trail,
+            2026-11-17. The leaf name is the title, not a
             breadcrumb level (the rows' subcategory would leak the wrong
             section here: Small leather goods / Bags and clutches / Decor). */}
-        {sub && (isCharmsPage || isTravAccPage || isSuitcasesPage || isReadingPage) && (
+        {sub && (isCharmsPage || isTravAccPage || isSuitcasesPage || isReadingPage || isLeatherAccPage || isLuggagePage || isStrapsPage) && (
           <>
             {" | "}
-            <span className="tracking-normal text-black">{(isCharmsPage || isReadingPage) ? "ACCESSORIES" : "LUGGAGE"}</span>
+            <span className="tracking-normal text-black">{(isCharmsPage || isReadingPage || isLeatherAccPage || isStrapsPage) ? "ACCESSORIES" : "LUGGAGE"}</span>
+          </>
+        )}
+        {/* The original's breadcrumb for the women's Hats and gloves
+            page is 2 levels (WOMEN | HATS AND GLOVES, JSON-LD trail,
+            2026-11-17) — the middle level would leak the first row's
+            subcategory, so it is omitted here, like the SLG / RTW
+            parents. */}
+        {sub && isWomensAccPage && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">{titleText}</span>
           </>
         )}
         {/* Group 1 (2026-11-17): the original's rendered bottom
@@ -3653,6 +3712,63 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             </p>
           )}
           <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setSuitParaOpen(!suitParaOpen)}>{suitParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Leather Accessories descriptive paragraph — verbatim from
+          hermes.com (SSR HTML, 2026-11-17). Accessories parent page
+          only; below the grid with See More, as on the original. */}
+      {isLeatherAccPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {leatherAccParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Elevate your daily life and favorite objects with Hermès leather accessories. Bring a unique touch of whimsy to your bag thanks to our bag charms in leather, playful nods to the equestrian universe. Reinvent the carry and allure of your iconic pieces with our removable straps with graphic motifs. Elegance finally invites itself onto your desk: notebooks, pencil cases, and leather covers await you in our selection dedicated to reading and writing.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Elevate your daily life and favorite objects with Hermès leather accessories. Bring a unique touch of whimsy to your bag thanks to our bag charms in leather, playful nods to the equestrian universe.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setLeatherAccParaOpen(!leatherAccParaOpen)}>{leatherAccParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Luggage descriptive paragraph — verbatim from hermes.com
+          (SSR HTML, 2026-11-17). Luggage parent page only; below the
+          grid with See More, as on the original. */}
+      {isLuggagePage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {luggageParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Accompany every escapade with creations combining lightness and technicality. From great departures with our rolling suitcases or 48h travel bags, to details that simplify the stopover thanks to travel accessories, everything is thought out for movement. Robust leathers and signature canvases dress these road companions, promising borderless elegance and absolute functionality for nomadic spirits.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Accompany every escapade with creations combining lightness and technicality. From great departures with our rolling suitcases or 48h travel bags, to details that simplify the stopover thanks to travel accessories, everything is thought out for movement.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setLuggageParaOpen(!luggageParaOpen)}>{luggageParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Women's Hats and gloves descriptive paragraph — verbatim from
+          hermes.com (SSR HTML, 2026-11-17). Hats and gloves page only;
+          below the grid with See More, as on the original. NOTE: a
+          single sentence on the original, so the collapsed form is the
+          same sentence + "…" (the Charms pattern's sentence-boundary
+          cut). */}
+      {isWomensAccPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {womensAccParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Hermès accessories for women are bold and sophisticated, from colorful straw hats and soft wool beanies to whimsical handkerchiefs and warm leather gloves.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Hermès accessories for women are bold and sophisticated, from colorful straw hats and soft wool beanies to whimsical handkerchiefs and warm leather gloves.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWomensAccParaOpen(!womensAccParaOpen)}>{womensAccParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
 
