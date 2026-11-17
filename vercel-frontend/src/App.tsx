@@ -5288,9 +5288,14 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
     // original's own editorial images (HEAD 200, 2026-11-17); the hero
     // video is the original's own film, downloaded and self-hosted.
     // NOT rendered: the "Highlighted images" workshop carousel (its 7
-    // photo URLs are unmapped in the page HTML — do not guess them) and
-    // the rider-profile photos (likewise unmapped) — the profiles render
-    // as text only.
+    // photo URLs are in neither the server-rendered page HTML nor the
+    // text fetch, and the story content API 403s — the carousel loads
+    // client-side; do not guess them). The rider photos ARE mapped
+    // (2026-11-17): the "A placer en 1er/2ème/3ème" images sit directly
+    // before each rider's name in the page HTML, in rider order, and the
+    // photos themselves confirm it (Jeanne = woman show jumper on a bay;
+    // Ben = man in a navy show jacket; Astier = man jumping a grey over
+    // a cross-country fence) — each verified HEAD 200 + viewed.
     const back = () => { if (window.history.length > 1) window.history.back(); else go({ t: "home" }); };
     const mailto = "mailto:equitation@hermes.com?subject=Measure your desires";
     const saddles: { name: string; type: string; price: string; img: string; desc: string }[] = [
@@ -5299,10 +5304,10 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
       { name: "Vivace Saddle", type: "Jumping saddle, flat seat.", price: "$ 9700", img: "https://assets.hermes.com/is/image/hermesedito/068493CK3D_VIVACE-2?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "Successor to the Steinkraus saddle and more recently to the Hermès Allegro, the Hermès Vivace saddle offers an unprecedented sensation of closeness between the horse and its rider by eliminating unnecessary thickness and pressure points for improved comfort. Perfectly adapted to riders who enjoy riding as much as jumping, it combines an advanced center of gravity with stability and comfort." },
       { name: "Arpège Saddle", type: "Dressage saddle, extra-deep seat.", price: "$ 10300", img: "https://assets.hermes.com/is/image/hermesedito/068619CK3D_ARPEGE-3?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "Developed in collaboration with Hermès partner rider Jessica von Bredow-Werndl, world and European champion, the Hermès Arpège saddle is both modern and elegant, enabling riders to compete at the highest level. Its stitch-free calfskin seat and single-flap design ensure unparalleled comfort and proximity to the horse." },
     ];
-    const riders: { name: string; since: string; bio: string }[] = [
-      { name: "Jeanne Sadran", since: "Partner rider since 2025", bio: "Having ridden horses since she was a child, Jeanne Sadran is now considered a rising star in French show jumping. After making a name for herself at the highest level riding Dexter de Kerglenn, as a Hermès partner rider she is now making her mark on the international circuit with passion and determination." },
-      { name: "Ben Maher", since: "Partner rider since 2023", bio: "A British Olympic champion and rider with an equally precise and elegant style, Ben Maher is one of the biggest names in show jumping worldwide. Based in London, he began horseback riding very early in life and rapidly rose through the ranks until he reached the apex of his sport. Teaming up with Hermès in 2023 was a natural collaboration for this distinctly elegant rider, who is as passionate about perfecting movements as he is about respecting horses." },
-      { name: "Astier Nicolas", since: "Partner rider since 2013", bio: "An eventing rider with an exceptional track record, Astier Nicolas has represented French excellence on the international stage for several years. A Hermès partner rider since 2013, Astier combines precision with finesse and elegance—a unique signature style in the eventing world." },
+    const riders: { name: string; since: string; bio: string; img: string }[] = [
+      { name: "Jeanne Sadran", since: "Partner rider since 2025", img: "https://assets.hermes.com/is/image/hermesedito/A%20placer%20en%201er?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", bio: "Having ridden horses since she was a child, Jeanne Sadran is now considered a rising star in French show jumping. After making a name for herself at the highest level riding Dexter de Kerglenn, as a Hermès partner rider she is now making her mark on the international circuit with passion and determination." },
+      { name: "Ben Maher", since: "Partner rider since 2023", img: "https://assets.hermes.com/is/image/hermesedito/A%20placer%20en%202%C3%A8me?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", bio: "A British Olympic champion and rider with an equally precise and elegant style, Ben Maher is one of the biggest names in show jumping worldwide. Based in London, he began horseback riding very early in life and rapidly rose through the ranks until he reached the apex of his sport. Teaming up with Hermès in 2023 was a natural collaboration for this distinctly elegant rider, who is as passionate about perfecting movements as he is about respecting horses." },
+      { name: "Astier Nicolas", since: "Partner rider since 2013", img: "https://assets.hermes.com/is/image/hermesedito/A%20placer%20en%203%C3%A8me?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", bio: "An eventing rider with an exceptional track record, Astier Nicolas has represented French excellence on the international stage for several years. A Hermès partner rider since 2013, Astier combines precision with finesse and elegance—a unique signature style in the eventing world." },
     ];
     return (
       <div className="mx-auto px-4 py-6 sm:py-8">
@@ -5336,10 +5341,11 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
             <h2 className="font-serif-d text-2xl italic">Hermès, the exceptional contemporary saddler</h2>
             <p className="mt-4 text-sm leading-7 text-neutral-700">The House is now represented by 14 international riders across the four Olympic disciplines: jumping, dressage, para-equestrian and eventing.</p>
           </div>
-          <div className="mx-auto mt-10 max-w-3xl">
+          <div className="mx-auto mt-10 grid max-w-5xl gap-10 lg:grid-cols-3">
             {riders.map((r) => (
-              <div key={r.name} className="mb-8 text-center">
-                <h3 className="font-serif-d text-xl italic">{r.name}</h3>
+              <div key={r.name} className="text-center">
+                <img src={r.img} alt={r.name} loading="lazy" className="aspect-square w-full object-cover" />
+                <h3 className="font-serif-d mt-4 text-xl italic">{r.name}</h3>
                 <p className="mt-1 text-xs uppercase tracking-[0.15em] text-neutral-500">{r.since}</p>
                 <p className="mt-3 text-sm leading-7 text-neutral-700">{r.bio}</p>
               </div>
