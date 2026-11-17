@@ -6932,6 +6932,10 @@ const NEW_TILE: Record<number, string> = {
   6848: "https://assets.hermes.com/is/image/hermesproduct/60001SV019_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6849: "https://assets.hermes.com/is/image/hermesproduct/60447PV003_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6850: "https://assets.hermes.com/is/image/hermesproduct/60165PV019_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  // 2172 Trait 4-pencil gift set — tile = the real eye-pencil front photo
+  // (its own set ref has no CDN views; the previous fallback showed pink silk
+  // in a gift box, caught live 2026-11-17).
+  2172: "https://assets.hermes.com/is/image/hermesproduct/60570CV010_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6851: "https://assets.hermes.com/is/image/hermesproduct/60570CV087_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6852: "https://assets.hermes.com/is/image/hermesproduct/60267TV021_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6853: "https://assets.hermes.com/is/image/hermesproduct/60001MV011_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",

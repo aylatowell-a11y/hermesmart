@@ -2313,13 +2313,18 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       { label: "Rider", view: { t: "category", cat, sub: "Rider" } as View, current: isRiderPage },
     ];
     siblings.push({ label: "View all", view: { t: "category", cat }, current: isEquestrianPage });
+  } else if (isFragrancesPage) {
+    // The original's Fragrances parent page has NO sub-navigation buttons
+    // (verified live 2026-11-17, twice) — the siblings row stays empty.
+    // The sticky bar itself (FILTER + Product/Mosaic toggle) still renders.
+    siblings = [];
   } else if (cat === "fragrances" && sub) {
     // The original's sub-nav is per-section (2026-11-17): FRAGRANCES
     // pages list Hermessence / The Women's Universe / The Men's Universe
     // / Bath / View all; MAKE-UP pages list Lips / Face / Eyes / Hands /
     // Accessories / View all. (The old full-menu list is what the user
-    // saw wrong on the Bath page.) The parent page (no sub) keeps the
-    // full menu list via the `nav` branch below.
+    // saw wrong on the Bath page.) The parent page (no sub) has no
+    // sub-nav at all — see the isFragrancesPage branch above.
     const isMkPage = ["lips", "face", "eyes", "hands", "accessories", "make-up"].includes(subLow);
     const sibList = isMkPage ? ["Lips", "Face", "Eyes", "Hands", "Accessories"] : ["Hermessence collection", "The Women's Universe", "The Men's Universe", "Bath"];
     siblings = sibList.map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
@@ -2357,6 +2362,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [slgParaOpen, setSlgParaOpen] = useState(false);
   const [homeParaOpen, setHomeParaOpen] = useState(false);
   const [giftParaOpen, setGiftParaOpen] = useState(false);
+  const [bathParaOpen, setBathParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -3309,16 +3315,32 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         </div>
       )}
 
-      {/* Bath descriptive line — the original's Bath page carries
-          "Scented bath and body care ritual" (2026-11-17). Bath page
-          only; shown in full. (Whether the original places it below
-          the grid or under the title is unverified — the live verify
-          will check placement.) */}
+      {/* Bath descriptive paragraphs — verbatim from hermes.com
+          (category text fetch, 2026-11-17). Bath page only; below the
+          grid with See More, as on the original. NOTE: "Scented bath and
+          body care ritual" is only the page's document title — it is NOT
+          body text on the original (verified live 2026-11-17), so it must
+          not be rendered as a paragraph. */}
       {isBathPage && (
         <div className="mx-auto mt-12 max-w-3xl text-center">
-          <p className="text-sm leading-7 text-neutral-700">
-            Scented bath and body care ritual
-          </p>
+          {bathParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                For Hermès, the art of living is not a mere aesthetic; it is a daily philosophy that consists of cultivating beauty in the simplest rituals. Every object, every scent, and every texture is designed to provide a breath of fresh air, an enchanted pause in the tumult of the world. This holistic vision transforms the living space into a sensory refuge, where harmony is born from the precision of an olfactory accord or the softness of a material against the skin. It is a celebration of presence, here and now.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                This quest for well-being unfolds through universes that speak to everyone, whether for women or men. Fragrance escapes the bottle to inhabit the home, creating an atmosphere that reflects its inhabitant. The gesture of beauty is precise and soothing, extending to the hand care ritual, where color becomes an extension of personal expression, and care is a tribute to the artisan&apos;s primary instrument: the hand that creates, transforms, and caresses.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                Choosing an element of this art of living means making a fragment of the House&apos;s history your own. Whether it be home fragrances, skincare, or grooming objects, each piece is designed to last and to grow more beautiful with time. This selection is an inexhaustible source of inspiration for fragrance and beauty gifts that reflect unique thoughtfulness. To give Hermès is to offer a suspended moment, an object that carries the mark of the right gesture and the brilliance of a creation made for the pleasure of the senses.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              For Hermès, the art of living is not a mere aesthetic; it is a daily philosophy that consists of cultivating beauty in the simplest rituals. Every object, every scent, and every texture is designed to provide a breath of fresh air, an enchanted pause in the tumult of the world.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setBathParaOpen(!bathParaOpen)}>{bathParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
 
