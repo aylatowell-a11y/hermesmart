@@ -114,9 +114,9 @@ const MEGA_RAW: MegaEntry[] = [
 // Desktop mega menu for WOMEN, verified on hermes.com (7 Nov 2026). The shared
 // MEGA_RAW structure still drives the mobile drawer, which follows the user's video.
 const MEGA_DESKTOP_WOMEN: MegaSection[][] = [
-  [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026", "Spring-Summer 2027", "Coats and jackets", "Leather", "Dresses", "Tops and shirts", "Pants and shorts", "Knitwear and sweaters", "T-shirts and polos", "Beachwear", "Discover the runway shows"] }],
-  [{ heading: "SHOES", items: ["Fall-Winter 2026", "Sneakers", "Loafers", "Sandals", "Boots", "Pumps", "High heels", "Ballerinas", "Mules"] }, { heading: "SCARVES AND STOLES", items: ["Twillys", "Scarves 90 cm", "Equestrian", "Cashmere", "Stole", "Discover scarf tying"] }],
-  [{ heading: "FASHION JEWELRY", items: ["Bracelets", "Earrings", "Necklaces", "Rings", "Pins and brooches", "Hair accessories and combs", "Hairbands and hatbands"] }, { heading: "THE GLOVES' WORLD", items: [] }, { heading: "HATS", items: [] }],
+  [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026", "Spring-Summer 2027", "Coats and jackets", "Leather", "Dresses", "Tops and shirts", "Pants and shorts", "Knitwear and twillaines", "T-shirts and sweatshirts", "Beachwear", "Discover the runway shows"] }],
+  [{ heading: "SHOES", items: ["Fall-Winter 2026", "Sneakers", "Loafers", "Sandals", "Boots", "Pumps", "Ballet flats", "Mules"] }, { heading: "SCARVES AND STOLES", items: ["Twillys", "Scarves 90 cm", "Equestrian", "Cashmere", "Stole", "Discover scarf tying"] }],
+  [{ heading: "FASHION JEWELRY", items: ["Bracelets", "Earrings", "Necklaces", "Rings", "Pins and brooches", "Hair accessories and combs", "Hairbands and hatbands"] }],
   [{ heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }, { heading: "HAIR ACCESSORIES", items: [] }],
 ];
 type NavOverride = { label?: string; caption?: string; hidden?: boolean; dest?: string };
@@ -2013,6 +2013,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // and stoles" (2026-11-15: the comma-less key never matched, so the
       // page fell through to the strict subcategory match and showed 518).
       "scarves, shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : true),
+      // Alias keys (2026-11-17): the mobile menu heading is "Scarves
+      // shawls and stoles" (no commas) and the desktop heading is
+      // "Scarves and stoles" — both missed the comma key above and
+      // rendered EMPTY. Same predicate as the comma key.
+      "scarves shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : true),
+      "scarves and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : true),
       // Women's Belts parent page — the original's live order (266
       // tiles, extracted 2026-11-15) lives in beltPos; the parent lists
       // exactly those rows. The 101 clone rows not on the live list stay
@@ -2097,6 +2103,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "knitwear": (p) => p.fineSub === "Knitwear",
       "shirts": (p) => p.fineSub === "Shirts",
       "t-shirts and sweatshirts": (p) => p.fineSub === "T-shirts and sweatshirts",
+      // Alias keys (2026-11-17, empty-pages audit): the stale desktop
+      // labels "T-shirts and polos" and "Knitwear and sweaters" produced
+      // subs that missed every syn and rendered EMPTY. The labels are
+      // corrected in MEGA_DESKTOP_WOMEN, but these aliases keep old
+      // links/bookmarks working.
+      "t-shirts and polos": (p) => p.fineSub === "T-shirts and sweatshirts",
+      "knitwear and sweaters": (p) => p.subcategory === "Knitwear and twillaines",
       "pants and shorts": (p) => p.fineSub === "Pants and shorts",
       "beachwear": (p) => p.fineSub === "Beachwear",
     };
@@ -2154,7 +2167,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // Women's Scarves page (cat "women", sub "Scarves, shawls and
   // stoles") — sorts by scarfPos (the original's order, 2026-11-15).
   // Men's scarves (cat "men") are a separate page and are NOT affected.
-  const isWomensScarvesPage = cat === "women" && subLow === "scarves, shawls and stoles";
+  const isWomensScarvesPage = cat === "women" && ["scarves, shawls and stoles", "scarves shawls and stoles", "scarves and stoles"].includes(subLow);
   const isWomensBeltsPage = cat === "women" && subLow === "belts";
   const isWomensDressesPage = cat === "women" && (subLow === "dresses and skirts" || subLow === "dresses");
   // Women's Bags parent page (cat "women", no sub — the default page —
