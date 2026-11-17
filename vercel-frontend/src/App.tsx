@@ -1996,6 +1996,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // fashion-jewelry "Hair accessories and combs" item is redirected
       // here too (see megaTarget).
       "hair accessories": (p) => p.category === "women" && p.hairPos !== undefined,
+      // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's
+      // live orders (50 / 103 tiles) live in horsePos / riderPos.
+      "horse": (p) => p.category === "equestrian" && p.horsePos !== undefined,
+      "rider": (p) => p.category === "equestrian" && p.riderPos !== undefined,
       // Tableware page (cat "home", sub "Tableware") — the original's
       // live order (534 tiles, extracted 2026-11-15) lives in tabPos;
       // the page lists exactly those rows. The 117 clone Tableware
@@ -2143,6 +2147,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // sorts by eqPos (the original's live order, 149 tiles) and
   // carries the descriptive paragraph (two paragraphs, verbatim).
   const isEquestrianPage = cat === "equestrian" && !sub;
+  // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's
+  // live orders (50 / 103 tiles) live in horsePos / riderPos.
+  const isHorsePage = cat === "equestrian" && subLow === "horse";
+  const isRiderPage = cat === "equestrian" && subLow === "rider";
   // Gifts parent page (cat "gifts", no sub, 2026-11-16) — sorts by
   // giftPos (the original's live order, 592 tiles) and carries the
   // "Living in color" / "Time travelers" inserts + the 3-paragraph
@@ -2380,6 +2388,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // order — the same way (the parent page lists exactly the 149
     // live tiles).
     else if (isEquestrianPage && list.some((p) => p.eqPos !== undefined)) list = [...list].sort((a, b) => (a.eqPos ?? Infinity) - (b.eqPos ?? Infinity));
+    // Equestrian Horse (2026-11-17) sorts by horsePos — the original's
+    // order — the same way (the page lists exactly the 50 live tiles).
+    else if (isHorsePage && list.some((p) => p.horsePos !== undefined)) list = [...list].sort((a, b) => (a.horsePos ?? Infinity) - (b.horsePos ?? Infinity));
+    // Equestrian Rider (2026-11-17) sorts by riderPos — the original's
+    // order — the same way (the page lists exactly the 103 live tiles).
+    else if (isRiderPage && list.some((p) => p.riderPos !== undefined)) list = [...list].sort((a, b) => (a.riderPos ?? Infinity) - (b.riderPos ?? Infinity));
     // Tableware (2026-11-15) sorts by tabPos — the original's
     // order — the same way (the page lists exactly the 534 live tiles).
     else if (isTablewarePage && list.some((p) => p.tabPos !== undefined)) list = [...list].sort((a, b) => (a.tabPos ?? Infinity) - (b.tabPos ?? Infinity));
@@ -2398,7 +2412,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isEquestrianPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2602,6 +2616,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         { after: 31, title: "Day to night", body: "The sunset effect of this jacket comes into the light. Technical gabardine segues neatly into earthy poplin. Step forth, from day to dusk." },
       ];
     }
+    // Equestrian Horse / Rider sub-pages — the original's editorial
+    // blocks, verbatim from the live category pages (2026-11-17).
+    // "Steadfast companion" appears on both pages after different
+    // positions (Horse #31, Rider #9) — both entries are kept.
+    if (isHorsePage) return [
+      { after: 9, title: "Neat at a trot", body: "A spirited little companion, looking for refined cases where elegance sits just right." },
+      { after: 31, title: "Steadfast companion", body: "From stable to street, the bag doesn't miss a beat. In hand, on shoulder, it follows your lead." },
+    ];
+    if (isRiderPage) return [
+      { after: 9, title: "Steadfast companion", body: "From stable to street, the bag doesn't miss a beat. In hand, on shoulder, it follows your lead." },
+    ];
     return [];
   })();
   type GridItem = { kind: "product"; p: Product; tileKey?: string } | { kind: "video"; p: Product; tileKey?: string } | { kind: "text"; title: string; body: string };
@@ -2873,7 +2898,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         )}
       </div>
 
-      {gridList.length === 0 && <p className="py-16 text-center text-sm text-neutral-600">{sub ? `No articles in “${sub}” in this store yet.` : "No articles match these filters. Clear a filter to see more."}</p>}
+      {/* An unfiltered category page with no products is a dead
+          collection URL on the original (Equestrian Saddles, men's
+          Spring-Summer 2026) — it shows the original's own message,
+          not an empty grid. Filtered-empty keeps the old text. */}
+      {gridList.length === 0 && !filtersActive && sub ? (
+        <div className="py-16 text-center">
+          <p className="text-sm text-neutral-600">We&apos;re sorry. These items are no longer available.</p>
+          <p className="mt-2 text-sm text-neutral-600">Explore our other products to discover more.</p>
+        </div>
+      ) : gridList.length === 0 && <p className="py-16 text-center text-sm text-neutral-600">{sub ? `No articles in “${sub}” in this store yet.` : "No articles match these filters. Clear a filter to see more."}</p>}
 
       {!mosaic ? (
         <div className="carousel-full-bleed mt-8 grid grid-cols-2 gap-[2px] lg:grid-cols-4">
@@ -3157,6 +3191,30 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           </p>
           <p className="mt-4 text-sm leading-7 text-neutral-700">
             Discover a technical and durable wardrobe. Crafted with the saddle stitch, our saddles, bridles, and tack accessories combine durability and ergonomics in our dedicated horse section. To accompany the effort, Hermès also offers a technical wardrobe for the rider, ranging from show jackets to riding breeches. On the track as in training, Hermès standards ensure an impeccable silhouette and performance in service of equestrian harmony.
+          </p>
+        </div>
+      )}
+
+      {/* Equestrian Horse descriptive paragraph — verbatim from
+          hermes.com (category text fetch, 2026-11-17). Horse page
+          only; shown in full, as the parent Equestrian paragraph is.
+          (Whether the original collapses it behind See More is
+          unverified — the fetch gave no collapse signal.) */}
+      {isHorsePage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Discover the excellence of tack in service of well-being. Equipment for the horse at Hermès is an alliance of technicality and respect for the animal. Our saddles, bridles, and tack accessories are designed to follow equine anatomy, guaranteeing optimal freedom of movement and absolute comfort. Thanks to our historical expertise as a saddler, each piece is fashioned to last, using exceptional leathers that acquire a patina over time. For perfect harmony between mount and rider, we offer a bespoke equestrian service to adapt each saddle to the unique morphological needs of the horse.
+          </p>
+        </div>
+      )}
+
+      {/* Equestrian Rider descriptive paragraph — verbatim from
+          hermes.com (category text fetch, 2026-11-17). Rider page
+          only; shown in full, as the parent Equestrian paragraph is. */}
+      {isRiderPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Explore a technical silhouette for performance. The Hermès rider&apos;s wardrobe is designed like a second skin, combining timeless elegance with textile innovation. Our show jackets, riding breeches, and technical polos are studied to offer total freedom of movement. Each ergonomic cut and breathable fabric aims to accompany the effort with discretion, allowing the rider to focus on the accuracy of their aids and the precision of their course.
           </p>
         </div>
       )}

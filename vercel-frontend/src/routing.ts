@@ -79,6 +79,11 @@ const CATEGORY_PATHS: Record<string, string> = {
   "fragrances|": "fragrances-and-make-up",
   "home|": "home",
   "home|tableware": "home/tableware",
+  // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's
+  // own URLs; without these the generic slug fallback still resolved
+  // them, but the explicit entries keep the routing table truthful.
+  "equestrian|horse": "equestrian/horse",
+  "equestrian|rider": "equestrian/rider",
 };
 
 const REVERSE_PATHS: Record<string, { cat: string; sub?: string }> = {};
