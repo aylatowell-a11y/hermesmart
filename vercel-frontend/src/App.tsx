@@ -2017,7 +2017,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "eyes": (p) => p.category === cat && p.eyesPos !== undefined,
       "hands": (p) => p.category === cat && p.handsPos !== undefined,
       "accessories": (p) => p.category === cat && p.accPos !== undefined,
-      "blankets and pillows": (p) => p.subcategory === "Blankets and throws",
+      "blankets and pillows": (p) => p.textilesPos !== undefined,
+      "decorative objects and games": (p) => p.objectsPos !== undefined,
+      "sports and outdoor": (p) => p.sportsPos !== undefined,
+      "beach": (p) => p.beachPos !== undefined,
       "for women": (p) => p.subcategory === "For women" || p.category === "gifts",
       "for men": (p) => p.category === "gifts",
       "for children": (p) => p.category === "gifts",
@@ -2270,6 +2273,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const isCasesPage = cat === "home" && subLow === "cases and bath linens";
   const isOfficePage = cat === "home" && subLow === "office and writing";
   const isReadingPage = cat === "leather" && subLow === "reading and writing";
+  // Group 3 empty pages (2026-11-17) — the original's live orders live
+  // in objectsPos (Decorative objects and games 279), textilesPos
+  // (Blankets and pillows 153), sportsPos (Sports and outdoor 48),
+  // beachPos (Beach 108).
+  const isObjectsPage = cat === "home" && subLow === "decorative objects and games";
+  const isTextilesPage = cat === "home" && subLow === "blankets and pillows";
+  const isSportsPage = cat === "home" && subLow === "sports and outdoor";
+  const isBeachPage = cat === "home" && subLow === "beach";
   // Equestrian parent page (cat "equestrian", no sub, 2026-11-16) —
   // sorts by eqPos (the original's live order, 149 tiles) and
   // carries the descriptive paragraph (two paragraphs, verbatim).
@@ -2331,6 +2342,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "ready-to-wear": "Ready-to-wear",
     "dresses": "Dresses and skirts",
     "the wonders": "The Wonders",
+    "sports and outdoor": "Sports and Outdoor",
     "fall-winter 2026": "Fall-Winter 2026 Collection",
     "fall-winter 2026 collection": "Fall-Winter 2026 Collection",
     "spring-summer 2026": "Spring-Summer 2026 Collection",
@@ -2339,7 +2351,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
   };
   const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : isCharmsPage ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage) ? `${label} | HOME` : isChildPage ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : isCharmsPage ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isBeachPage) ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2414,16 +2426,23 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // The original's Tech universe page has NO sub-navigation row at all
     // (no filter-siblings-categories nav in the SSR HTML, 2026-11-17).
     siblings = [];
-  } else if (isFurnPage || isCasesPage || isOfficePage) {
+  } else if (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) {
     // The original's Home sub-nav (SSR HTML, 2026-11-17): the same 5
-    // items on all three pages — Blankets and pillows / Decorative
+    // items on all five pages — Blankets and pillows / Decorative
     // objects and games / Furniture, lighting and rugs / Office and
-    // writing / Cases and bath linens — NO "View all".
+    // writing / Cases and bath linens — NO "View all". (Objects and
+    // Textiles pages show the same list, Group 3, 2026-11-17.)
     siblings = ["Blankets and pillows", "Decorative objects and games", "Furniture, lighting and rugs", "Office and writing", "Cases and bath linens"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
   } else if (isChildPage) {
     // The original's Children and baby page has NO sub-navigation row
     // at all (no filter-siblings-categories nav in the SSR HTML,
     // 2026-11-17) — same as Tech universe.
+    siblings = [];
+  } else if (isSportsPage || isBeachPage) {
+    // The original's Sports and outdoor / Beach pages have NO
+    // sub-navigation row at all (no filter-siblings-categories nav in
+    // the SSR HTML, 2026-11-17) — same as Children and baby / Tech
+    // universe.
     siblings = [];
   } else if (isBalletPage) {
     // The original's Women's Shoes sub-nav (SSR HTML, 2026-11-17):
@@ -2496,6 +2515,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [preciousParaOpen, setPreciousParaOpen] = useState(false);
   const [readingParaOpen, setReadingParaOpen] = useState(false);
   const [chainParaOpen, setChainParaOpen] = useState(false);
+  const [objectsParaOpen, setObjectsParaOpen] = useState(false);
+  const [textilesParaOpen, setTextilesParaOpen] = useState(false);
+  const [sportsParaOpen, setSportsParaOpen] = useState(false);
+  const [beachParaOpen, setBeachParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2638,6 +2661,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (isCasesPage && list.some((p) => p.casesPos !== undefined)) list = [...list].sort((a, b) => (a.casesPos ?? Infinity) - (b.casesPos ?? Infinity));
     else if (isOfficePage && list.some((p) => p.officePos !== undefined)) list = [...list].sort((a, b) => (a.officePos ?? Infinity) - (b.officePos ?? Infinity));
     else if (isReadingPage && list.some((p) => p.readingPos !== undefined)) list = [...list].sort((a, b) => (a.readingPos ?? Infinity) - (b.readingPos ?? Infinity));
+    // Group 3 empty pages (2026-11-17) sort by their own position
+    // field — the original's live order for each page.
+    else if (isObjectsPage && list.some((p) => p.objectsPos !== undefined)) list = [...list].sort((a, b) => (a.objectsPos ?? Infinity) - (b.objectsPos ?? Infinity));
+    else if (isTextilesPage && list.some((p) => p.textilesPos !== undefined)) list = [...list].sort((a, b) => (a.textilesPos ?? Infinity) - (b.textilesPos ?? Infinity));
+    else if (isSportsPage && list.some((p) => p.sportsPos !== undefined)) list = [...list].sort((a, b) => (a.sportsPos ?? Infinity) - (b.sportsPos ?? Infinity));
+    else if (isBeachPage && list.some((p) => p.beachPos !== undefined)) list = [...list].sort((a, b) => (a.beachPos ?? Infinity) - (b.beachPos ?? Infinity));
     // Equestrian (2026-11-16) sorts by eqPos — the original's
     // order — the same way (the parent page lists exactly the 149
     // live tiles).
@@ -2666,7 +2695,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -3128,11 +3157,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           advances: ~1095px of ~1232px). */}
       <div className="sticky z-30 -mx-4 mt-4 bg-[#fcf7f1] px-4 py-3 sm:-mx-6 sm:px-6" style={{ top: stickyTop }}>
         <div className="flex items-center gap-x-3">
-          <nav ref={subNavRef} className="no-scrollbar flex min-w-0 flex-1 gap-3 overflow-x-auto whitespace-nowrap" aria-label="Subcategories">
+          {/* Group 3 (2026-11-17): the original has NO sub-nav row on
+              Children / Tech universe / Beach / Sports / Collections
+              parent pages — render the nav only when there are siblings,
+              so those pages show no empty row. */}
+          {siblings.length > 0 && (<nav ref={subNavRef} className="no-scrollbar flex min-w-0 flex-1 gap-3 overflow-x-auto whitespace-nowrap" aria-label="Subcategories">
             {siblings.map((s) => (
               <button key={s.label} data-current={s.current || undefined} aria-label={`Subcategory ${s.label}`} aria-current={s.current || undefined} className={`shrink-0 border-b pb-[2px] pt-1 text-[11px] tracking-wide ${s.current ? "border-black font-medium text-black" : "border-transparent text-neutral-600 hover:text-black"}`} onClick={() => go(s.view)}>{s.label}</button>
             ))}
-          </nav>
+          </nav>)}
           <div className="ml-auto flex shrink-0 items-center gap-3">
             <button aria-label={totalSel ? `Open filters, ${totalSel} selected` : "Open filters"} className={`font-mono-d hidden items-center gap-2 py-1 text-xs font-medium uppercase tracking-normal lg:flex ${totalSel > 0 ? "bg-black px-3 text-white" : ""}`} onClick={openDrawer}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 6h12M19 6h2M3 12h4M11 12h10M3 18h9M16 18h5" /><circle cx="17" cy="6" r="2" /><circle cx="9" cy="12" r="2" /><circle cx="14" cy="18" r="2" /></svg>
@@ -3230,7 +3263,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           caps once normal-case is dropped). */}
       <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -3258,7 +3291,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             only (like Tech universe), Ballet → WOMEN | SHOES, Twilly →
             WOMEN | SCARVES, SHAWLS AND STOLES, Wonders / Precious →
             JEWELRY | COLLECTIONS. */}
-        {sub && (isFurnPage || isCasesPage || isOfficePage) && (
+        {sub && (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) && (
           <>
             {" | "}
             <span className="tracking-normal text-black">HOME</span>
@@ -3724,6 +3757,107 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         </div>
       )}
 
+
+      {/* Decorative objects and games descriptive paragraphs — verbatim from hermes.com
+          (SSR HTML, 2026-11-17). Decorative page only; below the
+          grid with See More, as on the original. */}
+      {isObjectsPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {objectsParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                At Hermès, an object is never an accessory; it is a necessary punctuation. These creations, often small in scale, are designed with the same exacting standards as the most imposing pieces. Whether in leather, wood, or metal, these objects inhabit a space with their singular presence, transforming mundane gestures into moments of aesthetic pleasure.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                Certain objects are tasked with collecting the superfluous to keep only the essential. Porcelain or leather change trays and ashtrays welcome the small trifles of the day with sovereign distinction, becoming visual landmarks in an entryway or on a desk. To protect what is most precious, our boxes and cases combine the rigor of structure with the softness of an interior leather lining. These vessels are refuges for memories—objects of legacy that protect as much as they decorate, illustrating the House&apos;s mastery of the art of order and secrets.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                The spirit of the House also expresses itself beyond the walls, accompanying movement toward the outdoors. Even in the rain, one&apos;s allure remains impeccable thanks to objects designed for protection. Our umbrellas, featuring turned wood handles and canopies in subtle colors, are feats of artisanal craftsmanship. They offer an elegant response to the whims of the sky. Every detail, from the wrist strap to the mechanism, is studied to provide a fluid experience, making every outing a serene stroll, regardless of the horizon.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              At Hermès, an object is never an accessory; it is a necessary punctuation. These creations, often small in scale, are designed with the same exacting standards as the most imposing pieces.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setObjectsParaOpen(!objectsParaOpen)}>{objectsParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+      {/* Blankets and pillows descriptive paragraphs — verbatim from hermes.com
+          (SSR HTML, 2026-11-17). Blankets page only; below the
+          grid with See More, as on the original. */}
+      {isTextilesPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {textilesParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Textiles at Hermès are the invisible architects of domestic well-being. They do more than simply dress a room; they define its emotional and tactile temperature. Drawing from an exceptional mastery of natural fibers, the House offers creations where weaving, printing, and embroidery respond to one another to create a vibrant interior landscape. Whether linen, wool, or cashmere, each textile is a promise of softness and protection.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                In the living room or the bedroom, Hermès textiles become allies for moments of relaxation. Pillows become design objects in their own right, providing a graphic note or a color contrast that brightens a seat. For cooler evenings or moments of reading, throws offer their lightness and enveloping warmth, bearing witness to an artisanal craftsmanship that prioritizes the fineness of the fiber. These pieces, often adorned with iconic motifs, are companions for the road that grow more beautiful over time, acquiring a unique suppleness through use.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                The bedroom, the sanctuary of the home, demands particular attention to the quality of sleep and rest. Hermès blankets are part of this quest for the essential, offering an ideal thermal structure and an impeccable drape. Their presence on the bed brings immediate serenity, the fruit of rigorous manufacturing where every stitch is controlled. Choosing these textiles means investing in objects that respect both the skin and the environment—pieces designed to last and be passed down, carrying within them the family spirit and the warmth of a home inhabited by beauty.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Textiles at Hermès are the invisible architects of domestic well-being. They do more than simply dress a room; they define its emotional and tactile temperature.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTextilesParaOpen(!textilesParaOpen)}>{textilesParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+      {/* Sports and outdoor descriptive paragraphs — verbatim from hermes.com
+          (SSR HTML, 2026-11-17). Sports page only; below the
+          grid with See More, as on the original. */}
+      {isSportsPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {sportsParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                At Hermès, games and sports are not mere distractions; they are expressions of discipline, freedom, and joy. The House approaches this universe with the same artisanal mastery as its historical métiers, transforming a sporting tool into a design object. Whether for a game among friends or solitary training, the equipment used influences the quality of the moment. We create objects that invite effort with elegance, prioritizing materials that live with movement and grow more beautiful through action.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                The quest for physical and mental well-being finds a precise response in our collections dedicated to gentle disciplines. The practice of yoga demands total concentration and harmony with one&apos;s environment. Our yoga accessories, from the mat to the strap, are designed to support the body with remarkable anatomical precision and tactile softness. Each piece is an invitation to mindfulness, where the simplicity of the design encourages a quiet mind.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                Sport at Hermès is also a matter of legacy and shared pleasure. Our board games and sporting accessories are life companions that cross generations. They carry within them the spirit of conquest and the rigor of the gesture, whether it be the precision of a throw or the strategy of a game of chess. By choosing these objects, you embrace a philosophy where leisure becomes an art—a way to cultivate energy and curiosity.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              At Hermès, games and sports are not mere distractions; they are expressions of discipline, freedom, and joy. The House approaches this universe with the same artisanal mastery as its historical métiers, transforming a sporting tool into a design object.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setSportsParaOpen(!sportsParaOpen)}>{sportsParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+      {/* Beach descriptive paragraphs — verbatim from hermes.com
+          (SSR HTML, 2026-11-17). Beach page only; below the
+          grid with See More, as on the original. */}
+      {isBeachPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {beachParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Hermès accompanies these solar escapes with a collection designed for clarity and movement. The beach becomes a stage for vibrant graphic expression, where the House&apos;s motifs unfold on lightweight and generous materials. It is an invitation to experience summer with quiet confidence, prioritizing fabrics that breathe and capture the light.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                Resting by the ocean demands a seat worthy of the name. Our beach towels and mats, with their exceptional plushness, offer unrivaled protection against the heat of the sand, inviting hours of reading or contemplation. To wrap oneself in a breath of silk or fine cotton between swims, pareos display dreamlike prints that dance with the wind. They are a touch of light sophistication, capable of being tied in a thousand ways to suit every silhouette with natural grace and disarming simplicity.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                To carry everything that makes the day perfect, organization is key. Our beach bags are designed to brave salt and wind while maintaining impeccable poise. Their spacious volumes welcome towels, books, and skincare with effortless ease, while their sturdy handles ensure a comfortable carry. These objects combine the performance of canvas with premium leather finishes, perfectly illustrating the House&apos;s spirit of travel.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Hermès accompanies these solar escapes with a collection designed for clarity and movement. The beach becomes a stage for vibrant graphic expression, where the House&apos;s motifs unfold on lightweight and generous materials.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setBeachParaOpen(!beachParaOpen)}>{beachParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
       {/* The Wonders descriptive paragraph — verbatim from hermes.com
           (SSR HTML, 2026-11-17). The Wonders page only; below the grid
           with See More, as on the original. NOTE: "[gold jewelry]" and

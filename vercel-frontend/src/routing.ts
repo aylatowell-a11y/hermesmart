@@ -122,6 +122,17 @@ const CATEGORY_PATHS: Record<string, string> = {
   "home|cases and bath linens": "home/cases-and-bath-linen",
   "home|office and writing": "home/office-and-writing",
   "home|children and baby": "home-art-living/children-and-baby",
+  // Group 3 Home pages (2026-11-17) — the original's own URLs.
+  // Decorative objects 279 tiles (objectsPos), Blankets and pillows
+  // 153 (textilesPos) — the menu item RETARGETS here from the old
+  // /home/blankets-and-pillows/ slug (the old URL still resolves to
+  // the same view via the generic slug match, so it shows [153] too,
+  // not a duplicate page). Sports and outdoor 48 (sportsPos), Beach
+  // 108 (beachPos).
+  "home|decorative objects and games": "home/objects",
+  "home|blankets and pillows": "home/textiles",
+  "home|sports and outdoor": "home-art-living/sports-and-outdoor",
+  "home|beach": "home-art-living/beach",
   // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's
   // own URLs; without these the generic slug fallback still resolved
   // them, but the explicit entries keep the routing table truthful.
