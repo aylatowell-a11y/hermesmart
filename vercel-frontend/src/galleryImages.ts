@@ -8178,6 +8178,20 @@ const NEW_GALLERY: Record<number, { label: string; src: string; videoSrc?: strin
   6912: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/038540CAX9_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
   6913: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/460247M%2003_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/460247M%2003_worn_102?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
   6914: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/311350M%2001_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$" } ],
+  6915: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/221411B%2000_front_wm_101?$product_default_bg$" }, { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/221411B%2000_front_wm_102?$product_default_bg$" }],
+  6916: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/123603B%2000_front_wm_102?$product_default_bg$" }],
+  6917: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/121610B%2000_front_wm_101?$product_default_bg$" }],
+  6918: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/104834B%2000_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/104834B%2000_worn_102?$product_default_bg$" }],
+  6919: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/110012B%2000_front_wm_102?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/110012B%2000_worn_102?$product_default_bg$" }],
+  6920: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/110017B%2000_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/110017B%2000_worn_102?$product_default_bg$" }],
+  6921: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/115406B%2000_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/115406B%2000_worn_102?$product_default_bg$" }],
+  6922: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/221624B%2000_front_wm_102?$product_default_bg$" }],
+  6923: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/123646B%2000_front_wm_101?$product_default_bg$" }],
+  6924: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/104261B%2000_front_wm_101?$product_default_bg$" }],
+  6925: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/222634B%2000_front_wm_101?$product_default_bg$" }],
+  6926: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/118644B%2000_front_wm_102?$product_default_bg$" }],
+  6927: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/220350B%2000_front_wm_102?$product_default_bg$" }],
+  6928: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/122605B%2000_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/122605B%2000_worn_102?$product_default_bg$" }],
 };
 
 // PDP full-photo quality (user complaint 2026-11-11, "koi compromise

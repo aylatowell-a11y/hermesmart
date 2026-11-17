@@ -1989,6 +1989,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "cases and bath linens": (p) => p.casesPos !== undefined,
       "office and writing": (p) => p.officePos !== undefined,
       "reading and writing": (p) => p.readingPos !== undefined,
+      // Group 2 (2026-11-17): Jewelry Collections parent + Chaînes
+      // d'ancre sub-page, FIELD-ONLY gates (same pattern as the Group 1
+      // jewelry pages). Do NOT touch the existing "our collections" syn
+      // (watchPos-gated, different key, different page).
+      "collections": (p) => p.collectionsPos !== undefined,
+      "chaînes d'ancre": (p) => p.chainedancrePos !== undefined,
       // Watches "Our collections" view (2026-11-15): the all-watches
       // list, gated on watchPos like the parent page.
       "our collections": (p) => p.category === "watches" && p.watchPos !== undefined,
@@ -2259,6 +2265,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const isBalletPage = cat === "women" && subLow === "ballet flats";
   const isWondersPage = cat === "jewelry" && subLow === "the wonders";
   const isPreciousPage = cat === "jewelry" && subLow === "precious moments";
+  const isCollectionsPage = cat === "jewelry" && subLow === "collections";
+  const isChainedAncrePage = cat === "jewelry" && subLow === "chaînes d'ancre";
   const isCasesPage = cat === "home" && subLow === "cases and bath linens";
   const isOfficePage = cat === "home" && subLow === "office and writing";
   const isReadingPage = cat === "leather" && subLow === "reading and writing";
@@ -2331,7 +2339,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
   };
   const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : isCharmsPage ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage) ? `${label} | HOME` : isChildPage ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage) ? `${label} | COLLECTIONS` : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : isCharmsPage ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage) ? `${label} | HOME` : isChildPage ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2431,13 +2439,18 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // land on the scarves parent content for now.)
     siblings = ["Silk scarves and accessories", "Cashmere shawls and stoles", "Twilly and other small formats"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
     siblings.push({ label: "View all", view: { t: "category", cat, sub: "Scarves, shawls and stoles" }, current: false });
-  } else if (isWondersPage || isPreciousPage) {
+  } else if (isWondersPage || isPreciousPage || isChainedAncrePage) {
     // The original's Jewelry Collections sub-nav (SSR HTML,
     // 2026-11-17): Kelly / Chaînes d'ancre / Equestrian / The Wonders /
-    // Precious moments — NO "View all". (Kelly / Equestrian / Chaînes
-    // d'ancre pages are not built yet — their links show the
-    // dead-collection message until Group 2 / the menu-gap build.)
+    // Precious moments — NO "View all". (Kelly / Equestrian pages are
+    // not built yet — their links show the dead-collection message
+    // until the menu-gap build. Chaînes d'ancre built in Group 2.)
     siblings = ["Kelly", "Chaînes d'ancre", "Equestrian", "The Wonders", "Precious moments"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
+  } else if (isCollectionsPage) {
+    // The original's Collections parent page has NO sub-navigation row
+    // at all (no filter-siblings-categories nav in the SSR HTML,
+    // 2026-11-17) — same as Tech universe / Children.
+    siblings = [];
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -2482,6 +2495,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [wondersParaOpen, setWondersParaOpen] = useState(false);
   const [preciousParaOpen, setPreciousParaOpen] = useState(false);
   const [readingParaOpen, setReadingParaOpen] = useState(false);
+  const [chainParaOpen, setChainParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2565,6 +2579,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // (cat === "jewelry") is also true here and these rows carry jewPos.
     else if (isWondersPage && list.some((p) => p.wondersPos !== undefined)) list = [...list].sort((a, b) => (a.wondersPos ?? Infinity) - (b.wondersPos ?? Infinity));
     else if (isPreciousPage && list.some((p) => p.preciousPos !== undefined)) list = [...list].sort((a, b) => (a.preciousPos ?? Infinity) - (b.preciousPos ?? Infinity));
+    // Group 2 (2026-11-17): these sort branches MUST sit BEFORE the
+    // isJewelryPage branch — the rows carry jewPos, so the jewPos
+    // branch would win if it came first (same trap as wonders/precious).
+    else if (isCollectionsPage && list.some((p) => p.collectionsPos !== undefined)) list = [...list].sort((a, b) => (a.collectionsPos ?? Infinity) - (b.collectionsPos ?? Infinity));
+    else if (isChainedAncrePage && list.some((p) => p.chainedancrePos !== undefined)) list = [...list].sort((a, b) => (a.chainedancrePos ?? Infinity) - (b.chainedancrePos ?? Infinity));
     else if (isJewelryPage && list.some((p) => p.jewPos !== undefined)) list = [...list].sort((a, b) => (a.jewPos ?? Infinity) - (b.jewPos ?? Infinity));
     else if (isFashionJewelryPage && list.some((p) => p.fashPos !== undefined)) list = [...list].sort((a, b) => (a.fashPos ?? Infinity) - (b.fashPos ?? Infinity));
     else if (isHomePage && list.some((p) => p.homePos !== undefined)) list = [...list].sort((a, b) => (a.homePos ?? Infinity) - (b.homePos ?? Infinity));
@@ -2647,7 +2666,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCasesPage, isOfficePage, isReadingPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2869,6 +2888,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     if (isChildPage) return [
       { after: 8, title: "Building blocks", body: "Round, square, rectangle. Learning begins in orange boxes." },
       { after: 28, title: "Fauna of fun", body: "This colorful little herd has swapped jungle and forest for the comfort of an indoor enclosure." },
+    ];
+    // Chaînes d'ancre page — the original's editorial block ("A chain
+    // of sparkle" after tile #9), verbatim from the live category page
+    // text fetch + SSR HTML, 2026-11-17. Full-list position 9 =
+    // "Geometrie Precieuse single dangle earring" $15,500.
+    if (isChainedAncrePage) return [
+      { after: 9, title: "A chain of sparkle", body: "This jewel's points of sparkle are multiplied across fingers to lend elegance a hand." },
     ];
     return [];
   })();
@@ -3204,7 +3230,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           caps once normal-case is dropped). */}
       <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCasesPage && !isOfficePage && !isReadingPage && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -3250,7 +3276,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             <span className="tracking-normal text-black">SCARVES, SHAWLS AND STOLES</span>
           </>
         )}
-        {sub && (isWondersPage || isPreciousPage) && (
+        {sub && (isWondersPage || isPreciousPage || isCollectionsPage || isChainedAncrePage) && (
           <>
             {" | "}
             <span className="tracking-normal text-black">COLLECTIONS</span>
@@ -3735,6 +3761,28 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             </p>
           )}
           <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setPreciousParaOpen(!preciousParaOpen)}>{preciousParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Chaînes d'ancre descriptive paragraph — verbatim from
+          hermes.com (live text fetch, 2026-11-17; the original's US page
+          carries this paragraph IN FRENCH — do NOT translate it).
+          Chaînes d'ancre page only; below the grid with See More, as on
+          the original. NOTE: "[bijoux en or]" and "[bijoux en argent]"
+          are literal in the original's own text (facet links there) —
+          rendered verbatim as plain text. */}
+      {isChainedAncrePage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {chainParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Née du regard de Robert Dumas sur une chaîne de bateau en 1938, la collection Chaîne d&apos;ancre incarne l&apos;esprit marin d&apos;Hermès. Le maillon s&apos;affranchit de sa fonction pour devenir une sculpture fluide et graphique, symbole d&apos;une robustesse sophistiquée. Laissez-vous séduire par ses volumes généreux à travers nos [bijoux en or] aux reflets solaires, ou préférez l&apos;éclat lunaire et la force de caractère de nos [bijoux en argent]. Une véritable ode au mouvement et à la matière.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Née du regard de Robert Dumas sur une chaîne de bateau en 1938, la collection Chaîne d&apos;ancre incarne l&apos;esprit marin d&apos;Hermès.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setChainParaOpen(!chainParaOpen)}>{chainParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
 

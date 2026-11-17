@@ -132,6 +132,8 @@ const CATEGORY_PATHS: Record<string, string> = {
   // moments 21 (preciousPos).
   "jewelry|the wonders": "jewelry/collections/wonders",
   "jewelry|precious moments": "jewelry/collections/precious-moments",
+  "jewelry|collections": "jewelry/collections",
+  "jewelry|chaînes d'ancre": "jewelry/collections/chaine-d-ancre",
 };
 
 const REVERSE_PATHS: Record<string, { cat: string; sub?: string }> = {};
