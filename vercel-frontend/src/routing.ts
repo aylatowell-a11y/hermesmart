@@ -169,6 +169,13 @@ const CATEGORY_PATHS: Record<string, string> = {
   "home|blankets and pillows": "home/textiles",
   "home|sports and outdoor": "home-art-living/sports-and-outdoor",
   "home|beach": "home-art-living/beach",
+  // Petit h page (Group 7, 2026-11-18) — the original's own URL is
+  // /us/en/category/petit-h/ (top-level, NOT under /home/). The menu
+  // heading "PETIT H" (cat "home") clicks to sub "Petit h" via
+  // headingToSub; without this entry the generic slug fallback would
+  // resolve it to /home/petit-h/ (wrong URL, and a direct load of
+  // /petit-h/ would fall through to the home parent page).
+  "home|petit h": "petit-h",
   // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's
   // own URLs; without these the generic slug fallback still resolved
   // them, but the explicit entries keep the routing table truthful.

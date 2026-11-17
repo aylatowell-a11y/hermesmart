@@ -2065,6 +2065,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // fires on this page, so field-only is used (same as the
       // Group 5 ties keys).
       "timepieces": (p) => p.timepiecePos !== undefined,
+      // Group 7 (2026-11-18) — Petit h [277]. FIELD-ONLY gate (same
+      // Group 4 trap): all tagged rows are category "home", but the
+      // key only ever fires on this page, so field-only is used.
+      "petit h": (p) => p.petitHPos !== undefined,
       "blankets and pillows": (p) => p.textilesPos !== undefined,
       "decorative objects and games": (p) => p.objectsPos !== undefined,
       "sports and outdoor": (p) => p.sportsPos !== undefined,
@@ -2281,6 +2285,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // timepiecePos, with the "Discover what's possible" / "Ahead of
   // time" inserts and the horology paragraph below the grid.
   const isTimepiecesPage = cat === "watches" && subLow === "timepieces";
+  // Petit h page (Group 7, 2026-11-18) — the original's
+  // /us/en/category/petit-h/ listing (277 tiles), sorted by
+  // petitHPos, with the "Applied creativity" / "Deconstructing the
+  // norm" inserts and the 3-paragraph "reverse creation" text below
+  // the grid.
+  const isPetitHPage = cat === "home" && subLow === "petit h";
   // Fragrances parent page (cat "fragrances", no sub, 2026-11-15) —
   // sorts by fragPos (the original's live order, 272 tiles) and
   // carries the "Rouge Brillant Silky" / "Fragrance Finder" inserts.
@@ -2575,6 +2585,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // sub-navigation row at all (no filter-siblings-categories nav
     // in the live category page text fetch) — same as Tech universe.
     siblings = [];
+  } else if (isPetitHPage) {
+    // Group 7 (2026-11-18): the original's Petit h page has NO
+    // sub-navigation row at all (no filter-siblings-categories nav
+    // in the SSR HTML) — same as Tech universe / Children. Without
+    // this branch the `nav` default below would show the home menu
+    // subs + "View all".
+    siblings = [];
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -2630,6 +2647,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [tiesParaOpen, setTiesParaOpen] = useState(false);
   const [menTiesParentParaOpen, setMenTiesParentParaOpen] = useState(false);
   const [timepiecesParaOpen, setTimepiecesParaOpen] = useState(false);
+  const [petitHParaOpen, setPetitHParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2741,6 +2759,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // live tiles).
     else if (isWatchesPage && list.some((p) => p.watchPos !== undefined)) list = [...list].sort((a, b) => (a.watchPos ?? Infinity) - (b.watchPos ?? Infinity));
     else if (isTimepiecesPage && list.some((p) => p.timepiecePos !== undefined)) list = [...list].sort((a, b) => (a.timepiecePos ?? Infinity) - (b.timepiecePos ?? Infinity));
+    // Petit h (Group 7, 2026-11-18) sorts by petitHPos — the
+    // original's live order. Placed here (after Timepieces): the
+    // isHomePage branch requires NO sub, so it cannot shadow this
+    // page, and no earlier branch matches cat "home" + sub "petit h".
+    else if (isPetitHPage && list.some((p) => p.petitHPos !== undefined)) list = [...list].sort((a, b) => (a.petitHPos ?? Infinity) - (b.petitHPos ?? Infinity));
     // Fragrances (2026-11-15) sorts by fragPos — the original's
     // order — the same way (the parent page lists exactly the 272
     // live tiles).
@@ -2821,7 +2844,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isTimepiecesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isTiesPage, isMensScarvesPage, isMenTiesParentPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isTimepiecesPage, isPetitHPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isTiesPage, isMensScarvesPage, isMenTiesParentPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2993,6 +3016,21 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     if (isTimepiecesPage) return [
       { after: 8, title: "Discover what's possible", body: "A motif ready to set sail and the now-iconic strap… The Cape Cod watch, unique to the very last detail, invites time to be explored in every shape, from square to rectangle." },
       { after: 32, title: "Ahead of time", body: "Hermès' first ever expression of time, the Arceau watch transforms every second into something new. Moments become suspended in time, free to be traversed, explored, and savored for as long as desired." },
+    ];
+    // Petit h page — the original's two editorial blocks
+    // ("Applied creativity" after tile #9, "Deconstructing the norm"
+    // after tile #31), verbatim from the SSR HTML, 2026-11-17. The
+    // original's blocks also carry an image (hermesedito EDITO 1 /
+    // EDITO 2 16x9) and a CTA link to /us/en/content/154031-petit-h-event/
+    // ("Play along with Petit h" / "Blur the lines") — the clone's
+    // text-tile mechanism renders title + body only, so the image and
+    // CTA are not rendered (same gap class as the Tableware "Take
+    // tables to new depths" link). No inserts are known after tile
+    // #40 (SSR covers only the first 40) — the parent's live read
+    // confirms whether more exist in 41..277.
+    if (isPetitHPage) return [
+      { after: 9, title: "Applied creativity", body: "Hybrid and unbridled, these bags and accessories play with materials, shapes and functions. The Petit h workshop doesn't follow straight lines; it takes pleasure in blurring them." },
+      { after: 31, title: "Deconstructing the norm", body: "Even if creations within the Petit h workshop have been designed down to the most minute detail, they still run against the grain. Excess is embraced as imagination runs wild." },
     ];
     // Tableware page — the original's two editorial blocks
     // ("Gold medals" after tile #8, "Abyssal beauty" after tile #28),
@@ -3397,7 +3435,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           caps once normal-case is dropped). */}
       <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -3449,6 +3487,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <>
             {" | "}
             <span className="tracking-normal text-black">TIMEPIECES</span>
+          </>
+        )}
+        {/* Group 7 (2026-11-18): the original's Petit h page bottom
+            breadcrumb is 2 levels (HOME AND ART OF LIVING | PETIT H,
+            JSON-LD trail) — the middle level would leak the first
+            row's subcategory (Decor). */}
+        {sub && isPetitHPage && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">PETIT H</span>
           </>
         )}
         {/* Group 1 (2026-11-17): the original's rendered bottom
@@ -3938,6 +3986,40 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             </p>
           )}
           <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTimepiecesParaOpen(!timepiecesParaOpen)}>{timepiecesParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Petit h descriptive paragraphs — verbatim from hermes.com
+          (SSR HTML, 2026-11-17). Petit h page only; below the grid
+          with See More, as on the original. NOTE: paragraphs 2 and 3
+          each open with a lead phrase followed by a line break in the
+          original's own markup ("A heritage carried by the artisanal
+          gesture" / "The spirit of surprise and nomadic encounters"),
+          rendered here with the same break. */}
+      {isPetitHPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {petitHParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                The Petit h workshop is based on a philosophy of &quot;reverse creation&quot;: here, we do not start from a predetermined sketch, but from the material itself. This laboratory of ideas gives a second life to the House&apos;s dormant materials—such as leather scraps, silk remnants, crystal, or porcelain—to transform them into unexpected curiosities. Each piece is the result of a meeting between designers, artists, and artisans who unite their talents to repurpose resources with humor and poetry. This creative &quot;upcycling&quot; process gives birth to singular, often unique creations, where the ingenuity of the gesture transfigures the material&apos;s original purpose.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                A heritage carried by the artisanal gesture
+                <br />
+                This visionary approach could not exist without the exceptional technical mastery that has defined the House since its origins. The freedom of tone at Petit h is supported by savoir-faire passed down through six generations of artisans, ensuring that every object, no matter how whimsical, meets the highest standards of quality and durability. From wrapping a stirrup to weaving silk, the hand of the artisan remains the pivot of this adventure, transforming fragments of precious materials into fashion accessories, small furniture, or decorative objects inhabited by a true soul.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                The spirit of surprise and nomadic encounters
+                <br />
+                Petit h is a world in motion that loves to meet its audience around the globe. Every Petit h event is designed as an ephemeral, staged stopover, offering total immersion in this spirit of a &quot;sidestep&quot; unique to the workshop. These privileged moments allow for the discovery of capsule collections and exclusive pieces that do more than decorate daily life—they re-enchant it. By choosing a Petit h creation, you opt for an object that celebrates the unpredictable, the beauty of rediscovered material, and the boldness of a craftsmanship that never stops inventing new horizons.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              The Petit h workshop is based on a philosophy of &quot;reverse creation&quot;: here, we do not start from a predetermined sketch, but from the material itself. This laboratory of ideas gives a second life to the House&apos;s dormant materials—such as leather scraps, silk remnants, crystal, or porcelain—to transform them into unexpected curiosities. Each piece is the result of a meeting between designers, artists, and artisans who unite their talents to repurpose resources with humor and poetry. This creative &quot;upcycling&quot; process gives birth to singular, often unique creations, where the ingenuity of the gesture transfigures the material&apos;s original purpose.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setPetitHParaOpen(!petitHParaOpen)}>{petitHParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
 
