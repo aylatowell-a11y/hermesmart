@@ -126,6 +126,9 @@ const CATEGORY_PATHS: Record<string, string> = {
   "men|scarves and stoles": "men/ties-stoles-and-scarves/stoles-and-scarves",
   "men|ties and scarves": "men/ties-stoles-and-scarves",
   "watches|": "watches",
+  // Watches Timepieces page (Group 6, 2026-11-17) — the original's
+  // own URL /us/en/category/timepieces/.
+  "watches|timepieces": "timepieces",
   "fragrances|": "fragrances-and-make-up",
   // Fragrances sub-pages (2026-11-17) — the original's own URLs
   // (/fragrances/art-living/ is the Bath page; /fragrances/women/ and

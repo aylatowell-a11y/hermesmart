@@ -7878,6 +7878,11 @@ const NEW_TILE: Record<number, string> = {
   7776: "https://assets.hermes.com/is/image/hermesproduct/394853T%2002_front_wm_103?wid=750&hei=1000&fit=fit&$product_default_bg$",
   7777: "https://assets.hermes.com/is/image/hermesproduct/414700T%2004_front_wm_103?wid=750&hei=1000&fit=fit&$product_default_bg$",
   7778: "https://assets.hermes.com/is/image/hermesproduct/274866T%2001_flat_wm_103?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  7781: "https://assets.hermes.com/is/image/hermesproduct/049311WW00_front_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  7782: "https://assets.hermes.com/is/image/hermesproduct/KB0028WK37_flat_101?extend=300,300,300,300&align=0,0&$product_default_bg$",
+  7783: "https://assets.hermes.com/is/image/hermesproduct/KB0054WK09_flat_101?extend=300,300,300,300&align=0,0&$product_default_bg$",
+  7784: "https://assets.hermes.com/is/image/hermesproduct/KB0081WK34_flat_101?extend=300,300,300,300&align=0,0&$product_default_bg$",
+  7785: "https://assets.hermes.com/is/image/hermesproduct/060126WS01_flat_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
 };
 
 const BAG_POOL = [picotinLock18V2, kellyShoulderV2, tablierSellier, boxBag, doubleLonge, neoDoubleSens35, fallbackHandbag];

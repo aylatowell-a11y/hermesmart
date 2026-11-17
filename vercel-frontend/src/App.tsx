@@ -2060,6 +2060,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "ties, bow ties and pocket squares": (p) => p.tiePos !== undefined,
       "scarves": (p) => cat === "men" ? p.menScarfPos !== undefined : p.subcategory === "Scarves, shawls and stoles" && p.scarfPos !== undefined,
       "ties and scarves": (p) => p.menTiesPos !== undefined,
+      // Group 6 (2026-11-17) — Watches Timepieces [229]. FIELD-ONLY
+      // gate (the Group 4 category-gate trap): the key only ever
+      // fires on this page, so field-only is used (same as the
+      // Group 5 ties keys).
+      "timepieces": (p) => p.timepiecePos !== undefined,
       "blankets and pillows": (p) => p.textilesPos !== undefined,
       "decorative objects and games": (p) => p.objectsPos !== undefined,
       "sports and outdoor": (p) => p.sportsPos !== undefined,
@@ -2271,6 +2276,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // are NOT gated — their original totals were not measured; only
   // the parent page is.
   const isWatchesPage = cat === "watches" && !sub;
+  // Watches Timepieces page (Group 6, 2026-11-17) — the original's
+  // /us/en/category/timepieces/ listing (229 tiles), sorted by
+  // timepiecePos, with the "Discover what's possible" / "Ahead of
+  // time" inserts and the horology paragraph below the grid.
+  const isTimepiecesPage = cat === "watches" && subLow === "timepieces";
   // Fragrances parent page (cat "fragrances", no sub, 2026-11-15) —
   // sorts by fragPos (the original's live order, 272 tiles) and
   // carries the "Rouge Brillant Silky" / "Fragrance Finder" inserts.
@@ -2560,6 +2570,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // row at all (no filter-siblings-categories nav in the SSR HTML,
     // 2026-11-17) — same as Tech universe / Children.
     siblings = [];
+  } else if (isTimepiecesPage) {
+    // Group 6 (2026-11-17): the original's Timepieces page has NO
+    // sub-navigation row at all (no filter-siblings-categories nav
+    // in the live category page text fetch) — same as Tech universe.
+    siblings = [];
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -2614,6 +2629,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [womensAccParaOpen, setWomensAccParaOpen] = useState(false);
   const [tiesParaOpen, setTiesParaOpen] = useState(false);
   const [menTiesParentParaOpen, setMenTiesParentParaOpen] = useState(false);
+  const [timepiecesParaOpen, setTimepiecesParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2724,6 +2740,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // order — the same way (the parent page lists exactly the 370
     // live tiles).
     else if (isWatchesPage && list.some((p) => p.watchPos !== undefined)) list = [...list].sort((a, b) => (a.watchPos ?? Infinity) - (b.watchPos ?? Infinity));
+    else if (isTimepiecesPage && list.some((p) => p.timepiecePos !== undefined)) list = [...list].sort((a, b) => (a.timepiecePos ?? Infinity) - (b.timepiecePos ?? Infinity));
     // Fragrances (2026-11-15) sorts by fragPos — the original's
     // order — the same way (the parent page lists exactly the 272
     // live tiles).
@@ -2804,7 +2821,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isTiesPage, isMensScarvesPage, isMenTiesParentPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isTimepiecesPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isTiesPage, isMensScarvesPage, isMenTiesParentPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -2968,6 +2985,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     if (isFragrancesPage) return [
       { after: 8, title: "Rouge Brillant Silky", body: "Its creamy texture melts onto the curve of the lips, illuminating them with a light, silky sheen. A new, delicately tinted, high-shine signature." },
       { after: 28, title: "Fragrance Finder", body: "Are you ready to find the perfume that suits you? Express your olfactory preferences and discover the perfect fragrances for you or your loved ones." },
+    ];
+    // Watches Timepieces page — the original's two editorial blocks
+    // ("Discover what's possible" after tile #8, "Ahead of time"
+    // after tile #32), verbatim from the live category page text
+    // fetch, 2026-11-17.
+    if (isTimepiecesPage) return [
+      { after: 8, title: "Discover what's possible", body: "A motif ready to set sail and the now-iconic strap… The Cape Cod watch, unique to the very last detail, invites time to be explored in every shape, from square to rectangle." },
+      { after: 32, title: "Ahead of time", body: "Hermès' first ever expression of time, the Arceau watch transforms every second into something new. Moments become suspended in time, free to be traversed, explored, and savored for as long as desired." },
     ];
     // Tableware page — the original's two editorial blocks
     // ("Gold medals" after tile #8, "Abyssal beauty" after tile #28),
@@ -3372,7 +3397,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           caps once normal-case is dropped). */}
       <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -3414,6 +3439,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <>
             {" | "}
             <span className="tracking-normal text-black">TIES AND SCARVES</span>
+          </>
+        )}
+        {/* Group 6 (2026-11-17): the original's Timepieces page
+            bottom breadcrumb ends at the page (WATCHES |
+            TIMEPIECES) — the middle level would leak the first
+            row's subcategory. */}
+        {sub && isTimepiecesPage && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">TIMEPIECES</span>
           </>
         )}
         {/* Group 1 (2026-11-17): the original's rendered bottom
@@ -3882,6 +3917,27 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             </p>
           )}
           <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setMenTiesParentParaOpen(!menTiesParentParaOpen)}>{menTiesParentParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Watches Timepieces descriptive paragraph — verbatim from
+          hermes.com (live category page text fetch, 2026-11-17).
+          Timepieces page only; below the grid with See More, as on
+          the original. The original carries inline links inside
+          the paragraph (black / brown / orange / exceptional
+          pieces) — rendered as plain text on the clone. */}
+      {isTimepiecesPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {timepiecesParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Dive into the universe of Hermès horology, where technical expertise meets creative whimsy. A signature of the House, leather is showcased on interchangeable straps in deep shades: classic black, natural brown, or vibrant orange. Finally, discover the pinnacle of our savoir-faire through our exceptional pieces.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Dive into the universe of Hermès horology, where technical expertise meets creative whimsy.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTimepiecesParaOpen(!timepiecesParaOpen)}>{timepiecesParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
 
