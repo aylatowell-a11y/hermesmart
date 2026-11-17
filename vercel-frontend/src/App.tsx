@@ -6761,7 +6761,15 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     const u = await api.loginUser({ email: liEmail, password: liPw });
     return { ...u, isAdmin: false };
   }, onSuccess: (r) => { setLiMsg(r.message); if (r.ok) { if (r.isAdmin) { save("hlx-admin-auth", { email: liEmail, password: liPw }); go({ t: "admin" }); } else { setUser({ name: r.name, email: liEmail }); go({ t: "home" }); } } } });
-  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobParts = suDob.split("-"); const dobDisplay = dobParts.length === 3 ? `${monthNames[Number(dobParts[1]) - 1] ?? ""} ${Number(dobParts[2])}, ${dobParts[0]}` : ""; save("hlx-profile", { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }); save("hlx-just-registered", { email: suEmail }); go({ t: "account", mode: "login" }); } } });
+  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobParts = suDob.split("-"); const dobDisplay = dobParts.length === 3 ? `${monthNames[Number(dobParts[1]) - 1] ?? ""} ${Number(dobParts[2])}, ${dobParts[0]}` : ""; save("hlx-profile", { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }); save("hlx-just-registered", { email: suEmail }); // Switch the form DIRECTLY (2026-11-17 fix, second attempt): the
+      // go() below does NOT reliably change anything — when the visitor
+      // reached this page by signing out, view.mode is ALREADY "login",
+      // so the mode does not change, the mode effect never re-runs and
+      // the signup form stays visible (proven live twice, reproduced in
+      // jsdom by starting signed-out). The direct state change is what
+      // actually shows the login form; go() only keeps the URL/history
+      // consistent. The flag is still saved for the remount path.
+      setLiEmail(suEmail); setLiMsg("Your account has been created. Please sign in."); setAuthMode("login"); go({ t: "account", mode: "login" }); } } });
   const ordersQ = useQuery({ queryKey: ["myorders", user?.email], queryFn: () => api.myOrders({ email: user?.email ?? "" }), enabled: !!user });
   // Signed-in account tabs (§D addendum): exactly five, in this order.
   const [acctTab, setAcctTab] = useState<"orders" | "profile" | "addresses" | "payments" | "reservations">("orders");
