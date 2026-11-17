@@ -40,6 +40,12 @@ const CATEGORY_PATHS: Record<string, string> = {
   "women|spring-summer 2026 collection": "women/ready-wear/spring-summer-collection",
   "women|spring-summer 2026": "women/ready-wear/spring-summer-collection",
   "women|dresses and skirts": "women/ready-wear/dresses-and-skirts",
+  // The desktop WOMEN menu's "Dresses" item resolves to sub "Dresses"
+  // (MEGA_DESKTOP_WOMEN), whose URL is /women/dresses/. Without this
+  // entry a direct load of that URL fell through to the women's default
+  // page (bags [45]) — the same failure the RTW parent had (2026-11-17:
+  // cart Back landed on /women/dresses/ and showed bags).
+  "women|dresses": "women/dresses",
   // The women's RTW PARENT page (2026-11-16): the original's own URL is
   // /women/ready-wear/ (no "to"). Without this entry the slug fell through
   // to the generic matcher, found no sub called "ready-wear", and rendered
