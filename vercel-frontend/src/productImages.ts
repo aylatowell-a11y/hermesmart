@@ -6989,6 +6989,18 @@ const NEW_TILE: Record<number, string> = {
   6901: "https://assets.hermes.com/is/image/hermesproduct/0010407%2076_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6902: "https://assets.hermes.com/is/image/hermesproduct/5000977%2000_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   6903: "https://assets.hermes.com/is/image/hermesproduct/0003701%203Y_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1218: "https://assets.hermes.com/is/image/hermesproduct/0003611%20CA_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1223: "https://assets.hermes.com/is/image/hermesproduct/0003611%201A_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1260: "https://assets.hermes.com/is/image/hermesproduct/0003601%2037_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1270: "https://assets.hermes.com/is/image/hermesproduct/0003831%20CC_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1274: "https://assets.hermes.com/is/image/hermesproduct/0003101%203Y_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1305: "https://assets.hermes.com/is/image/hermesproduct/0003811%20EG_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1395: "https://assets.hermes.com/is/image/hermesproduct/1000531%20BN_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1400: "https://assets.hermes.com/is/image/hermesproduct/1000491%20GO_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1450: "https://assets.hermes.com/is/image/hermesproduct/0003621%20VP_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1451: "https://assets.hermes.com/is/image/hermesproduct/0003621%20CU_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1462: "https://assets.hermes.com/is/image/hermesproduct/0003911%20BB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  1483: "https://assets.hermes.com/is/image/hermesproduct/0002741%2037_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
 };
 
 const BAG_POOL = [picotinLock18V2, kellyShoulderV2, tablierSellier, boxBag, doubleLonge, neoDoubleSens35, fallbackHandbag];
