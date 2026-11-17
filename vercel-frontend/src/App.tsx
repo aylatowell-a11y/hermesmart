@@ -6775,9 +6775,19 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     const t = window.setTimeout(() => setCodeWait((v) => v - 1), 1000);
     return () => window.clearTimeout(t);
   }, [codeWait]);
-  // Consume the just-registered flag once (it only ever shows on the first
-  // login-form mount after sign-up).
-  useEffect(() => { if (load("hlx-just-registered", null)) save("hlx-just-registered", null); }, []);
+  // Follow the view's mode (2026-11-17 fix): the account page is usually
+  // opened WITHOUT a mode (view.mode undefined) and the visitor switches
+  // to the signup form inside the page, so after sign-up the redirect
+  // go({t:"account", mode:"login"}) does NOT remount this component
+  // (the key `view.mode ?? "login"` stays "login") — without this
+  // effect the signup form would stay visible and the new email would
+  // never be prefilled. Switching mode here also applies the
+  // just-registered flag (prefill + message) when it is present.
+  useEffect(() => {
+    setAuthMode(mode ?? "login");
+    const jr = load<{ email?: string } | null>("hlx-just-registered", null);
+    if (jr) { if (jr.email) setLiEmail(jr.email); setLiMsg("Your account has been created. Please sign in."); save("hlx-just-registered", null); }
+  }, [mode]);
   if (user) {
     // Phone / date of birth entered at sign-up (saved locally on
     // registration — the clone's account record holds name + email only).
