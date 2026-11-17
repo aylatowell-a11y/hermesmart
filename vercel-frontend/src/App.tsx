@@ -42,7 +42,7 @@ import { productImageFor } from "./productImages";
 import { HOME_TILE_ORDER } from "./homeTiles";
 import { BELT_TILE_ORDER } from "./beltTiles";
 import { galleryForProduct, hiResHermes } from "./galleryImages";
-import { accountUrl, categoryUrl, contactUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
+import { accountUrl, bespokeUrl, categoryUrl, contactUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
 
 type Product = ApiResponse<typeof api, "getStorefront">["products"][number];
 type Settings = ApiResponse<typeof api, "getStorefront">["settings"];
@@ -167,6 +167,9 @@ function megaTarget(entry: MegaEntry, overrides: NavOverrides, heading: string, 
     if (item === "Discover the runway shows") return { t: "category", cat: dest, sub: "Ready-to-Wear" };
     return { t: "category", cat: dest, sub: item === "View all" ? headingToSub(heading) : item };
   }
+  // The Equestrian menu's SADDLES heading is the original's bespoke
+  // editorial page (not a product listing) — 2026-11-17.
+  if (entry.key === "equestrian" && heading === "SADDLES") return { t: "page", page: "bespoke-equestrian" };
   // standalone heading
   const special: Record<string,string> = { "GIFTS FOR WOMEN":"For women","GIFTS FOR MEN":"For men","GIFTS FOR CHILDREN AND BABIES":"For children","GIFTS FOR DOGS":"For dogs","APPLE WATCH HERMÈS":"Cape Cod" };
   return { t: "category", cat: dest, sub: special[heading] || headingToSub(heading) };
@@ -686,6 +689,7 @@ export function App() {
     if (parsed && parsed.kind === "contact") return { view: { t: "page", page: "contact" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "account") return { view: { t: "account" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "cart") return { view: { t: "cart" } as View, productRef: null as string | null };
+    if (parsed && parsed.kind === "bespoke") return { view: { t: "page", page: "bespoke-equestrian" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "faq") return { view: { t: "faq", topic: parsed.topic } as View, productRef: null as string | null };
     // routing.ts only parses the payment FAQ topic; every other FAQ topic
     // (and the /us/en/faq/ landing) is resolved here from the path.
@@ -906,7 +910,7 @@ export function App() {
     // about) stay unrouted. The cart IS routed — the original's cart is
     // a full page at /us/en/cart/, and without its own history entry
     // browser Back from the cart skipped the product page entirely.
-    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "account" ? accountUrl() : v.t === "cart" ? "/us/en/cart/" : v.t === "faq" ? faqPath(v.topic) : null;
+    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "page" && v.page === "bespoke-equestrian" ? bespokeUrl() : v.t === "account" ? accountUrl() : v.t === "cart" ? "/us/en/cart/" : v.t === "faq" ? faqPath(v.topic) : null;
     if (url) { try { window.history.pushState(null, "", url); } catch { /* ignore */ } }
     if (v.t === "category" && !opts?.restore) pulse(2200);
     setView(v); setMobileNav(false); setMenuCat(null);
@@ -960,6 +964,12 @@ export function App() {
       if (parsed.kind === "cart") {
         if (cur.t === "category") saveCatState(cur);
         setView({ t: "cart" }); setMobileNav(false); setMenuCat(null);
+        window.scrollTo({ top: 0 });
+        return;
+      }
+      if (parsed.kind === "bespoke") {
+        if (cur.t === "category") saveCatState(cur);
+        setView({ t: "page", page: "bespoke-equestrian" }); setMobileNav(false); setMenuCat(null);
         window.scrollTo({ top: 0 });
         return;
       }
@@ -2247,6 +2257,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // (verified live 2026-11-16) — the siblings row stays empty. The
     // sticky bar itself (FILTER + Product/Mosaic toggle) still renders.
     siblings = [];
+  } else if (cat === "equestrian") {
+    // The original's Equestrian sub-nav: SADDLES is the bespoke
+    // editorial page, HORSE and RIDER are the sub-pages (2026-11-17).
+    siblings = [
+      { label: "Saddles", view: { t: "page", page: "bespoke-equestrian" } as View, current: false },
+      { label: "Horse", view: { t: "category", cat, sub: "Horse" } as View, current: isHorsePage },
+      { label: "Rider", view: { t: "category", cat, sub: "Rider" } as View, current: isRiderPage },
+    ];
+    siblings.push({ label: "View all", view: { t: "category", cat }, current: isEquestrianPage });
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -5223,6 +5242,83 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
               <p className="mt-6 text-right text-xs text-neutral-600">* Required information</p>
               <ContactForm settings={settings} go={go} />
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (page === "bespoke-equestrian") {
+    // Bespoke equestrian editorial page, per the original
+    // /us/en/content/344534-bespoke-equestrian/ (read live 2026-11-17):
+    // hero video with the title + intro overlaid at its foot, "Our range
+    // of saddles" intro, the 4 saddles in alternating two-column sections
+    // (text/photo), "A unique creation", then the 3 partner-rider profiles.
+    // All copy is verbatim from the original; the 4 saddle photos are the
+    // original's own editorial images (HEAD 200, 2026-11-17); the hero
+    // video is the original's own film, downloaded and self-hosted.
+    // NOT rendered: the "Highlighted images" workshop carousel (its 7
+    // photo URLs are unmapped in the page HTML — do not guess them) and
+    // the rider-profile photos (likewise unmapped) — the profiles render
+    // as text only.
+    const back = () => { if (window.history.length > 1) window.history.back(); else go({ t: "home" }); };
+    const mailto = "mailto:equitation@hermes.com?subject=Measure your desires";
+    const saddles: { name: string; type: string; price: string; img: string; desc: string }[] = [
+      { name: "Faubourg Saddle", type: "Jumping saddle, deep seat.", price: "$ 11000", img: "https://assets.hermes.com/is/image/hermesedito/079955CK3D_FAUBOURG-2?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "Embodying the quintessence of Hermès' centuries-old expertise, the Faubourg saddle, co-developed with world number 2 rider Jérôme Guéry, opens a new chapter in the history of the House's saddles. The desire for excellence and innovation has led to the creation of a saddle that stands out from the rest. It's unique. With its deep seat, narrow saddletree, integrated blocks, and fused flap design, the Faubourg saddle becomes one with the horse and reveals its technical and aesthetic innovations at first glance." },
+      { name: "Cavale Saddle", type: "Jumping saddle, mid-depth seat.", price: "$ 9700", img: "https://assets.hermes.com/is/image/hermesedito/060771CK89_CAVALE%20II?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "In line with the Hermès Cavale developed with Simon Delestre, the Hermès Cavale II saddle keeps the same technical advantages, all the while bringing the rider significantly closer to their horse. Thanks to its central balance that brings great stability and its highly comfortable stitch-free seat, this jumping saddle, carefully designed to meet high-level expectations, also makes an excellent all-purpose saddle." },
+      { name: "Vivace Saddle", type: "Jumping saddle, flat seat.", price: "$ 9700", img: "https://assets.hermes.com/is/image/hermesedito/068493CK3D_VIVACE-2?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "Successor to the Steinkraus saddle and more recently to the Hermès Allegro, the Hermès Vivace saddle offers an unprecedented sensation of closeness between the horse and its rider by eliminating unnecessary thickness and pressure points for improved comfort. Perfectly adapted to riders who enjoy riding as much as jumping, it combines an advanced center of gravity with stability and comfort." },
+      { name: "Arpège Saddle", type: "Dressage saddle, extra-deep seat.", price: "$ 10300", img: "https://assets.hermes.com/is/image/hermesedito/068619CK3D_ARPEGE-3?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "Developed in collaboration with Hermès partner rider Jessica von Bredow-Werndl, world and European champion, the Hermès Arpège saddle is both modern and elegant, enabling riders to compete at the highest level. Its stitch-free calfskin seat and single-flap design ensure unparalleled comfort and proximity to the horse." },
+    ];
+    const riders: { name: string; since: string; bio: string }[] = [
+      { name: "Jeanne Sadran", since: "Partner rider since 2025", bio: "Having ridden horses since she was a child, Jeanne Sadran is now considered a rising star in French show jumping. After making a name for herself at the highest level riding Dexter de Kerglenn, as a Hermès partner rider she is now making her mark on the international circuit with passion and determination." },
+      { name: "Ben Maher", since: "Partner rider since 2023", bio: "A British Olympic champion and rider with an equally precise and elegant style, Ben Maher is one of the biggest names in show jumping worldwide. Based in London, he began horseback riding very early in life and rapidly rose through the ranks until he reached the apex of his sport. Teaming up with Hermès in 2023 was a natural collaboration for this distinctly elegant rider, who is as passionate about perfecting movements as he is about respecting horses." },
+      { name: "Astier Nicolas", since: "Partner rider since 2013", bio: "An eventing rider with an exceptional track record, Astier Nicolas has represented French excellence on the international stage for several years. A Hermès partner rider since 2013, Astier combines precision with finesse and elegance—a unique signature style in the eventing world." },
+    ];
+    return (
+      <div className="mx-auto px-4 py-6 sm:py-8">
+        <div className="mx-auto w-full max-w-[1280px]">
+          <button aria-label="Back" className="font-mono-d mb-4 text-xs font-medium uppercase tracking-[0.15em] text-black" onClick={back}>← BACK</button>
+          <div className="relative">
+            <video src="/videos/bespoke-equestrian-hero.mp4" className="aspect-video w-full object-cover" autoPlay muted loop playsInline aria-label="The Hermès saddle film" />
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-6 pb-6 pt-16 text-white sm:px-10">
+              <h1 className="font-serif-d text-2xl italic sm:text-4xl">The Hermès saddle, savoir-faire and performance</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-7">180 years of expertise in creating sports saddles that fit horses perfectly and meet all their riders&apos; expectations.</p>
+            </div>
+          </div>
+          <div className="mx-auto mt-12 max-w-3xl text-center">
+            <h2 className="font-serif-d text-2xl italic">Our range of saddles</h2>
+            <p className="mt-4 text-sm leading-7 text-neutral-700">The Hermès saddle is where the House&apos;s expertise originates from. Each saddle is doubly custom-made and has its own identity. It harmoniously offers both its rider and horse a uniquely different riding experience.</p>
+            <p className="mt-6"><a className="font-mono-d text-xs font-medium uppercase tracking-[0.15em] underline underline-offset-4" href={mailto}>Contact one of our experts to create your saddle</a></p>
+          </div>
+          <div className="mx-auto mt-16 max-w-5xl">
+            {saddles.map((s, i) => (
+              <div key={s.name} className="mb-16 grid items-center gap-8 lg:grid-cols-2">
+                <div className={i % 2 === 1 ? "lg:order-2" : ""}>
+                  <h3 className="font-serif-d text-2xl italic">{s.name}</h3>
+                  <p className="mt-2 text-sm font-medium">{s.type}</p>
+                  <p className="mt-1 text-sm">{s.price}</p>
+                  <p className="mt-4 text-sm leading-7 text-neutral-700">{s.desc}</p>
+                </div>
+                <img src={s.img} alt={s.name} loading="lazy" className={`w-full object-cover ${i % 2 === 1 ? "lg:order-1" : ""}`} />
+              </div>
+            ))}
+          </div>
+          <div className="mx-auto mt-12 max-w-3xl text-center">
+            <h2 className="font-serif-d text-2xl italic">A unique creation</h2>
+            <p className="mt-4 text-sm leading-7 text-neutral-700">Each saddle is much more than an object: it&apos;s the result of a combination of passion, precision, and collaboration. Born from a unique three-way collaboration bringing together a partner rider, a saddle expert, and a craftsman, each piece is crafted by a single master saddler in our workshops in Faubourg, Paris, and Normandy.</p>
+            <p className="mt-6"><a className="font-mono-d text-xs font-medium uppercase tracking-[0.15em] underline underline-offset-4" href={mailto}>Contact our saddle experts</a></p>
+          </div>
+          <div className="mx-auto mt-16 max-w-3xl text-center">
+            <h2 className="font-serif-d text-2xl italic">Hermès, the exceptional contemporary saddler</h2>
+            <p className="mt-4 text-sm leading-7 text-neutral-700">The House is now represented by 14 international riders across the four Olympic disciplines: jumping, dressage, para-equestrian and eventing.</p>
+          </div>
+          <div className="mx-auto mt-10 max-w-3xl">
+            {riders.map((r) => (
+              <div key={r.name} className="mb-8 text-center">
+                <h3 className="font-serif-d text-xl italic">{r.name}</h3>
+                <p className="mt-1 text-xs uppercase tracking-[0.15em] text-neutral-500">{r.since}</p>
+                <p className="mt-3 text-sm leading-7 text-neutral-700">{r.bio}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

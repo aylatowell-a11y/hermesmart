@@ -17,7 +17,8 @@ export type ParsedRoute =
   | { kind: "faq"; topic: string }
   | { kind: "contact" }
   | { kind: "account" }
-  | { kind: "cart" };
+  | { kind: "cart" }
+  | { kind: "bespoke" };
 
 export function slugify(s: string): string {
   return s
@@ -116,6 +117,13 @@ export function contactUrl(): string {
   return "/us/en/contact-us/";
 }
 
+// The original's bespoke equestrian editorial page, verified live
+// 2026-11-17 (the Equestrian menu's SADDLES item links here, not to a
+// product listing).
+export function bespokeUrl(): string {
+  return "/us/en/content/344534-bespoke-equestrian/";
+}
+
 // The account page URL — a direct load of /us/en/account/ used to render
 // the homepage (parseUrl returned null for it), so the account view only
 // appeared after clicking the header Account icon at the same URL.
@@ -149,6 +157,7 @@ export function parseUrl(
   if (clean === "") return { kind: "home" };
   if (clean === "contact-us") return { kind: "contact" };
   if (clean === "account") return { kind: "account" };
+  if (clean === "content/344534-bespoke-equestrian") return { kind: "bespoke" };
   // The cart is a full page on the original (/us/en/cart/) — routed so
   // browser Back from it returns to the page the user came from
   // (2026-11-17: unrouted, Back skipped the product page entirely).
