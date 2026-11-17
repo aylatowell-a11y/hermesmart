@@ -5,13 +5,21 @@ import { api, type ApiResponse, type LocalChat } from "./api";
 // Original Hermes hero photo (hermes.com homepage, verified 2026-11-10):
 // black-and-white triangular tiled bench + blue patterned blanket on a beige
 // stone wall. Desktop 16:9, mobile 9:16 (the crop hermes.com serves ≤1023px).
+// It was the homepage hero until 2026-11-16; since the NOV_PHASE_2 republish
+// (2026-11-17) it is only the mega-menu fallback photo (megaImage below).
 const heroBenchImg = "https://assets.hermes.com/is/image/hermesedito/cover_maison_167?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
-const heroBenchImgMobile = "https://assets.hermes.com/is/image/hermesedito/Cover_maison_mobile?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
-// Original Hermes Baladeur poster (hermes.com homepage, verified 2026-11-10):
-// woman + bicycle + large white Afghan hound in front of a desert screen.
-// The video itself is served from public/videos/ as MP4 (see BOARD d).
-const baladeurPosterImg = "https://assets.hermes.com/is/image/hermesedito/Hero_Baladeur_Cover_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
-const baladeurPosterImgMobile = "https://assets.hermes.com/is/image/hermesedito/Hero_Baladeur_Cover_9x16?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+// Original Hermes "A winter's tale" hero video poster (hermes.com homepage,
+// NOV_PHASE_2, verified 2026-11-17 via the homepage content JSON):
+// burgundy boots on mossy rocks in a snowy pine forest. The video itself is
+// served from public/videos/ as MP4 (see BOARD a). Desktop 16:9, mobile 9:16.
+const heroBootsImg = "https://assets.hermes.com/is/image/hermesedito/HERMES_HOLIDAYS_26_BOOTS_15s_169?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const heroBootsImgMobile = "https://assets.hermes.com/is/image/hermesedito/HERMES_HOLIDAYS_26_BOOTS_15s_916?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+// Original Hermes Cottage video poster (hermes.com homepage, NOV_PHASE_2,
+// verified 2026-11-17 via the homepage content JSON): tan leather pouch on
+// a snow-dusted mossy rock in falling snow. The video itself is served from
+// public/videos/ as MP4 (see BOARD d). Desktop 16:9, mobile 9:16.
+const cottageImg = "https://assets.hermes.com/is/image/hermesedito/HERMES_HOLIDAYS_26_COTTAGE_06s_169?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const cottageImgMobile = "https://assets.hermes.com/is/image/hermesedito/HERMES_HOLIDAYS_26_COTTAGE_06s_916?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 // Original Hermes Horsescape High Jewelry homepage banner (hermes.com,
 // verified 2026-11-14 via the homepage content JSON
 // https://www.hermes.com/api/content/homepage?locale=us_en — block
@@ -118,7 +126,7 @@ function applyNavOverrides(overrides: NavOverrides): MegaEntry[] {
 }
 // One distinct photo per nav category (mega-menu left image). The `img` key
 // on each MEGA_RAW entry selects its photo; anything unknown falls back to
-// heroBenchImg (the real homepage bench photo).
+// heroBenchImg (the former homepage hero photo, NOV_PHASE_1).
 // Real Hermes photos for the mega-menu slots (hotlinked, as the user
 // requires — NO AI-generated images anywhere on the storefront). The
 // original's WOMEN menu photo is the SS27 runway show and its LEATHER
@@ -206,75 +214,71 @@ const SUBS_BY_CAT: Record<string, string[]> = (() => {
 })();
 const THEMES = ["Silk", "Beauty", "Belts", "Men's Shoes", "Fashion Jewelry", "Fragrances", "Watches", "Leather Goods", "Home"];
 // Discover carousel — verified on hermes.com (7 Nov 2026) by clicking controls 1–15,
-// re-verified live 2026-11-15: 15 slides, but only 5 themes, repeated three times
-// in this exact order. Every repeat shows the SAME products at the SAME prices.
+// re-verified live 2026-11-15, REPLACED 2026-11-17 by the NOV_PHASE_2
+// ("A winter's tale" / Holidays 26) republish, verified via the homepage
+// content JSON (id 403728, published 2026-11-16 09:20 UTC): 15 slides, but
+// only 5 themes, repeated three times in this exact order. Every repeat shows
+// the SAME products at the SAME prices.
 // The original shows NO visible numeric counter (only a segmented progress bar
 // under the carousel); each slide is labelled by its theme position, e.g.
-// "Belts, 1 of 5" — the 1/15 numbering lives only in the page structure.
-const CAROUSEL_BASE_THEMES = ["Belts", "Men's Shoes", "Fashion Jewelry", "Silk", "Beauty"];
-const CAROUSEL_THEMES: string[] = Array.from({ length: 15 }, (_, i) => CAROUSEL_BASE_THEMES[i % CAROUSEL_BASE_THEMES.length] ?? "Belts");
+// "Fashion Jewelry, 1 of 5" — the 1/15 numbering lives only in the page structure.
+const CAROUSEL_BASE_THEMES = ["Fashion Jewelry", "Women's shoes", "Scarves", "Fine Jewelry", "Small leather goods"];
+const CAROUSEL_THEMES: string[] = Array.from({ length: 15 }, (_, i) => CAROUSEL_BASE_THEMES[i % CAROUSEL_BASE_THEMES.length] ?? "Fashion Jewelry");
 // Discover carousel editorial photos — the ORIGINAL hermes.com homepage
-// (block_fetish, NOV_PHASE_1, re-verified 2026-11-10 via the translate
-// proxy): one editorial/MODEL photo per theme, NOT a product photo. The
-// homepage JSON holds exactly 5 slides; the 5 themes repeat 3× (slides 1/6/11 Belts,
-// 2/7/12 Men's shoes, …), exactly as CAROUSEL_THEMES repeats them —
-// nothing extra added, nothing invented. All 10 URLs below were fetched
-// (HTTP 200) and VIEWED: the 3x4 portrait crop is the original's mobile
-// editorial image and is used on every breakpoint because our slides are
-// portrait (3/4 mobile, 16:9 desktop); the original's desktop 16:9 crops
-// are the same scenes in landscape (Fashion jewelry desktop is 9:16, the
-// same face/bracelets close-up, even tighter). The 4 products shown under
-// each theme are unchanged (THEME_GRID_ORDER).
+// (block_fetish, NOV_PHASE_2 / HOLIDAY_26, verified 2026-11-17 via the
+// homepage content JSON): one editorial/MODEL photo per theme, NOT a product
+// photo. The homepage JSON holds exactly 5 slides; the 5 themes repeat 3×
+// (slides 1/6/11 Fashion Jewelry, 2/7/12 Women's shoes, …), exactly as
+// CAROUSEL_THEMES repeats them — nothing extra added, nothing invented.
+// All 10 URLs below were fetched (HTTP 200) and VIEWED: the 3x4 portrait
+// crop is the original's mobile editorial image and is used on every
+// breakpoint because our slides are portrait (3/4 mobile, 16:9 desktop);
+// the original's desktop 16:9 crops are the same scenes in landscape (all
+// five "9x16"-named desktop files actually serve 1920×1080 = 16:9, as
+// probed 2026-11-17). The 4 products shown under each theme are unchanged
+// (THEME_GRID_ORDER).
 const CAROUSEL_EDITORIAL: Record<string, { img: string; alt: string }> = {
-  "Belts": { img: "https://assets.hermes.com/is/image/hermesedito/WOMEN_BELT_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing the Kelly Pocket 18 belt" },
-  "Men's Shoes": { img: "https://assets.hermes.com/is/image/hermesedito/SHOES_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing brown leather loafers" },
-  "Fashion Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/FASHION_JEWELRY_BELT_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Close-up of a model wearing Kelly bracelets" },
-  "Silk": { img: "https://assets.hermes.com/is/image/hermesedito/SILK_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing a patterned silk scarf" },
-  "Beauty": { img: "https://assets.hermes.com/is/image/hermesedito/MAKEUP_NOV_P1_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Close-up of a model wearing red lipstick" },
+  "Fashion Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/FASHION_JEWELRY_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Gold Clic H bracelet on a snow-dusted mossy rock in a pine forest" },
+  "Women's shoes": { img: "https://assets.hermes.com/is/image/hermesedito/WOMEN_SHOES_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Burgundy leather slingback heels on moss-covered rocks in a pine forest" },
+  "Scarves": { img: "https://assets.hermes.com/is/image/hermesedito/MEN_SILK_HOLIDAY_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Yellow equestrian-pattern fringed scarf draped over a pine branch" },
+  "Fine Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/GOLD_JEWELRY_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Gold rings resting on a frost-covered pine branch" },
+  "Small leather goods": { img: "https://assets.hermes.com/is/image/hermesedito/LEATHER_GOODS_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Black leather wallet with gold clasp on a snow-dusted mossy rock" },
 };
 // Discover carousel DESKTOP editorial photos — the original's desktop
 // (≥1024px) carousel serves the SAME scenes in 16:9 landscape (verified
-// 2026-11-10: all 5 URLs HTTP 200 at wid=1920; the probed files are
-// 1237×696 = 16:9, including the "9x16"-named Fashion Jewelry one). The
-// desktop carousel uses these for EVERY slide — centre and side strips
-// alike — so a strip becoming the centre only changes width, never the
-// image (the strips show the 16:9 image centre-cropped to 128px, exactly
-// as on hermes.com). Mobile keeps the 3x4 portrait URLs above.
+// 2026-11-17: all 5 URLs HTTP 200 at wid=1920; the probed files are
+// 1920×1080 = 16:9, including the "9x16"-named ones). The desktop carousel
+// uses these for EVERY slide — centre and side strips alike — so a strip
+// becoming the centre only changes width, never the image (the strips show
+// the 16:9 image centre-cropped to 128px, exactly as on hermes.com).
+// Mobile keeps the 3x4 portrait URLs above.
 const CAROUSEL_EDITORIAL_DESKTOP: Record<string, { img: string; alt: string }> = {
-  "Belts": { img: "https://assets.hermes.com/is/image/hermesedito/WOMEN_BELT_NOV_P1_26_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing the Kelly Pocket 18 belt" },
-  "Men's Shoes": { img: "https://assets.hermes.com/is/image/hermesedito/SHOES_NOV_P1_26_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing brown leather loafers" },
-  "Fashion Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/FASHION_JEWELRY_BELT_NOV_P1_26_9x16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Close-up of a model wearing Kelly bracelets" },
-  "Silk": { img: "https://assets.hermes.com/is/image/hermesedito/SILK_NOV_P1_26_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Model wearing a patterned silk scarf" },
-  "Beauty": { img: "https://assets.hermes.com/is/image/hermesedito/MAKEUP_NOV_P1_26_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Close-up of a model wearing red lipstick" },
+  "Fashion Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/FASHION_JEWELRY_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Gold Clic H bracelet on a snow-dusted mossy rock in a pine forest" },
+  "Women's shoes": { img: "https://assets.hermes.com/is/image/hermesedito/WOMEN_SHOES_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Burgundy leather slingback heels on moss-covered rocks in a pine forest" },
+  "Scarves": { img: "https://assets.hermes.com/is/image/hermesedito/MEN_SILK_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Yellow equestrian-pattern fringed scarf draped over a pine branch" },
+  "Fine Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/GOLD_JEWELRY_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Gold rings resting on a frost-covered pine branch" },
+  "Small leather goods": { img: "https://assets.hermes.com/is/image/hermesedito/LEATHER_GOODS_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Black leather wallet with gold clasp on a snow-dusted mossy rock" },
 };
-// Verified theme grids on hermes.com (7 Nov 2026, re-verified live
-// 11 Nov 2026 16:40, browser task f0a7843e): the exact four products, in
-// this order, shown under each carousel theme. Resolved by refCode, NOT by
-// name — name-matching landed on the wrong colour variant (Bouncing sneaker
-// Blanc instead of Beige/Natural, Noe loafer Brun instead of Yellow).
-// Entries starting with "id:" resolve by product id — used only for the
-// Serif strap row (id 16), whose refCode is empty in our data.
-// Tiebreaks (disclosed, verify against the live tile photo): Bouncing
-// sneaker H221898ZHBG is the FIRST Beige/Natural $1,275 Bouncing in the
-// men's shoes category (extraction pos 151); five other same-name/price/
-// colour rows exist (H262851ZHF8, H231763ZHNL, H221898ZHX3, H231763ZHX3,
-// H27100GZHAF). Mini Thalassa H500522FD89 is the FIRST Black $580 in the
-// bracelets category (extraction pos 108); alternatives H500522FC89,
-// H500522FK89. White variant ADDED 2026-11-11 as id 5086 (ref H004391Sv05,
-// $660, live-read); Silk slot 1 now points at it (was H004391Sv02
-// Marine/Rouge). Noe loafer H262834ZAAC: colour corrected
-// Brun -> Yellow in data.ts (live extraction pos 262 + theme tile both
-// Yellow). Kelly Pocket 18 belt H081120CK89 price $1,375 -> $2,150 in
-// data.ts (same change). Names NOT renamed here: Chaine d'ancre necklace /
-// earrings (product-page fetch 403'd — unverified); Beauty renames
-// (Eye shadow quartet / Nail polish) ARE in data.ts, product-page
-// confirmed.
+// Verified theme grids on hermes.com — the exact four products, in this
+// order, shown under each carousel theme. Resolved by refCode, NOT by name
+// — name-matching landed on the wrong colour variant before (Bouncing
+// sneaker Blanc instead of Beige/Natural, Noe loafer Brun instead of
+// Yellow). Entries starting with "id:" resolve by product id.
+// NOV_PHASE_2 grids (verified 2026-11-17 via the homepage content JSON,
+// id 403728, and live on hermes.com/us/en/ the same day): all five themes
+// and all 20 products replaced — every name, price and colour below was
+// checked against the JSON and exists in data.ts at that refCode.
+// Maillons d'Hiver scarf H394860Tv01: colour corrected Blue -> Beige/Natural
+// in data.ts (the JSON variant is Beige/Natural and the 01 folded asset
+// photo is visibly beige). The old NOV_PHASE_1 grids (Belts / Men's Shoes /
+// Fashion Jewelry / Silk / Beauty, verified 7 Nov 2026, re-verified live
+// 11 Nov 2026) are superseded — the original no longer shows them.
 const THEME_GRID_ORDER: Record<string, string[]> = {
-  "Belts": ["H081120CK89", "H010439CK55080", "H011790UCAAXS", "id:16"],
-  "Men's Shoes": ["H261807ZHAF", "H262820ZHNL", "H262834ZAAC", "H261881ZHD8390"],
-  "Fashion Jewelry": ["H100096FE03", "H306324FvN2", "H100095FE03", "H500522FD89"],
-  "Silk": ["H004391Sv05", "H061144Sv06", "H251526Sv02", "H891071Sv01"],
-  "Beauty": ["VP25SETD25BUNDLE", "V60875PV007", "H104951Mv01", "V60863PV002"],
+  "Fashion Jewelry": ["H300003FO6Y", "H262066GvBO", "H011123CK6O", "H251053GvTI"],
+  "Women's shoes": ["H252128ZvL1", "H242107ZvML", "H271194ZvAC", "H261257ZvA3"],
+  "Scarves": ["H394402Tv02", "H394860Tv01", "H362953Sv07", "H243162Sv05"],
+  "Fine Jewelry": ["H225618Bv00", "H125506Bv00", "H123431Bv00", "H126303Bv00"],
+  "Small leather goods": ["H087985CK89", "H041054CK55", "H088129CK89", "H088212CKAD"],
 };
 // Homepage theme-grid eyebrow labels — measured on hermes.com's homepage
 // HTML (2026-11-16): only the two Beauty cards carry one, rendered in
@@ -675,7 +679,7 @@ export function App() {
   const qc = useQueryClient();
   const store = useQuery({ queryKey: ["storefront"], queryFn: () => api.getStorefront({}) });
   const products = useMemo(() => store.data?.products ?? [], [store.data]);
-  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "800-441-4488", heroTitle: "Threading ideas", heroText: "", shipTo: "UNITED STATES", deliveryText: "", returnsText: "", paymentMethods: "", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10am - 9pm EST", logoMode: "both", logoUrl: "", flagshipStore: "691 Madison Avenue, New York", shipToCountries: "UNITED STATES", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. All rights reserved.", serviceDeliveryBody: "Free standard delivery. Herm\u00e8s offers several fast and secure delivery options.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
+  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "800-441-4488", heroTitle: "A winter's tale", heroText: "", shipTo: "UNITED STATES", deliveryText: "", returnsText: "", paymentMethods: "", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10am - 9pm EST", logoMode: "both", logoUrl: "", flagshipStore: "691 Madison Avenue, New York", shipToCountries: "UNITED STATES", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. All rights reserved.", serviceDeliveryBody: "Free standard delivery. Herm\u00e8s offers several fast and secure delivery options.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
 
   // Real URLs (History API routing): the initial view comes from the URL
   // when it is a routed one (category, contact page, or home); a product
@@ -1291,7 +1295,7 @@ export function App() {
 
 function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pulse }: { settings: Settings; products: Product[]; themeIdx: number; setThemeIdx: (i: number) => void; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; pulse: (ms?: number) => void }) {
   const activeIdx = Math.min(CAROUSEL_THEMES.length - 1, Math.max(0, themeIdx));
-  const theme = CAROUSEL_THEMES[activeIdx] ?? "Belts";
+  const theme = CAROUSEL_THEMES[activeIdx] ?? "Fashion Jewelry";
   const strip = products.filter((p) => p.theme === theme);
   // Grid = the verified four products for this theme, in verified order, so
   // positions 1/6/11 (Belts), 2/7/12, … always show identical products/prices.
@@ -1299,8 +1303,12 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
   const orderedRefs = THEME_GRID_ORDER[theme];
   const ordered = orderedRefs ? orderedRefs.map((r) => r.startsWith("id:") ? products.find((p) => p.id === Number(r.slice(3))) : products.find((p) => p.refCode === r)).filter((p): p is Product => !!p) : [];
   const shown = (ordered.length ? ordered : strip.length ? strip : products).slice(0, 4);
-  const heroText = settings.heroText || "The blanket provides a canvas that can take any direction, from reimagining motifs to asserting a bold artistic signature. Its playful composition allows style to express itself on a larger scale.";
-  const heroWords = (settings.heroTitle || "Threading ideas").split(" ");
+  // The original's hero has NO description paragraph in NOV_PHASE_2 (the
+  // homepage JSON text is just the title + CTA token) — heroText is empty
+  // unless an admin sets one, and the paragraph renders only then. (The
+  // old "Threading ideas" blanket text was the NOV_PHASE_1 hero copy.)
+  const heroText = settings.heroText || "";
+  const heroWords = (settings.heroTitle || "A winter's tale").split(" ");
   const heroFirst = heroWords[0] ?? "Threading";
   const heroRest = heroWords.slice(1).join(" ") || "ideas";
   const CAROUSEL_N = CAROUSEL_THEMES.length; // 15 slides (5 themes x 3)
@@ -1346,34 +1354,50 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
     // (/women/fashion-jewelry/), not the fine-jewelry page — the first
     // product carrying that theme may be a fine row, so do not infer it.
     if (t === "Fashion Jewelry") return { t: "category", cat: "fashion-jewelry" };
+    // NOV_PHASE_2 themes (2026-11-17): the grid products' stored `theme`
+    // values do not carry these names (shoes/scarves/SLG rows have "" /
+    // "Silk" / "Leather Goods"; fine-jewelry rows carry "Fashion Jewelry"),
+    // so the destinations are explicit. Scarves: the original's theme link
+    // points at men's scarves, but the four grid products are women's rows
+    // in our data — the destination is where the products are.
+    if (t === "Women's shoes") return { t: "category", cat: "women", sub: "Shoes" };
+    if (t === "Scarves") return { t: "category", cat: "women", sub: "Scarves, shawls and stoles" };
+    if (t === "Fine Jewelry") return { t: "category", cat: "jewelry" };
+    if (t === "Small leather goods") return { t: "category", cat: "leather", sub: "Small leather goods" };
     const rep = products.find((p) => p.theme === t);
     return rep ? { t: "category", cat: rep.category } : { t: "home" };
   };
   const [vidPaused, setVidPaused] = useState(false);
   const [vidMuted, setVidMuted] = useState(true);
-  // Baladeur video: portrait MP4 + poster on phones, landscape on desktop
+  // Homepage videos (NOV_PHASE_2, 2026-11-17): the hero boots film and the
+  // Cottage film — portrait MP4 + poster on phones, landscape on desktop
   // (the original serves 9:16 mobile / 16:9 desktop). MP4s live in
-  // public/videos/ (dress-video precedent); poster is the Hermes CDN cover.
-  const baladeurIsMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches;
-  const baladeurSrc = baladeurIsMobile ? "/videos/baladeur-mobile.mp4" : "/videos/baladeur-desktop.mp4";
-  const baladeurPoster = baladeurIsMobile ? baladeurPosterImgMobile : baladeurPosterImg;
-  // The Baladeur film is the ONLY video on the homepage (verified on
-  // hermes.com). It starts moving when scrolled into view and freezes when
-  // out of view or paused — exactly the real behaviour. NOTE (2026-11-10):
-  // the original Hermes video file could NOT be wired in yet — its URL is
-  // not in any product asset list, the homepage HTML is Cloudflare-blocked
-  // and the archived copy is rate-limited, so no verified video URL exists
-  // for it. Until one is found, the motion stays recreated in-app on the
-  // editorial still (slow cinematic pan); the controls match the real ones.
+  // public/videos/ (Baladeur precedent); posters are the Hermes CDN stills.
+  const heroIsMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches;
+  const heroBootsSrc = heroIsMobile ? "/videos/hero-boots-mobile.mp4" : "/videos/hero-boots-desktop.mp4";
+  const heroBootsPoster = heroIsMobile ? heroBootsImgMobile : heroBootsImg;
+  const [heroPaused, setHeroPaused] = useState(false);
+  const [heroMuted, setHeroMuted] = useState(true);
+  const cottageSrc = heroIsMobile ? "/videos/cottage-mobile.mp4" : "/videos/cottage-desktop.mp4";
+  const cottagePoster = heroIsMobile ? cottageImgMobile : cottageImg;
+  // The Cottage film starts moving when scrolled into view and freezes when
+  // out of view or paused — exactly the real behaviour.
   const vidRef = useRef<HTMLElement>(null);
   const [vidInView, setVidInView] = useState(false);
   useEffect(() => { const el = vidRef.current; if (!el) return; const ob = new IntersectionObserver((es) => setVidInView(!!es[0]?.isIntersecting), { threshold: 0.2 }); ob.observe(el); return () => ob.disconnect(); }, []);
   return (
     <div className="overflow-x-clip">
-      {/* BOARD a) HERO — full-viewport, full-bleed; the whole hero is a link */}
-      <section className="relative cursor-pointer overflow-x-clip" onClick={() => go({ t: "category", cat: "home", sub: "Blankets and pillows" })} aria-label="Threading ideas — discover the blanket collection">
-        <picture>
-          <source media="(max-width: 640px)" srcSet={heroBenchImgMobile} />
+      {/* BOARD a) HERO — full-viewport, full-bleed video ("A winter's tale",
+          NOV_PHASE_2, 2026-11-17). On the original the video itself is a
+          "Play the illustration video" button (click toggles play/pause) and
+          ONLY the CTA navigates — to women's shoes. The title sits ~100px
+          above the bottom, the CTA ~55px above it (measured live 2026-11-17,
+          1919x998); Pause + sound controls sit bottom-right, ~25-30px above
+          the bottom, sound closest to the right edge. */}
+      <section className="relative overflow-x-clip" aria-label="A winter's tale — wander into our collection">
+        <div role="button" aria-label={heroPaused ? "Play the illustration video" : "Pause the illustration video"} aria-pressed={!heroPaused} tabIndex={0} className="cursor-pointer"
+          onClick={() => setHeroPaused(!heroPaused)}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setHeroPaused(!heroPaused); } }}>
           {/* Mobile height is FULL-SCREEN (100svh, 100vh fallback), as on
               hermes.com: the user's phone screenshots (2026-11-12) show the
               original's mobile hero running to the bottom of the screen
@@ -1383,8 +1407,8 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
               image read warmer/brighter than the original's taller crop.
               100svh fills the visible screen (accounting for the mobile
               browser chrome); 100vh is the fallback for older browsers. */}
-          <img src={heroBenchImg} alt="Blue patterned blanket folded on a black-and-white triangular tiled bench against a beige stone wall" className="h-screen h-[100svh] w-full object-cover object-center sm:h-screen" />
-        </picture>
+          <ProductVideo src={heroBootsSrc} poster={heroBootsPoster} playing={!heroPaused} muted={heroMuted} className="h-screen h-[100svh] w-full object-cover object-center sm:h-screen" />
+        </div>
         {/* Vintage dark gradients, as on hermes.com (measured live
             2026-11-11 23:21): top darkening ~15–20% of the height,
             near-black at the very top (behind the header); bottom
@@ -1396,9 +1420,21 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent pb-6 pt-6 text-white sm:pb-8 sm:pt-8">
           <div className="mx-auto max-w-[629px] px-[15px] text-center">
             <h1 className="font-serif-d text-[34px] italic leading-tight"><span>{heroFirst}</span> {heroRest}</h1>
-            <p className="mx-auto mt-1 w-full max-w-[500px] break-words font-serif-d text-[16px] italic leading-[21px]">{heroText}</p>
-            <button aria-label="Discover the blanket collection" className="font-mono-d mt-4 text-[11px] uppercase tracking-[1px] underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "home", sub: "Blankets and pillows" })}>Discover</button>
+            {heroText ? <p className="mx-auto mt-1 w-full max-w-[500px] break-words font-serif-d text-[16px] italic leading-[21px]">{heroText}</p> : null}
+            <button aria-label="Wander into our collection" className="font-mono-d mt-4 text-[11px] uppercase tracking-[1px] underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "women", sub: "Shoes" })}>Wander into our collection</button>
           </div>
+        </div>
+        <div className="absolute bottom-[10px] right-[10px] z-10 flex items-center gap-[5px]">
+          <button aria-label={heroPaused ? "Play video" : "Pause video"} aria-pressed={heroPaused} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setHeroPaused(!heroPaused)}>
+            {heroPaused
+              ? <svg width="10" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>
+              : <svg width="10" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>}
+          </button>
+          <button aria-label={heroMuted ? "Enable sound" : "Mute"} aria-pressed={!heroMuted} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setHeroMuted(!heroMuted)}>
+            {heroMuted
+              ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16 9l6 6M22 9l-6 6" /></svg>
+              : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>}
+          </button>
         </div>
       </section>
 
@@ -1433,7 +1469,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             white label button only on the centre slide, 32px above its
             bottom. Clicking a strip (or an arrow) brings it to the centre
             with a smooth width transition and the previous centre becomes
-            a strip. Starts with BELTS (index 0) in the centre. The window
+            a strip. Starts with FASHION JEWELRY (index 0) in the centre. The window
             renders the 11 slides around the active index (circular), so
             wrapping 15→1 / 1→15 is seamless and no slide mounts/unmounts
             in view. */}
@@ -1441,7 +1477,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           <div className="flex h-[35vw] justify-center gap-[3px]">
             {Array.from({ length: 11 }, (_, k) => k - 5).map((off) => {
               const logicalIdx = (((activeIdx + off) % CAROUSEL_THEMES.length) + CAROUSEL_THEMES.length) % CAROUSEL_THEMES.length;
-              const t = CAROUSEL_THEMES[logicalIdx] ?? "Belts";
+              const t = CAROUSEL_THEMES[logicalIdx] ?? "Fashion Jewelry";
               const ed = CAROUSEL_EDITORIAL_DESKTOP[t];
               if (!ed) return null;
               const isActive = off === 0;
@@ -1472,7 +1508,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           <div className="flex h-[97.33vw] justify-center gap-[3px]">
             {Array.from({ length: 11 }, (_, k) => k - 5).map((off) => {
               const logicalIdx = (((activeIdx + off) % CAROUSEL_THEMES.length) + CAROUSEL_THEMES.length) % CAROUSEL_THEMES.length;
-              const t = CAROUSEL_THEMES[logicalIdx] ?? "Belts";
+              const t = CAROUSEL_THEMES[logicalIdx] ?? "Fashion Jewelry";
               const ed = CAROUSEL_EDITORIAL[t];
               if (!ed) return null;
               const isActive = off === 0;
@@ -1508,43 +1544,24 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
       </div>
       </section>
 
-      {/* BOARD d) VIDEO — full-bleed board, as on hermes.com (measured
-          2026-11-11, 1919x998): the 16:9 Baladeur video is 600px tall
-          (60vh, min 550px — at 1366 the original's video is ~550px, not
-          the 62vh ~390px the old code gave) and the title, sub-text and
-          Discover link are OVERLAID on the video's lower dark area —
-          there is NO black block below the video. A dark gradient covers
-          the bottom ~53% of the board (near-black at the bottom).
-          Controls are bare white glyphs (no white squares) at the
-          video's bottom-right: pause glyph 64px from the right edge,
-          sound glyph 21px from it, both centred 28px above the bottom
-          (30px gap between glyphs). The Kelly board abuts directly
-          below (no gap). (An earlier note claiming a black block below
-          the video was WRONG — the user's screenshots + live measurement
-          prove the overlay.)
-          MOBILE HEIGHT (fixed 2026-11-12 from the user's phone
-          screenshots of hermes.com, 720x1640): the original's mobile
-          video is TALLER than the 62vh the old code used — the DISCOVER
-          underline sits ~58px above the video bottom and the video runs
-          to the bottom of the screen, giving ~76vh, so the board is
-          75vh on phones (desktop stays 60vh / min 550px). At 75vh the
-          9:16 mobile video shows almost uncropped (360 wide x ~615
-          tall ≈ the video's natural 9:16 shape). */}
-      <section ref={vidRef} className="relative overflow-hidden bg-black" aria-label="The great outdoors in stereo video">
+      {/* BOARD d) VIDEO — Cottage film, full-bleed board (NOV_PHASE_2,
+          2026-11-17; the Baladeur board was removed from the original
+          homepage in the same republish). Same board geometry as the old
+          Baladeur board (desktop FULL viewport height, 100vh; mobile 75vh)
+          and the same overlay pattern: a dark gradient over the bottom
+          ~53% (near-black at the bottom) and NO black block below the
+          video. The original shows NO title here — only the CTA, centred
+          ~60px above the video bottom (measured live 2026-11-17,
+          1919x998). Controls are bare white glyphs (no white squares) at
+          the video's bottom-right, ~25px above the bottom, sound closest
+          to the right edge. The Horsescape banner abuts directly below
+          (no gap). */}
+      <section ref={vidRef} className="relative overflow-hidden bg-black" aria-label="Explore our small leather goods collection video">
         <div className="relative overflow-hidden">
-        {/* Baladeur video board — desktop is FULL viewport height (100vh):
-            measured live 2026-11-12 ~21:55 at 1919x998: the original's
-            board is ~998px (100vh), NOT 60vh/min-550px (the clone's old
-            599px was ~40% too short). The audit's "~360px" reading was
-            wrong. Mobile stays 75vh (Round 10b, from the user's video).
-            Caption stays at bottom-[58px]: the original's caption underline
-            is 58px above the board bottom, the clone's is 56px — identical. */}
-        <ProductVideo src={baladeurSrc} poster={baladeurPoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[75vh] w-full object-cover lg:h-screen" />
+        <ProductVideo src={cottageSrc} poster={cottagePoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[75vh] w-full object-cover lg:h-screen" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[53%] bg-gradient-to-t from-black via-black/60 to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-[58px] z-10 px-4 text-center text-white">
-          <h2 className="font-serif-d text-[30px] italic">The great outdoors in stereo</h2>
-          <p className="font-serif-d mx-auto mt-1 text-[20px] italic">Ride lightly, listen largely. The Hermès sound comes where the road begins.</p>
-          <button aria-label="Discover the equestrian collection" className="font-mono-d pointer-events-auto mt-5 text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => go({ t: "category", cat: "equestrian" })}>Discover the collection</button>
+          <button aria-label="Explore our small leather goods collection" className="font-mono-d pointer-events-auto text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => go({ t: "category", cat: "leather", sub: "Small leather goods" })}>Explore our small leather goods collection</button>
         </div>
         <div className="absolute bottom-[10px] right-[10px] z-10 flex items-center gap-[5px]">
           <button aria-label={vidPaused ? "Play video" : "Pause video"} aria-pressed={vidPaused} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setVidPaused(!vidPaused)}>
@@ -1562,8 +1579,9 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
       </section>
 
       {/* Horsescape High Jewelry banner — on the original it sits below the
-          Baladeur board and above the service strip (Kelly editorial removed
-          from the original homepage 2026-11-16; verified via homepage JSON).
+          Cottage video board and above the service strip (Baladeur removed
+          from the original homepage 2026-11-17; Kelly editorial removed
+          2026-11-16; verified via homepage JSON + live).
           Full-bleed photo, caption + DISCOVER at the bottom centre; the
           original's DISCOVER goes to the "Hermès: jeweler of shapes" story
           page, which the clone does not have — the section links to the
