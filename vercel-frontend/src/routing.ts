@@ -129,6 +129,19 @@ const CATEGORY_PATHS: Record<string, string> = {
   // Watches Timepieces page (Group 6, 2026-11-17) — the original's
   // own URL /us/en/category/timepieces/.
   "watches|timepieces": "timepieces",
+  // Watches Women / Men pages (Group 9, 2026-11-18) — the original's
+  // own URLs /us/en/category/watches/women/ and /watches/men/.
+  // (The generic slug fallback already produced these, but explicit
+  // entries pin them.)
+  "watches|women": "watches/women",
+  "watches|men": "watches/men",
+  // Gifts sub-pages (Group 9, 2026-11-18) — the original's own URLs.
+  // Without these the generic slug fallback resolved "for women" to
+  // /gifts/for-women/ (wrong) and the other three likewise.
+  "gifts|for women": "gifts/gifts-for-women",
+  "gifts|for men": "gifts/gifts-for-men",
+  "gifts|for children": "gifts/gifts-for-children-and-babies",
+  "gifts|for dogs": "gifts/gifts-for-dogs",
   "fragrances|": "fragrances-and-make-up",
   // Fragrances sub-pages (2026-11-17) — the original's own URLs
   // (/fragrances/art-living/ is the Bath page; /fragrances/women/ and

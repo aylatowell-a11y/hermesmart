@@ -2011,8 +2011,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // Watches "Our collections" view (2026-11-15): the all-watches
       // list, gated on watchPos like the parent page.
       "our collections": (p) => p.category === "watches" && p.watchPos !== undefined,
-      "women": (p) => p.category === "watches" || p.category === "women",
-      "men": (p) => p.category === "watches" || p.category === "men",
+      // Group 9 (2026-11-18): the Watches Women / Men pages are
+      // gendered listings with their own live orders (200 / 51 tiles,
+      // watchWomenPos / watchMenPos). The old gate returned every
+      // watches row + every women/men row (2,664 / 1,146). Branch on
+      // cat: only cat "watches" uses the new fields. The Jewelry Men
+      // page (cat "jewelry", sub "men") keeps the old behaviour —
+      // its live list has not been read yet.
+      "women": (p) => cat === "watches" ? p.watchWomenPos !== undefined : p.category === "watches" || p.category === "women",
+      "men": (p) => cat === "watches" ? p.watchMenPos !== undefined : p.category === "watches" || p.category === "men",
       // Group 4 (2026-11-17) — "Straps" is TWO pages sharing one sub
       // name: leather bag straps (16, category leather) under
       // ACCESSORIES, and watch straps (50, category watches) under
@@ -2092,10 +2099,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "decorative objects and games": (p) => p.objectsPos !== undefined,
       "sports and outdoor": (p) => p.sportsPos !== undefined,
       "beach": (p) => p.beachPos !== undefined,
-      "for women": (p) => p.subcategory === "For women" || p.category === "gifts",
-      "for men": (p) => p.category === "gifts",
-      "for children": (p) => p.category === "gifts",
-      "for dogs": (p) => p.subcategory === "Scarves, shawls and stoles" && /chiens/i.test(p.name),
+      // Group 9 (2026-11-18): the four Gifts sub-pages are separate
+      // listings with their own live orders (women 278, men 219,
+      // children 72, dogs 54). The old syns returned the whole gifts
+      // category (2 rows each) or a scarves/chiens guess (11 rows).
+      // Field-only gates — tagged rows span categories.
+      "for women": (p) => p.giftWomenPos !== undefined,
+      "for men": (p) => p.giftMenPos !== undefined,
+      "for children": (p) => p.giftChildPos !== undefined,
+      "for dogs": (p) => p.giftDogsPos !== undefined,
       "dresses": (p) => p.category === cat && p.subcategory === "Dresses and skirts" && (cat === "women" ? p.dressPos !== undefined : true),
       // Ready-to-wear parent pages (2026-11-16) — the original's live
       // order lives in wRtwPos (women, 421 tiles) / mRtwPos (men, 207
@@ -2304,6 +2316,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // timepiecePos, with the "Discover what's possible" / "Ahead of
   // time" inserts and the horology paragraph below the grid.
   const isTimepiecesPage = cat === "watches" && subLow === "timepieces";
+  // Watches Women / Men pages (Group 9, 2026-11-18) — the original's
+  // /us/en/category/watches/women/ (200 tiles) and /watches/men/
+  // (51 tiles) listings, sorted by watchWomenPos / watchMenPos, with
+  // their own inserts, paragraphs and theme carousels below the grid.
+  // No sub-nav row on either page (live category page text fetch).
+  const isWatchWomenPage = cat === "watches" && subLow === "women";
+  const isWatchMenPage = cat === "watches" && subLow === "men";
   // Petit h page (Group 7, 2026-11-18) — the original's
   // /us/en/category/petit-h/ listing (276 tiles), sorted by
   // petitHPos, with the "Applied creativity" / "Deconstructing the
@@ -2412,6 +2431,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // description (collapsed + See More, as on the original). The
   // original shows NO sub-nav buttons and NO "GIFTS" eyebrow here.
   const isGiftsPage = cat === "gifts" && !sub;
+  // Gifts sub-pages (Group 9, 2026-11-18) — the original's
+  // /gifts/gifts-for-women/ (278 tiles), /gifts/gifts-for-men/
+  // (219), /gifts/gifts-for-children-and-babies/ (72) and
+  // /gifts/gifts-for-dogs/ (54) listings, sorted by giftWomenPos /
+  // giftMenPos / giftChildPos / giftDogsPos. No sub-nav row on any
+  // of the four (the parent page has none either, verified live
+  // 2026-11-16; the sub-page reads report none).
+  const isGiftWomenPage = cat === "gifts" && subLow === "for women";
+  const isGiftMenPage = cat === "gifts" && subLow === "for men";
+  const isGiftChildPage = cat === "gifts" && subLow === "for children";
+  const isGiftDogsPage = cat === "gifts" && subLow === "for dogs";
   // Hair accessories page (cat "women", sub "Hair accessories",
   // 2026-11-16) — sorts by hairPos (the original's live order, 26
   // tiles) and lives at /us/en/category/women/hair-accessories/ on the
@@ -2469,9 +2499,18 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // The original's H1 capitalises "Art" ("Home and Art of living");
     // titleCaseSub would lowercase it ("Home and art of living").
     "home and art of living": "Home and Art of living",
+    // Group 9 (2026-11-18): the original's Gifts sub-page H1s are
+    // "Gifts for women" / "Gifts for men" / "Gifts for children and
+    // babies" / "Gifts for dogs" (live reads — the children heading
+    // reads "Gifts for children and babies [72]"); titleCaseSub
+    // would render only "For women" etc.
+    "for women": "Gifts for women",
+    "for men": "Gifts for men",
+    "for children": "Gifts for children and babies",
+    "for dogs": "Gifts for dogs",
   };
   const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : (isCharmsPage || isLeatherAccPage || isStrapsPage) ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage || isLuggagePage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isHomeArtPage ? "" : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isBeachPage || isWomensAccPage) ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : (isTiesPage || isMensScarvesPage) ? "MEN | TIES AND SCARVES" : isMenTiesParentPage ? label : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const crumbTop = isGiftWomenPage ? "GIFTS | GIFTS FOR WOMEN" : isGiftMenPage ? "GIFTS | GIFTS FOR MEN" : isGiftChildPage ? "GIFTS | GIFTS FOR CHILDREN AND BABIES" : isGiftDogsPage ? "GIFTS | GIFTS FOR DOGS" : isWatchWomenPage ? "WATCHES | TIMEPIECES | WOMEN" : isWatchMenPage ? "WATCHES | TIMEPIECES | MEN" : isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : (isCharmsPage || isLeatherAccPage || isStrapsPage) ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage || isLuggagePage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isHomeArtPage ? "" : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isBeachPage || isWomensAccPage) ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : (isTiesPage || isMensScarvesPage) ? "MEN | TIES AND SCARVES" : isMenTiesParentPage ? label : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2502,10 +2541,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // The original's fashion-jewelry sub-pages (WOMEN menu, desktop).
     siblings = ["Bracelets", "Earrings", "Necklaces", "Rings", "Pins and brooches", "Hair accessories and combs", "Hairbands and hatbands"].map((l) => ({ label: l, view: (l === "Hair accessories and combs" ? { t: "category", cat: "women", sub: "Hair accessories" } : { t: "category", cat, sub: l }) as View, current: l.toLowerCase() === subLow }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
-  } else if (isGiftsPage) {
+  } else if (isGiftsPage || isGiftWomenPage || isGiftMenPage || isGiftChildPage || isGiftDogsPage) {
     // The original's Gifts parent page has NO sub-navigation buttons
     // (verified live 2026-11-16) — the siblings row stays empty. The
     // sticky bar itself (FILTER + Product/Mosaic toggle) still renders.
+    // Group 9 (2026-11-18): the four sub-pages have none either (the
+    // live sub-page reads report no sub-nav row).
     siblings = [];
   } else if (cat === "equestrian") {
     // The original's Equestrian sub-nav: SADDLES is the bespoke
@@ -2616,6 +2657,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // sub-navigation row at all (no filter-siblings-categories nav
     // in the live category page text fetch) — same as Tech universe.
     siblings = [];
+  } else if (isWatchWomenPage || isWatchMenPage) {
+    // Group 9 (2026-11-18): the original's Watches Women / Men
+    // pages have NO sub-navigation row at all (no
+    // filter-siblings-categories nav in the live category page text
+    // fetch) — same as Timepieces.
+    siblings = [];
   } else if (isPetitHPage) {
     // Group 7 (2026-11-18): the original's Petit h page has NO
     // sub-navigation row at all (no filter-siblings-categories nav
@@ -2696,6 +2743,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [menTiesParentParaOpen, setMenTiesParentParaOpen] = useState(false);
   const [timepiecesParaOpen, setTimepiecesParaOpen] = useState(false);
   const [petitHParaOpen, setPetitHParaOpen] = useState(false);
+  const [giftWomenParaOpen, setGiftWomenParaOpen] = useState(false);
+  const [giftMenParaOpen, setGiftMenParaOpen] = useState(false);
+  const [giftChildParaOpen, setGiftChildParaOpen] = useState(false);
+  const [giftDogsParaOpen, setGiftDogsParaOpen] = useState(false);
+  const [watchWomenParaOpen, setWatchWomenParaOpen] = useState(false);
+  const [watchMenParaOpen, setWatchMenParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2818,6 +2871,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // page, and no earlier branch matches cat "home" + sub
     // "home and art of living".
     else if (isHomeArtPage && list.some((p) => p.homeArtPos !== undefined)) list = [...list].sort((a, b) => (a.homeArtPos ?? Infinity) - (b.homeArtPos ?? Infinity));
+    // Group 9 (2026-11-18) — Gifts sub-pages + Watches Women / Men
+    // sort by their own position fields (the original's live order).
+    // Placed here (after Home Art): the flags are cat+sub specific,
+    // so no earlier branch can shadow them.
+    else if (isGiftWomenPage && list.some((p) => p.giftWomenPos !== undefined)) list = [...list].sort((a, b) => (a.giftWomenPos ?? Infinity) - (b.giftWomenPos ?? Infinity));
+    else if (isGiftMenPage && list.some((p) => p.giftMenPos !== undefined)) list = [...list].sort((a, b) => (a.giftMenPos ?? Infinity) - (b.giftMenPos ?? Infinity));
+    else if (isGiftChildPage && list.some((p) => p.giftChildPos !== undefined)) list = [...list].sort((a, b) => (a.giftChildPos ?? Infinity) - (b.giftChildPos ?? Infinity));
+    else if (isGiftDogsPage && list.some((p) => p.giftDogsPos !== undefined)) list = [...list].sort((a, b) => (a.giftDogsPos ?? Infinity) - (b.giftDogsPos ?? Infinity));
+    else if (isWatchWomenPage && list.some((p) => p.watchWomenPos !== undefined)) list = [...list].sort((a, b) => (a.watchWomenPos ?? Infinity) - (b.watchWomenPos ?? Infinity));
+    else if (isWatchMenPage && list.some((p) => p.watchMenPos !== undefined)) list = [...list].sort((a, b) => (a.watchMenPos ?? Infinity) - (b.watchMenPos ?? Infinity));
     // Fragrances (2026-11-15) sorts by fragPos — the original's
     // order — the same way (the parent page lists exactly the 272
     // live tiles).
@@ -2898,7 +2961,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isTimepiecesPage, isPetitHPage, isHomeArtPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isTiesPage, isMensScarvesPage, isMenTiesParentPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isTimepiecesPage, isPetitHPage, isHomeArtPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isTiesPage, isMensScarvesPage, isMenTiesParentPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isGiftWomenPage, isGiftMenPage, isGiftChildPage, isGiftDogsPage, isWatchWomenPage, isWatchMenPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -3106,6 +3169,33 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       { after: 8, title: "Living in color", body: "For city riders whose red matters as much as what is wrapped in orange.." },
       { after: 28, title: "Time travelers", body: "Icons that move through decades without shedding their appeal." },
     ];
+    // Group 9 (2026-11-18) — Gifts sub-pages + Watches Women / Men
+    // editorial blocks, verbatim from the live category pages.
+    // Gifts for women carries the SAME two blocks as the Gifts
+    // parent ("Living in color" / "Time travelers"); Gifts for
+    // children carries the SAME two as the Children page
+    // ("Building blocks" / "Fauna of fun"). Gifts for dogs has none.
+    // Watches Women reuses the Timepieces "Discover what's possible"
+    // body word for word (same Cape Cod text).
+    if (isGiftWomenPage) return [
+      { after: 8, title: "Living in color", body: "For city riders whose red matters as much as what is wrapped in orange.." },
+      { after: 28, title: "Time travelers", body: "Icons that move through decades without shedding their appeal." },
+    ];
+    if (isGiftMenPage) return [
+      { after: 8, title: "Purity passed down", body: "For men who find the truth in texture and prints that never tire." },
+      { after: 28, title: "Hit the town", body: "Summer-tinged pieces for those who blend grace with eloquence and hold minimalism dear." },
+    ];
+    if (isGiftChildPage) return [
+      { after: 8, title: "Building blocks", body: "Round, square, rectangle. Learning begins in orange boxes." },
+      { after: 28, title: "Fauna of fun", body: "This colorful little herd has swapped jungle and forest for the comfort of an indoor enclosure." },
+    ];
+    if (isWatchWomenPage) return [
+      { after: 9, title: "Discover what's possible", body: "A motif ready to set sail and the now-iconic strap… The Cape Cod watch, unique to the very last detail, invites time to be explored in every shape, from square to rectangle." },
+      { after: 31, title: "Elegance with a capital H", body: "Harnessed by a harmonious burst of beauty, style and symmetry come together at just the right Hour to make every second count." },
+    ];
+    if (isWatchMenPage) return [
+      { after: 9, title: "Switching time", body: "The H08 watch breaks traditional codes and reveals contrast. Sporty, robust and delicate, it has mastered the art of performance by blending the timeless with the contemporary." },
+    ];
     if (cat === "leather") {
       if (subLow === "to go wallets") return [{ after: 8, title: "Minimalist-chic", body: "Compact and structured, To Go wallets assert their style and transform momentum into boldness." }];
       if (subLow === "wallets") return [
@@ -3291,7 +3381,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // slide prefers a games-named home product (e.g. a change tray) but
   // falls back to any home Decor photo. Each slide gets a distinct photo.
   const giftsThemes: ThemeSlide[] = (() => {
-    if (!isGiftsPage) return [];
+    // Group 9 (2026-11-18): the four Gifts sub-pages reuse the
+    // parent's 5 themes — the first theme ("Fashion jewelry") is
+    // verified on the women and men pages (live reads, "1 of 5");
+    // the other four labels per sub-page were NOT recorded, so the
+    // parent's live verify must confirm them (if any sub-page shows
+    // different themes, split this into per-page defs).
+    if (!isGiftsPage && !isGiftWomenPage && !isGiftMenPage && !isGiftChildPage && !isGiftDogsPage) return [];
     const defs: { label: string; view: View; match: (p: Product) => boolean; pick?: () => Product | undefined }[] = [
       { label: "Fashion jewelry", view: { t: "category", cat: "fashion-jewelry" }, match: (p) => p.category === "fashion-jewelry" },
       { label: "Silk scarves and accessories", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
@@ -3302,6 +3398,52 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     const used = new Set<number>();
     return defs.map((d) => {
       const rep = d.pick ? d.pick() : products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  // Watches Women / Men theme carousel slides (Group 9, 2026-11-18)
+  // — the original's 5 cross-universe cards per page, in order,
+  // verified from the live category page text fetches (the link lists
+  // after the tile grid). Women: Scarves, shawls and stoles; Bags and
+  // clutches; Gold Jewelry; Small leather goods; Decorative objects
+  // and games. Men: Ties and scarves; Jewelry; Bags and clutches;
+  // Small leather goods; Luggage. No verified hermesedito editorial
+  // image URLs exist for these slides (same as the Gifts carousel),
+  // so each slide uses the first Hermes-CDN product photo of its
+  // theme — a real original photo, not an invented image.
+  const watchWomenThemes: ThemeSlide[] = (() => {
+    if (!isWatchWomenPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean; pick?: () => Product | undefined }[] = [
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
+      { label: "Gold Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Decorative objects and games", view: { t: "category", cat: "home", sub: "Decorative objects and games" }, match: (p) => p.category === "home" && p.subcategory === "Decor", pick: () => products.find((p) => p.category === "home" && /poker|chess|backgammon|game|change tray/i.test(p.name) && productImageFor(p).startsWith("https://assets.hermes.com")) ?? products.find((p) => p.category === "home" && p.subcategory === "Decor" && productImageFor(p).startsWith("https://assets.hermes.com")) },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = d.pick ? d.pick() : products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const watchMenThemes: ThemeSlide[] = (() => {
+    if (!isWatchMenPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Ties and scarves", view: { t: "category", cat: "men", sub: "Ties and scarves" }, match: (p) => p.category === "men" && p.tiePos !== undefined },
+      { label: "Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+      { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Luggage", view: { t: "category", cat: "leather", sub: "Luggage" }, match: (p) => p.subcategory === "Luggage" },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
       if (rep) used.add(rep.id);
       const img = rep ? productImageFor(rep) : "";
       return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
@@ -3531,7 +3673,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           keeps its 2-level breadcrumb (separate branch below). */}
       {!isHomeArtPage && (<nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && !isHomeArtPage && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && !isHomeArtPage && !isGiftWomenPage && !isGiftMenPage && !isGiftChildPage && !isGiftDogsPage && !isWatchWomenPage && !isWatchMenPage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -3583,6 +3725,25 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <>
             {" | "}
             <span className="tracking-normal text-black">TIMEPIECES</span>
+          </>
+        )}
+        {/* Group 9 (2026-11-18): the original's bottom breadcrumbs for
+            the Gifts sub-pages are 2 levels (GIFTS | GIFTS FOR WOMEN /
+            GIFTS FOR MEN / GIFTS FOR CHILDREN AND BABIES / GIFTS FOR
+            DOGS) and for the Watches gender pages 3 levels (WATCHES |
+            TIMEPIECES | WOMEN / MEN) — live category page reads. */}
+        {sub && (isGiftWomenPage || isGiftMenPage || isGiftChildPage || isGiftDogsPage) && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">{isGiftWomenPage ? "GIFTS FOR WOMEN" : isGiftMenPage ? "GIFTS FOR MEN" : isGiftChildPage ? "GIFTS FOR CHILDREN AND BABIES" : "GIFTS FOR DOGS"}</span>
+          </>
+        )}
+        {sub && (isWatchWomenPage || isWatchMenPage) && (
+          <>
+            {" | "}
+            <button aria-label="Breadcrumb Timepieces" className="underline underline-offset-4" onClick={() => go({ t: "category", cat: "watches", sub: "timepieces" })}>TIMEPIECES</button>
+            {" | "}
+            <span className="tracking-normal text-black">{isWatchWomenPage ? "WOMEN" : "MEN"}</span>
           </>
         )}
         {/* Group 7 (2026-11-18): the original's Petit h page bottom
@@ -3664,8 +3825,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <FallWinterThemeCarousel go={go} themes={homeThemes} />
         ) : isHomeArtPage ? (
           <FallWinterThemeCarousel go={go} themes={homeArtThemes} />
-        ) : isGiftsPage ? (
+        ) : isGiftsPage || isGiftWomenPage || isGiftMenPage || isGiftChildPage || isGiftDogsPage ? (
           <FallWinterThemeCarousel go={go} themes={giftsThemes} />
+        ) : isWatchWomenPage ? (
+          <FallWinterThemeCarousel go={go} themes={watchWomenThemes} />
+        ) : isWatchMenPage ? (
+          <FallWinterThemeCarousel go={go} themes={watchMenThemes} />
         ) : (
         <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
           {(() => {
@@ -4468,6 +4633,148 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             </p>
           )}
           <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftParaOpen(!giftParaOpen)}>{giftParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+
+      {/* Group 9 (2026-11-18) — Gifts sub-pages + Watches Women / Men
+          descriptive paragraphs, verbatim from hermes.com (live
+          category page reads + category text fetches, 2026-11-18).
+          Collapsed = paragraph 1 + "…", See More / See less (Bath
+          pattern). PROVENANCE: Gifts women P1 matches the live read
+          exactly; its P2/P3, and the children / dogs paragraphs, come
+          from the pages' own category text (meta description) — the
+          live reads did not record them, so the parent's live verify
+          must confirm the expanded text. Gifts men P1 is the LIVE
+          READ text ("quiet elegance and exceptional craftsmanship") —
+          the text fetch's longer P1 variant differs from the visible
+          page, so it is NOT used; its P2/P3 are the meta candidates.
+          Watches paragraphs carry inline links on the original
+          (black / brown / silver / H08 / Cut / Cape Cod) — rendered
+          as plain text on the clone (Timepieces pattern). */}
+      {isGiftWomenPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {giftWomenParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Finding the perfect gift for a woman is an exploration of Hermès, where each object tells a story of craftsmanship and high standards. Whether you are seeking a present for a specific occasion or to celebrate a suspended moment, our selection of gifts offers a variety of iconic pieces and new iterations. From fashion accessories to decorative objects, the House&apos;s universe offers gift ideas that combine utility with a timeless aesthetic. To give a piece of Hermès is to choose an object designed to last, that grows more beautiful with time, and accompanies every silhouette with natural distinction.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                At the heart of this quest for the perfect present, silk holds a privileged place. The silk scarf, with its narrative motifs and vibrant colors, remains an absolute gift of elegance, capable of transforming an allure with a simple gesture. For something more personal, small leather goods offer leather objects with impeccable finishes, combining the suppleness of skins with the precision of the saddle stitch. The House&apos;s jewelry also allows for punctuating one&apos;s style with a precious glow.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                The art of gifting also extends to the senses with our fragrance and make-up collections. Choosing a scent is a delicate way to highlight a personality. The beauty line offers daily care gestures transformed into rituals of pleasure. Finally, for those who cherish their interior, Hermès home objects complete this inventory of curiosities. To accompany you in the preparation of this surprise, we invite you to discover our guidance dedicated to the art of gifting, ensuring that every gesture of your order is imbued with the greatest delicacy.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Finding the perfect gift for a woman is an exploration of Hermès, where each object tells a story of craftsmanship and high standards. Whether you are seeking a present for a specific occasion or to celebrate a suspended moment, our selection of gifts offers a variety of iconic pieces and new iterations. From fashion accessories to decorative objects, the House&apos;s universe offers gift ideas that combine utility with a timeless aesthetic. To give a piece of Hermès is to choose an object designed to last, that grows more beautiful with time, and accompanies every silhouette with natural distinction.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftWomenParaOpen(!giftWomenParaOpen)}>{giftWomenParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+      {isGiftMenPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {giftMenParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Finding the perfect gift for a man at Hermès is an exploration of the House&apos;s métiers, where each object carries an expression of quiet elegance and exceptional craftsmanship. Each selection combines refinement and simplicity, whether it is a piece of jewelry, a leather accessory, or a refined home object. A thoughtful present at Hermès is one made with care and chosen with meaning.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                At the heart of this quest for the perfect Hermès present for men, precision leather goods and silk hold a central place and constitute essential gift choices. Wallets, card holders, and ties are crafted to endure, while masculine jewelry allows for adding a touch of character to any allure. Each piece reflects the house&apos;s creative vision, where the artisan&apos;s hand transforms the material into a functional work of art.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                The art of gifting also extends to watchmaking and fragrance. Choosing a Hermès watch means giving a timepiece with sophisticated mechanics and singular style. For a sensory experience, our fragrances for men create a memorable and personal gift. Giving Hermès is a ritual that begins with the choice of the object and continues through to its presentation. To ensure your gesture is worthy of the occasion, we see that every order benefits from meticulous preparation. To accompany you in the preparation of this surprise, we invite you to discover our guidance dedicated to the art of gifting, ensuring that every gesture of your order is imbued with the greatest delicacy.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Finding the perfect gift for a man at Hermès is an exploration of the House&apos;s métiers, where each object carries an expression of quiet elegance and exceptional craftsmanship. Each selection combines refinement and simplicity, whether it is a piece of jewelry, a leather accessory, or a refined home object. A thoughtful present at Hermès is one made with care and chosen with meaning.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftMenParaOpen(!giftMenParaOpen)}>{giftMenParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+      {isGiftChildPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {giftChildParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Finding a baby gift at Hermès is a celebration of life&apos;s first moments. Our selection offers objects designed to accompany a newborn&apos;s awakening and the parents&apos; enchantment through durable creations. Whether you are looking for a present for a birth, a christening, or a first birthday, the world of childhood unfolds in an inventory of iconic pieces. To give a Hermès gift for a newborn is to choose a first treasure, a piece of craftsmanship destined to become a precious family heirloom.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                The wardrobe for little ones highlights natural and soothing materials, selected with the highest standards. Cashmere baby blankets, booties, and beanies wrap the child in warmth, while terry cloth bath linens bring a soft touch after bathing rituals. For the awakening of the senses, poetic stuffed animals and plush toys stimulate the imagination with refined elegance. These baby gift ideas are promises of well-being, designed to last and move through the early years with faithfulness. The art of gifting at Hermès also extends to traditional objects that mark life&apos;s milestones. Decorative objects for the nursery, such as precious wood photo frames and music boxes, are also featured.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                From the choice of the object to its delivery, we accompany you to ensure the surprise is complete. If you wish to learn more about the presentation of your gift, shipping times, or return policies for your newborn items, we invite you to consult our guidance dedicated to gifts.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Finding a baby gift at Hermès is a celebration of life&apos;s first moments. Our selection offers objects designed to accompany a newborn&apos;s awakening and the parents&apos; enchantment through durable creations. Whether you are looking for a present for a birth, a christening, or a first birthday, the world of childhood unfolds in an inventory of iconic pieces. To give a Hermès gift for a newborn is to choose a first treasure, a piece of craftsmanship destined to become a precious family heirloom.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftChildParaOpen(!giftChildParaOpen)}>{giftChildParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+      {isGiftDogsPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {giftDogsParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Celebrating the loyalty of one&apos;s four-legged companion is a gesture imbued with tenderness and distinction. To give a Hermès gift for a dog is to choose an object of design where the House&apos;s saddlery heritage meets the absolute comfort of the animal. Protected by the emblematic orange box, each present becomes the symbol of a shared affection, transforming a simple walk or a moment of rest into a true ritual of elegance. Whether to mark an event or simply for the pleasure of giving, our selection of canine accessories honors the nobility of this unbreakable bond.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                Our inventory of gift ideas offers artisanal pieces designed to last and grow more beautiful over time. Leather savoir-faire is expressed through dog collars and leashes with impeccable finishes, while the art of living invites itself into the home with oak wood bowls and cozy baskets. Each accessory is crafted with the same exigence as our equestrian collections, guaranteeing a robustness and richness of raw materials without equal. To give one of these creations is to ensure an exceptional piece of equipment for one&apos;s companion that combines functionality and aesthetics.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                Gifting at Hermès is a ritual that demands precision from selection to delivery. To accompany you serenely in the choice of a size or to perfect the presentation of your gift, we invite you to discover our support for special gifts.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Celebrating the loyalty of one&apos;s four-legged companion is a gesture imbued with tenderness and distinction. To give a Hermès gift for a dog is to choose an object of design where the House&apos;s saddlery heritage meets the absolute comfort of the animal. Protected by the emblematic orange box, each present becomes the symbol of a shared affection, transforming a simple walk or a moment of rest into a true ritual of elegance. Whether to mark an event or simply for the pleasure of giving, our selection of canine accessories honors the nobility of this unbreakable bond.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftDogsParaOpen(!giftDogsParaOpen)}>{giftDogsParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+      {isWatchWomenPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {watchWomenParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                The Hermès vision of time embraces femininity, blending timepieces&apos; precision with the poetry of design. True objects of style, our women&apos;s watches enhance the wrist while celebrating our saddlery heritage. Elegance resides in the details of the interchangeable straps: opt for the absolute sleekness of black, the authentic warmth of brown leather, or the subtlety of a contemporary silver watches.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                Each timepiece asserts a unique allure. Embrace the bold geometry and sporty spirit of the Hermès H08, or let yourself be drawn to the round, beveled lines of the daring Hermès Cut. Finally, rediscover a timeless icon with the Cape Cod, whose famous &quot;square in a rectangle&quot; case pays a vibrant tribute to the Chaîne d&apos;Ancre link.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              The Hermès vision of time embraces femininity, blending timepieces&apos; precision with the poetry of design. True objects of style, our women&apos;s watches enhance the wrist while celebrating our saddlery heritage. Elegance resides in the details of the interchangeable straps: opt for the absolute sleekness of black, the authentic warmth of brown leather, or the subtlety of a contemporary silver watches.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWatchWomenParaOpen(!watchWomenParaOpen)}>{watchWomenParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+      {isWatchMenPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {watchMenParaOpen ? (
+            <>
+              <p className="text-sm leading-7 text-neutral-700">
+                Masculine time according to Hermès is a matter of form, movement, and allure. Our men&apos;s watches combine the rigor of fine mechanics with a bold aesthetic, designed to seamlessly fit into everyday life.
+              </p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">
+                Discover the sporty allure and contemporary geometry of the Hermès H08, a true balance between tension and fluidity. Let yourself be captivated by the clean lines and versatility of the new Hermès Cut, or assert an architectural elegance with the iconic Cape Cod and its famous &quot;square in a rectangle&quot; case. Finally, elevate your timepiece with our saddlery savoir-faire: opt for the deep and timeless character of a black leather strap, the absolute signature of uncompromising chic.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Masculine time according to Hermès is a matter of form, movement, and allure. Our men&apos;s watches combine the rigor of fine mechanics with a bold aesthetic, designed to seamlessly fit into everyday life.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWatchMenParaOpen(!watchMenParaOpen)}>{watchMenParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
 
