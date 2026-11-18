@@ -3439,7 +3439,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       { label: "Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
       { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
       { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
-      { label: "Luggage", view: { t: "category", cat: "leather", sub: "Luggage" }, match: (p) => p.subcategory === "Luggage" },
+      // Luggage must match on luggagePos: NO catalogue row has subcategory
+      // "Luggage" (the 48 Luggage-page rows carry subcategories Bags and
+      // clutches / Key rings / Small leather goods), so the old subcategory
+      // match never found a rep photo and the slide was filtered out
+      // (Group 9 follow-up, 2026-11-18).
+      { label: "Luggage", view: { t: "category", cat: "leather", sub: "Luggage" }, match: (p) => p.luggagePos !== undefined },
     ];
     const used = new Set<number>();
     return defs.map((d) => {

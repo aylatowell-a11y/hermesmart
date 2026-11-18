@@ -9373,7 +9373,6 @@ const NEW_GALLERY: Record<number, { label: string; src: string; videoSrc?: strin
   8105: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/408339WW00_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/408339WW00_worn_102?$product_default_bg$" }],
   8106: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/408305WW00_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/408305WW00_worn_102?$product_default_bg$" }],
   8107: [{ label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/408329WW00_front_wm_101?$product_default_bg$" }, { label: "Worn", src: "https://assets.hermes.com/is/image/hermesproduct/408329WW00_worn_102?$product_default_bg$" }],
-  8108: [{ label: "Flat", src: "https://assets.hermes.com/is/image/hermesproduct/KB0057WK18_flat_101?extend=300,300,300,300&align=0,0&$product_default_bg$" }],
 };
 
 // PDP full-photo quality (user complaint 2026-11-11, "koi compromise
