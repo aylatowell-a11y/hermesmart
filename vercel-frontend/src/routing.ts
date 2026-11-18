@@ -98,6 +98,14 @@ const CATEGORY_PATHS: Record<string, string> = {
   "women|": "leather-goods/bags-and-clutches/womens-bags-and-clutches",
   "leather|women's bags and clutches": "leather-goods/bags-and-clutches/womens-bags-and-clutches",
   "leather|men's bags and clutches": "leather-goods/bags-and-clutches/mens-bags-and-clutches",
+  // Group 11 (2026-11-18) — the Bags and clutches PARENT page
+  // ("View all"): the original's own URL is
+  // /leather-goods/bags-and-clutches/ (143 tiles, bagsViewPos).
+  // Without this the generic slug fallback resolved it to
+  // /leather/bags-and-clutches/ (wrong URL), and a direct load of
+  // the original's URL fell through to the homepage (parseUrl
+  // returns null for a "leather-goods" first segment).
+  "leather|bags and clutches": "leather-goods/bags-and-clutches",
   "leather|small leather goods": "leather-goods/small-leather-goods",
   // Leather Accessories / Luggage sub-pages (2026-11-17) — the original's
   // own URLs. Charms / Travel accessories / Suitcases are the new pages;
@@ -225,6 +233,13 @@ const CATEGORY_PATHS: Record<string, string> = {
   // /us/en/category/jewelry/men/ (92 tiles, menJewPos). The generic
   // slug fallback already produced this, but the explicit entry pins it.
   "jewelry|men": "jewelry/men",
+  // Group 11 (2026-11-18) — the Jewelry parent page IS the Gold
+  // Jewelry category: the original's own URL is
+  // /us/en/category/jewelry/gold-jewelry/ (323 tiles, jewPos). Without
+  // this the clone's parent URL was /us/en/category/jewelry/, and a
+  // direct load of the original's URL fell through to the parent view
+  // only via the generic sub-slug fallback.
+  "jewelry|": "jewelry/gold-jewelry",
 };
 
 const REVERSE_PATHS: Record<string, { cat: string; sub?: string }> = {};

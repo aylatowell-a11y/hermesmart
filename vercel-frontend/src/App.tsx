@@ -1939,6 +1939,18 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // two pre-existing gift rows (id48 Gift card, id49 Silk gift set)
       // are NOT on the original's Gifts page and carry no giftPos.
       if (cat === "gifts") return products.filter((p) => p.giftPos !== undefined);
+      // Gold Jewelry parent page (cat "jewelry", no sub, Group 11,
+      // 2026-11-18): it lists exactly the 323 live tiles from the
+      // original's Gold Jewelry listing (jewPos); the 85 other
+      // category-"jewelry" rows stay in the catalogue but never appear
+      // on this page — 37 of them are the Jewelry Men rows (menJewPos,
+      // they belong on the Men page) and the rest are rows the original
+      // dropped from this listing (incl. the 74 stripped by the Group 11
+      // retag). Same over-broad-gate bug class as Jewelry Men (Group 10,
+      // clone showed 1,758) and the Home rebuild ([1882] -> [1269]):
+      // the old fall-through returned every category-"jewelry" row
+      // (408) and the page read Gold Jewelry[408] against the live 323.
+      if (cat === "jewelry") return products.filter((p) => p.jewPos !== undefined);
       return catList;
     }
     const low = sub.toLowerCase();
@@ -1959,6 +1971,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // The 19 clone bag rows not on the original stay in the
       // catalogue but never appear on the parent grid.
       "men's bags and clutches": (p) => p.subcategory === "Bags and clutches" && p.mBagPos !== undefined,
+      // Group 11 (2026-11-18): the Bags and clutches PARENT page
+      // ("View all", /leather-goods/bags-and-clutches/, 143 tiles) —
+      // its own live order lives in bagsViewPos. Field-only gate: the
+      // parent list OVERLAPS the Women's (47) and Men's (104) lists,
+      // so a row may carry both wBagPos/mBagPos and bagsViewPos. The
+      // page previously fell to the strict subcategory fallback (all
+      // Bags and clutches rows in sortOrder).
+      "bags and clutches": (p) => p.bagsViewPos !== undefined,
       "silk scarves and accessories": (p) => p.subcategory === "Scarves, shawls and stoles",
       "cashmere shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles",
       // Fragrances sub-pages (2026-11-17) — each page lists exactly its
@@ -2324,6 +2344,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // "Kelly in the city" / "Hands-free mode" inserts. The women's
   // bags page is a separate page and is NOT affected.
   const isMensBagsPage = cat === "leather" && subLow === "men's bags and clutches";
+  // Bags and clutches parent page ("View all", cat "leather", sub
+  // "Bags and clutches", Group 11, 2026-11-18) — the original's
+  // /leather-goods/bags-and-clutches/ listing (143 tiles), sorted by
+  // bagsViewPos, with the "The goldsmith's touch" / "City style"
+  // inserts and the full footer paragraph below the grid.
+  const isBagsViewPage = cat === "leather" && subLow === "bags and clutches";
   // Watches parent page (cat "watches", no sub, 2026-11-15) — sorts
   // by watchPos (the original's live order, 370 tiles) and carries
   // the descriptive paragraph. The sub-views (Women / Men / Straps)
@@ -2531,7 +2557,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "for children": "Gifts for children and babies",
     "for dogs": "Gifts for dogs",
   };
-  const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
+  // Group 11 (2026-11-18): the original's fine-jewelry listing IS the
+  // Gold Jewelry category (/jewelry/gold-jewelry/, H1 "Gold Jewelry");
+  // the clone's jewelry parent page (cat "jewelry", no sub) shows
+  // that listing, so its H1 is "Gold Jewelry", not "Jewelry".
+  const titleText = (cat === "jewelry" && !sub) ? "Gold Jewelry" : COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
   const crumbTop = isGiftWomenPage ? "GIFTS | GIFTS FOR WOMEN" : isGiftMenPage ? "GIFTS | GIFTS FOR MEN" : isGiftChildPage ? "GIFTS | GIFTS FOR CHILDREN AND BABIES" : isGiftDogsPage ? "GIFTS | GIFTS FOR DOGS" : isWatchWomenPage ? "WATCHES | TIMEPIECES | WOMEN" : isWatchMenPage ? "WATCHES | TIMEPIECES | MEN" : isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : (isCharmsPage || isLeatherAccPage || isStrapsPage) ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage || isLuggagePage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isHomeArtPage ? "" : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isBeachPage || isWomensAccPage) ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : (isTiesPage || isMensScarvesPage) ? "MEN | TIES AND SCARVES" : isMenTiesParentPage ? label : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
@@ -2540,10 +2570,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   type Sib = { label: string; view: View; current: boolean };
   let siblings: Sib[] = [];
   if (isBagsPage) {
+    // Group 11 (2026-11-18): on the "View all" parent page the
+    // "View all" item is the current one (it was always
+    // current=false, so the page showed NO current item); the
+    // Women's item is current only on the women's page itself.
+    const isViewAll = subLow === "bags and clutches";
     siblings = [
-      { label: "Women's bags and clutches", view: { t: "category", cat, sub: "Women's bags and clutches" }, current: !isMensBags },
+      { label: "Women's bags and clutches", view: { t: "category", cat, sub: "Women's bags and clutches" }, current: !isMensBags && !isViewAll },
       { label: "Men's bags and clutches", view: { t: "category", cat, sub: "Men's bags and clutches" }, current: isMensBags },
-      { label: "View all", view: { t: "category", cat, sub: "Bags and clutches" }, current: false },
+      { label: "View all", view: { t: "category", cat, sub: "Bags and clutches" }, current: isViewAll },
     ];
   } else if (isSneakersPage) {
     siblings = ["Sneakers", "Sandals", "Loafers and mules", "Derbies and Oxford shoes", "Boots and ankle boots"].map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow }));
@@ -2780,6 +2815,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [watchMenParaOpen, setWatchMenParaOpen] = useState(false);
   // Group 10 (2026-11-18): Jewelry Men descriptive paragraph.
   const [jewelryMenParaOpen, setJewelryMenParaOpen] = useState(false);
+  // Group 11 (2026-11-18): the Fine jewelry (Gold Jewelry) paragraph
+  // collapse toggle (Bath pattern, same as the Jewelry Men paragraph).
+  const [fineJewelryParaOpen, setFineJewelryParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2896,6 +2934,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Men's Bags (2026-11-15) sorts by mBagPos — the original's
     // order — the same way (women's bags are a separate page).
     else if (isMensBagsPage && list.some((p) => p.mBagPos !== undefined)) list = [...list].sort((a, b) => (a.mBagPos ?? Infinity) - (b.mBagPos ?? Infinity));
+    // Bags and clutches parent ("View all", Group 11, 2026-11-18)
+    // sorts by bagsViewPos — the original's own parent order (143
+    // tiles), NOT a merge of the women's/men's orders. Placed right
+    // after the mBagPos branch: the rows carry wBagPos/mBagPos too,
+    // and those branches must not win here.
+    else if (isBagsViewPage && list.some((p) => p.bagsViewPos !== undefined)) list = [...list].sort((a, b) => (a.bagsViewPos ?? Infinity) - (b.bagsViewPos ?? Infinity));
     // Watches (2026-11-15) sorts by watchPos — the original's
     // order — the same way (the parent page lists exactly the 370
     // live tiles).
@@ -3148,11 +3192,37 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Women's Bags parent page — the original's "Equestrian style"
     // editorial block sits after tile #28 (verbatim from the live
     // category page text fetch, 2026-11-15). The Birkin / Constance /
-    // Kelly block after #9 is three product links, not a text block,
-    // so it cannot be rendered by the text-tile mechanism (known gap);
-    // the wide image tiles likewise stay unwired (their image URLs do
-    // not expose in the browser — see the comment above).
+    // Kelly block between #8 and #9 is NOT a text tile — it renders
+    // as the "iconic" GridItem kind below (Group 11, 2026-11-18),
+    // with the verified hermesedito images and content links.
     if (isWomensBagsPage) return [{ after: 28, title: "Equestrian style", body: "Canvas borrows from the codes of the equestrian universe. From the paddock to the pavement, the horse never feels too far away." }];
+    // Bags and clutches parent ("View all", Group 11, 2026-11-18) —
+    // the original's two editorial blocks ("The goldsmith's touch"
+    // after tile #8, "City style" after tile #28), verbatim from the
+    // live category page text fetch, 2026-11-18. On the original they
+    // are wide image tiles (heading + italic subtext + DISCOVER); the
+    // clone renders them as text tiles (same treatment as the Jewelry
+    // Men "Strong links" block) — the wide images stay unwired, their
+    // URLs do not expose in the browser.
+    if (isBagsViewPage) return [
+      { after: 8, title: "The goldsmith's touch", body: "These leather goods complete looks with a precious touch thanks to their signature clasps." },
+      { after: 28, title: "City style", body: "Easy to carry, Hermès leather goods offer countless ways to stride into every day with style." },
+    ];
+    // Fine jewelry parent (Gold Jewelry, Group 11, 2026-11-18) — the
+    // original's editorial blocks, verbatim from the live category
+    // page read + text fetch, 2026-11-18: "New jewelry variations"
+    // after #9, "Precious Moments" after #31 AND again after #49
+    // (the same title twice — the grid key uses the map index, so
+    // the duplicate title renders twice), "Gold and stones" after
+    // #71. The "Alternate views" image carousel after the final
+    // product is image-only with unlocated hermesedito images — NOT
+    // built (known gap, same class as Knitwear / Ballet / Twilly).
+    if (cat === "jewelry" && !sub) return [
+      { after: 9, title: "New jewelry variations", body: "Iconic even when transformed, the Kelly bag has now become a piece of jewelry, still featuring its signature clasp." },
+      { after: 31, title: "Precious Moments", body: "In a choreography of precious stones, balancing movement and lightness, Hermès sets the imagination free around the center stone." },
+      { after: 49, title: "Precious Moments", body: "In a choreography of precious stones, balancing movement and lightness, Hermès sets the imagination free around the center stone." },
+      { after: 71, title: "Gold and stones", body: "Gold and stones speak countless stories directly onto the skin." },
+    ];
     // Men's Bags parent page — the original's two editorial blocks
     // ("Kelly in the city" after tile #8, "Hands-free mode" after
     // tile #28), verbatim from the live category page, 2026-11-15.
@@ -3298,7 +3368,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     ];
     return [];
   })();
-  type GridItem = { kind: "product"; p: Product; tileKey?: string } | { kind: "video"; p: Product; tileKey?: string } | { kind: "text"; title: string; body: string };
+  type GridItem = { kind: "product"; p: Product; tileKey?: string } | { kind: "video"; p: Product; tileKey?: string } | { kind: "text"; title: string; body: string } | { kind: "iconic" };
   const gridItems: GridItem[] = [];
   // The Fall-Winter collection page carries NO editorial tiles on the
   // original (verified in its first 120 products). Every other page
@@ -3314,6 +3384,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     if (isFallWinterPage && FW_VIDEO_TILE_IDS.has(p.id)) gridItems.push({ kind: "video", p, tileKey });
     else gridItems.push({ kind: "product", p, tileKey });
     if (showEdInserts) for (const ins of edInserts) if (ins.after === i + 1) gridItems.push({ kind: "text", title: ins.title, body: ins.body });
+    // Women's Bags iconic block (Group 11, 2026-11-18): the original's
+    // Birkin / Constance / Kelly "Discover" block sits BETWEEN #8 and
+    // #9 — a feature tile for the Bel-Il bag (#9) + three Discover
+    // links. It is a full-width row, not a text tile, so it has its
+    // own GridItem kind. Same showEdInserts gate as the text inserts
+    // (unfiltered + relevance-sorted).
+    if (showEdInserts && isWomensBagsPage && i + 1 === 8) gridItems.push({ kind: "iconic" });
   });
 
   // SLG parent filter cards (2026-11-15) — the original's 5 subcategory
@@ -3577,6 +3654,94 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     }).filter((s) => s.imgMo);
   })();
 
+  // Group 11 (2026-11-18): Scarves / Fine jewelry / Bags (parent +
+  // women's) / Women's Shoes theme carousel slides — the original's 5
+  // cross-universe cards per page, in order, verified from the live
+  // category page text fetches (the link lists after the tile grid).
+  // Scarves: Shoes; Hats and gloves; Fashion jewelry; Leather goods;
+  // Belts. Fine jewelry: Bags and clutches; Timepieces; Ready-to-wear;
+  // Hats and gloves; Small leather goods. Bags (both pages): Small
+  // leather goods; Timepieces; Ready-to-wear; Gold Jewelry; Scarves,
+  // shawls and stoles. Shoes: Bags and clutches; Scarves, shawls and
+  // stoles; Ready-to-wear; Small leather goods; Jewelry. No verified
+  // hermesedito editorial image URLs exist for these slides (same as
+  // the Gifts carousel), so each slide uses the first Hermes-CDN
+  // product photo of its theme — a real original photo, not an
+  // invented image. Matches use position fields where one exists
+  // (Group 9 follow-up lesson: a subcategory match can never fire
+  // when no row carries it).
+  const scarvesThemes: ThemeSlide[] = (() => {
+    if (!isWomensScarvesPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Shoes", view: { t: "category", cat: "women", sub: "Shoes" }, match: (p) => p.shoePos !== undefined },
+      { label: "Hats and gloves", view: { t: "category", cat: "women", sub: "Hats and gloves" }, match: (p) => p.wAccPos !== undefined },
+      { label: "Fashion jewelry", view: { t: "category", cat: "fashion-jewelry" }, match: (p) => p.category === "fashion-jewelry" },
+      { label: "Leather goods", view: { t: "category", cat: "leather" }, match: (p) => p.category === "leather" },
+      { label: "Belts", view: { t: "category", cat: "women", sub: "Belts" }, match: (p) => p.beltPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const fineJewelryThemes: ThemeSlide[] = (() => {
+    if (!(cat === "jewelry" && !sub)) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
+      { label: "Timepieces", view: { t: "category", cat: "watches", sub: "Timepieces" }, match: (p) => p.timepiecePos !== undefined },
+      { label: "Ready-to-wear", view: { t: "category", cat: "women", sub: "Ready-to-wear" }, match: (p) => p.wRtwPos !== undefined },
+      { label: "Hats and gloves", view: { t: "category", cat: "women", sub: "Hats and gloves" }, match: (p) => p.wAccPos !== undefined },
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const bagsThemes: ThemeSlide[] = (() => {
+    if (!isBagsViewPage && !isWomensBagsPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Timepieces", view: { t: "category", cat: "watches", sub: "Timepieces" }, match: (p) => p.timepiecePos !== undefined },
+      { label: "Ready-to-wear", view: { t: "category", cat: "women", sub: "Ready-to-wear" }, match: (p) => p.wRtwPos !== undefined },
+      { label: "Gold Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const shoesThemes: ThemeSlide[] = (() => {
+    if (!isWomensShoesPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Ready-to-wear", view: { t: "category", cat: "women", sub: "Ready-to-wear" }, match: (p) => p.wRtwPos !== undefined },
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
   const renderSection = (s: FSection) => {
     const isOpen = openSection === s.key;
     const group = s.group;
@@ -3745,12 +3910,49 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
 
       {!mosaic ? (
         <div className="carousel-full-bleed mt-8 grid grid-cols-2 gap-[2px] lg:grid-cols-4">
-          {gridItems.map((it) => it.kind === "product" ? (
+          {gridItems.map((it, gi) => it.kind === "product" ? (
             <ProductCard key={it.tileKey ?? it.p.id} p={it.p} colourInName onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
           ) : it.kind === "video" ? (
             <VideoTile key={it.tileKey ?? it.p.id} p={it.p} onOpen={(id) => go({ t: "product", id })} />
+          ) : it.kind === "iconic" ? (
+            // Women's Bags iconic block (Group 11, 2026-11-18) — the
+            // original's Birkin / Constance / Kelly "Discover" block
+            // between tiles #8 and #9: a feature tile for the Bel-Il
+            // bag (#9, ref H088537CKAB) + three Discover links. The
+            // hermesedito images are the original's own (all 6 URLs
+            // HEAD-verified 200 on 2026-11-18); the feature tile uses
+            // the Bel-Il product's own photo. The three links go to
+            // the original's content pages (/content/106191-birkin/
+            // etc.) — the clone has no content pages for them (same
+            // class as the bespoke SADDLES exception), so a click
+            // loads the URL the original uses.
+            <div key="ed-iconic" className="col-span-2 grid grid-cols-2 gap-[2px] lg:col-span-4 lg:grid-cols-4">
+              {(() => {
+                const belIl = products.find((p) => p.refCode === "H088537CKAB");
+                const links = [
+                  { name: "Birkin", href: "/us/en/content/106191-birkin/", imgMo: "https://assets.hermes.com/is/image/hermesedito/Tuile_KBC_Mobile_2048x1536_Birkin", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/006_worn_1_DESKTOP-3" },
+                  { name: "Constance", href: "/us/en/content/186146-constance/", imgMo: "https://assets.hermes.com/is/image/hermesedito/Tuile_KBC_Mobile_2048x1536_Constance", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/019_worn_1_DESKTOP-2" },
+                  { name: "Kelly", href: "/us/en/content/106196-kelly/", imgMo: "https://assets.hermes.com/is/image/hermesedito/Tuile_KBC_Mobile_2048x1536_Kelly", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/022_worn_1_DESKTOP-3" },
+                ];
+                return (<>
+                  <button key="ed-iconic-belil" aria-label="Discover the Bel-Il bag" className="relative block aspect-square overflow-hidden text-left" onClick={() => belIl && go({ t: "product", id: belIl.id })}>
+                    {belIl && <img src={productImageFor(belIl)} alt="Bel-Il bag" loading="lazy" className="h-full w-full object-cover" />}
+                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 pb-4 pt-10 text-left text-[13px] font-bold uppercase leading-snug tracking-wide text-white">Bel-Il bag<span className="mt-1 block text-[11px] font-semibold normal-case tracking-normal underline underline-offset-4">Discover</span></span>
+                  </button>
+                  {links.map((l) => (
+                    <a key={`ed-iconic-${l.name}`} href={l.href} aria-label={`Discover ${l.name}`} className="relative block aspect-square overflow-hidden">
+                      <picture>
+                        <source media="(min-width: 1024px)" srcSet={l.imgDesktop} />
+                        <img src={l.imgMo} alt={l.name} loading="lazy" className="h-full w-full object-cover" />
+                      </picture>
+                      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 pb-4 pt-10 text-left text-[13px] font-bold uppercase leading-snug tracking-wide text-white">{l.name}<span className="mt-1 block text-[11px] font-semibold normal-case tracking-normal underline underline-offset-4">Discover</span></span>
+                    </a>
+                  ))}
+                </>);
+              })()}
+            </div>
           ) : (
-            <div key={`ed-text-${it.title}`} className="flex aspect-square flex-col justify-center bg-[#efe9df] p-6">
+            <div key={`ed-text-${gi}`} className="flex aspect-square flex-col justify-center bg-[#efe9df] p-6">
               <p className="font-serif-d text-xl italic">{it.title}</p>
               <p className="mt-3 text-sm leading-6 text-neutral-700">{it.body}</p>
             </div>
@@ -3973,6 +4175,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <FallWinterThemeCarousel go={go} themes={tshirtThemes} />
         ) : isWomensKnitwearPage ? (
           <FallWinterThemeCarousel go={go} themes={knitwearThemes} />
+        ) : isWomensScarvesPage ? (
+          <FallWinterThemeCarousel go={go} themes={scarvesThemes} />
+        ) : cat === "jewelry" && !sub ? (
+          <FallWinterThemeCarousel go={go} themes={fineJewelryThemes} />
+        ) : isBagsViewPage || isWomensBagsPage ? (
+          <FallWinterThemeCarousel go={go} themes={bagsThemes} />
+        ) : isWomensShoesPage ? (
+          <FallWinterThemeCarousel go={go} themes={shoesThemes} />
         ) : (
         <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
           {(() => {
@@ -4004,28 +4214,41 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         </div>
         )}
       </section>
-      {/* /jewelry/ descriptive paragraph — verbatim from hermes.com
-          (fetched 2026-11-15). Parent page only. The original's inline
-          links go to the matching sub-pages; the Chaîne d'ancre link
-          has no clone page, so it stays plain text. */}
+      {/* /jewelry/ descriptive paragraph — Group 11 (2026-11-18): the
+          original's Gold Jewelry paragraph, verbatim from the live
+          category page text fetch (2026-11-18 07:57 UTC). It REPLACES
+          the old generic jewelry text ("Hermès jewelry cultivates a
+          singular art…", fetched 2026-11-15) — the original's
+          fine-jewelry listing IS the Gold Jewelry category. Parent
+          page only. The original's inline links go to the matching
+          sub-pages; the Kelly link has no clone page, so it stays
+          plain text. Collapsed = first two sentences + "…", See More /
+          See less (Bath pattern, same as the Jewelry Men paragraph). */}
       {cat === "jewelry" && !sub && (
-        <p className="mx-auto mt-12 max-w-3xl text-center text-sm leading-7 text-neutral-700">
-          Hermès jewelry cultivates a singular art where metal becomes sculpture and the link becomes a signature. Let yourself be seduced by the pure radiance of our{" "}
-          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Rings" })}>white gold rings</button>
-          , true architectural plays of light. Reinvent the way you wear jewelry with boldness: from the classicism of our{" "}
-          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Earrings" })}>earrings</button>
-          {" "}to the affirmed modernity of our{" "}
-          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Earrings" })}>ear cuffs</button>
-          , each piece dresses the face with character. This mastery of form sublimes our{" "}
-          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Necklaces and pendants" })}>silver necklaces</button>
-          {" "}and dialogues with the House's marine heritage, embodied by the iconic Chaîne d'ancre collection. A raw elegance that is also available for men through our{" "}
-          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Bracelets" })}>men's bracelets</button>
-          . Finally, celebrate eternal attachment thanks to our precious{" "}
-          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Wedding rings" })}>wedding rings</button>
-          {" "}and our dedicated selection of men's{" "}
-          <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Wedding rings" })}>wedding bands</button>
-          , promises of timeless style.
-        </p>
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {fineJewelryParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Incarnation of a solar femininity, the Hermès gold jewelry collection morphs precious matter into sculptures of light. Let yourself be seduced by the contemporary softness of our{" "}
+              <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Rings" })}>rose gold rings</button>
+              , or opt for the pure and architectural radiance of our{" "}
+              <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Bracelets" })}>white gold bracelets</button>
+              . This quest for harmony continues to the face with our{" "}
+              <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Earrings" })}>earrings</button>
+              {" "}with bold volumes, designed to capture every ray. Explore the fluidity of our{" "}
+              <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Necklaces and pendants" })}>necklaces and long necklaces</button>
+              , true chains of savoir-faire. Finally, find the House&apos;s emblematic codes, where the functional clasp becomes an aesthetic jewel, at the heart of the timeless Kelly collection.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Incarnation of a solar femininity, the Hermès gold jewelry collection morphs precious matter into sculptures of light. Let yourself be seduced by the contemporary softness of our{" "}
+              <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Rings" })}>rose gold rings</button>
+              , or opt for the pure and architectural radiance of our{" "}
+              <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Bracelets" })}>white gold bracelets</button>
+              .…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setFineJewelryParaOpen(!fineJewelryParaOpen)}>{fineJewelryParaOpen ? "See less" : "See More"}</button>
+        </div>
       )}
       {/* SLG descriptive paragraphs — verbatim from hermes.com
           (2026-11-15; sub-page texts from slg-subcats-results.json,
@@ -4132,6 +4355,25 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         <div className="mx-auto mt-12 max-w-3xl text-center">
           <p className="text-sm leading-7 text-neutral-700">
             Step into the functional refinement of the men&apos;s bags collection. Crafted from premium materials, our men&apos;s bags combine timeless style with everyday practicality. Whether you need a sophisticated men&apos;s tote bag for work, a durable men&apos;s backpack for travel, or a sleek men&apos;s messenger bag for daily essentials, Hermès offers a variety of styles to suit your needs. Explore our collection of men&apos;s bags, from classic leather designs to modern interpretations, and find the perfect companion for your lifestyle. Our men&apos;s bags collection features a variety of designs, each crafted with meticulous attention to detail and exceptional quality. From the iconic Kelly Messenger to the versatile Herbag, each bag is a testament to Hermès&apos; commitment to craftsmanship and style. Discover a range of sizes, colors, and materials, ensuring you find the ideal bag for any occasion, whether it&apos;s a casual outing or a formal event. Elevate your style with a men&apos;s bag that reflects your personality and meets your practical needs, while embodying the timeless elegance of Hermès.
+          </p>
+        </div>
+      )}
+
+      {/* Bags and clutches parent ("View all", Group 11, 2026-11-18)
+          descriptive paragraph — verbatim from hermes.com (category
+          text fetch, 2026-11-18 07:58 UTC). Parent page only; shown
+          in full, as on the original. The "bags for women" / "bags for
+          men" links go to the two sub-pages; "small models" and
+          "leather" stay plain text (their original destinations are
+          filter links with no clone page). */}
+      {isBagsViewPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          <p className="text-sm leading-7 text-neutral-700">
+            Explore the iconic savoir-faire of Hermès through our complete bag and clutch collection. From versatile small models to larger tote bags, each piece showcases expert craftsmanship in heritage leather, silk, or canvas. Adorned with distinct gold or silver hardware, our selection transcends trends with the timeless silhouettes of our dedicated lines of{" "}
+            <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Women's bags and clutches" })}>bags for women</button>
+            {" "}and{" "}
+            <button className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: "Men's bags and clutches" })}>bags for men</button>
+            .
           </p>
         </div>
       )}
