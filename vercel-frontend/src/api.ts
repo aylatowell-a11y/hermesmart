@@ -17,25 +17,89 @@
 // the same utility type App.tsx uses to derive Product/Settings.
 
 import { PRODUCTS, SETTINGS, type Product, type Settings } from "./data";
+import { API_URL, ADMIN_EMAIL } from "./config";
+import { sha256Hex } from "./sha256";
 
-// Demo admin password for THIS standalone build only (client-side gate).
-// It is NOT the live store's server password. The admin panel here edits only
-// this browser's local copy.
-const DEMO_ADMIN_PASSWORD = "admin123";
+export { ADMIN_EMAIL };
 
-// Admin sign-in email — the SINGLE configurable value for the admin login.
-// The admin signs in with this Gmail address + the admin password above.
-// Change this one line to change the admin email everywhere.
-export const ADMIN_EMAIL = "nauman4915@gmail.com";
+// ---------------------------------------------------------------------------
+// Admin gate — client-side demo only (SECURITY 2026-11-18).
+// The admin password is NEVER in the shipped bundle: the owner sets it once
+// in the Admin Panel and only its SHA-256 hash is kept in this browser's
+// localStorage (hv-admin-password-hash). The admin email comes from the
+// VITE_ADMIN_EMAIL env var (see config.ts); if it is unset the gate is
+// password-only. Honest limit: a client-side gate can always be bypassed
+// with DevTools in the visitor's own browser — it keeps casual visitors
+// out of the panel, it is not server authentication. Real admin auth needs
+// the backend (VITE_API_URL). All admin effects are own-browser only.
+// ---------------------------------------------------------------------------
+const ADMIN_HASH_KEY = "admin-password-hash";
+const SESSION_SALT = ":admin-session";
 
-// The admin gate: the password must match AND the email must match
-// ADMIN_EMAIL (case-insensitive). This is a client-side demo gate only —
-// it keeps the admin panel behind the admin's Gmail, not just a password.
-// If ADMIN_EMAIL is ever cleared, the gate falls back to password-only.
+export function adminPasswordIsSet(): boolean {
+  return read<string | null>(ADMIN_HASH_KEY, null) !== null;
+}
+
 function isAdmin(email: string | undefined, password: string | undefined): boolean {
-  if (password !== DEMO_ADMIN_PASSWORD) return false;
-  if (!ADMIN_EMAIL) return true;
-  return (email ?? "").trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  if (!password) return false;
+  if (ADMIN_EMAIL && (email ?? "").trim().toLowerCase() !== ADMIN_EMAIL.toLowerCase()) return false;
+  const hash = read<string | null>(ADMIN_HASH_KEY, null);
+  if (!hash) return false;
+  return sha256Hex(password) === hash;
+}
+
+function isAdminSession(email: string | undefined, token: string | undefined): boolean {
+  if (!token) return false;
+  if (ADMIN_EMAIL && (email ?? "").trim().toLowerCase() !== ADMIN_EMAIL.toLowerCase()) return false;
+  const hash = read<string | null>(ADMIN_HASH_KEY, null);
+  if (!hash) return false;
+  return token === sha256Hex(hash + SESSION_SALT);
+}
+
+/** Admin proof by password OR by a valid session token (minted at sign-in). */
+function adminAuthed(args: { email?: string; password?: string; sessionToken?: string }): boolean {
+  if (args.sessionToken && isAdminSession(args.email, args.sessionToken)) return true;
+  if (!args.password) return false;
+  if (loginThrottleLocked()) return false;
+  return isAdmin(args.email, args.password);
+}
+
+/** First-run setup: only allowed while no admin password exists yet. */
+// First-run bootstrap: with no admin password set, can this email reach
+// the setup form? Only the configured admin email — or any email when no
+// admin email is configured (set VITE_ADMIN_EMAIL to restrict it to the
+// owner's Gmail). Without this, the first-run setup form inside the Admin
+// Panel would be unreachable: every route into the panel requires a
+// password that does not exist yet.
+export function adminSetupNeeded(email: string): boolean {
+  return !adminPasswordIsSet() && (!ADMIN_EMAIL || email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase());
+}
+
+export function adminSetupPassword(password: string): { ok: boolean; message: string } {
+  if (adminPasswordIsSet()) return { ok: false, message: "Admin password is already set. Change it from inside the Admin Panel." };
+  if (!isStrongPassword(password)) return { ok: false, message: "Password must be at least 10 characters with an upper-case letter, a lower-case letter, a digit and a special character." };
+  write(ADMIN_HASH_KEY, sha256Hex(password));
+  return { ok: true, message: "Admin password set." };
+}
+
+export function adminChangePassword(args: { email?: string; password: string; newPassword: string }): { ok: boolean; message: string; token: string } {
+  if (!isAdmin(args.email, args.password)) return { ok: false, message: "Current password is incorrect.", token: "" };
+  if (!isStrongPassword(args.newPassword)) return { ok: false, message: "New password must be at least 10 characters with an upper-case letter, a lower-case letter, a digit and a special character.", token: "" };
+  const hash = sha256Hex(args.newPassword);
+  write(ADMIN_HASH_KEY, hash);
+  return { ok: true, message: "Admin password changed.", token: sha256Hex(hash + SESSION_SALT) };
+}
+
+/** Mint a session token after a password sign-in — the token, not the password, is what gets persisted. */
+export function adminCreateSession(args: { email?: string; password: string }): { ok: boolean; token: string } {
+  if (!isAdmin(args.email, args.password)) return { ok: false, token: "" };
+  resetLoginThrottle();
+  const hash = read<string | null>(ADMIN_HASH_KEY, null) ?? "";
+  return { ok: true, token: sha256Hex(hash + SESSION_SALT) };
+}
+
+export function adminSessionValid(args: { email?: string; token: string }): boolean {
+  return isAdminSession(args.email, args.token);
 }
 
 export type ApiResponse<TApi, TAction extends keyof TApi> =
@@ -69,12 +133,58 @@ function nextId(key: string, start: number): number {
   return cur;
 }
 
-type LocalUser = { id: number; name: string; email: string; password: string; disabled: number; viewedByAdmin: number; createdAt: string };
+// ---------------------------------------------------------------------------
+// Validation + abuse caps (SECURITY 2026-11-18). localStorage is ~5 MB and
+// shared by every collection, so unbounded lists can fill it and silently
+// break all later writes (write() swallows quota errors). Caps keep the
+// newest entries and drop the oldest.
+// ---------------------------------------------------------------------------
+export function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((email ?? "").trim());
+}
+
+export function isStrongPassword(pw: string): boolean {
+  return pw.length >= 10 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /\d/.test(pw) && /[^A-Za-z0-9]/.test(pw);
+}
+
+// User passwords are stored as SHA-256(email + "\n" + password) — never
+// plaintext. (Client-side hashing only hides them from casual reads of
+// localStorage; real auth needs the backend.)
+function hashUserPassword(email: string, password: string): string {
+  return sha256Hex(email.trim().toLowerCase() + "\n" + password);
+}
+
+// Sign-in throttling: 5 failed password attempts -> 60 s lockout, per
+// browser. Cheap friction against local guessing; not a server lockout.
+const THROTTLE_KEY = "login-throttle";
+const THROTTLE_MAX = 5;
+const THROTTLE_MS = 60 * 1000;
+export function loginThrottleStatus(): { locked: boolean; waitSec: number } {
+  const t = read<{ count: number; lockedUntil: number }>(THROTTLE_KEY, { count: 0, lockedUntil: 0 });
+  const waitSec = Math.max(0, Math.ceil((t.lockedUntil - Date.now()) / 1000));
+  return { locked: waitSec > 0, waitSec };
+}
+function loginThrottleLocked(): boolean {
+  return loginThrottleStatus().locked;
+}
+function recordLoginFailure(): void {
+  const t = read<{ count: number; lockedUntil: number }>(THROTTLE_KEY, { count: 0, lockedUntil: 0 });
+  const count = Date.now() > t.lockedUntil ? 1 : t.count + 1;
+  write(THROTTLE_KEY, { count, lockedUntil: count >= THROTTLE_MAX ? Date.now() + THROTTLE_MS : 0 });
+}
+function resetLoginThrottle(): void {
+  write(THROTTLE_KEY, { count: 0, lockedUntil: 0 });
+}
+
+// passwordHash is SHA-256(email + "\n" + password). Older rows stored a
+// plaintext `password` field — loginUser migrates them on next sign-in.
+type LocalUser = { id: number; name: string; email: string; passwordHash: string; password?: string; disabled: number; viewedByAdmin: number; createdAt: string };
 type LocalOrder = { id: number; customerName: string; email: string; total: number; status: string; items: string; address: string; paymentMethod: string; deliveryOption: string; viewedByAdmin: number; createdAt: string };
 type LocalWish = { id: number; email: string; productId: number; productName: string };
 type LocalNotify = { id: number; productId: number; productName: string; email: string };
 type LocalReturn = { id: number; orderId: number; email: string; reason: string; status: string };
 export type LocalChat = { id: number; from: "customer" | "admin"; text: string; name: string; readByAdmin: number; createdAt: string };
+export type LocalContact = { id: number; first: string; last: string; email: string; subject: string; message: string; createdAt: string };
 
 function parseArr<T>(raw: string | undefined, fallback: T[]): T[] {
   if (!raw) return fallback;
@@ -116,10 +226,8 @@ function getSettings(): Settings {
 }
 
 // ---------------------------------------------------------------------------
-// Optional remote proxy (only when VITE_API_URL is set)
+// Optional remote proxy (only when VITE_API_URL is set — see config.ts)
 // ---------------------------------------------------------------------------
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
-
 async function remote<T>(action: string, args: Record<string, unknown>): Promise<T | null> {
   if (!API_URL) return null;
   try {
@@ -174,6 +282,7 @@ export const api = {
       items: JSON.stringify(args.items), address: args.address, paymentMethod: args.paymentMethod,
       deliveryOption: args.deliveryOption, viewedByAdmin: 0, createdAt: new Date().toISOString(),
     });
+    if (orders.length > 500) orders.length = 500;
     write("orders", orders);
     return { ok: true as const, orderId: id, total };
   },
@@ -181,20 +290,39 @@ export const api = {
   async registerUser(args: { name: string; email: string; password: string }): Promise<{ ok: boolean; message: string; name: string }> {
     const users = read<LocalUser[]>("users", []);
     const email = args.email.trim().toLowerCase();
+    if (!isValidEmail(email)) return { ok: false, message: "Please enter a valid email address.", name: "" };
+    if (!isStrongPassword(args.password)) return { ok: false, message: "Password must be at least 10 characters with an upper-case letter, a lower-case letter, a digit and a special character.", name: "" };
+    if (users.length >= 500) return { ok: false, message: "Registration is temporarily unavailable. Please try again later.", name: "" };
     if (users.some((u) => u.email.toLowerCase() === email)) {
       return { ok: false, message: "An account with this email already exists. Please sign in.", name: "" };
     }
-    users.push({ id: nextId("next-user-id", 101), name: args.name, email: args.email, password: args.password, disabled: 0, viewedByAdmin: 0, createdAt: new Date().toISOString() });
+    users.push({ id: nextId("next-user-id", 101), name: args.name, email: args.email, passwordHash: hashUserPassword(email, args.password), disabled: 0, viewedByAdmin: 0, createdAt: new Date().toISOString() });
     write("users", users);
     return { ok: true, message: "Account created. Welcome to the Maison.", name: args.name };
   },
 
   async loginUser(args: { email: string; password: string }): Promise<{ ok: boolean; message: string; name: string }> {
+    if (loginThrottleLocked()) return { ok: false, message: "Too many sign-in attempts. Please try again in a minute.", name: "" };
     const users = read<LocalUser[]>("users", []);
-    const u = users.find((x) => x.email.toLowerCase() === args.email.trim().toLowerCase());
-    if (!u || u.password !== args.password) return { ok: false, message: "Email or password not recognised.", name: "" };
+    const email = args.email.trim().toLowerCase();
+    const u = users.find((x) => x.email.toLowerCase() === email);
+    const hash = hashUserPassword(email, args.password);
+    const ok = !!u && (u.passwordHash ? u.passwordHash === hash : u.password === args.password);
+    if (!ok || !u) { recordLoginFailure(); return { ok: false, message: "Email or password not recognised.", name: "" }; }
     if (u.disabled) return { ok: false, message: "This account has been disabled. Please contact customer service.", name: "" };
+    // Migrate legacy plaintext rows to hashes on first successful sign-in.
+    if (!u.passwordHash) {
+      write("users", users.map((x) => (x.id === u.id ? { ...x, passwordHash: hash, password: undefined } : x)));
+    }
+    resetLoginThrottle();
     return { ok: true, message: "Signed in.", name: u.name };
+  },
+
+  // Re-check a stored session on load: does the account still exist and is
+  // it still enabled? (A disabled account must not stay signed in.)
+  async getUserStatus(args: { email: string }): Promise<{ exists: boolean; disabled: boolean; name: string }> {
+    const u = read<LocalUser[]>("users", []).find((x) => x.email.toLowerCase() === args.email.trim().toLowerCase());
+    return { exists: !!u, disabled: !!u?.disabled, name: u?.name ?? "" };
   },
 
   async myOrders(args: { email: string }): Promise<{ orders: LocalOrder[] }> {
@@ -206,8 +334,10 @@ export const api = {
   async subscribeNewsletter(args: { email: string }): Promise<{ ok: true }> {
     const list = read<{ id: number; email: string }[]>("newsletter", []);
     const email = args.email.trim().toLowerCase();
+    if (!isValidEmail(email)) return { ok: true as const };
     if (!list.some((n) => n.email.toLowerCase() === email)) {
       list.push({ id: nextId("next-news-id", 1), email: args.email });
+      if (list.length > 1000) list.splice(0, list.length - 1000);
       write("newsletter", list);
     }
     return { ok: true as const };
@@ -215,9 +345,31 @@ export const api = {
 
   async requestNotify(args: { productId: number; productName: string; email: string }): Promise<{ ok: true }> {
     const list = read<LocalNotify[]>("notify", []);
-    list.push({ id: nextId("next-notify-id", 1), productId: args.productId, productName: args.productName, email: args.email });
-    write("notify", list);
+    const email = args.email.trim().toLowerCase();
+    if (!isValidEmail(email)) return { ok: true as const };
+    if (!list.some((n) => n.productId === args.productId && n.email.toLowerCase() === email)) {
+      list.push({ id: nextId("next-notify-id", 1), productId: args.productId, productName: args.productName, email: args.email });
+      if (list.length > 1000) list.splice(0, list.length - 1000);
+      write("notify", list);
+    }
     return { ok: true as const };
+  },
+
+  // Contact-form messages. There is no email backend in this build, so
+  // messages are stored locally (newest first, capped) for the admin to
+  // read in the Admin Panel Chat tab — they are NOT silently dropped.
+  async contactMessage(args: { first: string; last: string; email: string; subject: string; message: string }): Promise<{ ok: boolean }> {
+    if (!isValidEmail(args.email)) return { ok: false };
+    const list = read<LocalContact[]>("contact", []);
+    list.unshift({
+      id: nextId("next-contact-id", 1),
+      first: args.first.slice(0, 100), last: args.last.slice(0, 100),
+      email: args.email.slice(0, 254), subject: args.subject.slice(0, 200),
+      message: args.message.slice(0, 2000), createdAt: new Date().toISOString(),
+    });
+    if (list.length > 200) list.length = 200;
+    write("contact", list);
+    return { ok: true };
   },
 
   async recordVisit(_args: { visitorKey: string; day: string }): Promise<{ ok: true }> {
@@ -267,6 +419,7 @@ export const api = {
       return { ok: true as const, added: false };
     }
     list.push({ id: nextId("next-wish-id", 1), email: args.email, productId: args.productId, productName: args.productName });
+    if (list.length > 500) list.splice(0, list.length - 500);
     write("wishlist", list);
     return { ok: true as const, added: true };
   },
@@ -282,6 +435,7 @@ export const api = {
     }
     const returns = read<LocalReturn[]>("returns", []);
     returns.push({ id: nextId("next-return-id", 1), orderId: args.orderId, email: args.email, reason: args.reason, status: "Requested" });
+    if (returns.length > 500) returns.splice(0, returns.length - 500);
     write("returns", returns);
     return { ok: true, message: "Return requested. Our customer service will contact you." };
   },
@@ -292,37 +446,41 @@ export const api = {
     return { messages: read<LocalChat[]>("chat", []) };
   },
 
-  async sendChatMessage(args: { from: "customer" | "admin"; text: string; name?: string }): Promise<{ ok: boolean; id?: number }> {
-    const text = (args.text ?? "").trim();
+  async sendChatMessage(args: { from: "customer" | "admin"; text: string; name?: string; email?: string; password?: string; sessionToken?: string }): Promise<{ ok: boolean; id?: number }> {
+    const text = (args.text ?? "").trim().slice(0, 1000);
     if (!text) return { ok: false };
+    // Only the admin may post as "admin" — otherwise anyone with the
+    // console could impersonate customer service in this browser's chat.
+    if (args.from === "admin" && !adminAuthed(args)) return { ok: false };
     const msgs = read<LocalChat[]>("chat", []);
     const id = nextId("next-chat-id", 1);
-    msgs.push({ id, from: args.from, text, name: args.name ?? "", readByAdmin: args.from === "admin" ? 1 : 0, createdAt: new Date().toISOString() });
+    msgs.push({ id, from: args.from, text, name: (args.name ?? "").slice(0, 100), readByAdmin: args.from === "admin" ? 1 : 0, createdAt: new Date().toISOString() });
+    if (msgs.length > 500) msgs.splice(0, msgs.length - 500);
     write("chat", msgs);
     return { ok: true, id };
   },
 
-  async adminMarkChatRead(args: { email?: string; password: string }): Promise<{ ok: boolean }> {
-    if (!isAdmin(args.email, args.password)) return { ok: false };
+  async adminMarkChatRead(args: { email?: string; password: string; sessionToken?: string }): Promise<{ ok: boolean }> {
+    if (!adminAuthed(args)) return { ok: false };
     const msgs = read<LocalChat[]>("chat", []);
     msgs.forEach((m) => { m.readByAdmin = 1; });
     write("chat", msgs);
     return { ok: true };
   },
 
-  async adminDeleteChatMessage(args: { email?: string; password: string; id: number }): Promise<{ ok: boolean }> {
-    if (!isAdmin(args.email, args.password)) return { ok: false };
+  async adminDeleteChatMessage(args: { email?: string; password: string; sessionToken?: string; id: number }): Promise<{ ok: boolean }> {
+    if (!adminAuthed(args)) return { ok: false };
     write("chat", read<LocalChat[]>("chat", []).filter((m) => m.id !== args.id));
     return { ok: true };
   },
 
-  async adminClearChat(args: { email?: string; password: string }): Promise<{ ok: boolean }> {
-    if (!isAdmin(args.email, args.password)) return { ok: false };
+  async adminClearChat(args: { email?: string; password: string; sessionToken?: string }): Promise<{ ok: boolean }> {
+    if (!adminAuthed(args)) return { ok: false };
     write("chat", []);
     return { ok: true };
   },
 
-  async adminData(args: { email?: string; password: string }): Promise<{
+  async adminData(args: { email?: string; password: string; sessionToken?: string; probe?: boolean }): Promise<{
     ok: boolean;
     stats: { products: number; orders: number; users: number; revenue: number; newsletter: number; notify: number; visitsTotal: number; visitsToday: number; pendingOrders: number; newAccountsToday: number; newOrders: number; returns: number };
     visitsByDay: { day: string; count: number }[];
@@ -337,6 +495,7 @@ export const api = {
     newsletter: { id: number; email: string }[];
     notify: { id: number; productName: string; email: string }[];
     returns: { id: number; orderId: number; email: string; reason: string; status: string }[];
+    contact: LocalContact[];
   }> {
     const empty = {
       ok: false,
@@ -353,8 +512,16 @@ export const api = {
       newsletter: [] as { id: number; email: string }[],
       notify: [] as { id: number; productName: string; email: string }[],
       returns: [] as { id: number; orderId: number; email: string; reason: string; status: string }[],
+      contact: [] as LocalContact[],
     };
-    if (!isAdmin(args.email, args.password)) return empty;
+    if (!adminAuthed(args)) {
+      // A real (non-probe) password failure counts toward the sign-in
+      // throttle. The customer sign-in form probes admin first on every
+      // login, so probes must not count — one wrong customer password
+      // would otherwise cost two throttle strikes.
+      if (args.password && !args.sessionToken && !args.probe) recordLoginFailure();
+      return empty;
+    }
     const prods = getProducts();
     const ords = read<LocalOrder[]>("orders", []);
     const usrs = read<LocalUser[]>("users", []);
@@ -418,11 +585,12 @@ export const api = {
       newsletter: news,
       notify: noti.map((n) => ({ id: n.id, productName: n.productName, email: n.email })),
       returns: rets.map((r) => ({ id: r.id, orderId: r.orderId, email: r.email, reason: r.reason, status: r.status })),
+      contact: read<LocalContact[]>("contact", []),
     };
   },
 
-  async adminMarkViewed(args: { email?: string; password: string; kind: "order" | "user"; id: number }): Promise<{ ok: boolean }> {
-    if (!isAdmin(args.email, args.password)) return { ok: false };
+  async adminMarkViewed(args: { email?: string; password: string; sessionToken?: string; kind: "order" | "user"; id: number }): Promise<{ ok: boolean }> {
+    if (!adminAuthed(args)) return { ok: false };
     if (args.kind === "order") {
       const orders = read<LocalOrder[]>("orders", []);
       write("orders", orders.map((o) => (o.id === args.id ? { ...o, viewedByAdmin: 1 } : o)));
@@ -433,27 +601,27 @@ export const api = {
     return { ok: true };
   },
 
-  async adminSetUserDisabled(args: { email?: string; password: string; id: number; disabled: boolean }): Promise<{ ok: boolean }> {
-    if (!isAdmin(args.email, args.password)) return { ok: false };
+  async adminSetUserDisabled(args: { email?: string; password: string; sessionToken?: string; id: number; disabled: boolean }): Promise<{ ok: boolean }> {
+    if (!adminAuthed(args)) return { ok: false };
     const users = read<LocalUser[]>("users", []);
     write("users", users.map((u) => (u.id === args.id ? { ...u, disabled: args.disabled ? 1 : 0 } : u)));
     return { ok: true };
   },
 
-  async adminDeleteUser(args: { email?: string; password: string; id: number }): Promise<{ ok: boolean }> {
-    if (!isAdmin(args.email, args.password)) return { ok: false };
+  async adminDeleteUser(args: { email?: string; password: string; sessionToken?: string; id: number }): Promise<{ ok: boolean }> {
+    if (!adminAuthed(args)) return { ok: false };
     write("users", read<LocalUser[]>("users", []).filter((u) => u.id !== args.id));
     return { ok: true };
   },
 
   async adminSaveProduct(args: {
-    email?: string; password: string; id?: number; name: string; category: string; subcategory?: string; theme?: string;
+    email?: string; password: string; sessionToken?: string; id?: number; name: string; category: string; subcategory?: string; theme?: string;
     price: number; priceLabel?: string; status?: string; line?: string; material?: string; modelSize?: string;
     metallicFinish?: string; colorsJson?: string; description?: string; story?: string; tone?: string;
     glyph?: string; refCode?: string; galleryViews?: string; applePay?: boolean; sizeOptions?: string;
     accordions?: string; shippingDelay?: string; detailLines?: string;
   }): Promise<{ ok: boolean; id: number }> {
-    if (!isAdmin(args.email, args.password)) return { ok: false, id: 0 };
+    if (!adminAuthed(args)) return { ok: false, id: 0 };
     const overrides = read<Record<string, Partial<Product>>>("products-overrides", {});
     const added = read<Product[]>("products-new", []);
     const vals: Partial<Product> = {
@@ -501,8 +669,8 @@ export const api = {
     return { ok: true, id };
   },
 
-  async adminDeleteProduct(args: { email?: string; password: string; id: number }): Promise<{ ok: boolean }> {
-    if (!isAdmin(args.email, args.password)) return { ok: false };
+  async adminDeleteProduct(args: { email?: string; password: string; sessionToken?: string; id: number }): Promise<{ ok: boolean }> {
+    if (!adminAuthed(args)) return { ok: false };
     const deleted = new Set(read<number[]>("products-deleted", []));
     deleted.add(args.id);
     write("products-deleted", [...deleted]);
@@ -510,21 +678,22 @@ export const api = {
     return { ok: true };
   },
 
-  async adminUpdateOrder(args: { email?: string; password: string; id: number; status: string }): Promise<{ ok: boolean }> {
-    if (!isAdmin(args.email, args.password)) return { ok: false };
+  async adminUpdateOrder(args: { email?: string; password: string; sessionToken?: string; id: number; status: string }): Promise<{ ok: boolean }> {
+    if (!adminAuthed(args)) return { ok: false };
     const orders = read<LocalOrder[]>("orders", []);
     write("orders", orders.map((o) => (o.id === args.id ? { ...o, status: args.status } : o)));
     return { ok: true };
   },
 
-  async adminSaveSettings(args: { email?: string; password: string; settings: Settings }): Promise<{ ok: boolean }> {
-    if (!isAdmin(args.email, args.password)) return { ok: false };
+  async adminSaveSettings(args: { email?: string; password: string; sessionToken?: string; settings: Settings }): Promise<{ ok: boolean }> {
+    if (!adminAuthed(args)) return { ok: false };
     write("settings", args.settings);
     return { ok: true };
   },
 
-  async adminUploadLogo(args: { email?: string; password: string; dataBase64: string; mimeType: string; clear: boolean }): Promise<{ ok: boolean; logoUrl: string }> {
-    if (!isAdmin(args.email, args.password)) return { ok: false, logoUrl: "" };
+  async adminUploadLogo(args: { email?: string; password: string; sessionToken?: string; dataBase64: string; mimeType: string; clear: boolean }): Promise<{ ok: boolean; logoUrl: string }> {
+    if (!adminAuthed(args)) return { ok: false, logoUrl: "" };
+    if (args.dataBase64.length > 7_000_000) return { ok: false, logoUrl: "" }; // ~5 MB file as base64
     if (args.clear || !args.dataBase64) {
       const cur = read<Partial<Settings> | null>("settings", null);
       write("settings", { ...(cur ?? {}), logoUrl: "" });
