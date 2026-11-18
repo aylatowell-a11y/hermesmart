@@ -116,7 +116,7 @@ const MEGA_RAW: MegaEntry[] = [
 const MEGA_DESKTOP_WOMEN: MegaSection[][] = [
   [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026", "Spring-Summer 2027", "Coats and jackets", "Leather", "Dresses", "Tops and shirts", "Pants and shorts", "Knitwear and twillaines", "T-shirts and sweatshirts", "Beachwear", "Discover the runway shows"] }],
   [{ heading: "SHOES", items: ["Fall-Winter 2026", "Sneakers", "Loafers", "Sandals", "Boots", "Pumps", "Ballet flats", "Mules"] }, { heading: "SCARVES AND STOLES", items: ["Twillys", "Scarves 90 cm", "Equestrian", "Cashmere", "Stole", "Discover scarf tying"] }],
-  [{ heading: "FASHION JEWELRY", items: ["Bracelets", "Earrings", "Necklaces", "Rings", "Pins and brooches", "Hair accessories and combs", "Hairbands and hatbands"] }],
+  [{ heading: "FASHION JEWELRY", items: ["Bracelets", "Earrings", "Necklaces", "Rings", "Hair accessories and combs"] }],
   [{ heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }, { heading: "HAIR ACCESSORIES", items: [] }],
 ];
 type NavOverride = { label?: string; caption?: string; hidden?: boolean; dest?: string };
@@ -458,7 +458,40 @@ function cartImageFor(products: Product[], productId: number, name: string, pric
 // bags, etc. never get a quick-buy button.
 function isSneakerProduct(p: Product): boolean { return /sneaker/i.test(p.name); }
 
-function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile, eyebrow }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean; plainTile?: boolean; eyebrow?: string }) {
+// Per-page tile colour overrides (Group 12, 2026-11-18) — the original
+// is inconsistent across its own pages: the same row shows a different
+// colour word on Timepieces / Watches Women / Watches Men than on the
+// other pages (Group 6: 58 diffs; Group 9: watchWomen ~102, watchMen
+// ~13). The clone keeps ONE colour per row (the PDP colour line is
+// authoritative), so the tile colour word is overridden per page here.
+// Computed from the saved live lists (watches-timepieces-live-full.txt,
+// watches-women-live-full.txt, watches-men-live-full.txt) against the
+// current rows: an entry exists only where the tile word differs from
+// the row colour. "" means the tile shows NO colour word (suppress).
+// Applied at TILE render only (ProductCard tileColour prop, category
+// grid only) — PDP colour, search results, recommendations and
+// carousels are untouched. Recompute with colour_overrides.py after
+// any row-colour change (the id591 fix removed its 2 entries).
+const TILE_COLOUR_OVERRIDES: Record<string, Record<number, string>> = {
+  timepieces: { 533: "Black", 534: "Black", 535: "Beige/Natural", 536: "Brown", 538: "Brown", 539: "Brown", 540: "Grey", 541: "Purple", 542: "Black", 544: "Black", 545: "Beige/Natural", 546: "Black", 547: "Beige/Natural", 548: "Black", 551: "Grey", 552: "Pink", 554: "Purple", 557: "White", 559: "Blue", 560: "Black", 561: "Pink", 562: "Pink", 563: "Grey", 564: "Black", 565: "Green", 566: "Black", 567: "Grey", 569: "Brown", 572: "Grey", 575: "Grey", 576: "Pink", 577: "Pink", 578: "Brown", 579: "Black", 581: "Black", 583: "Black", 584: "Grey", 585: "Grey", 586: "Pink", 589: "Pink", 590: "Beige/Natural", 593: "Beige/Natural", 594: "Beige/Natural", 595: "Brown", 596: "Beige/Natural", 597: "Grey", 599: "Brown", 600: "Beige/Natural", 601: "Brown", 602: "Beige/Natural", 603: "Beige/Natural", 6346: "White", 6347: "Blue" },
+  watchWomen: { 261: "Yellow", 533: "Black", 534: "Black", 535: "Beige/Natural", 536: "Brown", 538: "Brown", 539: "Brown", 540: "Grey", 541: "Purple", 542: "Black", 544: "Black", 545: "Beige/Natural", 546: "Black", 547: "Beige/Natural", 548: "Black", 551: "Grey", 552: "Pink", 554: "Purple", 557: "White", 559: "Blue", 560: "Black", 561: "Pink", 562: "Pink", 563: "Grey", 564: "Black", 565: "Green", 566: "Black", 567: "Grey", 572: "Grey", 576: "Pink", 577: "Pink", 583: "Black", 584: "Grey", 585: "Grey", 586: "Pink", 589: "Pink", 590: "Beige/Natural", 594: "Beige/Natural", 596: "Beige/Natural", 597: "Grey", 599: "Brown", 600: "Beige/Natural", 601: "Brown", 602: "Beige/Natural", 603: "Beige/Natural", 6346: "White", 8103: "", 8104: "" },
+  watchMen: { 544: "Black", 545: "Beige/Natural", 547: "Beige/Natural", 548: "Black", 569: "Brown", 575: "Grey", 578: "Brown", 579: "Black", 581: "Black", 593: "Beige/Natural", 595: "Brown" },
+};
+
+// Returns undefined (no override — use the row colour), null (suppress —
+// the tile shows no colour word), or the override word for this page+row.
+function tileColourFor(page: string | null, id: number): string | null | undefined {
+  if (!page) return undefined;
+  const m = TILE_COLOUR_OVERRIDES[page];
+  if (!m || !(id in m)) return undefined;
+  const v = m[id];
+  return v === "" ? null : v;
+}
+function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile, eyebrow, tileColour }: { p: Product; onOpen: (id: number) => void; onQuickBuy?: (p: Product) => void; colourInName?: boolean; plainTile?: boolean; eyebrow?: string; tileColour?: string | null }) {
+  // Per-page tile colour override (Group 12): undefined = use the row
+  // colour, null = suppress (the tile shows no colour word), a string =
+  // render that word instead of the row colour. PDP colour is untouched.
+  const shownColour = tileColour === undefined ? p.colors[0]?.name : tileColour;
   const bagIcon = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>;
   // Tile views (hermes.com parity): the tile photo first, then the
   // alternates — the product's gallery views after the first
@@ -609,7 +642,7 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile, eyebrow }
         // and a Quick buy bag button (sneaker pages) ends the text row.
         <div className="mt-2 flex items-start justify-between gap-2">
           <div>
-            <p className="product-name px-2 text-left text-xs leading-5 text-[var(--text)]">{p.name}{p.colors[0] ? <span className="sr-only">, {p.colors[0].name}</span> : ""}</p>
+            <p className="product-name px-2 text-left text-xs leading-5 text-[var(--text)]">{p.name}{shownColour ? <span className="sr-only">, {shownColour}</span> : ""}</p>
             <p className="mt-0.5 px-2 text-left text-xs leading-5 text-[var(--text)]">{priceText(p)}</p>
           </div>
           {onQuickBuy && isBuyableStatus(p.status) && (
@@ -621,7 +654,7 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile, eyebrow }
         <>
           {eyebrow && <p className="font-mono-d mt-2 block px-2 text-left text-[11px] font-medium uppercase leading-[14px] tracking-normal text-[var(--text)]">{eyebrow}</p>}
           <p className={`product-name ${eyebrow ? "" : "mt-2 "}px-2 text-left text-xs leading-5 text-[var(--text)]`}>{p.name}</p>
-          {p.colors[0] && <p className="sr-only">{p.colors[0].name}</p>}
+          {shownColour && <p className="sr-only">{shownColour}</p>}
           <p className="mt-0.5 px-2 text-left text-xs leading-5 text-[var(--text)]">{priceText(p)}</p>
           {onQuickBuy && isBuyableStatus(p.status) && (
             <button aria-label={`Quick buy ${p.name}`} className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-base shadow transition hover:bg-black hover:text-white"
@@ -2199,15 +2232,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // The 603 Tableware rows that also carry homePos still appear
       // on the Home parent page — tabPos does not touch homePos.
       "tableware": (p) => p.subcategory === "Tableware" && p.tabPos !== undefined,
-      // Men's Shoes parent page — the original's live order (328
-      // tiles, extracted 2026-11-15) lives in menShoePos; the parent lists
-      // exactly those rows. The 50 clone rows not on the live list stay
-      // in the catalogue but never appear on the parent grid (same rule
-      // as Scarves/Belts/Dresses). Women's shoes (cat "women") are NOT
-      // gated — that page shows [701] = 689 live + 12 kept rows.
+      // Women's Shoes page — gated on shoePos since the Group 12 retag
+      // (2026-11-18): the original's live order (732 tiles) lives in
+      // shoePos; the page lists exactly those rows. The 14 clone rows not
+      // on the live list stay in the catalogue but never appear on the grid
+      // (same rule as Scarves/Belts/Dresses, and the men's branch above).
+      // Before the gate the page showed [746] = 732 live + 14 kept rows.
       // NOTE: the key MUST be exactly "shoes" — subLow is "shoes" for
       // both the women's and men's Shoes pages (Scarves comma lesson).
-      "shoes": (p) => p.category === cat && p.subcategory === "Shoes" && (cat === "men" ? p.menShoePos !== undefined : true),
+      "shoes": (p) => p.category === cat && p.subcategory === "Shoes" && (cat === "men" ? p.menShoePos !== undefined : p.shoePos !== undefined),
       "loafers": (p) => /loafer/i.test(p.name),
       "boots": (p) => /boot/i.test(p.name),
       "mules": (p) => /mule|loafer/i.test(p.name),
@@ -2368,6 +2401,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // No sub-nav row on either page (live category page text fetch).
   const isWatchWomenPage = cat === "watches" && subLow === "women";
   const isWatchMenPage = cat === "watches" && subLow === "men";
+  // Per-page tile colour override key (Group 12): the three watch pages
+  // show the original's own tile colour words via TILE_COLOUR_OVERRIDES
+  // (tileColourFor at the grid call site); every other page passes null
+  // and the tile uses the row colour.
+  const tileColourPage = isTimepiecesPage ? "timepieces" : isWatchWomenPage ? "watchWomen" : isWatchMenPage ? "watchMen" : null;
   // Petit h page (Group 7, 2026-11-18) — the original's
   // /us/en/category/petit-h/ listing (276 tiles), sorted by
   // petitHPos, with the "Applied creativity" / "Deconstructing the
@@ -2596,7 +2634,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     siblings = rtwList.map((l) => ({ label: l, view: { t: "category", cat, sub: l } as View, current: l.toLowerCase() === subLow || (isCollectionSub && l.toLowerCase() === `${subLow} collection`) || (l === "Dresses and skirts" && isDressesPage && !RTW_SUBS.some((x) => x.toLowerCase() === subLow)) }));
   } else if (cat === "fashion-jewelry") {
     // The original's fashion-jewelry sub-pages (WOMEN menu, desktop).
-    siblings = ["Bracelets", "Earrings", "Necklaces", "Rings", "Pins and brooches", "Hair accessories and combs", "Hairbands and hatbands"].map((l) => ({ label: l, view: (l === "Hair accessories and combs" ? { t: "category", cat: "women", sub: "Hair accessories" } : { t: "category", cat, sub: l }) as View, current: l.toLowerCase() === subLow }));
+    // Group 12 (2026-11-18): "Pins and brooches" and "Hairbands and
+    // hatbands" REMOVED — neither exists on the original (no menu node;
+    // both URLs 404 on hermes.com, confirmed by text fetch 2026-11-18),
+    // so the clone no longer links to the sorry-message pages.
+    siblings = ["Bracelets", "Earrings", "Necklaces", "Rings", "Hair accessories and combs"].map((l) => ({ label: l, view: (l === "Hair accessories and combs" ? { t: "category", cat: "women", sub: "Hair accessories" } : { t: "category", cat, sub: l }) as View, current: l.toLowerCase() === subLow }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
   } else if (isGiftsPage || isGiftWomenPage || isGiftMenPage || isGiftChildPage || isGiftDogsPage) {
     // The original's Gifts parent page has NO sub-navigation buttons
@@ -3499,6 +3541,34 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     return defs.map((d) => ({ label: d.label, imgMo: d.imgMo, imgDesktop: d.imgDesktop, view: d.view }));
   })();
 
+  // Petit h theme carousel slides (Group 12, 2026-11-18) — the
+  // original's 5 cross-universe cards in order: Tableware, Fashion
+  // jewelry, Decorative objects and games, Charms, Horizons Ateliers,
+  // verified from the petit-h page's SSR category blob
+  // (petit-h-live-ssr-2026-11-18.html, captured 2026-11-18; the live
+  // text fetch shows only the paragraph, no carousel links). All 10
+  // hermesedito image URLs HEAD-verified 200 on 2026-11-18: mobile
+  // 3:4 (the <1024px srcset) and desktop 16:9 (the 1024px+ srcset).
+  // Destinations are the original's own hrefs: Tableware →
+  // /us/en/category/home/tableware/; Fashion jewelry →
+  // /us/en/category/women/fashion-jewelry/; Decorative objects and
+  // games → /us/en/category/home/objects/; Charms →
+  // /us/en/category/leather-goods/accessories/charms/; Horizons
+  // Ateliers is a content page the clone does not have, so it falls
+  // back to the About page (same as Home/artliving).
+  const petitHThemes: ThemeSlide[] = (() => {
+    if (!isPetitHPage) return [];
+    const base = "https://assets.hermes.com/is/image/hermesedito/";
+    const defs: { label: string; imgMo: string; imgDesktop: string; view: View }[] = [
+      { label: "Tableware", imgMo: `${base}HOME-PETITH-069001P_-65-3x4-P1`, imgDesktop: `${base}HOME-PETITH-069001P-Tea%20time%2016x9-P1`, view: { t: "category", cat: "home", sub: "Tableware" } },
+      { label: "Fashion jewelry", imgMo: `${base}HOME-PETITH-STACKING%2026_1649V2-P2`, imgDesktop: `${base}HOME-PETITH-306324F%20N3_worn_3V2-P2`, view: { t: "category", cat: "fashion-jewelry" } },
+      { label: "Decorative objects and games", imgMo: `${base}HOME-PETITH-333292M%2001_019-3x4-P3`, imgDesktop: `${base}HOME-PETITH-333292M%2001_worn_3-P3`, view: { t: "category", cat: "home", sub: "Decorative objects and games" } },
+      { label: "Charms", imgMo: `${base}HOME-PETITH-GRISGRIS_0042_v3-P4`, imgDesktop: `${base}HOME-PETITH-GRISGRIS_0038_v1b-P4`, view: { t: "category", cat: "leather", sub: "Charms" } },
+      { label: "Horizons Ateliers", imgMo: `${base}HOME-PETITH-HERMES_HORIZON_2_03_CMJN-P5`, imgDesktop: `${base}HOME-PETITH-169-P5`, view: { t: "about" } },
+    ];
+    return defs.map((d) => ({ label: d.label, imgMo: d.imgMo, imgDesktop: d.imgDesktop, view: d.view }));
+  })();
+
   // Gifts theme carousel slides (2026-11-16) — the original's 5
   // cross-universe cards in order: Fashion jewelry, Silk scarves and
   // accessories, Hair accessories, Small leather goods, Decorative
@@ -3706,6 +3776,46 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     }).filter((s) => s.imgMo);
   })();
 
+  // Ballet + Twilly theme carousel slides (Group 12, 2026-11-18) —
+  // the original's 5 cross-universe cards per page, verified from the
+  // saved SSR category HTML (women-ballet.html / women-twilly.html,
+  // captured 2026-11-17; the live text fetches show only empty insert
+  // slots, no carousel links). All 20 hermesedito image URLs
+  // HEAD-verified 200 on 2026-11-18: mobile (_MO, the <1024px srcset)
+  // and desktop (_DESKTOP, the 1024px+ srcset). Destinations are the
+  // original's own hrefs, mapped to the closest clone page where the
+  // exact filtered view does not exist: Ballet "Silk scarves and
+  // accessories" → the Scarves page; Ballet "Ready-to-wear" → the
+  // Fall-Winter 2026 collection page; Twilly "Fashion jewelry" → the
+  // fashion-jewelry parent (the original's href is the earrings
+  // filtered view). Before this fix both pages fell through to the
+  // generic THEME_CARDS fallback (wrong content).
+  const balletThemes: ThemeSlide[] = (() => {
+    if (!isBalletPage) return [];
+    const base = "https://assets.hermes.com/is/image/hermesedito/";
+    const defs: { label: string; imgMo: string; imgDesktop: string; view: View }[] = [
+      { label: "Leather goods", imgMo: `${base}PAP_F_BALLERINES_P1_MO`, imgDesktop: `${base}PAP_F_BALLERINES_P1_DESKTOP`, view: { t: "category", cat: "leather" } },
+      { label: "Silk scarves and accessories", imgMo: `${base}PAP_F_BALLERINES_P2_MO`, imgDesktop: `${base}PAP_F_BALLERINES_P2_DESKTOP`, view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" } },
+      { label: "Ready-to-wear", imgMo: `${base}PAP_F_BALLERINES_P3_MO`, imgDesktop: `${base}PAP_F_BALLERINES_P3_DESKTOP`, view: { t: "category", cat: "women", sub: "Fall-Winter 2026" } },
+      { label: "Small leather goods", imgMo: `${base}PAP_F_BALLERINES_P4_MO`, imgDesktop: `${base}PAP_F_BALLERINES_P4_DESKTOP`, view: { t: "category", cat: "leather", sub: "Small leather goods" } },
+      { label: "Jewelry", imgMo: `${base}PAP_F_BALLERINES_P5_MO`, imgDesktop: `${base}PAP_F_BALLERINES_P5_DESKTOP`, view: { t: "category", cat: "jewelry" } },
+    ];
+    return defs.map((d) => ({ label: d.label, imgMo: d.imgMo, imgDesktop: d.imgDesktop, view: d.view }));
+  })();
+
+  const twillyThemes: ThemeSlide[] = (() => {
+    if (!isTwillyPage) return [];
+    const base = "https://assets.hermes.com/is/image/hermesedito/";
+    const defs: { label: string; imgMo: string; imgDesktop: string; view: View }[] = [
+      { label: "Fashion jewelry", imgMo: `${base}SOIE_F_TWILLY_PETITSFORMATS_P1_MO`, imgDesktop: `${base}SOIE_F_TWILLY_PETITSFORMATS_P1_DESKTOP`, view: { t: "category", cat: "fashion-jewelry" } },
+      { label: "Small leather goods", imgMo: `${base}SOIE_F_TWILLY_PETITSFORMATS_P2_MO`, imgDesktop: `${base}SOIE_F_TWILLY_PETITSFORMATS_P2_DESKTOP`, view: { t: "category", cat: "leather", sub: "Small leather goods" } },
+      { label: "Hair accessories", imgMo: `${base}SOIE_F_TWILLY_PETITSFORMATS_P3_MO`, imgDesktop: `${base}SOIE_F_TWILLY_PETITSFORMATS_P3_DESKTOP`, view: { t: "category", cat: "women", sub: "Hair accessories" } },
+      { label: "Sandals", imgMo: `${base}SOIE_F_TWILLY_PETITSFORMATS_P4_MO`, imgDesktop: `${base}SOIE_F_TWILLY_PETITSFORMATS_P4_DESKTOP`, view: { t: "category", cat: "women", sub: "Sandals" } },
+      { label: "Tops and shirts", imgMo: `${base}SOIE_F_TWILLY_PETITSFORMATS_P5_MO`, imgDesktop: `${base}SOIE_F_TWILLY_PETITSFORMATS_P5_DESKTOP`, view: { t: "category", cat: "women", sub: "Tops and shirts" } },
+    ];
+    return defs.map((d) => ({ label: d.label, imgMo: d.imgMo, imgDesktop: d.imgDesktop, view: d.view }));
+  })();
+
   const bagsThemes: ThemeSlide[] = (() => {
     if (!isBagsViewPage && !isWomensBagsPage) return [];
     const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
@@ -3911,7 +4021,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       {!mosaic ? (
         <div className="carousel-full-bleed mt-8 grid grid-cols-2 gap-[2px] lg:grid-cols-4">
           {gridItems.map((it, gi) => it.kind === "product" ? (
-            <ProductCard key={it.tileKey ?? it.p.id} p={it.p} colourInName onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
+            <ProductCard key={it.tileKey ?? it.p.id} p={it.p} colourInName tileColour={tileColourFor(tileColourPage, it.p.id)} onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
           ) : it.kind === "video" ? (
             <VideoTile key={it.tileKey ?? it.p.id} p={it.p} onOpen={(id) => go({ t: "product", id })} />
           ) : it.kind === "iconic" ? (
@@ -4163,6 +4273,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <FallWinterThemeCarousel go={go} themes={homeThemes} />
         ) : isHomeArtPage ? (
           <FallWinterThemeCarousel go={go} themes={homeArtThemes} />
+        ) : isPetitHPage ? (
+          <FallWinterThemeCarousel go={go} themes={petitHThemes} />
         ) : isGiftsPage || isGiftWomenPage || isGiftMenPage || isGiftChildPage || isGiftDogsPage ? (
           <FallWinterThemeCarousel go={go} themes={giftsThemes} />
         ) : isWatchWomenPage ? (
@@ -4177,6 +4289,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <FallWinterThemeCarousel go={go} themes={knitwearThemes} />
         ) : isWomensScarvesPage ? (
           <FallWinterThemeCarousel go={go} themes={scarvesThemes} />
+        ) : isBalletPage ? (
+          <FallWinterThemeCarousel go={go} themes={balletThemes} />
+        ) : isTwillyPage ? (
+          <FallWinterThemeCarousel go={go} themes={twillyThemes} />
         ) : cat === "jewelry" && !sub ? (
           <FallWinterThemeCarousel go={go} themes={fineJewelryThemes} />
         ) : isBagsViewPage || isWomensBagsPage ? (
@@ -7112,7 +7228,15 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
           {NAV.map((n) => (
             <div key={n.key}>
               <button aria-label={`Sitemap ${n.label}`} className="text-xs font-semibold uppercase tracking-[0.2em] underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: n.key })}>{n.label}</button>
-              {n.subs.map((s) => <button key={s} aria-label={`Sitemap ${n.label} ${s}`} className="block py-1 text-sm text-neutral-600 hover:underline" onClick={() => go({ t: "category", cat: n.key, sub: s })}>{s}</button>)}
+              {/* The "Home" sub under HOME AND ART OF LIVING comes from the
+                  NAV "HOME" heading (Group 12, 2026-11-18): left as-is it
+                  resolves to sub "Home", which matches no syn and renders
+                  the sorry message. The original's menu heading "HOME AND
+                  ART OF LIVING" links to /home-art-living/, so this entry
+                  lands on the artliving page instead — same mapping as the
+                  megaTarget HOME-heading fix. The /home/ parent page
+                  itself is untouched (its sub-nav stays siblings []). */}
+              {n.subs.map((s) => <button key={s} aria-label={`Sitemap ${n.label} ${s}`} className="block py-1 text-sm text-neutral-600 hover:underline" onClick={() => go(n.key === "home" && s === "Home" ? { t: "category", cat: "home", sub: "Home and art of living" } : { t: "category", cat: n.key, sub: s })}>{s}</button>)}
             </div>
           ))}
           {FOOTER_COLS.map((c) => (

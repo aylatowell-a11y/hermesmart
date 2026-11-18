@@ -90,9 +90,7 @@ const CATEGORY_PATHS: Record<string, string> = {
   "fashion-jewelry|earrings": "women/fashion-jewelry/earrings",
   "fashion-jewelry|necklaces": "women/fashion-jewelry/necklaces",
   "fashion-jewelry|rings": "women/fashion-jewelry/rings",
-  "fashion-jewelry|pins and brooches": "women/fashion-jewelry/pins-and-brooches",
   "fashion-jewelry|hair accessories and combs": "women/fashion-jewelry/hair-accessories-and-combs",
-  "fashion-jewelry|hairbands and hatbands": "women/fashion-jewelry/hairbands-and-hatbands",
   "women|bracelets": "women/fashion-jewelry/bracelets",
   // The women's default page (cat "women", no sub) IS the women's bags page.
   "women|": "leather-goods/bags-and-clutches/womens-bags-and-clutches",
