@@ -2015,11 +2015,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // gendered listings with their own live orders (200 / 51 tiles,
       // watchWomenPos / watchMenPos). The old gate returned every
       // watches row + every women/men row (2,664 / 1,146). Branch on
-      // cat: only cat "watches" uses the new fields. The Jewelry Men
-      // page (cat "jewelry", sub "men") keeps the old behaviour —
-      // its live list has not been read yet.
+      // cat: only cat "watches" uses the new fields.
+      // Group 10 (2026-11-18): the Jewelry Men page (cat "jewelry",
+      // sub "men") is the same bug class — the old gate returned
+      // every watches row + every men row (1,758). It now uses its
+      // own live order (92 tiles, menJewPos).
       "women": (p) => cat === "watches" ? p.watchWomenPos !== undefined : p.category === "watches" || p.category === "women",
-      "men": (p) => cat === "watches" ? p.watchMenPos !== undefined : p.category === "watches" || p.category === "men",
+      "men": (p) => cat === "watches" ? p.watchMenPos !== undefined : cat === "jewelry" ? p.menJewPos !== undefined : p.category === "watches" || p.category === "men",
       // Group 4 (2026-11-17) — "Straps" is TWO pages sharing one sub
       // name: leather bag straps (16, category leather) under
       // ACCESSORIES, and watch straps (50, category watches) under
@@ -2225,14 +2227,25 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "jackets and blazers": (p) => p.fineSub === "Jackets and blazers",
       "knitwear": (p) => p.fineSub === "Knitwear",
       "shirts": (p) => p.fineSub === "Shirts",
-      "t-shirts and sweatshirts": (p) => p.fineSub === "T-shirts and sweatshirts",
+      // Group 10 (2026-11-18): the women's T-shirts page is a
+      // dedicated live order (53 tiles, tshirtPos) — the old fineSub
+      // gate returned the MEN's 57 t-shirts (every fineSub row is
+      // category "men"), so the women's page showed men's products.
+      // Branch on cat: only cat "women" uses tshirtPos; the men's
+      // page keeps the fineSub gate + subPos order.
+      "t-shirts and sweatshirts": (p) => cat === "women" ? p.tshirtPos !== undefined : p.fineSub === "T-shirts and sweatshirts",
       // Alias keys (2026-11-17, empty-pages audit): the stale desktop
       // labels "T-shirts and polos" and "Knitwear and sweaters" produced
       // subs that missed every syn and rendered EMPTY. The labels are
       // corrected in MEGA_DESKTOP_WOMEN, but these aliases keep old
       // links/bookmarks working.
-      "t-shirts and polos": (p) => p.fineSub === "T-shirts and sweatshirts",
-      "knitwear and sweaters": (p) => p.subcategory === "Knitwear and twillaines",
+      "t-shirts and polos": (p) => cat === "women" ? p.tshirtPos !== undefined : p.fineSub === "T-shirts and sweatshirts",
+      // Group 10 (2026-11-18): the women's Knitwear page is a
+      // dedicated live order (154 tiles, knitPos) — it rendered via
+      // the strict subcategory fallback (193 rows, men + women mixed).
+      // The "knitwear" key below is the MEN's page (fineSub "Knitwear").
+      "knitwear and twillaines": (p) => p.knitPos !== undefined,
+      "knitwear and sweaters": (p) => p.knitPos !== undefined,
       "pants and shorts": (p) => p.fineSub === "Pants and shorts",
       "beachwear": (p) => p.fineSub === "Beachwear",
     };
@@ -2261,6 +2274,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // own [421] display order (wRtwPos) and descriptive paragraph
   // (verbatim from hermes.com, 2026-11-16).
   const isWomensRtwPage = cat === "women" && subLow === "ready-to-wear";
+  // Group 10 (2026-11-18): the women's T-shirts and Knitwear
+  // sub-pages have their own live orders (53 / 154 tiles,
+  // tshirtPos / knitPos) — they are RTW sub-pages, so isRTWPage
+  // still covers their top breadcrumb ("WOMEN | READY-TO-WEAR").
+  const isWomensTshirtsPage = cat === "women" && subLow === "t-shirts and sweatshirts";
+  const isWomensKnitwearPage = cat === "women" && subLow === "knitwear and twillaines";
   // SLG sub-pages sort by slgPos (their own order on that dedicated page),
   // not by sortOrder. The SLG parent page is not a sub-page; it sorts by
   // slgParentPos (the original's live parent order, 2026-11-15).
@@ -2404,6 +2423,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const isBalletPage = cat === "women" && subLow === "ballet flats";
   const isWondersPage = cat === "jewelry" && subLow === "the wonders";
   const isPreciousPage = cat === "jewelry" && subLow === "precious moments";
+  // Group 10 (2026-11-18): the Jewelry Men page (cat "jewelry",
+  // sub "men") has its own live order (92 tiles, menJewPos).
+  const isJewelryMenPage = cat === "jewelry" && subLow === "men";
   const isCollectionsPage = cat === "jewelry" && subLow === "collections";
   const isChainedAncrePage = cat === "jewelry" && subLow === "chaînes d'ancre";
   const isCasesPage = cat === "home" && subLow === "cases and bath linens";
@@ -2663,6 +2685,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // filter-siblings-categories nav in the live category page text
     // fetch) — same as Timepieces.
     siblings = [];
+  } else if (isJewelryMenPage) {
+    // Group 10 (2026-11-18): the original's Jewelry Men page has NO
+    // sub-navigation row at all (no filter-siblings-categories nav
+    // in the live category page text fetch) — same as the Watches
+    // gender pages. Without this branch the `nav` default below
+    // would show the jewelry menu subs + "View all".
+    siblings = [];
   } else if (isPetitHPage) {
     // Group 7 (2026-11-18): the original's Petit h page has NO
     // sub-navigation row at all (no filter-siblings-categories nav
@@ -2749,6 +2778,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [giftDogsParaOpen, setGiftDogsParaOpen] = useState(false);
   const [watchWomenParaOpen, setWatchWomenParaOpen] = useState(false);
   const [watchMenParaOpen, setWatchMenParaOpen] = useState(false);
+  // Group 10 (2026-11-18): Jewelry Men descriptive paragraph.
+  const [jewelryMenParaOpen, setJewelryMenParaOpen] = useState(false);
   const subNavRef = useRef<HTMLElement>(null);
   // On mount, scroll the sideways sub-nav so the CURRENT sibling is in view
   // (the row itself scrolls horizontally; the page never moves).
@@ -2825,11 +2856,21 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Women's Shoes (2026-11-15) sorts by shoePos — the original's
     // order — the same way (men's shoes are a separate page).
     else if (isMensRtwSub && list.some((p) => p.subPos !== undefined)) list = [...list].sort((a, b) => (a.subPos ?? Infinity) - (b.subPos ?? Infinity));
+    // Group 10 (2026-11-18): the women's T-shirts / Knitwear
+    // sub-pages sort by their own live orders (tshirtPos 1..53,
+    // knitPos 1..154) — before the fwPos/ssPos collection orders,
+    // like the men's RTW sub-pages above.
+    else if (isWomensTshirtsPage && list.some((p) => p.tshirtPos !== undefined)) list = [...list].sort((a, b) => (a.tshirtPos ?? Infinity) - (b.tshirtPos ?? Infinity));
+    else if (isWomensKnitwearPage && list.some((p) => p.knitPos !== undefined)) list = [...list].sort((a, b) => (a.knitPos ?? Infinity) - (b.knitPos ?? Infinity));
     else if (isSlgParent && list.some((p) => p.slgParentPos !== undefined)) list = [...list].sort((a, b) => (a.slgParentPos ?? Infinity) - (b.slgParentPos ?? Infinity));
     else if (isSlgSub && list.some((p) => p.slgPos !== undefined)) list = [...list].sort((a, b) => (a.slgPos ?? Infinity) - (b.slgPos ?? Infinity));
     // Jewelry Collections sub-pages (2026-11-17) sort by their own
     // position field — BEFORE the jewPos branch, because isJewelryPage
     // (cat === "jewelry") is also true here and these rows carry jewPos.
+    // Group 10 (2026-11-18): the Jewelry Men page sorts by menJewPos
+    // the same way — isJewelryPage is true here too, and the rows
+    // carry jewPos.
+    else if (isJewelryMenPage && list.some((p) => p.menJewPos !== undefined)) list = [...list].sort((a, b) => (a.menJewPos ?? Infinity) - (b.menJewPos ?? Infinity));
     else if (isWondersPage && list.some((p) => p.wondersPos !== undefined)) list = [...list].sort((a, b) => (a.wondersPos ?? Infinity) - (b.wondersPos ?? Infinity));
     else if (isPreciousPage && list.some((p) => p.preciousPos !== undefined)) list = [...list].sort((a, b) => (a.preciousPos ?? Infinity) - (b.preciousPos ?? Infinity));
     // Group 2 (2026-11-17): these sort branches MUST sit BEFORE the
@@ -3196,6 +3237,19 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     if (isWatchMenPage) return [
       { after: 9, title: "Switching time", body: "The H08 watch breaks traditional codes and reveals contrast. Sporty, robust and delicate, it has mastered the art of performance by blending the timeless with the contemporary." },
     ];
+    // Group 10 (2026-11-18): the Jewelry Men page's two editorial
+    // blocks ("Strong links" after tile #8, "Double tour" after tile
+    // #28), verbatim from the live category page read + text fetch,
+    // 2026-11-18. The "Discover the story" link inside each block is
+    // a bare discover link, not a text block, so it cannot be rendered
+    // by the text-tile mechanism (same gap class as Tableware).
+    // The Knitwear page's "Alternate views" image carousel (after
+    // #122) is image-only with unlocated hermesedito images — NOT
+    // built (known gap, same class as Ballet / Twilly / Women's Bags).
+    if (isJewelryMenPage) return [
+      { after: 8, title: "Strong links", body: "With enhanced presence, this jewelry piece fastens securely to the wrist and outlines the contours of a new style." },
+      { after: 28, title: "Double tour", body: "A jewelry design in perpetual motion." },
+    ];
     if (cat === "leather") {
       if (subLow === "to go wallets") return [{ after: 8, title: "Minimalist-chic", body: "Compact and structured, To Go wallets assert their style and transform momentum into boldness." }];
       if (subLow === "wallets") return [
@@ -3455,6 +3509,74 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     }).filter((s) => s.imgMo);
   })();
 
+  // Group 10 (2026-11-18): Jewelry Men / women's T-shirts /
+  // women's Knitwear theme carousel slides — the original's 5
+  // cross-universe cards per page, in order, verified from the live
+  // category page text fetches (the link lists after the tile grid).
+  // Jewelry Men: Belts; Timepieces; Scarves; Small leather goods;
+  // Ready-to-wear. T-shirts: Tech universe; Blankets and pillows;
+  // Sneakers; Fashion jewelry; Sports and Outdoor. Knitwear:
+  // Knitwear; Make-up; Bags and clutches; Silk scarves and
+  // accessories; Gold Jewelry. No verified hermesedito editorial
+  // image URLs exist for these slides (same as the Gifts carousel),
+  // so each slide uses the first Hermes-CDN product photo of its
+  // theme — a real original photo, not an invented image. Matches
+  // use position fields where one exists (Group 9 follow-up lesson:
+  // a subcategory match can never fire when no row carries it).
+  const jewelryMenThemes: ThemeSlide[] = (() => {
+    if (!isJewelryMenPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Belts", view: { t: "category", cat: "women", sub: "Belts" }, match: (p) => p.beltPos !== undefined },
+      { label: "Timepieces", view: { t: "category", cat: "watches", sub: "Timepieces" }, match: (p) => p.timepiecePos !== undefined },
+      { label: "Scarves", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Ready-to-wear", view: { t: "category", cat: "women", sub: "Ready-to-wear" }, match: (p) => p.wRtwPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const tshirtThemes: ThemeSlide[] = (() => {
+    if (!isWomensTshirtsPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Tech universe", view: { t: "category", cat: "home", sub: "Tech universe" }, match: (p) => p.techPos !== undefined },
+      { label: "Blankets and pillows", view: { t: "category", cat: "home", sub: "Blankets and pillows" }, match: (p) => p.textilesPos !== undefined },
+      { label: "Sneakers", view: { t: "category", cat: "women", sub: "Sneakers" }, match: (p) => /sneaker/i.test(p.name) },
+      { label: "Fashion jewelry", view: { t: "category", cat: "fashion-jewelry" }, match: (p) => p.category === "fashion-jewelry" },
+      { label: "Sports and Outdoor", view: { t: "category", cat: "home", sub: "Sports and outdoor" }, match: (p) => p.sportsPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const knitwearThemes: ThemeSlide[] = (() => {
+    if (!isWomensKnitwearPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Knitwear", view: { t: "category", cat: "women", sub: "Knitwear and twillaines" }, match: (p) => p.knitPos !== undefined },
+      { label: "Make-up", view: { t: "category", cat: "fragrances", sub: "Make-up" }, match: (p) => p.mkPos !== undefined },
+      { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
+      { label: "Silk scarves and accessories", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Gold Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
   const renderSection = (s: FSection) => {
     const isOpen = openSection === s.key;
     const group = s.group;
@@ -3678,7 +3800,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           keeps its 2-level breadcrumb (separate branch below). */}
       {!isHomeArtPage && (<nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && !isHomeArtPage && !isGiftWomenPage && !isGiftMenPage && !isGiftChildPage && !isGiftDogsPage && !isWatchWomenPage && !isWatchMenPage && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && !isHomeArtPage && !isGiftWomenPage && !isGiftMenPage && !isGiftChildPage && !isGiftDogsPage && !isWatchWomenPage && !isWatchMenPage && !isJewelryMenPage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -3749,6 +3871,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             <button aria-label="Breadcrumb Timepieces" className="underline underline-offset-4" onClick={() => go({ t: "category", cat: "watches", sub: "timepieces" })}>TIMEPIECES</button>
             {" | "}
             <span className="tracking-normal text-black">{isWatchWomenPage ? "WOMEN" : "MEN"}</span>
+          </>
+        )}
+        {/* Group 10 (2026-11-18): the original's Jewelry Men bottom
+            breadcrumb is 2 levels (JEWELRY | MEN) — the middle level
+            would leak the first row's subcategory (Bracelets). */}
+        {sub && isJewelryMenPage && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">MEN</span>
           </>
         )}
         {/* Group 7 (2026-11-18): the original's Petit h page bottom
@@ -3836,6 +3967,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <FallWinterThemeCarousel go={go} themes={watchWomenThemes} />
         ) : isWatchMenPage ? (
           <FallWinterThemeCarousel go={go} themes={watchMenThemes} />
+        ) : isJewelryMenPage ? (
+          <FallWinterThemeCarousel go={go} themes={jewelryMenThemes} />
+        ) : isWomensTshirtsPage ? (
+          <FallWinterThemeCarousel go={go} themes={tshirtThemes} />
+        ) : isWomensKnitwearPage ? (
+          <FallWinterThemeCarousel go={go} themes={knitwearThemes} />
         ) : (
         <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
           {(() => {
@@ -4780,6 +4917,27 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             </p>
           )}
           <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWatchMenParaOpen(!watchMenParaOpen)}>{watchMenParaOpen ? "See less" : "See More"}</button>
+        </div>
+      )}
+      {/* Group 10 (2026-11-18) — Jewelry Men descriptive paragraph,
+          verbatim from hermes.com (live category page text fetch,
+          2026-11-18). One paragraph; the original's inline links
+          (white gold wedding rings / cufflinks / bracelets /
+          necklaces / white gold necklaces) are rendered as plain text
+          (Timepieces pattern). Collapsed = P1 + "…", See More /
+          See less (Bath pattern). */}
+      {isJewelryMenPage && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {jewelryMenParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Affirmation of style, Hermès men&apos;s jewelry explores the tension between raw materials and architectural design. Silver, leather, and gold unite to create pieces with assumed masculinity, where function inspires form. Discover the modern purity and radical graphics of our white gold wedding rings, discreet symbols of an eternal attachment. Elegance is also played out in functional details: our cufflinks revisit saddle studs or motifs from the Ex-Libris collection to sublime the shirt with wit. The iconic Chaîne d&apos;ancre link, inspired by the marine universe, structures many of our bracelets, whether braided with Tournis leather or sculpted in solid metal. This graphic strength is also worn as a long necklace: explore our necklaces with assertive volumes, and let yourself be captivated by the mineral and sophisticated radiance of our white gold necklaces, touches of cold light on the silhouette.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Affirmation of style, Hermès men&apos;s jewelry explores the tension between raw materials and architectural design. Silver, leather, and gold unite to create pieces with assumed masculinity, where function inspires form. Discover the modern purity and radical graphics of our white gold wedding rings, discreet symbols of an eternal attachment. Elegance is also played out in functional details: our cufflinks revisit saddle studs or motifs from the Ex-Libris collection to sublime the shirt with wit. The iconic Chaîne d&apos;ancre link, inspired by the marine universe, structures many of our bracelets, whether braided with Tournis leather or sculpted in solid metal. This graphic strength is also worn as a long necklace: explore our necklaces with assertive volumes, and let yourself be captivated by the mineral and sophisticated radiance of our white gold necklaces, touches of cold light on the silhouette.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setJewelryMenParaOpen(!jewelryMenParaOpen)}>{jewelryMenParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
 

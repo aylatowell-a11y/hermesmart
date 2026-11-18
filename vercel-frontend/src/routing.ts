@@ -42,6 +42,16 @@ const CATEGORY_PATHS: Record<string, string> = {
   "women|spring-summer 2026 collection": "women/ready-wear/spring-summer-collection",
   "women|spring-summer 2026": "women/ready-wear/spring-summer-collection",
   "women|dresses and skirts": "women/ready-wear/dresses-and-skirts",
+  // Group 10 (2026-11-18) — the women's T-shirts and Knitwear
+  // sub-pages: the original's own URLs are
+  // /women/ready-wear/t-shirts-and-sweatshirts/ and
+  // /women/ready-wear/knitwear-and-twillaines/. Without these the
+  // generic slug fallback resolved them to
+  // /women/t-shirts-and-sweatshirts/ and /women/knitwear-and-twillaines/
+  // (wrong URLs), and a direct load of the original's URLs fell
+  // through to the women's default page (bags [45]).
+  "women|t-shirts and sweatshirts": "women/ready-wear/t-shirts-and-sweatshirts",
+  "women|knitwear and twillaines": "women/ready-wear/knitwear-and-twillaines",
   // The desktop WOMEN menu's "Dresses" item resolves to sub "Dresses"
   // (MEGA_DESKTOP_WOMEN), whose URL is /women/dresses/. Without this
   // entry a direct load of that URL fell through to the women's default
@@ -211,6 +221,10 @@ const CATEGORY_PATHS: Record<string, string> = {
   "jewelry|precious moments": "jewelry/collections/precious-moments",
   "jewelry|collections": "jewelry/collections",
   "jewelry|chaînes d'ancre": "jewelry/collections/chaine-d-ancre",
+  // Jewelry Men page (Group 10, 2026-11-18) — the original's own URL
+  // /us/en/category/jewelry/men/ (92 tiles, menJewPos). The generic
+  // slug fallback already produced this, but the explicit entry pins it.
+  "jewelry|men": "jewelry/men",
 };
 
 const REVERSE_PATHS: Record<string, { cat: string; sub?: string }> = {};
