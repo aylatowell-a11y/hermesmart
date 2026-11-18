@@ -283,7 +283,7 @@ const THEME_GRID_ORDER: Record<string, string[]> = {
   "Women's shoes": ["H252128ZvL1", "H242107ZvML", "H271194ZvAC", "H261257ZvA3"],
   "Scarves": ["H394402Tv02", "H394860Tv01", "H362953Sv07", "H243162Sv05"],
   "Fine Jewelry": ["H225618Bv00", "H125506Bv00", "H123431Bv00", "H126303Bv00"],
-  "Small leather goods": ["H087985CK89", "H041054CK55", "H088129CK89", "H088212CKAD"],
+  "Small leather goods": ["H087985CK89", "H041054CK55", "H078384CK55", "H088129CK89"],
 };
 // Homepage theme-grid eyebrow labels — measured on hermes.com's homepage
 // HTML (2026-11-16): only the two Beauty cards carry one, rendered in
@@ -1898,10 +1898,18 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const base = useMemo(() => {
     const catList = products.filter((p) => p.category === cat);
     if (!sub) {
-      // Home parent page also lists the 8 cases/mirror rows that live
-      // under fragrances / Make-up (2026-11-15) — they carry homePos
-      // and appear on /home/ without a second product row.
-      if (cat === "home") return [...catList, ...products.filter((p) => p.category !== "home" && p.homePos !== undefined)];
+      // Home parent page (Home rebuild, 2026-11-18): it lists EXACTLY
+      // the 1,269 live tiles from the original's /home/ listing
+      // (homePos 1–1269). The old list was every category-"home" row
+      // (1,802) plus the 8 cases/mirror rows, and the tile order only
+      // reordered them — the page read [1882] (1,810 rows + 72
+      // duplicate tile pushes). The gate is homePos-only (no category
+      // condition): the 8 cases/mirror rows live under fragrances /
+      // Make-up but carry homePos, so they stay on /home/ without a
+      // second product row. Rows not on the live list stay in the
+      // catalogue but never appear on this page (same rule as Women's
+      // Bags / Watches / Fragrances).
+      if (cat === "home") return products.filter((p) => p.homePos !== undefined);
       // The women's default page (cat "women", no sub) IS the women's
       // bags page (routing.ts "women|" → the bags URL, 2026-11-15):
       // it lists exactly the 45 live tiles from the original's order
@@ -2304,7 +2312,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const isPetitHPage = cat === "home" && subLow === "petit h";
   // Home and Art of living page (Group 8, 2026-11-18) — the original's
   // heading page /home-art-living/ (1,756 tiles, homeArtPos order). NOT
-  // the /home/ parent (isHomePage, homePos, 1,271 tiles): different URL,
+  // the /home/ parent (isHomePage, homePos, 1,269 tiles): different URL,
   // different title, different order — a separate listing that largely
   // overlaps the Home parent's products. No paragraph on the original
   // (the category description lives only in meta tags), no editorial
@@ -2890,12 +2898,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
 
   const totalSel = (Object.keys(EMPTY_SEL) as FGroup[]).reduce((n, g) => n + sel[g].length, 0) + (onlineOnly ? 1 : 0) + (priceNarrowed ? 1 : 0);
   const filtersActive = totalSel > 0;
-  // Home colourway tiles (2026-11-15): in the default state (no
-  // filters, relevance sort) the Home parent grid renders one tile per
-  // live position from HOME_TILE_ORDER — the original shows one tile
-  // per colourway — followed by the rows the original has dropped, in
-  // their current order. Any filter or sort switches back to the
-  // ordinary row list (same rule as the editorial inserts).
+  // Home colourway tiles (Home rebuild, 2026-11-18): in the default
+  // state (no filters, relevance sort) the Home parent grid renders
+  // one tile per live position from HOME_TILE_ORDER — the rebuilt
+  // order covers exactly the 1,269 live tiles, one entry each, no
+  // duplicates, and `base` is gated to homePos rows, so the tail
+  // (rows the original dropped) is empty. Any filter or sort switches
+  // back to the ordinary row list (same rule as the editorial inserts).
   const homeTilesActive = isHomePage && !filtersActive && sort === "relevance";
   // Women's Belts tile grid (2026-11-15): same mechanism as Home — the
   // original repeats identical tiles (266 tiles, 177 distinct rows), so
@@ -3209,18 +3218,25 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // pages in the clone.)
   const homeThemes: ThemeSlide[] = (() => {
     if (!isHomePage) return [];
-    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
-      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
-      { label: "Rider", view: { t: "category", cat: "equestrian" }, match: (p) => p.category === "equestrian" },
-      { label: "Horizons Ateliers", view: { t: "about" }, match: (p) => p.category === "home" },
-      { label: "Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
-      { label: "Timepieces", view: { t: "category", cat: "watches" }, match: (p) => p.category === "watches" },
+    // Home rebuild (2026-11-18): the original's 5 cross-universe cards
+    // in the same order as the artliving page's (Small leather goods,
+    // Rider, Horizons Ateliers, Jewelry, Timepieces) — these use the
+    // REAL hermesedito editorial images (the same 10 URLs as
+    // homeArtThemes, all HEAD-verified 200 on 2026-11-18), not the
+    // product-photo stand-ins the Home parent used before. Destinations
+    // are the Home parent's existing views (Rider → Equestrian parent,
+    // Timepieces → Watches parent): the artliving page's dedicated
+    // sub-page links were verified from ITS SSR blob only, not this
+    // page's, so they are not copied here.
+    const base = "https://assets.hermes.com/is/image/hermesedito/";
+    const defs: { label: string; imgMo: string; imgDesktop: string; view: View }[] = [
+      { label: "Small leather goods", imgMo: `${base}LV1HOME-P1_34`, imgDesktop: `${base}LV1HOME-P1_169`, view: { t: "category", cat: "leather", sub: "Small leather goods" } },
+      { label: "Rider", imgMo: `${base}LV1HOME-cavalier-3-4-P2`, imgDesktop: `${base}LV1HOME-cavalier-P2`, view: { t: "category", cat: "equestrian" } },
+      { label: "Horizons Ateliers", imgMo: `${base}LV1HOME-HERMES_HORIZON_2_03_CMJN-P3`, imgDesktop: `${base}LV1HOME-HERMES_HORIZON_1_03_CMJN-P3`, view: { t: "about" } },
+      { label: "Jewelry", imgMo: `${base}LV1HOME-bij-argent-3_4-P4`, imgDesktop: `${base}LV1HOME-bij-argent-16_9-P4`, view: { t: "category", cat: "jewelry" } },
+      { label: "Timepieces", imgMo: `${base}LV1HOME-horlo-homme-3_4_P5`, imgDesktop: `${base}LV1HOME-horlo-homme-16_9_P5_NEW`, view: { t: "category", cat: "watches" } },
     ];
-    return defs.map((d) => {
-      const rep = products.find((p) => d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
-      const img = rep ? productImageFor(rep) : "";
-      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
-    }).filter((s) => s.imgMo);
+    return defs.map((d) => ({ label: d.label, imgMo: d.imgMo, imgDesktop: d.imgDesktop, view: d.view }));
   })();
 
   // Home and Art of living theme carousel slides (Group 8, 2026-11-18)
