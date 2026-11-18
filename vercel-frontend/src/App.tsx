@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, type ApiResponse, type LocalChat } from "./api";
+import { api, isValidEmail, adminSetupPassword, adminChangePassword, adminCreateSession, adminSessionValid, adminPasswordIsSet, adminSetupNeeded, loginThrottleStatus, type ApiResponse, type LocalChat, type LocalContact } from "./api";
 // Real photos: the image files are in ./assets/ (uploaded to the repo).
 // Original Hermes hero photo (hermes.com homepage, verified 2026-11-10):
 // black-and-white triangular tiled bench + blue patterned blanket on a beige
@@ -408,7 +408,11 @@ function HermesLogo({ settings, light, variant = "full" }: { settings: Settings;
 }
 
 function load<T>(k: string, fb: T): T { try { const v = localStorage.getItem(k); return v ? (JSON.parse(v) as T) : fb; } catch { return fb; } }
-function save(k: string, v: unknown) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } }
+// SECURITY 2026-11-18: saving null REMOVES the key. Previously it wrote
+// the JSON string "null", so a "cleared" record (sign-out, wiped legacy
+// admin credentials) lingered in localStorage. load() parsed it back to
+// null so it was harmless, but a wiped credential should not linger.
+function save(k: string, v: unknown) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } }
 
 export function ProductVisual({ p, large: _large, altSrc, altActive, hideStatus }: { p: Product; large?: boolean; altSrc?: string; altActive?: boolean; hideStatus?: boolean }) {
   // Real studio product photo for every product (assets/products/), filling
@@ -758,7 +762,12 @@ export function App() {
   // the chat bubble can sit above the bar (see ChatBubble).
   const [buyBarVisible, setBuyBarVisible] = useState(false);
   const [cart, setCart] = useState<CartItem[]>(() => load("hlx-cart", []));
-  const [user, setUser] = useState<{ name: string; email: string } | null>(() => load("hlx-user", null));
+  // Sessions last 24 h and are re-checked against the account store on load:
+  // a deleted or disabled account must not stay signed in.
+  const [user, setUser] = useState<{ name: string; email: string; expiresAt?: number } | null>(() => {
+    const u = load<{ name: string; email: string; expiresAt?: number } | null>("hlx-user", null);
+    return u && u.expiresAt && u.expiresAt < Date.now() ? null : u;
+  });
   const [addedDialog, setAddedDialog] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQ, setSearchQ] = useState("");
@@ -920,6 +929,12 @@ export function App() {
 
   useEffect(() => { save("hlx-cart", cart); }, [cart]);
   useEffect(() => { save("hlx-user", user); }, [user]);
+  useEffect(() => {
+    if (!user) return;
+    void api.getUserStatus({ email: user.email }).then((s) => {
+      if (!s.exists || s.disabled) { setUser(null); save("hlx-user", null); }
+    }).catch(() => {});
+  }, []);
   useEffect(() => { productsRef.current = products; }, [products]);
   useEffect(() => { viewRef.current = view; }, [view]);
   // Deep link to a product: the ref in the URL resolves once the catalog loads.
@@ -1047,13 +1062,15 @@ export function App() {
   const pricedCart = cart.map((i) => ({ ...i, price: livePrice(i) }));
   const cartTotal = pricedCart.reduce((s, i) => s + i.qty * i.price, 0);
 
+  // Cart lines cap at 9 units (SECURITY 2026-11-18): quantities were
+  // unbounded, so a line could grow without limit.
   const addToCart = (p: Product, color = "", size = "", qty = 1) => {
     const c = color || p.colors[0]?.name || "";
     const key = `${p.id}|${c}|${size}`;
     setCart((prev) => {
       const ex = prev.find((i) => i.key === key);
-      if (ex) return prev.map((i) => (i.key === key ? { ...i, qty: i.qty + qty } : i));
-      return [...prev, { key, productId: p.id, name: p.name, price: p.price, qty, color: c, size, glyph: p.glyph, tone: p.tone, refCode: p.refCode ?? "" }];
+      if (ex) return prev.map((i) => (i.key === key ? { ...i, qty: Math.min(9, i.qty + qty) } : i));
+      return [...prev, { key, productId: p.id, name: p.name, price: p.price, qty: Math.min(9, qty), color: c, size, glyph: p.glyph, tone: p.tone, refCode: p.refCode ?? "" }];
     });
     setAddedDialog(p.name);
   };
@@ -2175,8 +2192,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // own category is what separates them. (Batch 15, 2026-11-11.)
       "fall-winter 2026 collection": (p) => p.line === "Fall-Winter 2026" && p.category === cat,
       "spring-summer 2026 collection": (p) => p.line === "Spring-Summer 2026",
-      "spring-summer 2027 collection": (p) => p.line === "Spring-Summer 2027",
-      "spring-summer 2027": (p) => p.line === "Spring-Summer 2027",
+      "spring-summer 2027 collection": (p) => p.line === "Spring-Summer 2027" && p.ssPos !== undefined,
+      "spring-summer 2027": (p) => p.line === "Spring-Summer 2027" && p.ssPos !== undefined,
       // Women's Scarves parent page — the original's live order (455
       // tiles, extracted 2026-11-15) lives in scarfPos; the parent lists
       // exactly those rows. The 61 clone rows not on the live list (19
@@ -5838,8 +5855,8 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               <p className="text-sm">We will notify you when this product is back in stock</p>
               {notified ? <p className="mt-3 text-sm font-medium" role="status">{notified}</p> : notifyOpen ? (
                 <div className="mt-3 flex gap-2">
-                  <input aria-label="Email for notify me" type="email" className="min-w-0 flex-1 border border-black/30 px-3 py-3 text-sm" placeholder="Your email" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} />
-                  <button aria-label="Notify me when back in stock" className="flex items-center gap-2 border border-black bg-white px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => { if (notifyEmail.includes("@")) notifyMut.mutate(); }}>
+                  <input aria-label="Email for notify me" type="email" maxLength={254} className="min-w-0 flex-1 border border-black/30 px-3 py-3 text-sm" placeholder="Your email" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} />
+                  <button aria-label="Notify me when back in stock" className="flex items-center gap-2 border border-black bg-white px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => { if (isValidEmail(notifyEmail)) notifyMut.mutate(); }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="1.5" /><path d="m3.5 7 8.5 6 8.5-6" /></svg>Notify me
                   </button>
                 </div>
@@ -6524,13 +6541,17 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
   );
   const chevron = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>;
   if (sent) return <p className="mt-6 border border-black/15 bg-[#fffcf7] p-5 text-sm" role="status">{sent}</p>;
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!f.first || !f.last || !f.email.includes("@") || !/^\d{10}$/.test(f.phone.replace(/\D/g, "").replace(/^1/, "")) || !f.message || !f.subject) {
+    if (!f.first || !f.last || !isValidEmail(f.email) || !/^\d{10}$/.test(f.phone.replace(/\D/g, "").replace(/^1/, "")) || !f.message || !f.subject) {
       setSubjectTouched(true);
       setErr("Please complete all fields — the telephone must be a US number (+1 followed by 10 digits).");
       return;
     }
+    // No email backend exists in this build: the message is saved locally
+    // for the admin (Admin Panel > Chat tab) instead of being dropped.
+    const saved = await api.contactMessage({ first: f.first, last: f.last, email: f.email, subject: f.subject, message: f.message });
+    if (!saved.ok) { setErr("Your message could not be saved. Please check your email address and try again."); return; }
     setErr(""); setSent(`Thank you, ${f.first}. Your message about “${f.subject}” has been sent — customer service will reply to ${f.email}.`);
   };
   return (
@@ -6538,16 +6559,16 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
       <div className="grid gap-x-8 gap-y-9 sm:grid-cols-2">
         <div>
           <label className={labelCls} htmlFor="cf-first">First name *</label>
-          <input id="cf-first" aria-label="Contact first name" className={fieldCls} value={f.first} onChange={(e) => setF({ ...f, first: e.target.value })} />
+          <input id="cf-first" aria-label="Contact first name" maxLength={100} className={fieldCls} value={f.first} onChange={(e) => setF({ ...f, first: e.target.value })} />
         </div>
         <div>
           <label className={labelCls} htmlFor="cf-last">Last name *</label>
-          <input id="cf-last" aria-label="Contact last name" className={fieldCls} value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
+          <input id="cf-last" aria-label="Contact last name" maxLength={100} className={fieldCls} value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
         </div>
       </div>
       <div>
         <label className={labelCls} htmlFor="cf-email">E-mail *</label>
-        <input id="cf-email" aria-label="Contact email" type="email" className={fieldCls} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
+        <input id="cf-email" aria-label="Contact email" type="email" maxLength={254} className={fieldCls} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
         <p className="mt-1 text-xs text-neutral-500">Expected format: yourname@domain.com</p>
       </div>
       <div className="flex items-start gap-8">
@@ -6563,7 +6584,7 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
         </div>
         <div className="min-w-0 flex-1">
           <label className={labelCls} htmlFor="cf-phone">Telephone number *</label>
-          <input id="cf-phone" aria-label="Contact telephone" className={fieldCls} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+          <input id="cf-phone" aria-label="Contact telephone" maxLength={20} className={fieldCls} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
           <p className="mt-1 text-xs text-neutral-500">Expected format: phone number with 10 digits</p>
           {/* hermes.com shows a second hint under the telephone field. */}
           <p className="mt-1 text-xs text-neutral-500">Minimum 10 numbers</p>
@@ -6586,7 +6607,7 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
       </div>
       <div>
         <label className={labelCls} htmlFor="cf-message">Your message *</label>
-        <textarea id="cf-message" aria-label="Contact message" className={fieldCls} rows={4} value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} />
+        <textarea id="cf-message" aria-label="Contact message" maxLength={2000} className={fieldCls} rows={4} value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} />
       </div>
       {err && <p className="-mt-4 text-sm text-red-700" role="status">{err}</p>}
       <div className="flex items-end justify-between gap-6">
@@ -7053,7 +7074,11 @@ function faqRich(text: string, go: (v: View, opts?: { restore?: boolean }) => vo
     const target = parts[i] ?? "";
     const view = pageFor[target];
     if (view) out.push(<button key={i} type="button" className="underline underline-offset-2" onClick={() => go(view)}>{label}</button>);
-    else out.push(<a key={i} href={target} target="_blank" rel="noreferrer" className="underline underline-offset-2">{label}</a>);
+    // Defence in depth: external FAQ links must use a safe scheme. The text
+    // is static today, but a future javascript:/data: target must never
+    // become a clickable link — render it as plain text instead.
+    else if (/^(https?:|mailto:)/i.test(target)) out.push(<a key={i} href={target} target="_blank" rel="noreferrer" className="underline underline-offset-2">{label}</a>);
+    else out.push(<span key={i}>{label}</span>);
   }
   return <>{out}</>;
 }
@@ -7387,7 +7412,7 @@ function TrackOrders({ user, go }: { settings: Settings; user: { name: string; e
   const [sent, setSent] = useState("");
   const [tracked, setTracked] = useState<{ id: number; status: string } | null>(null);
   const [trackMsg, setTrackMsg] = useState("");
-  const q = useQuery({ queryKey: ["track", sent], queryFn: () => api.myOrders({ email: sent }), enabled: sent.includes("@") });
+  const q = useQuery({ queryKey: ["track", sent], queryFn: () => api.myOrders({ email: sent }), enabled: isValidEmail(sent) });
   const doTrack = async () => {
     const em = user?.email ?? email;
     if (orderId.trim()) {
@@ -7544,7 +7569,7 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
                         <div className="mt-2 flex items-center justify-center gap-2">
                           <button aria-label={`Decrease quantity of ${i.name}`} disabled={i.qty <= 1} className="h-7 w-7 border border-black/30 disabled:cursor-not-allowed disabled:opacity-30" onClick={() => setCart(cart.map((x) => x.key === i.key ? { ...x, qty: Math.max(1, x.qty - 1) } : x))}>−</button>
                           <span aria-label={`Quantity of ${i.name}`}>{i.qty}</span>
-                          <button aria-label={`Increase quantity of ${i.name}`} className="h-7 w-7 border border-black/30" onClick={() => setCart(cart.map((x) => x.key === i.key ? { ...x, qty: x.qty + 1 } : x))}>+</button>
+                          <button aria-label={`Increase quantity of ${i.name}`} disabled={i.qty >= 9} className="h-7 w-7 border border-black/30 disabled:cursor-not-allowed disabled:opacity-30" onClick={() => setCart(cart.map((x) => x.key === i.key ? { ...x, qty: Math.min(9, x.qty + 1) } : x))}>+</button>
                         </div>
                       </div>
                       <div className="min-w-0 flex-1">
@@ -7720,7 +7745,7 @@ function ChatBubble({ settings, go, view, buyBarVisible }: { settings: Settings;
                   ))}
                 </div>
                 <form aria-label="Send a message to an advisor" className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); void send(); }}>
-                  <input aria-label="Your message" required className="min-w-0 flex-1 border border-black/20 bg-white px-3 py-2.5 text-sm outline-none" placeholder="Your message" value={draft} onChange={(e) => setDraft(e.target.value)} />
+                  <input aria-label="Your message" required maxLength={1000} className="min-w-0 flex-1 border border-black/20 bg-white px-3 py-2.5 text-sm outline-none" placeholder="Your message" value={draft} onChange={(e) => setDraft(e.target.value)} />
                   <button aria-label="Send" type="submit" className="flex w-11 shrink-0 items-center justify-center bg-black text-white">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M21 3 10.5 13.5M21 3l-7 18-3.5-7.5L3 10l18-7Z" /></svg>
                   </button>
@@ -7767,16 +7792,16 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
   ];
   const newsletterForm = (boxed: boolean) => done ? <p className="mt-3 text-sm font-medium" role="status">{done}</p> : boxed ? (
     <>
-      <input aria-label="Newsletter email" type="email" className="mt-3 w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <button aria-label="Subscribe to the newsletter" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (email.includes("@")) sub.mutate(); }}>Subscribe<span className="sr-only"> to the Newsletter</span></button>
+      <input aria-label="Newsletter email" type="email" maxLength={254} className="mt-3 w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <button aria-label="Subscribe to the newsletter" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (isValidEmail(email)) sub.mutate(); }}>Subscribe<span className="sr-only"> to the Newsletter</span></button>
     </>
   ) : (
     <>
       <button aria-label="Subscribe to the newsletter" className="font-mono-d mt-2 text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => setSubOpen(!subOpen)}>Subscribe<span className="sr-only"> to the Newsletter</span></button>
       {subOpen && (
         <div className="mt-3">
-          <input aria-label="Newsletter email" type="email" className="w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button aria-label="Confirm newsletter subscription" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (email.includes("@")) sub.mutate(); }}>Subscribe<span className="sr-only"> to the Newsletter</span></button>
+          <input aria-label="Newsletter email" type="email" maxLength={254} className="w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <button aria-label="Confirm newsletter subscription" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (isValidEmail(email)) sub.mutate(); }}>Subscribe<span className="sr-only"> to the Newsletter</span></button>
         </div>
       )}
     </>
@@ -7913,7 +7938,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
   );
 }
 
-function AccountView({ user, setUser, go, mode }: { user: { name: string; email: string } | null; setUser: (u: { name: string; email: string } | null) => void; go: (v: View, opts?: { restore?: boolean }) => void; mode?: "login" | "signup" }) {
+function AccountView({ user, setUser, go, mode }: { user: { name: string; email: string; expiresAt?: number } | null; setUser: (u: { name: string; email: string; expiresAt?: number } | null) => void; go: (v: View, opts?: { restore?: boolean }) => void; mode?: "login" | "signup" }) {
   // Which form shows first: "signup" when opened from the header "Sign up"
   // option, "login" otherwise. The visitor can switch inside the page.
   const [authMode, setAuthMode] = useState<"login" | "signup">(mode ?? "login");
@@ -7925,17 +7950,32 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   const [suTitle, setSuTitle] = useState(""); const [suFirst, setSuFirst] = useState(""); const [suLast, setSuLast] = useState("");
   const [suEmail, setSuEmail] = useState(""); const [suCode, setSuCode] = useState(""); const [suShowCode, setSuShowCode] = useState(false);
   const [suPw, setSuPw] = useState(""); const [suShowPw, setSuShowPw] = useState(false); const [suArea, setSuArea] = useState("US +1"); const [suPhone, setSuPhone] = useState(""); const [suDob, setSuDob] = useState(""); const [suMarketing, setSuMarketing] = useState(false);
-  const [suMsg, setSuMsg] = useState(""); const [sentCode, setSentCode] = useState(""); const [codeWait, setCodeWait] = useState(0);
+  const [suMsg, setSuMsg] = useState(""); const [sentCode, setSentCode] = useState(""); const [sentCodeAt, setSentCodeAt] = useState(0); const [codeTries, setCodeTries] = useState(0); const [codeWait, setCodeWait] = useState(0);
   const login = useMutation({ mutationFn: async () => {
+    const th = loginThrottleStatus();
+    if (th.locked) return { ok: false, message: `Too many sign-in attempts. Please try again in ${th.waitSec} seconds.`, name: "", isAdmin: false, token: "" };
     // Admin Gmail sign-in: the admin panel link was removed from this page
     // (user request 2026-11-13) — instead, signing in here with the admin
     // Gmail + admin password opens the Admin Panel directly.
-    const admin = await api.adminData({ email: liEmail, password: liPw });
-    if (admin.ok) return { ok: true, message: "Signed in.", name: "Admin", isAdmin: true };
+    // probe: true — this admin test must not count toward the sign-in
+    // throttle; one wrong customer password would otherwise cost two
+    // strikes (admin probe + user login).
+    const admin = await api.adminData({ email: liEmail, password: liPw, probe: true });
+    if (admin.ok) {
+      const s = adminCreateSession({ email: liEmail, password: liPw });
+      return { ok: true, message: "Signed in.", name: "Admin", isAdmin: true, token: s.token };
+    }
+    // First run (SECURITY 2026-11-18): no admin password exists yet, so
+    // the owner reaches the setup form by signing in with the admin email
+    // — the Admin Panel then shows the first-run setup instead of the
+    // sign-in form. Without this the setup form would be unreachable.
+    if (adminSetupNeeded(liEmail)) {
+      return { ok: true, message: "Set your admin password to continue.", name: "Admin", isAdmin: true, token: "" };
+    }
     const u = await api.loginUser({ email: liEmail, password: liPw });
-    return { ...u, isAdmin: false };
-  }, onSuccess: (r) => { setLiMsg(r.message); if (r.ok) { if (r.isAdmin) { save("hlx-admin-auth", { email: liEmail, password: liPw }); go({ t: "admin" }); } else { setUser({ name: r.name, email: liEmail }); go({ t: "home" }); } } } });
-  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobParts = suDob.split("-"); const dobDisplay = dobParts.length === 3 ? `${monthNames[Number(dobParts[1]) - 1] ?? ""} ${Number(dobParts[2])}, ${dobParts[0]}` : ""; save("hlx-profile", { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }); save("hlx-just-registered", { email: suEmail }); // Switch the form DIRECTLY (2026-11-17 fix, second attempt): the
+    return { ...u, isAdmin: false, token: "" };
+  }, onSuccess: (r) => { setLiMsg(r.message); if (r.ok) { if (r.isAdmin) { if (r.token) save("hlx-admin-auth", { email: liEmail, token: r.token }); go({ t: "admin" }); } else { setUser({ name: r.name, email: liEmail, expiresAt: Date.now() + 24 * 3600 * 1000 }); go({ t: "home" }); } } } });
+  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobParts = suDob.split("-"); const dobDisplay = dobParts.length === 3 ? `${monthNames[Number(dobParts[1]) - 1] ?? ""} ${Number(dobParts[2])}, ${dobParts[0]}` : ""; const profiles = load<Record<string, { title: string; phone: string; dob: string }>>("hlx-profiles", {}); profiles[suEmail.trim().toLowerCase()] = { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }; save("hlx-profiles", profiles); save("hlx-just-registered", { email: suEmail }); // Switch the form DIRECTLY (2026-11-17 fix, second attempt): the
       // go() below does NOT reliably change anything — when the visitor
       // reached this page by signing out, view.mode is ALREADY "login",
       // so the mode does not change, the mode effect never re-runs and
@@ -7973,7 +8013,10 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   if (user) {
     // Phone / date of birth entered at sign-up (saved locally on
     // registration — the clone's account record holds name + email only).
-    const savedProfile = load<{ title?: string; phone?: string; dob?: string }>("hlx-profile", {});
+    // Profiles are keyed by email (SECURITY 2026-11-18): the old single
+    // "hlx-profile" record was overwritten by every new sign-up in the
+    // same browser. The legacy key is still read as a fallback.
+    const savedProfile = load<Record<string, { title?: string; phone?: string; dob?: string }>>("hlx-profiles", {})[user?.email.trim().toLowerCase() ?? ""] ?? load<{ title?: string; phone?: string; dob?: string }>("hlx-profile", {});
     const savedAddresses = [...new Set((ordersQ.data?.orders ?? []).map((o) => o.address).filter(Boolean))];
     const tabs: { key: typeof acctTab; label: string }[] = [
       { key: "orders", label: "Order history" },
@@ -8080,20 +8123,29 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   const critOk = crit.len && crit.upper && crit.lower && crit.digit && crit.special;
   // SEND CODE is a demo in this standalone build: there is no email service,
   // so the code is generated here and shown to the visitor to enter below.
+  // SECURITY 2026-11-18: crypto-random (not Math.random), 10-minute expiry,
+  // max 5 attempts — the code proves nothing (it is displayed on the page),
+  // but it is no longer guessable or reusable forever.
   const sendCode = () => {
-    if (!suEmail.includes("@")) { setSuMsg("Please enter a valid email address first."); return; }
-    setSentCode(String(Math.floor(100000 + Math.random() * 900000)));
+    if (!isValidEmail(suEmail)) { setSuMsg("Please enter a valid email address first."); return; }
+    const buf = new Uint32Array(1);
+    crypto.getRandomValues(buf);
+    setSentCode(String(100000 + (buf[0] % 900000)));
+    setSentCodeAt(Date.now());
+    setCodeTries(0);
     setCodeWait(60);
     setSuMsg("");
   };
   const submitSignup = () => {
-    if (!suEmail.includes("@")) return setSuMsg("Please enter a valid email address.");
+    if (!isValidEmail(suEmail)) return setSuMsg("Please enter a valid email address.");
     // Already registered? Tell the visitor right away instead of letting
     // them fill the whole form — they should sign in, not sign up again.
     const existingUsers = load<{ email?: string }[]>("hv-users", []);
     if (existingUsers.some((u) => (u.email ?? "").toLowerCase() === suEmail.trim().toLowerCase())) return setSuMsg("An account with this email already exists. Please sign in.");
     if (!sentCode) return setSuMsg("Please press SEND CODE first — a code will be shown for you to enter.");
-    if (suCode.trim() !== sentCode) return setSuMsg("The verification code does not match the code shown above.");
+    if (Date.now() - sentCodeAt > 10 * 60 * 1000) return setSuMsg("That code has expired. Please press SEND CODE again for a new one.");
+    if (codeTries >= 5) return setSuMsg("Too many wrong attempts. Please press SEND CODE again for a new code.");
+    if (suCode.trim() !== sentCode) { setCodeTries((v) => v + 1); return setSuMsg("The verification code does not match the code shown above."); }
     if (!critOk) return setSuMsg("Please choose a password that meets all the criteria below.");
     if (!suTitle) return setSuMsg("Please choose a title.");
     if (!suFirst.trim() || !suLast.trim()) return setSuMsg("Please enter your first and last name.");
@@ -8136,7 +8188,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
         </div>
         {liMsg && <p className="mt-3 text-sm text-red-700" role="status">{liMsg}</p>}
         {emailStep ? (
-          <button aria-label="Continue with email" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!liEmail.includes("@")) { setLiMsg("Please enter a valid email address."); return; } setLiMsg(""); setEmailStep(false); }}>Continue</button>
+          <button aria-label="Continue with email" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!isValidEmail(liEmail)) { setLiMsg("Please enter a valid email address."); return; } setLiMsg(""); setEmailStep(false); }}>Continue</button>
         ) : (
           <button aria-label="Sign in button" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => login.mutate()}>Sign in</button>
         )}
@@ -8161,7 +8213,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
           <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Login information</h2>
           <label className={`${lab} mt-5`}>E-mail *
             <span className="mt-1 flex items-end gap-3">
-              <input aria-label="Create account email" type="email" className={`${underline} min-w-0 flex-1`} value={suEmail} onChange={(e) => setSuEmail(e.target.value)} />
+              <input aria-label="Create account email" type="email" maxLength={254} className={`${underline} min-w-0 flex-1`} value={suEmail} onChange={(e) => setSuEmail(e.target.value)} />
               <button aria-label="Send verification code" type="button" disabled={codeWait > 0} className="shrink-0 bg-black px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white disabled:opacity-50" onClick={sendCode}>Send code</button>
             </span>
             {sentCode && <span className="mt-1 block text-xs text-neutral-500">{codeWait} SECONDS REMAINING BEFORE YOU CAN REQUEST A NEW CODE</span>}
@@ -8196,10 +8248,10 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
             </select>
           </label>
           <label className={`${lab} mt-5`}>First name *
-            <input aria-label="First name" type="text" className={underline} value={suFirst} onChange={(e) => setSuFirst(e.target.value)} />
+            <input aria-label="First name" type="text" maxLength={100} className={underline} value={suFirst} onChange={(e) => setSuFirst(e.target.value)} />
           </label>
           <label className={`${lab} mt-5`}>Last name *
-            <input aria-label="Last name" type="text" className={underline} value={suLast} onChange={(e) => setSuLast(e.target.value)} />
+            <input aria-label="Last name" type="text" maxLength={100} className={underline} value={suLast} onChange={(e) => setSuLast(e.target.value)} />
           </label>
           <div className="mt-5 flex items-end gap-3">
             <label className={`${lab} w-32 shrink-0`}>Area code *
@@ -8208,7 +8260,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
               </select>
             </label>
             <label className={`${lab} min-w-0 flex-1`}>Telephone number *
-              <input aria-label="Telephone number" type="tel" className={underline} value={suPhone} onChange={(e) => setSuPhone(e.target.value)} />
+              <input aria-label="Telephone number" type="tel" maxLength={20} className={underline} value={suPhone} onChange={(e) => setSuPhone(e.target.value)} />
               <span className={hint}>Expected format: phone number with 10 digits</span>
               <span className={hint}>Minimum 10 numbers</span>
               <span className={hint}>Numbers only</span>
@@ -8395,7 +8447,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
             <p className="mt-3 text-[13px] leading-5 text-neutral-400">I can update my communication preferences anytime through my customer account and opt out of commercial email messages by clicking the &quot;Unsubscribe&quot; link located at the bottom of each email.</p>
             <button aria-label="Use another email address" className="mt-3 text-sm underline underline-offset-4" onClick={() => { setEmail(""); setEmailErr(""); }}>Use another email address</button>
             <p className="mt-5 text-[13px] leading-5 text-neutral-600">By clicking on &quot;Continue&quot;, you agree that your information will be processed by Hermès International, Hermès Seller and their service providers, in accordance with the <button type="button" aria-label="Privacy Policy from continue text" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button>.</p>
-            <button aria-label="Continue from account step" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => { if (!email.includes("@")) { setEmailErr("Please enter a valid email address."); return; } setAccountEdit(false); }}>Continue</button>
+            <button aria-label="Continue from account step" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => { if (!isValidEmail(email)) { setEmailErr("Please enter a valid email address."); return; } setAccountEdit(false); }}>Continue</button>
             <div className="mt-6 space-y-2 border-t border-[#f6f1eb] pt-4 text-[13px] text-neutral-600">
               {footerLinks.map(([l, pg]) => <button key={l} aria-label={`Account footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
               <p className="pt-1">{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
@@ -8440,27 +8492,27 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
                 {fieldErr(req(f.title))}
               </label>
               <label className={labelCls}>First name *
-                <input aria-label="First name" className={underline} value={f.first} onChange={(e) => setF({ ...f, first: e.target.value })} />
+                <input aria-label="First name" maxLength={100} className={underline} value={f.first} onChange={(e) => setF({ ...f, first: e.target.value })} />
                 {fieldErr(req(f.first))}
               </label>
               <label className={labelCls}>Last name *
-                <input aria-label="Last name" className={underline} value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
+                <input aria-label="Last name" maxLength={100} className={underline} value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
                 {fieldErr(req(f.last))}
               </label>
               <label className={labelCls}>Company (optional)
-                <input aria-label="Company" className={underline} value={f.company} onChange={(e) => setF({ ...f, company: e.target.value })} />
+                <input aria-label="Company" maxLength={100} className={underline} value={f.company} onChange={(e) => setF({ ...f, company: e.target.value })} />
               </label>
               <div>
                 <label className={labelCls}>Address *
-                  <input aria-label="Address" className={underline} value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} />
+                  <input aria-label="Address" maxLength={200} className={underline} value={f.address} onChange={(e) => setF({ ...f, address: e.target.value })} />
                 </label>
                 {fieldErr(req(f.address))}
               </div>
               <label className={labelCls}>Address continued
-                <input aria-label="Address continued" className={underline} value={f.address2} onChange={(e) => setF({ ...f, address2: e.target.value })} />
+                <input aria-label="Address continued" maxLength={200} className={underline} value={f.address2} onChange={(e) => setF({ ...f, address2: e.target.value })} />
               </label>
               <label className={labelCls}>City *
-                <input aria-label="City" className={underline} value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} />
+                <input aria-label="City" maxLength={100} className={underline} value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} />
                 {fieldErr(req(f.city))}
               </label>
               <label className={labelCls}>State *
@@ -8476,12 +8528,12 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
                 {fieldErr(req(f.state))}
               </label>
               <label className={labelCls}>Zip code *
-                <input aria-label="Zip code" inputMode="numeric" className={underline} value={f.zip} onChange={(e) => setF({ ...f, zip: e.target.value })} />
+                <input aria-label="Zip code" inputMode="numeric" maxLength={10} className={underline} value={f.zip} onChange={(e) => setF({ ...f, zip: e.target.value })} />
                 {fieldErr(req(f.zip))}
                 <span className="mt-1 block text-xs font-normal text-neutral-600">Expected format: enter a valid postal code for your country</span>
               </label>
               <label className={labelCls}>Zip +
-                <input aria-label="Zip plus" inputMode="numeric" className={underline} value={f.zipPlus} onChange={(e) => setF({ ...f, zipPlus: e.target.value })} />
+                <input aria-label="Zip plus" inputMode="numeric" maxLength={4} className={underline} value={f.zipPlus} onChange={(e) => setF({ ...f, zipPlus: e.target.value })} />
               </label>
               <div className="grid grid-cols-[1fr_1.2fr] gap-4">
                 <label className={labelCls}>Area code *
@@ -8490,7 +8542,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
                   </select>
                 </label>
                 <label className={labelCls}>Telephone number *
-                  <input aria-label="Telephone number" inputMode="tel" className={underline} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+                  <input aria-label="Telephone number" inputMode="tel" maxLength={20} className={underline} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
                 </label>
               </div>
               <div>
@@ -8594,7 +8646,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
 // the customer ChatBubble writes to, so both sides see one thread.
 // Admin edits are per-browser only (localStorage, no working backend):
 // messages live in this browser only.
-function AdminChat({ email, password }: { email: string; password: string }) {
+function AdminChat({ email, password, sessionToken, contact }: { email: string; password: string; sessionToken: string; contact: LocalContact[] }) {
   const [msgs, setMsgs] = useState<LocalChat[]>([]);
   const [reply, setReply] = useState("");
   const [note, setNote] = useState("");
@@ -8602,7 +8654,7 @@ function AdminChat({ email, password }: { email: string; password: string }) {
   useEffect(() => { void load(); }, []);
   const sendReply = async () => {
     const text = reply.trim(); if (!text) return;
-    const r = await api.sendChatMessage({ from: "admin", text });
+    const r = await api.sendChatMessage({ from: "admin", text, email, password, sessionToken });
     if (r.ok) { setReply(""); setNote("Reply sent."); void load(); } else setNote("Reply failed.");
   };
   return (
@@ -8610,8 +8662,8 @@ function AdminChat({ email, password }: { email: string; password: string }) {
       <p className="text-sm text-neutral-600">Customer chat messages from the floating chat bubble. Reply here and the customer sees it in the same thread. Messages are stored in this browser only.</p>
       <div className="mt-4 flex gap-2">
         <button aria-label="Refresh chat messages" className="border border-black px-4 py-2 text-[11px] uppercase tracking-[0.18em]" onClick={() => void load()}>Refresh</button>
-        <button aria-label="Mark all chat messages read" className="border border-black px-4 py-2 text-[11px] uppercase tracking-[0.18em]" onClick={async () => { await api.adminMarkChatRead({ email, password }); setNote("Marked all read."); void load(); }}>Mark all read</button>
-        <button aria-label="Clear all chat messages" className="border border-red-800 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-red-800" onClick={async () => { const r = await api.adminClearChat({ email, password }); if (r.ok) { setNote("Chat cleared."); void load(); } }}>Clear all</button>
+        <button aria-label="Mark all chat messages read" className="border border-black px-4 py-2 text-[11px] uppercase tracking-[0.18em]" onClick={async () => { await api.adminMarkChatRead({ email, password, sessionToken }); setNote("Marked all read."); void load(); }}>Mark all read</button>
+        <button aria-label="Clear all chat messages" className="border border-red-800 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-red-800" onClick={async () => { const r = await api.adminClearChat({ email, password, sessionToken }); if (r.ok) { setNote("Chat cleared."); void load(); } }}>Clear all</button>
       </div>
       {note && <p className="mt-2 text-sm text-neutral-600" role="status">{note}</p>}
       {msgs.length === 0 && <p className="mt-4 text-sm text-neutral-600">No chat messages yet.</p>}
@@ -8619,13 +8671,23 @@ function AdminChat({ email, password }: { email: string; password: string }) {
         <div key={m.id} className="mb-2 mt-3 border border-black/10 bg-[#fffdf9] p-4">
           <p className="text-xs text-neutral-500">{m.from === "customer" ? "Customer" : "Admin"}{m.name ? ` — ${m.name}` : ""} · {new Date(m.createdAt).toLocaleString()}{m.readByAdmin ? "" : " · UNREAD"}</p>
           <p className="mt-1 text-sm">{m.text}</p>
-          <button aria-label={`Delete chat message ${m.id}`} className="mt-2 border border-red-800 px-3 py-1 text-[11px] uppercase tracking-wider text-red-800" onClick={async () => { await api.adminDeleteChatMessage({ email, password, id: m.id }); void load(); }}>Delete</button>
+          <button aria-label={`Delete chat message ${m.id}`} className="mt-2 border border-red-800 px-3 py-1 text-[11px] uppercase tracking-wider text-red-800" onClick={async () => { await api.adminDeleteChatMessage({ email, password, sessionToken, id: m.id }); void load(); }}>Delete</button>
         </div>
       ))}
       <div className="mt-4 flex gap-2">
-        <input aria-label="Reply to chat" className="min-w-0 flex-1 border border-black/25 bg-white px-3 py-2.5 text-sm" placeholder="Reply as the store…" value={reply} onChange={(e) => setReply(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void sendReply(); }} />
+        <input aria-label="Reply to chat" maxLength={1000} className="min-w-0 flex-1 border border-black/25 bg-white px-3 py-2.5 text-sm" placeholder="Reply as the store…" value={reply} onChange={(e) => setReply(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void sendReply(); }} />
         <button aria-label="Send chat reply" className="bg-black px-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => void sendReply()}>Send reply</button>
       </div>
+      <h2 className="mt-10 text-[13px] font-semibold uppercase tracking-[0.25em]">Contact form messages</h2>
+      <p className="mt-2 text-sm text-neutral-600">Messages sent from the Contact page are saved here (there is no email backend in this build, so they are stored in this browser for the admin to read).</p>
+      {contact.length === 0 && <p className="mt-4 text-sm text-neutral-600">No contact messages yet.</p>}
+      {contact.map((c) => (
+        <div key={c.id} className="mb-2 mt-3 border border-black/10 bg-[#fffdf9] p-4">
+          <p className="text-xs text-neutral-500">{c.first} {c.last} · {c.email} · {new Date(c.createdAt).toLocaleString()}</p>
+          <p className="mt-1 text-sm font-medium">Subject: {c.subject}</p>
+          <p className="mt-1 text-sm">{c.message}</p>
+        </div>
+      ))}
     </div>
   );
 }
@@ -8633,47 +8695,80 @@ function AdminChat({ email, password }: { email: string; password: string }) {
 function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { products: Product[]; settings: Settings; qc: ReturnType<typeof useQueryClient>; navOverrides: NavOverrides; setNavOverrides: (n: NavOverrides) => void }) {
   const [pw, setPw] = useState(""); const [adminEmail, setAdminEmail] = useState(""); const [authed, setAuthed] = useState(false); const [tab, setTab] = useState("Dashboard");
   const [msg, setMsg] = useState("");
-  // Auto-sign-in when the admin Gmail was used on the customer sign-in form:
-  // that sign-in stores the admin credentials in hlx-admin-auth, so the
-  // panel opens directly without a second sign-in (user request 2026-11-13).
+  // SECURITY 2026-11-18: the admin password is never stored. Sign-in mints
+  // a session token (derived from the password hash) that is what persists
+  // in hlx-admin-auth and what the admin calls prove themselves with.
+  const [adminSession, setAdminSession] = useState("");
+  const [setupPw, setSetupPw] = useState(""); const [setupPw2, setSetupPw2] = useState("");
+  const [showChangePw, setShowChangePw] = useState(false);
+  const [curPw, setCurPw] = useState(""); const [newPw, setNewPw] = useState(""); const [newPw2, setNewPw2] = useState("");
+  // Auto-sign-in from the customer sign-in form: that sign-in stores a
+  // session token in hlx-admin-auth, so the panel opens directly without
+  // a second sign-in (user request 2026-11-13). A legacy record that still
+  // holds a plaintext password is wiped on sight — the owner then sets a
+  // new password in the first-run setup form below.
   useEffect(() => {
-    const stored = load<{ email?: string; password?: string } | null>("hlx-admin-auth", null);
-    if (!stored?.email || !stored?.password) return;
-    void api.adminData({ email: stored.email, password: stored.password }).then((r) => {
-      if (r.ok) { setAdminEmail(stored.email!); setPw(stored.password!); setAuthed(true); setMsg(""); }
-    });
+    const stored = load<{ email?: string; password?: string; token?: string } | null>("hlx-admin-auth", null);
+    if (!stored?.email) return;
+    if (stored.password) { save("hlx-admin-auth", null); return; }
+    if (!stored.token) return;
+    if (adminSessionValid({ email: stored.email, token: stored.token })) {
+      setAdminEmail(stored.email); setAdminSession(stored.token); setAuthed(true); setMsg("");
+    }
   }, []);
-  const dataQ = useQuery({ queryKey: ["admin", adminEmail, pw], queryFn: () => api.adminData({ email: adminEmail, password: pw }), enabled: authed });
+  const dataQ = useQuery({ queryKey: ["admin", adminEmail, pw, adminSession], queryFn: () => api.adminData({ email: adminEmail, password: pw, sessionToken: adminSession }), enabled: authed });
   const blank = { id: 0, name: "", category: "women", subcategory: "", theme: "Silk", price: 0, priceLabel: "", status: "available" as const, line: "", material: "", modelSize: "", metallicFinish: "", colorsJson: JSON.stringify([{ name: "Etoupe", hex: "#8a7a68", available: true }]), description: "", story: "", tone: "#e9ede8", glyph: "◆" };
   const [form, setForm] = useState(blank);
   const [logoUploading, setLogoUploading] = useState(false);
   const [stg, setStg] = useState<Settings>(settings);
   useEffect(() => { setStg(settings); }, [settings]);
-  const saveProduct = useMutation({ mutationFn: () => api.adminSaveProduct({ email: adminEmail, password: pw, ...form }), onSuccess: (r) => { setMsg(r.ok ? "Product saved — it is now live on the storefront." : "Save failed."); setForm(blank); qc.invalidateQueries({ queryKey: ["storefront"] }); dataQ.refetch(); } });
-  const delProduct = useMutation({ mutationFn: (id: number) => api.adminDeleteProduct({ email: adminEmail, password: pw, id }), onSuccess: () => { setMsg("Product deleted."); setConfirmProdDelete(null); qc.invalidateQueries({ queryKey: ["storefront"] }); dataQ.refetch(); } });
-  const updOrder = useMutation({ mutationFn: (v: { id: number; status: string }) => api.adminUpdateOrder({ email: adminEmail, password: pw, ...v }), onSuccess: () => { setMsg("Order status updated."); dataQ.refetch(); qc.invalidateQueries({ queryKey: ["myorders"] }); } });
-  const saveSettings = useMutation({ mutationFn: () => api.adminSaveSettings({ email: adminEmail, password: pw, settings: stg }), onSuccess: () => { setMsg("Settings saved — the storefront now shows the new values."); qc.invalidateQueries({ queryKey: ["storefront"] }); } });
+  const saveProduct = useMutation({ mutationFn: () => api.adminSaveProduct({ email: adminEmail, password: pw, sessionToken: adminSession, ...form }), onSuccess: (r) => { setMsg(r.ok ? "Product saved — it is now live on the storefront." : "Save failed."); setForm(blank); qc.invalidateQueries({ queryKey: ["storefront"] }); dataQ.refetch(); } });
+  const delProduct = useMutation({ mutationFn: (id: number) => api.adminDeleteProduct({ email: adminEmail, password: pw, sessionToken: adminSession, id }), onSuccess: () => { setMsg("Product deleted."); setConfirmProdDelete(null); qc.invalidateQueries({ queryKey: ["storefront"] }); dataQ.refetch(); } });
+  const updOrder = useMutation({ mutationFn: (v: { id: number; status: string }) => api.adminUpdateOrder({ email: adminEmail, password: pw, sessionToken: adminSession, ...v }), onSuccess: () => { setMsg("Order status updated."); dataQ.refetch(); qc.invalidateQueries({ queryKey: ["myorders"] }); } });
+  const saveSettings = useMutation({ mutationFn: () => api.adminSaveSettings({ email: adminEmail, password: pw, sessionToken: adminSession, settings: stg }), onSuccess: () => { setMsg("Settings saved — the storefront now shows the new values."); qc.invalidateQueries({ queryKey: ["storefront"] }); } });
   const [orderQ, setOrderQ] = useState(""); const [orderStatus, setOrderStatus] = useState("All"); const [orderDetail, setOrderDetail] = useState<number | null>(null);
   const [prodQ, setProdQ] = useState("");
   const [custQ, setCustQ] = useState(""); const [custDetail, setCustDetail] = useState<number | null>(null); const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [confirmProdDelete, setConfirmProdDelete] = useState<number | null>(null);
-  const markViewed = useMutation({ mutationFn: (v: { kind: "order" | "user"; id: number }) => api.adminMarkViewed({ email: adminEmail, password: pw, ...v }), onSuccess: () => dataQ.refetch() });
-  const setDisabled = useMutation({ mutationFn: (v: { id: number; disabled: boolean }) => api.adminSetUserDisabled({ email: adminEmail, password: pw, ...v }), onSuccess: () => { setMsg("Account updated."); dataQ.refetch(); } });
-  const delUser = useMutation({ mutationFn: (id: number) => api.adminDeleteUser({ email: adminEmail, password: pw, id }), onSuccess: () => { setMsg("Account deleted."); setConfirmDelete(null); setCustDetail(null); dataQ.refetch(); } });
+  const markViewed = useMutation({ mutationFn: (v: { kind: "order" | "user"; id: number }) => api.adminMarkViewed({ email: adminEmail, password: pw, sessionToken: adminSession, ...v }), onSuccess: () => dataQ.refetch() });
+  const setDisabled = useMutation({ mutationFn: (v: { id: number; disabled: boolean }) => api.adminSetUserDisabled({ email: adminEmail, password: pw, sessionToken: adminSession, ...v }), onSuccess: () => { setMsg("Account updated."); dataQ.refetch(); } });
+  const delUser = useMutation({ mutationFn: (id: number) => api.adminDeleteUser({ email: adminEmail, password: pw, sessionToken: adminSession, id }), onSuccess: () => { setMsg("Account deleted."); setConfirmDelete(null); setCustDetail(null); dataQ.refetch(); } });
 
-  if (!authed) return (
-    <div className="mx-auto max-w-md px-4 py-14">
-      <h1 className="font-serif-d text-center text-3xl italic">Admin Panel</h1>
-      <p className="mt-2 text-center text-sm text-neutral-600">Sign in to manage products, orders, customers, theme and settings.</p>
-      <input aria-label="Admin email" type="email" className="mt-6 w-full border border-black/30 px-3 py-3 text-sm" placeholder="Admin email (Gmail)" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
-      <input aria-label="Admin password" type="password" className="mt-3 w-full border border-black/30 px-3 py-3 text-sm" placeholder="Admin password" value={pw} onChange={(e) => setPw(e.target.value)} />
-      {msg && <p className="mt-2 text-sm text-red-700" role="status">{msg}</p>}
-      <button aria-label="Admin sign in" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={async () => {
-        const r = await api.adminData({ email: adminEmail, password: pw });
-        if (r.ok) { setAuthed(true); setMsg(""); qc.invalidateQueries({ queryKey: ["admin"] }); } else setMsg("Incorrect admin email or password.");
-      }}>Sign in to Admin</button>
-    </div>
-  );
+  if (!authed) {
+    // First run (SECURITY 2026-11-18): no admin password exists yet — the
+    // owner sets one here. Only its hash is stored, never the password.
+    if (!adminPasswordIsSet()) return (
+      <div className="mx-auto max-w-md px-4 py-14">
+        <h1 className="font-serif-d text-center text-3xl italic">Admin Panel</h1>
+        <p className="mt-2 text-center text-sm text-neutral-600">Set your admin password to start managing the store. It is stored only in this browser, as a hash — never in plain text, and never in the site's code.</p>
+        <input aria-label="New admin password" type="password" maxLength={128} className="mt-6 w-full border border-black/30 px-3 py-3 text-sm" placeholder="New admin password" value={setupPw} onChange={(e) => setSetupPw(e.target.value)} />
+        <input aria-label="Confirm new admin password" type="password" maxLength={128} className="mt-3 w-full border border-black/30 px-3 py-3 text-sm" placeholder="Confirm new admin password" value={setupPw2} onChange={(e) => setSetupPw2(e.target.value)} />
+        <p className="mt-2 text-xs text-neutral-500">At least 10 characters, with an upper-case letter, a lower-case letter, a digit and a special character.</p>
+        {msg && <p className="mt-2 text-sm text-red-700" role="status">{msg}</p>}
+        <button aria-label="Set admin password" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => {
+          if (setupPw !== setupPw2) { setMsg("Passwords do not match."); return; }
+          const r = adminSetupPassword(setupPw);
+          if (!r.ok) { setMsg(r.message); return; }
+          setSetupPw(""); setSetupPw2(""); setMsg("Admin password set. Please sign in.");
+        }}>Set admin password</button>
+      </div>
+    );
+    return (
+      <div className="mx-auto max-w-md px-4 py-14">
+        <h1 className="font-serif-d text-center text-3xl italic">Admin Panel</h1>
+        <p className="mt-2 text-center text-sm text-neutral-600">Sign in to manage products, orders, customers, theme and settings.</p>
+        <input aria-label="Admin email" type="email" maxLength={254} className="mt-6 w-full border border-black/30 px-3 py-3 text-sm" placeholder="Admin email (Gmail)" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
+        <input aria-label="Admin password" type="password" maxLength={128} className="mt-3 w-full border border-black/30 px-3 py-3 text-sm" placeholder="Admin password" value={pw} onChange={(e) => setPw(e.target.value)} />
+        {msg && <p className="mt-2 text-sm text-red-700" role="status">{msg}</p>}
+        <button aria-label="Admin sign in" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={async () => {
+          const th = loginThrottleStatus();
+          if (th.locked) { setMsg(`Too many sign-in attempts. Please try again in ${th.waitSec} seconds.`); return; }
+          const r = await api.adminData({ email: adminEmail, password: pw, sessionToken: adminSession });
+          if (r.ok) { const s = await adminCreateSession({ email: adminEmail, password: pw }); if (s.ok) { setAdminSession(s.token); save("hlx-admin-auth", { email: adminEmail, token: s.token }); } setAuthed(true); setMsg(""); qc.invalidateQueries({ queryKey: ["admin"] }); } else setMsg("Incorrect admin email or password.");
+        }}>Sign in to Admin</button>
+      </div>
+    );
+  }
   const d = dataQ.data;
   const tabs = ["Dashboard", "Products", "Orders", "Customers", "Sales", "Navigation", "Newsletter", "Chat", "Theme & Settings"];
   const inputCls = "w-full border border-black/25 px-3 py-2.5 text-sm bg-white";
@@ -8681,8 +8776,26 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-serif-d text-3xl italic">Admin Panel</h1>
-        <button aria-label="Admin sign out" className="border border-black px-5 py-2 text-[11px] uppercase tracking-[0.2em]" onClick={() => { setAuthed(false); setPw(""); setAdminEmail(""); save("hlx-admin-auth", null); }}>Sign out</button>
+        <div className="flex gap-2">
+          <button aria-label="Change admin password" className="border border-black px-5 py-2 text-[11px] uppercase tracking-[0.2em]" onClick={() => setShowChangePw((v) => !v)}>Change password</button>
+          <button aria-label="Admin sign out" className="border border-black px-5 py-2 text-[11px] uppercase tracking-[0.2em]" onClick={() => { setAuthed(false); setPw(""); setAdminEmail(""); setAdminSession(""); save("hlx-admin-auth", null); }}>Sign out</button>
+        </div>
       </div>
+      {showChangePw && (
+        <div className="mt-4 max-w-md border border-black/15 bg-[#fffdf9] p-4">
+          <p className="text-sm font-medium">Change admin password</p>
+          <input aria-label="Current admin password" type="password" maxLength={128} className="mt-3 w-full border border-black/25 bg-white px-3 py-2.5 text-sm" placeholder="Current password" value={curPw} onChange={(e) => setCurPw(e.target.value)} />
+          <input aria-label="New admin password" type="password" maxLength={128} className="mt-2 w-full border border-black/25 bg-white px-3 py-2.5 text-sm" placeholder="New password" value={newPw} onChange={(e) => setNewPw(e.target.value)} />
+          <input aria-label="Confirm new admin password" type="password" maxLength={128} className="mt-2 w-full border border-black/25 bg-white px-3 py-2.5 text-sm" placeholder="Confirm new password" value={newPw2} onChange={(e) => setNewPw2(e.target.value)} />
+          <p className="mt-2 text-xs text-neutral-500">At least 10 characters, with an upper-case letter, a lower-case letter, a digit and a special character.</p>
+          <button aria-label="Save new admin password" className="mt-3 bg-black px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => {
+            if (newPw !== newPw2) { setMsg("New passwords do not match."); return; }
+            const r = adminChangePassword({ email: adminEmail, password: curPw, newPassword: newPw });
+            if (!r.ok) { setMsg(r.message); return; }
+            setAdminSession(r.token); save("hlx-admin-auth", { email: adminEmail, token: r.token }); setPw(""); setCurPw(""); setNewPw(""); setNewPw2(""); setShowChangePw(false); setMsg(r.message);
+          }}>Save new password</button>
+        </div>
+      )}
       <div className="no-scrollbar mt-5 flex gap-2 overflow-x-auto">
         {tabs.map((t) => <button key={t} aria-label={`Admin tab ${t}`} className={`shrink-0 border px-4 py-2.5 text-[11px] uppercase tracking-[0.15em] ${tab === t ? "border-black bg-black text-white" : "border-black/30"}`} onClick={() => { setTab(t); dataQ.refetch(); }}>{t}</button>)}
       </div>
@@ -8856,7 +8969,7 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
       )}
 
       {tab === "Chat" && (
-        <AdminChat email={adminEmail} password={pw} />
+        <AdminChat email={adminEmail} password={pw} sessionToken={adminSession} contact={d?.contact ?? []} />
       )}
 
       {tab === "Theme & Settings" && (
@@ -8882,11 +8995,11 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
                     const f = e.target.files?.[0]; e.target.value = "";
                     if (!f) return;
                     setLogoUploading(true);
-                    try { const f64 = await fileToBase64(f); const r = await api.adminUploadLogo({ email: adminEmail, password: pw, dataBase64: f64.dataBase64, mimeType: f64.mimeType || f.type || "image/png", clear: false }); if (r.ok) { setStg(s => ({ ...s, logoUrl: r.logoUrl })); setMsg("Logo image uploaded — press “Save settings & theme” to keep the display mode, the image itself is already live."); qc.invalidateQueries({ queryKey: ["storefront"] }); } else setMsg("Logo upload failed — please use a PNG, JPG, WebP or SVG under 5 MB."); } catch { setMsg("Logo upload failed."); }
+                    try { const f64 = await fileToBase64(f); const r = await api.adminUploadLogo({ email: adminEmail, password: pw, sessionToken: adminSession, dataBase64: f64.dataBase64, mimeType: f64.mimeType || f.type || "image/png", clear: false }); if (r.ok) { setStg(s => ({ ...s, logoUrl: r.logoUrl })); setMsg("Logo image uploaded — press “Save settings & theme” to keep the display mode, the image itself is already live."); qc.invalidateQueries({ queryKey: ["storefront"] }); } else setMsg("Logo upload failed — please use a PNG, JPG, WebP or SVG under 5 MB."); } catch { setMsg("Logo upload failed."); }
                     setLogoUploading(false);
                   }} />
                 </label>
-                {stg.logoUrl && <button aria-label="Remove logo image" type="button" className="ml-2 border border-red-800 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-red-800" onClick={async () => { const r = await api.adminUploadLogo({ email: adminEmail, password: pw, dataBase64: "", mimeType: "image/png", clear: true }); if (r.ok) { setStg(s => ({ ...s, logoUrl: "" })); setMsg("Logo image removed — the default carriage emblem is shown again."); qc.invalidateQueries({ queryKey: ["storefront"] }); } }}>Remove logo image</button>}
+                {stg.logoUrl && <button aria-label="Remove logo image" type="button" className="ml-2 border border-red-800 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-red-800" onClick={async () => { const r = await api.adminUploadLogo({ email: adminEmail, password: pw, sessionToken: adminSession, dataBase64: "", mimeType: "image/png", clear: true }); if (r.ok) { setStg(s => ({ ...s, logoUrl: "" })); setMsg("Logo image removed — the default carriage emblem is shown again."); qc.invalidateQueries({ queryKey: ["storefront"] }); } }}>Remove logo image</button>}
               </div>
             </div>
           </div>
