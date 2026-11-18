@@ -178,6 +178,11 @@ function megaTarget(entry: MegaEntry, overrides: NavOverrides, heading: string, 
   // The Equestrian menu's SADDLES heading is the original's bespoke
   // editorial page (not a product listing) — 2026-11-17.
   if (entry.key === "equestrian" && heading === "SADDLES") return { t: "page", page: "bespoke-equestrian" };
+  // The Home menu's HOME heading is the original's Home and Art of
+  // living heading page (Group 8, 2026-11-18) — /home-art-living/,
+  // NOT the /home/ parent. Without this the heading resolved to sub
+  // "Home", which matches no syn and renders the sorry message.
+  if (entry.key === "home" && heading === "HOME") return { t: "category", cat: "home", sub: "Home and art of living" };
   // standalone heading
   const special: Record<string,string> = { "GIFTS FOR WOMEN":"For women","GIFTS FOR MEN":"For men","GIFTS FOR CHILDREN AND BABIES":"For children","GIFTS FOR DOGS":"For dogs","APPLE WATCH HERMÈS":"Cape Cod" };
   return { t: "category", cat: dest, sub: special[heading] || headingToSub(heading) };
@@ -2065,10 +2070,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // fires on this page, so field-only is used (same as the
       // Group 5 ties keys).
       "timepieces": (p) => p.timepiecePos !== undefined,
-      // Group 7 (2026-11-18) — Petit h [277]. FIELD-ONLY gate (same
+      // Group 7 (2026-11-18) — Petit h [276]. FIELD-ONLY gate (same
       // Group 4 trap): all tagged rows are category "home", but the
       // key only ever fires on this page, so field-only is used.
       "petit h": (p) => p.petitHPos !== undefined,
+      // Group 8 (2026-11-18) — Home and Art of living [1756]. FIELD-ONLY
+      // gate (same Group 4 trap): the 40 tagged rows span categories
+      // (home Decor/Tableware/Blankets and throws/Textiles/Furniture/
+      // Bags and clutches + 1 leather Small leather goods), so a
+      // category gate would hide rows.
+      "home and art of living": (p) => p.homeArtPos !== undefined,
       "blankets and pillows": (p) => p.textilesPos !== undefined,
       "decorative objects and games": (p) => p.objectsPos !== undefined,
       "sports and outdoor": (p) => p.sportsPos !== undefined,
@@ -2286,11 +2297,20 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // time" inserts and the horology paragraph below the grid.
   const isTimepiecesPage = cat === "watches" && subLow === "timepieces";
   // Petit h page (Group 7, 2026-11-18) — the original's
-  // /us/en/category/petit-h/ listing (277 tiles), sorted by
+  // /us/en/category/petit-h/ listing (276 tiles), sorted by
   // petitHPos, with the "Applied creativity" / "Deconstructing the
   // norm" inserts and the 3-paragraph "reverse creation" text below
   // the grid.
   const isPetitHPage = cat === "home" && subLow === "petit h";
+  // Home and Art of living page (Group 8, 2026-11-18) — the original's
+  // heading page /home-art-living/ (1,756 tiles, homeArtPos order). NOT
+  // the /home/ parent (isHomePage, homePos, 1,271 tiles): different URL,
+  // different title, different order — a separate listing that largely
+  // overlaps the Home parent's products. No paragraph on the original
+  // (the category description lives only in meta tags), no editorial
+  // inserts in the first 40, no sub-nav row; the theme carousel below
+  // the grid is the same 5 themes as the Home parent's.
+  const isHomeArtPage = cat === "home" && subLow === "home and art of living";
   // Fragrances parent page (cat "fragrances", no sub, 2026-11-15) —
   // sorts by fragPos (the original's live order, 272 tiles) and
   // carries the "Rouge Brillant Silky" / "Fragrance Finder" inserts.
@@ -2438,9 +2458,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "spring-summer 2026 collection": "Spring-Summer 2026 Collection",
     "spring-summer 2027": "Spring-Summer 2027 Collection",
     "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
+    // The original's H1 capitalises "Art" ("Home and Art of living");
+    // titleCaseSub would lowercase it ("Home and art of living").
+    "home and art of living": "Home and Art of living",
   };
   const titleText = COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : (isCharmsPage || isLeatherAccPage || isStrapsPage) ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage || isLuggagePage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isBeachPage || isWomensAccPage) ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : (isTiesPage || isMensScarvesPage) ? "MEN | TIES AND SCARVES" : isMenTiesParentPage ? label : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const crumbTop = isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : (isCharmsPage || isLeatherAccPage || isStrapsPage) ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage || isLuggagePage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isHomeArtPage ? "" : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isBeachPage || isWomensAccPage) ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : (isTiesPage || isMensScarvesPage) ? "MEN | TIES AND SCARVES" : isMenTiesParentPage ? label : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2591,6 +2614,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // in the SSR HTML) — same as Tech universe / Children. Without
     // this branch the `nav` default below would show the home menu
     // subs + "View all".
+    siblings = [];
+  } else if (isHomeArtPage) {
+    // Group 8 (2026-11-18): the original's Home and Art of living
+    // page has NO sub-navigation row at all (no
+    // filter-siblings-categories nav in the SSR HTML) — same as
+    // Petit h / Tech universe / Children. Without this branch the
+    // `nav` default below would show the home menu subs + "View all".
     siblings = [];
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
@@ -2764,6 +2794,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // isHomePage branch requires NO sub, so it cannot shadow this
     // page, and no earlier branch matches cat "home" + sub "petit h".
     else if (isPetitHPage && list.some((p) => p.petitHPos !== undefined)) list = [...list].sort((a, b) => (a.petitHPos ?? Infinity) - (b.petitHPos ?? Infinity));
+    // Home and Art of living (Group 8, 2026-11-18) sorts by homeArtPos —
+    // the original's live order. Placed here (after Petit h): the
+    // isHomePage branch requires NO sub, so it cannot shadow this
+    // page, and no earlier branch matches cat "home" + sub
+    // "home and art of living".
+    else if (isHomeArtPage && list.some((p) => p.homeArtPos !== undefined)) list = [...list].sort((a, b) => (a.homeArtPos ?? Infinity) - (b.homeArtPos ?? Infinity));
     // Fragrances (2026-11-15) sorts by fragPos — the original's
     // order — the same way (the parent page lists exactly the 272
     // live tiles).
@@ -2844,7 +2880,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isTimepiecesPage, isPetitHPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isTiesPage, isMensScarvesPage, isMenTiesParentPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isTimepiecesPage, isPetitHPage, isHomeArtPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isTiesPage, isMensScarvesPage, isMenTiesParentPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
@@ -3027,7 +3063,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // CTA are not rendered (same gap class as the Tableware "Take
     // tables to new depths" link). No inserts are known after tile
     // #40 (SSR covers only the first 40) — the parent's live read
-    // confirms whether more exist in 41..277.
+    // confirms whether more exist in 41..276.
     if (isPetitHPage) return [
       { after: 9, title: "Applied creativity", body: "Hybrid and unbridled, these bags and accessories play with materials, shapes and functions. The Petit h workshop doesn't follow straight lines; it takes pleasure in blurring them." },
       { after: 31, title: "Deconstructing the norm", body: "Even if creations within the Petit h workshop have been designed down to the most minute detail, they still run against the grain. Excess is embraced as imagination runs wild." },
@@ -3185,6 +3221,33 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       const img = rep ? productImageFor(rep) : "";
       return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
     }).filter((s) => s.imgMo);
+  })();
+
+  // Home and Art of living theme carousel slides (Group 8, 2026-11-18)
+  // — the original's 5 cross-universe cards in the SAME order as the
+  // Home parent's (Small leather goods, Rider, Horizons Ateliers,
+  // Jewelry, Timepieces), verified from this page's SSR category blob
+  // (stopBouncing). Unlike the Home parent's slides (product-photo
+  // stand-ins — no verified hermesedito URLs existed then), these use
+  // the REAL hermesedito editorial images from the SSR blob (all 10
+  // URLs HEAD-verified 200 on 2026-11-18): desktop 16:9 and mobile 3:4.
+  // Destinations are the original's own token paths: Rider and
+  // Timepieces link to their dedicated pages (the Home parent's
+  // approximations link to the Equestrian / Watches parents instead —
+  // flagged, not changed here). Horizons Ateliers has no content page
+  // in the clone, so it falls back to the About page (same as the Home
+  // parent).
+  const homeArtThemes: ThemeSlide[] = (() => {
+    if (!isHomeArtPage) return [];
+    const base = "https://assets.hermes.com/is/image/hermesedito/";
+    const defs: { label: string; imgMo: string; imgDesktop: string; view: View }[] = [
+      { label: "Small leather goods", imgMo: `${base}LV1HOME-P1_34`, imgDesktop: `${base}LV1HOME-P1_169`, view: { t: "category", cat: "leather", sub: "Small leather goods" } },
+      { label: "Rider", imgMo: `${base}LV1HOME-cavalier-3-4-P2`, imgDesktop: `${base}LV1HOME-cavalier-P2`, view: { t: "category", cat: "equestrian", sub: "Rider" } },
+      { label: "Horizons Ateliers", imgMo: `${base}LV1HOME-HERMES_HORIZON_2_03_CMJN-P3`, imgDesktop: `${base}LV1HOME-HERMES_HORIZON_1_03_CMJN-P3`, view: { t: "about" } },
+      { label: "Jewelry", imgMo: `${base}LV1HOME-bij-argent-3_4-P4`, imgDesktop: `${base}LV1HOME-bij-argent-16_9-P4`, view: { t: "category", cat: "jewelry" } },
+      { label: "Timepieces", imgMo: `${base}LV1HOME-horlo-homme-3_4_P5`, imgDesktop: `${base}LV1HOME-horlo-homme-16_9_P5_NEW`, view: { t: "category", cat: "watches", sub: "Timepieces" } },
+    ];
+    return defs.map((d) => ({ label: d.label, imgMo: d.imgMo, imgDesktop: d.imgDesktop, view: d.view }));
   })();
 
   // Gifts theme carousel slides (2026-11-16) — the original's 5
@@ -3433,9 +3496,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           used " / " separators with a title-case last segment — fixed here
           site-wide (the nav's uppercase class renders the last segment in
           caps once normal-case is dropped). */}
-      <nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
+      {/* Group 8 (2026-11-18): the original's /home-art-living/ page shows
+          NO bottom breadcrumb below the grid (Part 4 live read: search for
+          "breadcrumb" returns nothing; order is counter → theme carousel →
+          footer) — the whole nav is suppressed on isHomeArtPage. Petit h
+          keeps its 2-level breadcrumb (separate branch below). */}
+      {!isHomeArtPage && (<nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && !isHomeArtPage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -3552,7 +3620,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           </>
         )}
         {!sub && (<>{" | "}<span className="tracking-normal text-black">{titleText}</span></>)}
-      </nav>
+      </nav>)}
 
       {/* Product theme carousel — the original's category page has this swiper
           (aria-label "Product theme carousel", 15 slides = 5 categories x 3)
@@ -3566,6 +3634,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <FallWinterThemeCarousel go={go} themes={slgThemes} />
         ) : isHomePage ? (
           <FallWinterThemeCarousel go={go} themes={homeThemes} />
+        ) : isHomeArtPage ? (
+          <FallWinterThemeCarousel go={go} themes={homeArtThemes} />
         ) : isGiftsPage ? (
           <FallWinterThemeCarousel go={go} themes={giftsThemes} />
         ) : (

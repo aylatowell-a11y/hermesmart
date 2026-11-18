@@ -176,6 +176,16 @@ const CATEGORY_PATHS: Record<string, string> = {
   // resolve it to /home/petit-h/ (wrong URL, and a direct load of
   // /petit-h/ would fall through to the home parent page).
   "home|petit h": "petit-h",
+  // Home and Art of living page (Group 8, 2026-11-18) — the original's
+  // own URL is /us/en/category/home-art-living/ (top-level, NOT under
+  // /home/). The menu heading "HOME" (cat "home") clicks to sub "Home
+  // and art of living" via the megaTarget special case; without this
+  // entry the generic slug fallback would resolve it to
+  // /home/home-and-art-of-living/ (wrong URL, and a direct load of
+  // /home-art-living/ would return null from parseUrl and fall through
+  // to the homepage). First writer wins: no other key maps to
+  // "home-art-living".
+  "home|home and art of living": "home-art-living",
   // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's
   // own URLs; without these the generic slug fallback still resolved
   // them, but the explicit entries keep the routing table truthful.
