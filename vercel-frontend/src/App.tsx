@@ -2167,6 +2167,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // rows are all category "men" but the key only ever fires on
       // this page, so field-only is used for all three.
       "ties, bow ties and pocket squares": (p) => p.tiePos !== undefined,
+      "ties": (p) => p.tiePos !== undefined,
       "scarves": (p) => cat === "men" ? p.menScarfPos !== undefined : p.subcategory === "Scarves, shawls and stoles" && p.scarfPos !== undefined,
       "ties and scarves": (p) => p.menTiesPos !== undefined,
       // Group 6 (2026-11-17) — Watches Timepieces [229]. FIELD-ONLY
@@ -2507,7 +2508,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // extracted live, see the Group 5 build report). The men's Scarves
   // page also resolves via sub "Scarves, shawls and stoles" (the
   // homepage carousel tile links there) and its comma-less aliases.
-  const isTiesPage = cat === "men" && subLow === "ties, bow ties and pocket squares";
+  const isTiesPage = cat === "men" && (subLow === "ties, bow ties and pocket squares" || subLow === "ties");
   const isMensScarvesPage = cat === "men" && (subLow === "scarves" || subLow === "scarves, shawls and stoles" || subLow === "scarves shawls and stoles" || subLow === "scarves and stoles");
   const isMenTiesParentPage = cat === "men" && subLow === "ties and scarves";
   // Group 1 empty pages (2026-11-17) — the original's live orders live
@@ -2616,6 +2617,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "ready-to-wear": "Ready-to-wear",
     "dresses": "Dresses and skirts",
     "the wonders": "The Wonders",
+    "ties": "Ties, bow ties and pocket squares",
     "sports and outdoor": "Sports and Outdoor",
     "fall-winter 2026": "Fall-Winter 2026 Collection",
     "fall-winter 2026 collection": "Fall-Winter 2026 Collection",

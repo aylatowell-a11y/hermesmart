@@ -451,7 +451,7 @@ export const PRODUCT_IMAGES: Record<string, string> = {
   "Rouge Hermès gift set, Lip care": rougeLipCareSet,
   "Eye shadow quartet, Ombres Sables":
     "https://assets.hermes.com/is/image/hermesproduct/60875PV007_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60875PV007, $121 (REPLACE generated ombresEyeShadow)
-  "Nail polish, Limited edition, Or Rose":
+  "Nail polish, Limited edition":
     "https://assets.hermes.com/is/image/hermesproduct/60861VV050_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$", // V, ref V60861VV050, $66 (REPLACE generated nailPolishOrRose)
   // Original Hermes photo, hotlinked (CDN probe 2026-11-10, spaced ID
   // 104951M 01). Verified: tan case, red strap + striped band.
@@ -8369,26 +8369,11 @@ const NEW_TILE: Record<number, string> = {
 8264:"https://assets.hermes.com/is/image/hermesproduct/700001F%2087_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
 8265:"https://assets.hermes.com/is/image/hermesproduct/608002FP85_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8266: "https://assets.hermes.com/is/image/hermesproduct/083010CAEY_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8267: "https://assets.hermes.com/is/image/hermesproduct/103963M%2004_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8268: "https://assets.hermes.com/is/image/hermesproduct/261004N%20EN_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8269: "https://assets.hermes.com/is/image/hermesproduct/102503M%2063_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8270: "https://assets.hermes.com/is/image/hermesproduct/460246M%2003_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8271: "https://assets.hermes.com/is/image/hermesproduct/102503M%2063_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8272: "https://assets.hermes.com/is/image/hermesproduct/460235M%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8273: "https://assets.hermes.com/is/image/hermesproduct/460246M%2003_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8274: "https://assets.hermes.com/is/image/hermesproduct/1709458%2092_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8275: "https://assets.hermes.com/is/image/hermesproduct/064367S%2009_flat_wm_103?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8276: "https://assets.hermes.com/is/image/hermesproduct/064367S%2009_flat_wm_103?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8277: "https://assets.hermes.com/is/image/hermesproduct/064367S%2001_flat_wm_103?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8278: "https://assets.hermes.com/is/image/hermesproduct/064367S%2003_flat_wm_103?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8279: "https://assets.hermes.com/is/image/hermesproduct/064367S%2004_flat_wm_103?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8280: "https://assets.hermes.com/is/image/hermesproduct/853081S%2001_front_wm_103?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8281: "https://assets.hermes.com/is/image/hermesproduct/262047N%203U_above_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8282: "https://assets.hermes.com/is/image/hermesproduct/262047N%2001_above_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8283: "https://assets.hermes.com/is/image/hermesproduct/261068N%20AC_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8284: "https://assets.hermes.com/is/image/hermesproduct/262097G%202N_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8285: "https://assets.hermes.com/is/image/hermesproduct/262007N%2001_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
-  8286: "https://assets.hermes.com/is/image/hermesproduct/261044N%2002_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8287: "https://assets.hermes.com/is/image/hermesproduct/036233T%2003_wornsquare_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8288: "https://assets.hermes.com/is/image/hermesproduct/646439T%2016_wornsquare_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8289: "https://assets.hermes.com/is/image/hermesproduct/646434T%2007_wornsquare_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
@@ -8412,6 +8397,23 @@ const NEW_TILE: Record<number, string> = {
   8307: "https://assets.hermes.com/is/image/hermesproduct/086888CK37_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8308: "https://assets.hermes.com/is/image/hermesproduct/057946CKZ7_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8309: "https://assets.hermes.com/is/image/hermesproduct/057946CK1Q_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8310: "https://assets.hermes.com/is/image/hermesproduct/104880M%2013_flat_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8311: "https://assets.hermes.com/is/image/hermesproduct/104382M%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8312: "https://assets.hermes.com/is/image/hermesproduct/104877M%2002_flat_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8313: "https://assets.hermes.com/is/image/hermesproduct/262097G%20PN_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8314: "https://assets.hermes.com/is/image/hermesproduct/262021N%2002_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8315: "https://assets.hermes.com/is/image/hermesproduct/262017N%20AR_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8316: "https://assets.hermes.com/is/image/hermesproduct/262009N%204C_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8317: "https://assets.hermes.com/is/image/hermesproduct/252000G%20DG_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8318: "https://assets.hermes.com/is/image/hermesproduct/242053G%2002_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8319: "https://assets.hermes.com/is/image/hermesproduct/222059G%2002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8320: "https://assets.hermes.com/is/image/hermesproduct/262067G%20Q3_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8321: "https://assets.hermes.com/is/image/hermesproduct/262067G%209T_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8322: "https://assets.hermes.com/is/image/hermesproduct/262067G%2002_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8323: "https://assets.hermes.com/is/image/hermesproduct/262033N%20GD_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8324: "https://assets.hermes.com/is/image/hermesproduct/262031N%2002_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8325: "https://assets.hermes.com/is/image/hermesproduct/1199318%2001_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8326: "https://assets.hermes.com/is/image/hermesproduct/1070748%2092_front_1?wid=750&hei=1000&fit=fit&$product_default_bg$",
 
 };
 

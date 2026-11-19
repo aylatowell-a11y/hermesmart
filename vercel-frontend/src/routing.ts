@@ -144,6 +144,11 @@ const CATEGORY_PATHS: Record<string, string> = {
   // same URL. The old generic URLs (/men/scarves-shawls-and-stoles/
   // etc.) still resolve to the same views via the generic matcher —
   // no duplicate page is created.
+  // Ties page short URL (Order B correction, 2026-11-19) — the original's
+  // own URL is /men/ties-stoles-and-scarves/ties/; it fell back to the Men
+  // parent because no routing entry mapped it. The long menu URL below is
+  // unchanged (first-writer-wins keeps it for the menu route).
+  "men|ties": "men/ties-stoles-and-scarves/ties",
   "men|ties, bow ties and pocket squares": "men/ties-stoles-and-scarves/ties-bow-ties-and-pocket-squares",
   "men|scarves": "men/ties-stoles-and-scarves/stoles-and-scarves",
   "men|scarves, shawls and stoles": "men/ties-stoles-and-scarves/stoles-and-scarves",
