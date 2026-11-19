@@ -3241,7 +3241,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // yet — their image URLs do not expose in the browser (lazy-load
   // placeholder). The invented AI-photo wide tile + the invented "Ready
   // to carry" text tile are gone.
-  type EdInsert = { after: number; title: string; body: string };
+  type EdInsert = { after: number; title: string; body: string; img?: string; imgMo?: string; col?: number };
   const edInserts: EdInsert[] = (() => {
     if (isBeltsPage) return [{ after: 4, title: "Within reach", body: "The silhouette sharpens, the gait lightens, hands are left free to roam." }];
     if (isSlgParent) return [
@@ -3414,9 +3414,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // ("Building blocks" after tile #8, "Fauna of fun" after tile #28),
     // verbatim from the live category page text fetch + SSR HTML,
     // 2026-11-17. No descriptive paragraph on the original's page.
+    // Photos are the original's own hermesedito images from the same
+    // SSR (home-children.html): desktop 16-9 / mobile 3-4 crops, all
+    // HEAD-verified 200 on 2026-11-19. The original ROTATES insert
+    // photos between loads (a bedroom photo was seen in the user's
+    // screenshots, horse-plush / child-on-carpet in the 2026-11-19
+    // live loads) — these SSR photos are the real originals for
+    // these inserts. Building blocks sits in the RIGHT-hand columns
+    // on desktop (col 3); Fauna of fun in the LEFT-hand columns.
     if (isChildPage) return [
-      { after: 8, title: "Building blocks", body: "Round, square, rectangle. Learning begins in orange boxes." },
-      { after: 28, title: "Fauna of fun", body: "This colorful little herd has swapped jungle and forest for the comfort of an indoor enclosure." },
+      { after: 8, title: "Building blocks", body: "Round, square, rectangle. Learning begins in orange boxes.", img: "https://assets.hermes.com/is/image/hermesedito/EDITO_PE26_STILL-LIFE_T2_16-9_063_2178-1", imgMo: "https://assets.hermes.com/is/image/hermesedito/EDITO_PE26_STILL-LIFE_T2_3-4_063_2178-1", col: 3 },
+      { after: 28, title: "Fauna of fun", body: "This colorful little herd has swapped jungle and forest for the comfort of an indoor enclosure.", img: "https://assets.hermes.com/is/image/hermesedito/PIQUE%20NIQUE_EDITO_DESKTOP%20%2810%29", imgMo: "https://assets.hermes.com/is/image/hermesedito/ANIMAUX%20BLOCKS_EDITO_2" },
     ];
     // Chaînes d'ancre page — the original's editorial block ("A chain
     // of sparkle" after tile #9), verbatim from the live category page
@@ -3427,7 +3435,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     ];
     return [];
   })();
-  type GridItem = { kind: "product"; p: Product; tileKey?: string } | { kind: "video"; p: Product; tileKey?: string } | { kind: "text"; title: string; body: string } | { kind: "iconic" };
+  type GridItem = { kind: "product"; p: Product; tileKey?: string } | { kind: "video"; p: Product; tileKey?: string } | { kind: "text"; title: string; body: string; imgDesktop?: string; imgMo?: string; col?: number } | { kind: "iconic" };
   const gridItems: GridItem[] = [];
   // The Fall-Winter collection page carries NO editorial tiles on the
   // original (verified in its first 120 products). Every other page
@@ -3442,7 +3450,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     const tileKey = homeTilesActive || beltTilesActive ? `${homeTilesActive ? "home" : "belt"}-tile-${i + 1}` : undefined;
     if (isFallWinterPage && FW_VIDEO_TILE_IDS.has(p.id)) gridItems.push({ kind: "video", p, tileKey });
     else gridItems.push({ kind: "product", p, tileKey });
-    if (showEdInserts) for (const ins of edInserts) if (ins.after === i + 1) gridItems.push({ kind: "text", title: ins.title, body: ins.body });
+    if (showEdInserts) for (const ins of edInserts) if (ins.after === i + 1) gridItems.push({ kind: "text", title: ins.title, body: ins.body, imgDesktop: ins.img, imgMo: ins.imgMo, col: ins.col });
     // Women's Bags iconic block (Group 11, 2026-11-18): the original's
     // Birkin / Constance / Kelly "Discover" block sits BETWEEN #8 and
     // #9 — a feature tile for the Bel-Il bag (#9) + three Discover
@@ -3833,6 +3841,27 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     return defs.map((d) => ({ label: d.label, imgMo: d.imgMo, imgDesktop: d.imgDesktop, view: d.view }));
   })();
 
+  // Children and baby theme carousel slides — the original's 5
+  // cross-universe cards in order: Blankets and pillows, Small leather
+  // goods, Scarves, shawls and stoles, Timepieces, Jewelry, verified
+  // from the Children page's SSR category blob (home-children.html,
+  // 2026-11-17) + the live reads (2026-11-19). The original's links are
+  // filtered views; the clone maps each to the closest working page
+  // (Textiles [153], SLG [354], Scarves [448], Timepieces [230], the
+  // jewelry landing [323]). All 10 hermesedito images HEAD-verified 200.
+  const childThemes: ThemeSlide[] = (() => {
+    if (!isChildPage) return [];
+    const base = "https://assets.hermes.com/is/image/hermesedito/";
+    const defs: { label: string; imgMo: string; imgDesktop: string; view: View }[] = [
+      { label: "Blankets and pillows", imgMo: `${base}HOME-KIDS-104936M%2003_011-3x4_P1`, imgDesktop: `${base}HOME-KIDS-104936M%2003_worn_2_P1`, view: { t: "category", cat: "home", sub: "Blankets and pillows" } },
+      { label: "Small leather goods", imgMo: `${base}HOME-KIDS-EDITO_PE26_STILL-LIFE_T1_3-4_043_1637-P2`, imgDesktop: `${base}HOME-KIDS-EDITO_PE26_STILL-LIFE_T1_16-9_043_1637-P2`, view: { t: "category", cat: "leather", sub: "Small leather goods" } },
+      { label: "Scarves, shawls and stoles", imgMo: `${base}HOME-KIDS004368S%2010_worn_4%20-P3`, imgDesktop: `${base}HOME-KIDS004368S%2010_worn_4%20%281%29%20-P3`, view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" } },
+      { label: "Timepieces", imgMo: `${base}HOME-KIDS-horlo-femme-3_4-P4`, imgDesktop: `${base}HOME-KIDS-horlo-femme-16_9%20-P4`, view: { t: "category", cat: "watches", sub: "Timepieces" } },
+      { label: "Jewelry", imgMo: `${base}HOME-KIDS-bij-argent-3_4%20-P5`, imgDesktop: `${base}HOME-KIDS-bij-argent-16_9%20P5`, view: { t: "category", cat: "jewelry" } },
+    ];
+    return defs.map((d) => ({ label: d.label, imgMo: d.imgMo, imgDesktop: d.imgDesktop, view: d.view }));
+  })();
+
   const bagsThemes: ThemeSlide[] = (() => {
     if (!isBagsViewPage && !isWomensBagsPage) return [];
     const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
@@ -4036,7 +4065,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       ) : gridList.length === 0 && <p className="py-16 text-center text-sm text-neutral-600">{sub ? `No articles in “${sub}” in this store yet.` : "No articles match these filters. Clear a filter to see more."}</p>}
 
       {!mosaic ? (
-        <div className="carousel-full-bleed mt-8 grid grid-cols-2 gap-[2px] lg:grid-cols-4">
+        <div className={`carousel-full-bleed mt-8 grid grid-cols-2 gap-[2px] lg:grid-cols-4${isChildPage ? " grid-flow-dense" : ""}`}>
           {gridItems.map((it, gi) => it.kind === "product" ? (
             <ProductCard key={it.tileKey ?? it.p.id} p={it.p} colourInName tileColour={tileColourFor(tileColourPage, it.p.id)} onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
           ) : it.kind === "video" ? (
@@ -4077,6 +4106,25 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
                   ))}
                 </>);
               })()}
+            </div>
+          ) : it.imgDesktop ? (
+            // Editorial tile WITH a photo (Children page only, 2026-11-19):
+            // the original's tile is 2 columns wide and spans 2 product
+            // rows on desktop (photo on top, heading + caption on cream
+            // below), full-width on mobile. Dense flow (Children page
+            // only) backfills the products beside it, exactly as on the
+            // original: Building blocks right-hand (col 3), Fauna of
+            // fun left-hand. Inserts without a photo keep the old
+            // square text tile below — every other page is untouched.
+            <div key={`ed-text-${gi}`} className={`col-span-2 flex flex-col bg-[#efe9df]${it.col === 3 ? " lg:col-start-3" : ""} lg:row-span-2`}>
+              <picture>
+                <source media="(min-width: 1024px)" srcSet={it.imgDesktop} />
+                <img src={it.imgMo} alt="" loading="lazy" className="w-full object-cover" />
+              </picture>
+              <div className="flex flex-1 flex-col justify-center p-6">
+                <p className="font-serif-d text-xl italic">{it.title}</p>
+                <p className="mt-3 text-sm leading-6 text-neutral-700">{it.body}</p>
+              </div>
             </div>
           ) : (
             <div key={`ed-text-${gi}`} className="flex aspect-square flex-col justify-center bg-[#efe9df] p-6">
@@ -4221,13 +4269,26 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             <span className="tracking-normal text-black">PETIT H</span>
           </>
         )}
+        {/* Children and baby (2026-11-19): the original's bottom
+            breadcrumb is 2 levels (HOME AND ART OF LIVING | CHILDREN AND
+            BABY) — live reads 2026-11-19 + SSR JSON-LD trail. This
+            CORRECTS the Group 1 comment below, which read the 2026-11-17
+            SSR as 1 level; the rendered bottom breadcrumb in that same
+            SSR is 2 levels (link + span). The TOP breadcrumb stays 1
+            level ("Home and Art of living" only, SSR h-breadcrumb #0). */}
+        {sub && isChildPage && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">CHILDREN AND BABY</span>
+          </>
+        )}
         {/* Group 1 (2026-11-17): the original's rendered bottom
             breadcrumb ends at the SECTION for these pages (SSR HTML
             rendered breadcrumb + JSON-LD trail): Home subs → HOME AND
-            ART OF LIVING | HOME, Children → HOME AND ART OF LIVING
-            only (like Tech universe), Ballet → WOMEN | SHOES, Twilly →
+            ART OF LIVING | HOME, Ballet → WOMEN | SHOES, Twilly →
             WOMEN | SCARVES, SHAWLS AND STOLES, Wonders / Precious →
-            JEWELRY | COLLECTIONS. */}
+            JEWELRY | COLLECTIONS. (Children was listed here as 1 level;
+            corrected 2026-11-19 to 2 levels — see the branch above.) */}
         {sub && (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) && (
           <>
             {" | "}
@@ -4310,6 +4371,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <FallWinterThemeCarousel go={go} themes={balletThemes} />
         ) : isTwillyPage ? (
           <FallWinterThemeCarousel go={go} themes={twillyThemes} />
+        ) : isChildPage ? (
+          <FallWinterThemeCarousel go={go} themes={childThemes} />
         ) : cat === "jewelry" && !sub ? (
           <FallWinterThemeCarousel go={go} themes={fineJewelryThemes} />
         ) : isBagsViewPage || isWomensBagsPage ? (
