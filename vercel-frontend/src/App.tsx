@@ -477,8 +477,8 @@ function isSneakerProduct(p: Product): boolean { return /sneaker/i.test(p.name);
 // carousels are untouched. Recompute with colour_overrides.py after
 // any row-colour change (the id591 fix removed its 2 entries).
 const TILE_COLOUR_OVERRIDES: Record<string, Record<number, string>> = {
-  timepieces: { 533: "Black", 534: "Black", 535: "Beige/Natural", 536: "Brown", 538: "Brown", 539: "Brown", 540: "Grey", 541: "Purple", 542: "Black", 544: "Black", 545: "Beige/Natural", 546: "Black", 547: "Beige/Natural", 548: "Black", 551: "Grey", 552: "Pink", 554: "Purple", 557: "White", 559: "Blue", 560: "Black", 561: "Pink", 562: "Pink", 563: "Grey", 564: "Black", 565: "Green", 566: "Black", 567: "Grey", 569: "Brown", 572: "Grey", 575: "Grey", 576: "Pink", 577: "Pink", 578: "Brown", 579: "Black", 581: "Black", 583: "Black", 584: "Grey", 585: "Grey", 586: "Pink", 589: "Pink", 590: "Beige/Natural", 593: "Beige/Natural", 594: "Beige/Natural", 595: "Brown", 596: "Beige/Natural", 597: "Grey", 599: "Brown", 600: "Beige/Natural", 601: "Brown", 602: "Beige/Natural", 603: "Beige/Natural", 6346: "White", 6347: "Blue" },
-  watchWomen: { 261: "Yellow", 533: "Black", 534: "Black", 535: "Beige/Natural", 536: "Brown", 538: "Brown", 539: "Brown", 540: "Grey", 541: "Purple", 542: "Black", 544: "Black", 545: "Beige/Natural", 546: "Black", 547: "Beige/Natural", 548: "Black", 551: "Grey", 552: "Pink", 554: "Purple", 557: "White", 559: "Blue", 560: "Black", 561: "Pink", 562: "Pink", 563: "Grey", 564: "Black", 565: "Green", 566: "Black", 567: "Grey", 572: "Grey", 576: "Pink", 577: "Pink", 583: "Black", 584: "Grey", 585: "Grey", 586: "Pink", 589: "Pink", 590: "Beige/Natural", 594: "Beige/Natural", 596: "Beige/Natural", 597: "Grey", 599: "Brown", 600: "Beige/Natural", 601: "Brown", 602: "Beige/Natural", 603: "Beige/Natural", 6346: "White", 8103: "", 8104: "" },
+  timepieces: { 533: "Black", 536: "Brown", 538: "Brown", 539: "Brown", 540: "Grey", 541: "Purple", 542: "Black", 544: "Black", 545: "Beige/Natural", 546: "Black", 547: "Beige/Natural", 548: "Black", 551: "Grey", 552: "Pink", 554: "Purple", 557: "White", 559: "Blue", 560: "Black", 561: "Pink", 562: "Pink", 563: "Grey", 565: "Green", 566: "Black", 567: "Black", 569: "Brown", 572: "Grey", 575: "Grey", 576: "Pink", 577: "Pink", 578: "Brown", 579: "Black", 581: "Black", 583: "Black", 584: "Pink", 585: "Grey", 586: "Pink", 589: "Pink", 590: "Beige/Natural", 593: "Beige/Natural", 594: "Beige/Natural", 595: "Brown", 596: "Beige/Natural", 597: "Grey", 599: "Brown", 600: "Beige/Natural", 601: "Brown", 602: "Beige/Natural", 603: "Beige/Natural", 6346: "White" },
+  watchWomen: { 261: "Yellow", 533: "Black", 536: "Brown", 538: "Brown", 539: "Brown", 540: "Grey", 541: "Purple", 542: "Black", 544: "Black", 545: "Beige/Natural", 546: "Black", 547: "Beige/Natural", 548: "Black", 551: "Grey", 552: "Pink", 554: "Purple", 557: "White", 559: "Blue", 560: "Black", 561: "Pink", 562: "Pink", 563: "Grey", 565: "Green", 566: "Black", 567: "Black", 572: "Grey", 576: "Pink", 577: "Pink", 583: "Black", 584: "Pink", 585: "Grey", 586: "Pink", 589: "Pink", 590: "Beige/Natural", 594: "Beige/Natural", 596: "Beige/Natural", 597: "Grey", 599: "Brown", 600: "Beige/Natural", 601: "Brown", 602: "Beige/Natural", 603: "Beige/Natural", 6346: "White", 8103: "", 8104: "" },
   watchMen: { 544: "Black", 545: "Beige/Natural", 547: "Beige/Natural", 548: "Black", 569: "Brown", 575: "Grey", 578: "Brown", 579: "Black", 581: "Black", 593: "Beige/Natural", 595: "Brown" },
   // Sweep 2026-11-19: row id33 (Bride-a-Brac Sellier case, H104951Mv01) is
   // the Seigle colourway; the live tile shows the family colour
@@ -2121,11 +2121,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "pumps": (p) => /pump/i.test(p.name),
       "loafers and mules": (p) => /loafer/i.test(p.name),
       "derbies and oxford shoes": (p) => /derby|oxford/i.test(p.name),
-      "rings": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Rings" || (/\bring\b/i.test(p.name) && !/earring/i.test(p.name))),
+      "rings": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Rings" || (/\bring\b/i.test(p.name) && !/earring/i.test(p.name))) && (p.category === "fashion-jewelry" ? p.fashPos !== undefined : true),
       "wedding rings": (p) => p.category === cat && /wedding/i.test(p.name) && /\bring\b|\bband\b/i.test(p.name),
-      "bracelets": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Bracelets" || (/bracelet|bangle/i.test(p.name) && p.subcategory !== "Rings")),
-      "necklaces and pendants": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Necklaces" || p.subcategory === "Pendants" || (/necklace|pendant/i.test(p.name) && p.subcategory !== "Earrings")),
-      "earrings": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Earrings" || /earring|ear cuff/i.test(p.name)),
+      "bracelets": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Bracelets" || (/bracelet|bangle/i.test(p.name) && p.subcategory !== "Rings")) && (p.category === "fashion-jewelry" ? p.fashPos !== undefined : true),
+      "necklaces and pendants": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Necklaces" || p.subcategory === "Pendants" || (/necklace|pendant/i.test(p.name) && p.subcategory !== "Earrings")) && (p.category === "fashion-jewelry" ? p.fashPos !== undefined : true),
+      "earrings": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Earrings" || /earring|ear cuff/i.test(p.name)) && (p.category === "fashion-jewelry" ? p.fashPos !== undefined : true),
       "lips": (p) => p.category === cat && p.lipsPos !== undefined,
       "face": (p) => p.category === cat && p.facePos !== undefined,
       "eyes": (p) => p.category === cat && p.eyesPos !== undefined,
@@ -2202,7 +2202,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // order lives in wRtwPos (women, 488 tiles) / mRtwPos (men, 207
       // tiles). The old line/subcategory gate returned only the 84
       // "Dresses and skirts" rows for both parent pages.
-      "ready-to-wear": (p) => p.category === cat && ((cat === "women" && p.wRtwPos !== undefined) || (cat === "men" && p.mRtwPos !== undefined)),
+      "ready-to-wear": (p) => (cat === "women" && p.wRtwPos !== undefined) || (cat === "men" && p.mRtwPos !== undefined),
       // Fall-Winter 2026 is a gendered collection: the women's page (cat
       // "women") shows the women's 330 and the men's page (cat "men") shows
       // the men's 143. Both sets carry the same line value — the product's
@@ -2246,7 +2246,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // list stay in the catalogue but never appear on the parent grid
       // (same rule as Scarves/Belts). No tile map: the live list has no
       // repeated tiles, so the dressPos sort alone renders all 78.
-      "dresses and skirts": (p) => p.category === cat && p.subcategory === "Dresses and skirts" && (cat === "women" ? p.dressPos !== undefined : true),
+      "dresses and skirts": (p) => p.category === cat && (cat === "women" ? p.dressPos !== undefined : p.subcategory === "Dresses and skirts"),
       // Women's Hair accessories page — the original's live order (26
       // tiles, extracted 2026-11-16) lives in hairPos; the page lists
       // exactly those rows. The WOMEN menu "HAIR ACCESSORIES" heading
@@ -2265,7 +2265,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // appear on the grid (same rule as Scarves/Belts/Dresses).
       // The 603 Tableware rows that also carry homePos still appear
       // on the Home parent page — tabPos does not touch homePos.
-      "tableware": (p) => p.subcategory === "Tableware" && p.tabPos !== undefined,
+      "tableware": (p) => p.tabPos !== undefined,
       // Women's Shoes page — gated on shoePos since the Group 12 retag
       // (2026-11-18): the original's live order (732 tiles) lives in
       // shoePos; the page lists exactly those rows. The 14 clone rows not
@@ -2278,7 +2278,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "loafers": (p) => /loafer/i.test(p.name),
       "boots": (p) => /boot/i.test(p.name),
       "mules": (p) => /mule|loafer/i.test(p.name),
-      "necklaces": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Necklaces" || /necklace/i.test(p.name)),
+      "necklaces": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Necklaces" || /necklace/i.test(p.name)) && (p.category === "fashion-jewelry" ? p.fashPos !== undefined : true),
       "twillys": (p) => p.subcategory === "Scarves, shawls and stoles",
       "scarves 90 cm": (p) => p.subcategory === "Scarves, shawls and stoles",
       "cashmere": (p) => p.subcategory === "Scarves, shawls and stoles",
@@ -2288,10 +2288,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // ("To Go wallets" / "Wallets" / "Card holders" / "Pouches and
       // cases" / "Customizable") while their subcategory stays "Small
       // leather goods", so the parent page still lists every row.
-      "to go wallets": (p) => p.fineSub === "To Go wallets",
-      "wallets": (p) => p.fineSub === "Wallets",
-      "card holders": (p) => p.fineSub === "Card holders",
-      "pouches and cases": (p) => p.fineSub === "Pouches and cases",
+      "to go wallets": (p) => p.fineSub === "To Go wallets" && p.slgPos !== undefined,
+      "wallets": (p) => p.fineSub === "Wallets" && p.slgPos !== undefined,
+      "card holders": (p) => p.fineSub === "Card holders" && p.slgPos !== undefined,
+      "pouches and cases": (p) => p.fineSub === "Pouches and cases" && p.slgPos !== undefined,
       "customizable": (p) => /customizable/i.test(p.name),
       // Small leather goods PARENT page — the original's live order
       // (354 tiles, extracted 2026-11-15) lives in slgParentPos; the
@@ -2388,6 +2388,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // lists keep their original relative order.
   const isJewelryPage = cat === "jewelry";
   const isFashionJewelryPage = cat === "fashion-jewelry";
+  const isFashionJewelryParentPage = cat === "fashion-jewelry" && !sub;
   // Home parent page (cat "home", no sub) — sorts by homePos (2026-11-15),
   // dual-lists the 8 fragrances/Make-up cases + mirror, and carries the
   // collapsed editorial block + cross-universe theme carousel.
@@ -2640,7 +2641,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // the clone's jewelry parent page (cat "jewelry", no sub) shows
   // that listing, so its H1 is "Gold Jewelry", not "Jewelry".
   const titleText = (cat === "jewelry" && !sub) ? "Gold Jewelry" : COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isGiftWomenPage ? "GIFTS | GIFTS FOR WOMEN" : isGiftMenPage ? "GIFTS | GIFTS FOR MEN" : isGiftChildPage ? "GIFTS | GIFTS FOR CHILDREN AND BABIES" : isGiftDogsPage ? "GIFTS | GIFTS FOR DOGS" : isWatchesPage ? "" : isFragrancesPage ? "" : isEquestrianPage ? "" : isWatchWomenPage ? "WATCHES | TIMEPIECES | WOMEN" : isWatchMenPage ? "WATCHES | TIMEPIECES | MEN" : isGiftsPage ? "" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : (isCharmsPage || isLeatherAccPage || isStrapsPage) ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isSuitcasesPage || isLuggagePage) ? "LEATHER GOODS | LUGGAGE" : isTechPage ? label : isHomeArtPage ? "" : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isBeachPage || isWomensAccPage) ? label : isBalletPage ? `${label} | SHOES` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : (isTiesPage || isMensScarvesPage) ? "MEN | TIES AND SCARVES" : isMenTiesParentPage ? label : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const crumbTop = isGiftWomenPage ? "GIFTS | GIFTS FOR WOMEN" : isGiftMenPage ? "GIFTS | GIFTS FOR MEN" : isGiftChildPage ? "GIFTS | GIFTS FOR CHILDREN AND BABIES" : isGiftDogsPage ? "GIFTS | GIFTS FOR DOGS" : isWatchesPage ? "" : isFragrancesPage ? "" : isFragViewPage ? label : isEquestrianPage ? "" : isWatchWomenPage ? "WATCHES | TIMEPIECES | WOMEN" : isWatchMenPage ? "WATCHES | TIMEPIECES | MEN" : isGiftsPage ? "" : isFashionJewelryParentPage ? "Women" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : (isCharmsPage || isLeatherAccPage || isStrapsPage) ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isLuggagePage) ? "LEATHER GOODS | LUGGAGE" : isSuitcasesPage ? "LEATHER GOODS | LUGGAGE | SUITCASES AND TRAVEL BAGS" : isTechPage ? label : isHomeArtPage ? "" : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isWomensAccPage) ? label : isBeachPage ? `${label} | BEACH` : isBalletPage ? `${label} | SHOES | BALLET FLATS` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : (isTiesPage || isMensScarvesPage) ? "MEN | TIES AND SCARVES" : isMenTiesParentPage ? label : (cat === "jewelry" && !sub) ? "JEWELRY | Gold Jewelry" : sub ? `${label} | ${sub.toUpperCase()}` : label;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2999,7 +3000,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     else if (isCollectionsPage && list.some((p) => p.collectionsPos !== undefined)) list = [...list].sort((a, b) => (a.collectionsPos ?? Infinity) - (b.collectionsPos ?? Infinity));
     else if (isChainedAncrePage && list.some((p) => p.chainedancrePos !== undefined)) list = [...list].sort((a, b) => (a.chainedancrePos ?? Infinity) - (b.chainedancrePos ?? Infinity));
     else if (isJewelryPage && list.some((p) => p.jewPos !== undefined)) list = [...list].sort((a, b) => (a.jewPos ?? Infinity) - (b.jewPos ?? Infinity));
-    else if (isFashionJewelryPage && list.some((p) => p.fashPos !== undefined)) list = [...list].sort((a, b) => (a.fashPos ?? Infinity) - (b.fashPos ?? Infinity));
+    else if ((isFashionJewelryPage || (cat === "women" && ["rings", "bracelets", "earrings", "necklaces", "necklaces and pendants"].includes(subLow))) && list.some((p) => p.fashPos !== undefined)) list = [...list].sort((a, b) => (a.fashPos ?? Infinity) - (b.fashPos ?? Infinity));
     else if (isHomePage && list.some((p) => p.homePos !== undefined)) list = [...list].sort((a, b) => (a.homePos ?? Infinity) - (b.homePos ?? Infinity));
     else if (isWomensShoesPage && list.some((p) => p.shoePos !== undefined)) list = [...list].sort((a, b) => (a.shoePos ?? Infinity) - (b.shoePos ?? Infinity));
     // Men's Shoes (2026-11-15) sorts by menShoePos — the original's
@@ -3326,7 +3327,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // fetch, 2026-11-17.
     if (isTimepiecesPage) return [
       { after: 8, title: "Discover what's possible", body: "A motif ready to set sail and the now-iconic strap… The Cape Cod watch, unique to the very last detail, invites time to be explored in every shape, from square to rectangle." },
-      { after: 32, title: "Ahead of time", body: "Hermès' first ever expression of time, the Arceau watch transforms every second into something new. Moments become suspended in time, free to be traversed, explored, and savored for as long as desired." },
+      { after: 28, title: "Ahead of time", body: "Hermès' first ever expression of time, the Arceau watch transforms every second into something new. Moments become suspended in time, free to be traversed, explored, and savored for as long as desired." },
     ];
     // Petit h page — the original's two editorial blocks
     // ("Applied creativity" after tile #9, "Deconstructing the norm"
@@ -3405,8 +3406,20 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     if (cat === "leather") {
       if (subLow === "to go wallets") return [{ after: 8, title: "Minimalist-chic", body: "Compact and structured, To Go wallets assert their style and transform momentum into boldness." }];
       if (subLow === "wallets") return [
-        { after: 9, title: "Golden hour", body: "The small leather goods escape the bag for a proper sunbath. They look good with a tan." },
-        { after: 31, title: "The mark of time", body: "Leather built to last as long as good taste endures." },
+        { after: 8, title: "Golden hour", body: "The small leather goods escape the bag for a proper sunbath. They look good with a tan." },
+        { after: 28, title: "Charm party", body: "Interrupting the calm of the lines, this charm gallops across the leather." },
+      ];
+      // Sweep 2026-11-19: the original's Card holders + Pouches views
+      // carry the SLG parent's two inserts at the filter-view positions
+      // (Golden hour after #8, Charm party after #28) — the clone's
+      // dedicated sub-pages rendered none. Same bodies as the parent.
+      if (subLow === "card holders") return [
+        { after: 8, title: "Golden hour", body: "The small leather goods escape the bag for a proper sunbath. They look good with a tan." },
+        { after: 28, title: "Charm party", body: "Interrupting the calm of the lines, this charm gallops across the leather." },
+      ];
+      if (subLow === "pouches and cases") return [
+        { after: 8, title: "Golden hour", body: "The small leather goods escape the bag for a proper sunbath. They look good with a tan." },
+        { after: 28, title: "Charm party", body: "Interrupting the calm of the lines, this charm gallops across the leather." },
       ];
     }
     if (cat === "men") {
@@ -3456,6 +3469,53 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     if (isChainedAncrePage) return [
       { after: 9, title: "A chain of sparkle", body: "This jewel's points of sparkle are multiplied across fingers to lend elegance a hand." },
     ];
+    // Sweep Wave 2 (2026-11-19) — editorial blocks for the drifted pages,
+    // verbatim from the 2026-11-19 live category page reads. Beach: each
+    // block also carries the magazine line ("To read all about the
+    // yachting collection, see the magazine. SEE THE ARTICLE") — the
+    // magazine sentence is appended to the body; the SEE THE ARTICLE
+    // link itself is not wired (no URL captured). Furniture, Home
+    // Objects and Suitcases bodies are TRUNCATED in the live capture
+    // (mid-word / mid-sentence) — used verbatim, endings NOT guessed.
+    // Travel accessories' "DISCOVER THE COLLECTION" link target was not
+    // captured — title + body only, same treatment as the other
+    // discover-link blocks.
+    if (isBeachPage) return [
+      { after: 8, title: "The sea at your heels", body: "The iconic beach towel, a summer essential. To read all about the yachting collection, see the magazine." },
+      { after: 28, title: "Orange in the air", body: "The Neobain, created in 2019, has become a beach essential. To read all about the yachting collection, see the magazine." },
+    ];
+    if (isCasesPage) return [
+      { after: 8, title: "Beauty case style", body: "Small format, huge presence. Bride-a-Brac has more than one trick up its sleeve." },
+      { after: 28, title: "Seeing Double H", body: "The reversible Vice-Versa towels play with your sense of orientation." },
+    ];
+    if (isCharmsPage) return [
+      { after: 9, title: "Charm party", body: "Interrupting the calm of the lines, this charm gallops across the leather." },
+    ];
+    if (isEyesPage) return [
+      { after: 9, title: "Exquisite illusions", body: "Hermès Beauty has plenty of tricks up its sleeve for the holiday season." },
+    ];
+    if (isFurnPage) return [
+      { after: 8, title: "Elegance that holds up", body: "Take a seat on heritage. With its clean lines, slub fabric, and leather details, the Contour sofa do" },
+      { after: 28, title: "A grasp on allure", body: "Leather shows its hand and banks on iconic details while playing the H card. The elegance of emblema" },
+    ];
+    if (isObjectsPage) return [
+      { after: 8, title: "Beauty, boxed", body: "Between a manège and marquetry, leather clears every obstacle with panache. Geometry and craftsmansh…" },
+      { after: 28, title: "Interior horizons", body: "Leather and gold are aligned on the same latitude of craftsmanship. As the world turns, beauty lies" },
+    ];
+    if (isOfficePage) return [
+      { after: 8, title: "Page by page", body: "As the plot breaks into a gallop, Alezan keeps watch, no wild kicks nor fanciful leaps. A measured pace for stories finely reined in." },
+      { after: 28, title: "H Square", body: "A piece of leather, a few stitches: elegance turns into a game at the four corners of a Mises et Relances holdall." },
+    ];
+    if (isSuitcasesPage) return [
+      { after: 8, title: "Traveling H", body: "Whether taken on a quiet getaway or a distant adventure, these bags and suitcases chart a course of" },
+    ];
+    if (isTextilesPage) return [
+      { after: 8, title: "Evergreen elegance", body: "Dyed and woven in Nepal, cashmere is the exception that pampers the rule. The H appears as a ray of sunshine to be saved for a rainy day." },
+      { after: 28, title: "Throw caution to the wind", body: "Beneath its woven texture and demure appearance, bearing the banner of comfort, the British-inspired Avalon throw blanket hides a horse-racing story." },
+    ];
+    if (isTravAccPage) return [
+      { after: 9, title: "A LEATHER ODYSSEY", body: "With an intrepid heart and a wandering spirit, Hermès luggage has always been synonymous with travel" },
+    ];
     return [];
   })();
   type GridItem = { kind: "product"; p: Product; tileKey?: string } | { kind: "video"; p: Product; tileKey?: string } | { kind: "text"; title: string; body: string; imgDesktop?: string; imgMo?: string; col?: number } | { kind: "iconic" };
@@ -3483,20 +3543,19 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     if (showEdInserts && isWomensBagsPage && i + 1 === 8) gridItems.push({ kind: "iconic" });
   });
 
-  // SLG parent filter cards (2026-11-15) — the original's 5 subcategory
-  // cards under the title, each with its first product's photo, label
-  // and count. Counts are the ORIGINAL's live card counts, read on the
-  // original's SLG parent page 2026-11-15 (To Go 58, Wallets 174, Card
-  // holders 94, Pouches and cases 39, Customizable 2) — these are the
+  // SLG parent filter cards — the original's 5 subcategory cards under
+  // the title, each with its first product's photo, label and count.
+  // Counts are the ORIGINAL's live filter-view counts, re-read on the
+  // original's SLG parent page 2026-11-19 (To Go 59, Wallets 171, Card
+  // holders 91, Pouches and cases 41, Customizable 2) — these are the
   // filter-view counts, NOT the dedicated-page totals: the sub-pages
-  // they link to show the dedicated totals (57 / 173 / 94 / 31 / 2).
-  // Wallets' +1 is the dead Maillon tile (PDP 404 on the original);
-  // Pouches' +8 are filter-only tiles not on the dedicated page.
+  // they link to show the dedicated totals. (2026-11-15 read was To Go
+  // 58, Wallets 174, Card holders 94, Pouches and cases 39.)
   const SLG_CARDS: { label: string; count: number; view: View; first: Product | undefined }[] = [
-    { label: "To Go wallets", count: 58, view: { t: "category", cat: "leather", sub: "To Go wallets" }, first: base.find((p) => p.fineSub === "To Go wallets" && p.slgPos === 1) },
-    { label: "Wallets", count: 173, view: { t: "category", cat: "leather", sub: "Wallets" }, first: base.find((p) => p.fineSub === "Wallets" && p.slgPos === 1) },
-    { label: "Card holders", count: 94, view: { t: "category", cat: "leather", sub: "Card holders" }, first: base.find((p) => p.fineSub === "Card holders" && p.slgPos === 1) },
-    { label: "Pouches and cases", count: 38, view: { t: "category", cat: "leather", sub: "Pouches and cases" }, first: base.find((p) => p.fineSub === "Pouches and cases" && p.slgPos === 1) },
+    { label: "To Go wallets", count: 59, view: { t: "category", cat: "leather", sub: "To Go wallets" }, first: base.find((p) => p.fineSub === "To Go wallets" && p.slgPos === 1) },
+    { label: "Wallets", count: 171, view: { t: "category", cat: "leather", sub: "Wallets" }, first: base.find((p) => p.fineSub === "Wallets" && p.slgPos === 1) },
+    { label: "Card holders", count: 91, view: { t: "category", cat: "leather", sub: "Card holders" }, first: base.find((p) => p.fineSub === "Card holders" && p.slgPos === 1) },
+    { label: "Pouches and cases", count: 41, view: { t: "category", cat: "leather", sub: "Pouches and cases" }, first: base.find((p) => p.fineSub === "Pouches and cases" && p.slgPos === 1) },
     { label: "Customizable", count: 2, view: { t: "category", cat: "leather", sub: "Customizable" }, first: base.find((p) => /customizable/i.test(p.name)) },
   ];
   // SLG theme carousel slides (2026-11-15) — the original's 5 themes in
@@ -3918,6 +3977,480 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     }).filter((s) => s.imgMo);
   })();
 
+  // Fashion jewelry theme carousel slides — the original's 5 cross-universe cards in order: Shoes, Belts, Twilly and other small formats, Hats and gloves, Silk scarves and accessories (fashion-jewelry-live-full-2026-11-19.txt lines 6-7 + live text fetch 2026-11-19). No verified hermesedito editorial image URLs exist for these slides (the text fetch exposes only product photos), so each slide uses the first Hermes-CDN product photo of its theme — the documented slgThemes pattern (App.tsx:3512), a real original photo, not an invented image. Rep rows as of this data.ts (verified via the real productImageFor): Shoes id2611 Joy 70 sandal, Belts id13 Kelly Pocket 18 belt, Twilly id26 Turf, Les Courses Twilly, Hats and gloves id6621 Lisie beanie (id411 bucket hat is a local webp, skipped), Scarves id25 Colliers et Laisses pour Chiens scarf 90; all five URLs HEAD-verified 200.
+  const fashJewelryThemes: ThemeSlide[] = (() => {
+    if (!isFashionJewelryParentPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Shoes", view: { t: "category", cat: "women", sub: "Shoes" }, match: (p) => p.category === "women" && p.subcategory === "Shoes" },
+      { label: "Belts", view: { t: "category", cat: "women", sub: "Belts" }, match: (p) => p.subcategory === "Belts" },
+      { label: "Twilly and other small formats", view: { t: "category", cat: "women", sub: "Twilly and other small formats" }, match: (p) => p.twillyPos !== undefined },
+      { label: "Hats and gloves", view: { t: "category", cat: "women", sub: "Hats and gloves" }, match: (p) => p.wAccPos !== undefined },
+      { label: "Silk scarves and accessories", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+    ];
+    return defs.map((d) => {
+      const rep = products.find((p) => d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  // Sweep Wave 2 (2026-11-19) — theme carousel slides for the drifted
+  // pages, each the original's 5 cross-universe cards in order, verified
+  // from the 2026-11-19 live category page reads. Same product-photo
+  // stand-in pattern as slgThemes (no verified hermesedito editorial
+  // image URLs exist for these slides): each slide uses the first
+  // Hermes-CDN product photo of its theme — a real original photo, not
+  // an invented image. The Horizons Ateliers slide reuses the verified
+  // hermesedito universe images from homeThemes (same universe, same
+  // URLs, HEAD-verified) since no product represents that universe.
+  // Destinations are the closest clone page where the exact filtered
+  // view does not exist (noted per slide below).
+  const beachThemes: ThemeSlide[] = (() => {
+    if (!isBeachPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Sports and Outdoor", view: { t: "category", cat: "home", sub: "Sports and outdoor" }, match: (p) => p.sportsPos !== undefined },
+      { label: "Hats and Gloves", view: { t: "category", cat: "women", sub: "Hats and gloves" }, match: (p) => p.wAccPos !== undefined },
+      { label: "Gifts for Women", view: { t: "category", cat: "gifts", sub: "for women" }, match: (p) => p.giftWomenPos !== undefined },
+      { label: "Sandals", view: { t: "category", cat: "women", sub: "Sandals" }, match: (p) => /sandal/i.test(p.name) },
+      { label: "Make-up", view: { t: "category", cat: "fragrances", sub: "Make-up" }, match: (p) => p.mkPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const casesThemes: ThemeSlide[] = (() => {
+    if (!isCasesPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Ready-to-wear", view: { t: "category", cat: "women", sub: "Ready-to-wear" }, match: (p) => p.wRtwPos !== undefined },
+      { label: "Make-up", view: { t: "category", cat: "fragrances", sub: "Make-up" }, match: (p) => p.mkPos !== undefined },
+      { label: "Pouches and cases", view: { t: "category", cat: "leather", sub: "Pouches and cases" }, match: (p) => p.fineSub === "Pouches and cases" },
+      { label: "Cashmere shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" && /shawl|stole/i.test(p.name) },
+      { label: "Children and baby", view: { t: "category", cat: "home", sub: "Children and baby" }, match: (p) => p.childPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const chainedAncreThemes: ThemeSlide[] = (() => {
+    if (!isChainedAncrePage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Gold Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+      { label: "Timepieces", view: { t: "category", cat: "watches", sub: "Timepieces" }, match: (p) => p.timepiecePos !== undefined },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
+      // No standalone Silver Jewelry page exists in the clone; the slide
+      // links to the Jewelry parent (Gold Jewelry page) and its rep photo
+      // is a silver-named fine-jewelry row.
+      { label: "Silver Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" && /silver/i.test(p.name) },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const collectionsThemes: ThemeSlide[] = (() => {
+    if (!isCollectionsPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Gold Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+      { label: "Timepieces", view: { t: "category", cat: "watches", sub: "Timepieces" }, match: (p) => p.timepiecePos !== undefined },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
+      // No standalone Silver Jewelry page exists in the clone; the slide
+      // links to the Jewelry parent (Gold Jewelry page) and its rep photo
+      // is a silver-named fine-jewelry row.
+      { label: "Silver Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" && /silver/i.test(p.name) },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const charmsThemes: ThemeSlide[] = (() => {
+    if (!isCharmsPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Suitcases and travel bags", view: { t: "category", cat: "leather", sub: "Suitcases and travel bags" }, match: (p) => p.suitPos !== undefined },
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Women's bags and clutches", view: { t: "category", cat: "leather", sub: "Women's bags and clutches" }, match: (p) => p.wBagPos !== undefined },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Hats and gloves", view: { t: "category", cat: "women", sub: "Hats and gloves" }, match: (p) => p.wAccPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const dressesThemes: ThemeSlide[] = (() => {
+    if (!isDressesPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Make-up", view: { t: "category", cat: "fragrances", sub: "Make-up" }, match: (p) => p.mkPos !== undefined },
+      { label: "Pumps", view: { t: "category", cat: "women", sub: "Pumps" }, match: (p) => /pump/i.test(p.name) },
+      { label: "Fashion jewelry", view: { t: "category", cat: "fashion-jewelry" }, match: (p) => p.category === "fashion-jewelry" },
+      { label: "Belts", view: { t: "category", cat: "women", sub: "Belts" }, match: (p) => p.beltPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const equestrianThemes: ThemeSlide[] = (() => {
+    if (!isEquestrianPage) return [];
+    const base = "https://assets.hermes.com/is/image/hermesedito/";
+    const defs: { label: string; view: View; match: (p: Product) => boolean; imgMo?: string; imgDesktop?: string }[] = [
+      { label: "Women's bags and clutches", view: { t: "category", cat: "leather", sub: "Women's bags and clutches" }, match: (p) => p.wBagPos !== undefined },
+      { label: "Boots and ankle boots", view: { t: "category", cat: "women", sub: "Shoes" }, match: (p) => p.category === "women" && p.subcategory === "Shoes" && /boot/i.test(p.name) },
+      { label: "Sports and Outdoor", view: { t: "category", cat: "home", sub: "Sports and outdoor" }, match: (p) => p.sportsPos !== undefined },
+      // No standalone women's Coats page exists in the clone; the slide
+      // links to Women's ready-to-wear and its rep photo is a coat/parka.
+      { label: "Coats and parkas", view: { t: "category", cat: "women", sub: "Ready-to-wear" }, match: (p) => p.wRtwPos !== undefined && /coat|parka/i.test(p.name) },
+      { label: "Horizons Ateliers", view: { t: "about" }, match: () => false, imgMo: `${base}LV1HOME-HERMES_HORIZON_2_03_CMJN-P3`, imgDesktop: `${base}LV1HOME-HERMES_HORIZON_1_03_CMJN-P3` },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = d.imgMo ? undefined : products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = d.imgMo ?? (rep ? productImageFor(rep) : "");
+      return { label: d.label, imgMo: d.imgMo ?? img, imgDesktop: d.imgDesktop ?? img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const eyesThemes: ThemeSlide[] = (() => {
+    if (!isEyesPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Cases and bath linens", view: { t: "category", cat: "home", sub: "Cases and bath linens" }, match: (p) => p.casesPos !== undefined },
+      { label: "Fashion rings", view: { t: "category", cat: "fashion-jewelry", sub: "rings" }, match: (p) => p.category === "fashion-jewelry" && p.subcategory === "Rings" },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Gifts for women", view: { t: "category", cat: "gifts", sub: "for women" }, match: (p) => p.giftWomenPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const furnitureThemes: ThemeSlide[] = (() => {
+    if (!isFurnPage) return [];
+    const base = "https://assets.hermes.com/is/image/hermesedito/";
+    const defs: { label: string; view: View; match: (p: Product) => boolean; imgMo?: string; imgDesktop?: string }[] = [
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Rider", view: { t: "category", cat: "equestrian", sub: "Rider" }, match: (p) => p.riderPos !== undefined },
+      { label: "Horizons Ateliers", view: { t: "about" }, match: () => false, imgMo: `${base}LV1HOME-HERMES_HORIZON_2_03_CMJN-P3`, imgDesktop: `${base}LV1HOME-HERMES_HORIZON_1_03_CMJN-P3` },
+      { label: "Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+      { label: "Timepieces", view: { t: "category", cat: "watches", sub: "Timepieces" }, match: (p) => p.timepiecePos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = d.imgMo ? undefined : products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = d.imgMo ?? (rep ? productImageFor(rep) : "");
+      return { label: d.label, imgMo: d.imgMo ?? img, imgDesktop: d.imgDesktop ?? img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  // Gifts for children / Gifts for dogs theme carousels (sweep
+  // 2026-11-19) — the original's 5 cross-universe cards per page, in
+  // order, verified from the live reads. The shared giftsThemes def does
+  // NOT match either page (only its first label coincides), so each page
+  // has its own def; the render chain branches to these BEFORE giftsThemes.
+  const giftChildThemes: ThemeSlide[] = (() => {
+    if (!isGiftChildPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Fashion jewelry", view: { t: "category", cat: "fashion-jewelry" }, match: (p) => p.category === "fashion-jewelry" },
+      { label: "Children and baby", view: { t: "category", cat: "home", sub: "Children and baby" }, match: (p) => p.childPos !== undefined },
+      { label: "Cases and bath linens", view: { t: "category", cat: "home", sub: "Cases and bath linens" }, match: (p) => p.casesPos !== undefined },
+      { label: "Silk scarves and accessories", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Hair accessories", view: { t: "category", cat: "women", sub: "Hair accessories" }, match: (p) => p.hairPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const giftDogsThemes: ThemeSlide[] = (() => {
+    if (!isGiftDogsPage) return [];
+    const base = "https://assets.hermes.com/is/image/hermesedito/";
+    const defs: { label: string; view: View; match: (p: Product) => boolean; imgMo?: string; imgDesktop?: string }[] = [
+      { label: "Office and writing", view: { t: "category", cat: "home", sub: "Office and writing" }, match: (p) => p.officePos !== undefined },
+      { label: "Blankets and pillows", view: { t: "category", cat: "home", sub: "Blankets and pillows" }, match: (p) => p.textilesPos !== undefined },
+      { label: "Equestrian", view: { t: "category", cat: "equestrian" }, match: (p) => p.eqPos !== undefined },
+      { label: "Sports and Outdoor", view: { t: "category", cat: "home", sub: "Sports and outdoor" }, match: (p) => p.sportsPos !== undefined },
+      { label: "Horizons Ateliers", view: { t: "about" }, match: () => false, imgMo: `${base}LV1HOME-HERMES_HORIZON_2_03_CMJN-P3`, imgDesktop: `${base}LV1HOME-HERMES_HORIZON_1_03_CMJN-P3` },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = d.imgMo ? undefined : products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = d.imgMo ?? (rep ? productImageFor(rep) : "");
+      return { label: d.label, imgMo: d.imgMo ?? img, imgDesktop: d.imgDesktop ?? img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const horseThemes: ThemeSlide[] = (() => {
+    if (!isHorsePage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Blankets and pillows", view: { t: "category", cat: "home", sub: "Blankets and pillows" }, match: (p) => p.textilesPos !== undefined },
+      { label: "Sports and Outdoor", view: { t: "category", cat: "home", sub: "Sports and outdoor" }, match: (p) => p.sportsPos !== undefined },
+      { label: "Tableware", view: { t: "category", cat: "home", sub: "Tableware" }, match: (p) => p.tabPos !== undefined },
+      { label: "Women's bags and clutches", view: { t: "category", cat: "leather", sub: "Women's bags and clutches" }, match: (p) => p.wBagPos !== undefined },
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const luggageThemes: ThemeSlide[] = (() => {
+    if (!isLuggagePage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Watches", view: { t: "category", cat: "watches" }, match: (p) => p.timepiecePos !== undefined },
+      { label: "Ready-to-wear", view: { t: "category", cat: "women", sub: "Ready-to-wear" }, match: (p) => p.wRtwPos !== undefined },
+      { label: "Gold Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const menFwThemes: ThemeSlide[] = (() => {
+    if (!isMensFwPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Shirts", view: { t: "category", cat: "men", sub: "Shirts" }, match: (p) => p.fineSub === "Shirts" },
+      { label: "Belts", view: { t: "category", cat: "women", sub: "Belts" }, match: (p) => p.beltPos !== undefined },
+      { label: "Shoes", view: { t: "category", cat: "men", sub: "Shoes" }, match: (p) => p.menShoePos !== undefined },
+      { label: "Fashion jewelry", view: { t: "category", cat: "fashion-jewelry" }, match: (p) => p.category === "fashion-jewelry" },
+      // No standalone Apple Watch page exists in the clone; the slide
+      // links to the Watches parent and its rep photo is an Apple Watch
+      // Hermès case-and-band row.
+      { label: "Apple Watch Hermès", view: { t: "category", cat: "watches" }, match: (p) => /apple watch/i.test(p.name) },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const menRtwThemes: ThemeSlide[] = (() => {
+    if (!isMensRtwPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Shirts", view: { t: "category", cat: "men", sub: "Shirts" }, match: (p) => p.fineSub === "Shirts" },
+      { label: "Belts", view: { t: "category", cat: "women", sub: "Belts" }, match: (p) => p.beltPos !== undefined },
+      { label: "Shoes", view: { t: "category", cat: "men", sub: "Shoes" }, match: (p) => p.menShoePos !== undefined },
+      { label: "Fashion jewelry", view: { t: "category", cat: "fashion-jewelry" }, match: (p) => p.category === "fashion-jewelry" },
+      // No standalone Apple Watch page exists in the clone; the slide
+      // links to the Watches parent and its rep photo is an Apple Watch
+      // Hermès case-and-band row.
+      { label: "Apple Watch Hermès", view: { t: "category", cat: "watches" }, match: (p) => /apple watch/i.test(p.name) },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const menScarvesThemes: ThemeSlide[] = (() => {
+    if (!isMensScarvesPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Boots and ankle boots", view: { t: "category", cat: "men", sub: "Shoes" }, match: (p) => p.menShoePos !== undefined && /boot/i.test(p.name) },
+      { label: "Fashion jewelry", view: { t: "category", cat: "fashion-jewelry" }, match: (p) => p.category === "fashion-jewelry" },
+      { label: "Hats and gloves", view: { t: "category", cat: "women", sub: "Hats and gloves" }, match: (p) => p.wAccPos !== undefined },
+      { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
+      { label: "Belts", view: { t: "category", cat: "women", sub: "Belts" }, match: (p) => p.beltPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const officeThemes: ThemeSlide[] = (() => {
+    if (!isOfficePage) return [];
+    const base = "https://assets.hermes.com/is/image/hermesedito/";
+    const defs: { label: string; view: View; match: (p: Product) => boolean; imgMo?: string; imgDesktop?: string }[] = [
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Timepieces", view: { t: "category", cat: "watches", sub: "Timepieces" }, match: (p) => p.timepiecePos !== undefined },
+      { label: "Gifts for children and babies", view: { t: "category", cat: "gifts", sub: "for children" }, match: (p) => p.giftChildPos !== undefined },
+      { label: "Tech universe", view: { t: "category", cat: "home", sub: "Tech universe" }, match: (p) => p.techPos !== undefined },
+      { label: "Horizons Ateliers", view: { t: "about" }, match: () => false, imgMo: `${base}LV1HOME-HERMES_HORIZON_2_03_CMJN-P3`, imgDesktop: `${base}LV1HOME-HERMES_HORIZON_1_03_CMJN-P3` },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = d.imgMo ? undefined : products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = d.imgMo ?? (rep ? productImageFor(rep) : "");
+      return { label: d.label, imgMo: d.imgMo ?? img, imgDesktop: d.imgDesktop ?? img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const readingThemes: ThemeSlide[] = (() => {
+    if (!isReadingPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean; pick?: () => Product | undefined }[] = [
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Decorative objects and games", view: { t: "category", cat: "home" }, match: (p) => p.category === "home" && p.subcategory === "Decor", pick: () => products.find((p) => p.category === "home" && /poker|chess|backgammon|game|change tray/i.test(p.name) && productImageFor(p).startsWith("https://assets.hermes.com")) ?? products.find((p) => p.category === "home" && p.subcategory === "Decor" && productImageFor(p).startsWith("https://assets.hermes.com")) },
+      { label: "Office and writing", view: { t: "category", cat: "home", sub: "Office and writing" }, match: (p) => p.officePos !== undefined },
+      { label: "Univers Tech", view: { t: "category", cat: "home", sub: "Tech universe" }, match: (p) => p.techPos !== undefined },
+      { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = d.pick ? d.pick() : products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const suitcasesThemes: ThemeSlide[] = (() => {
+    if (!isSuitcasesPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Charms", view: { t: "category", cat: "leather", sub: "Charms" }, match: (p) => p.charmPos !== undefined },
+      { label: "Tech universe", view: { t: "category", cat: "home", sub: "Tech universe" }, match: (p) => p.techPos !== undefined },
+      // No standalone Men landing page exists in the clone; the slide
+      // links to Men's ready-to-wear, the closest men's page.
+      { label: "Men", view: { t: "category", cat: "men", sub: "Ready-to-wear" }, match: (p) => p.mRtwPos !== undefined },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const tablewareThemes: ThemeSlide[] = (() => {
+    if (!isTablewarePage) return [];
+    const base = "https://assets.hermes.com/is/image/hermesedito/";
+    const defs: { label: string; view: View; match: (p: Product) => boolean; imgMo?: string; imgDesktop?: string }[] = [
+      { label: "Rider", view: { t: "category", cat: "equestrian", sub: "Rider" }, match: (p) => p.riderPos !== undefined },
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Timepieces", view: { t: "category", cat: "watches", sub: "Timepieces" }, match: (p) => p.timepiecePos !== undefined },
+      { label: "Horizons Ateliers", view: { t: "about" }, match: () => false, imgMo: `${base}LV1HOME-HERMES_HORIZON_2_03_CMJN-P3`, imgDesktop: `${base}LV1HOME-HERMES_HORIZON_1_03_CMJN-P3` },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = d.imgMo ? undefined : products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = d.imgMo ?? (rep ? productImageFor(rep) : "");
+      return { label: d.label, imgMo: d.imgMo ?? img, imgDesktop: d.imgDesktop ?? img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const textilesThemes: ThemeSlide[] = (() => {
+    if (!isTextilesPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Children and baby", view: { t: "category", cat: "home", sub: "Children and baby" }, match: (p) => p.childPos !== undefined },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Ready-to-wear", view: { t: "category", cat: "women", sub: "Ready-to-wear" }, match: (p) => p.wRtwPos !== undefined },
+      { label: "Belts", view: { t: "category", cat: "women", sub: "Belts" }, match: (p) => p.beltPos !== undefined },
+      { label: "Rider", view: { t: "category", cat: "equestrian", sub: "Rider" }, match: (p) => p.riderPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const timepiecesThemes: ThemeSlide[] = (() => {
+    if (!isTimepiecesPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+      { label: "Bags and clutches", view: { t: "category", cat: "leather", sub: "Bags and clutches" }, match: (p) => p.subcategory === "Bags and clutches" },
+      { label: "Gold Jewelry", view: { t: "category", cat: "jewelry" }, match: (p) => p.category === "jewelry" },
+      // The original lists "Scarves" twice: first the women's scarves
+      // page, then the men's scarves page — kept as two distinct slides.
+      { label: "Scarves", view: { t: "category", cat: "men", sub: "Scarves" }, match: (p) => p.menScarfPos !== undefined },
+      // No standalone Men landing page exists in the clone; the slide
+      // links to Men's ready-to-wear, the closest men's page.
+      { label: "Men", view: { t: "category", cat: "men", sub: "Ready-to-wear" }, match: (p) => p.mRtwPos !== undefined },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
+  const travelAccThemes: ThemeSlide[] = (() => {
+    if (!isTravAccPage) return [];
+    const defs: { label: string; view: View; match: (p: Product) => boolean }[] = [
+      { label: "Small leather goods", view: { t: "category", cat: "leather", sub: "Small leather goods" }, match: (p) => p.subcategory === "Small leather goods" },
+      { label: "Charms", view: { t: "category", cat: "leather", sub: "Charms" }, match: (p) => p.charmPos !== undefined },
+      { label: "Tech universe", view: { t: "category", cat: "home", sub: "Tech universe" }, match: (p) => p.techPos !== undefined },
+      // No standalone Men landing page exists in the clone; the slide
+      // links to Men's ready-to-wear, the closest men's page.
+      { label: "Men", view: { t: "category", cat: "men", sub: "Ready-to-wear" }, match: (p) => p.mRtwPos !== undefined },
+      { label: "Scarves, shawls and stoles", view: { t: "category", cat: "women", sub: "Scarves, shawls and stoles" }, match: (p) => p.subcategory === "Scarves, shawls and stoles" },
+    ];
+    const used = new Set<number>();
+    return defs.map((d) => {
+      const rep = products.find((p) => !used.has(p.id) && d.match(p) && productImageFor(p).startsWith("https://assets.hermes.com"));
+      if (rep) used.add(rep.id);
+      const img = rep ? productImageFor(rep) : "";
+      return { label: d.label, imgMo: img, imgDesktop: img, view: d.view };
+    }).filter((s) => s.imgMo);
+  })();
+
   // Ballet + Twilly theme carousel slides (Group 12, 2026-11-18) —
   // the original's 5 cross-universe cards per page, verified from the
   // saved SSR category HTML (women-ballet.html / women-twilly.html,
@@ -4292,14 +4825,24 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           "breadcrumb" returns nothing; order is counter → theme carousel →
           footer) — the whole nav is suppressed on isHomeArtPage. Petit h
           keeps its 2-level breadcrumb (separate branch below). */}
-      {!isHomeArtPage && !isGiftsPage && !isWatchesPage && !isFragrancesPage && !isEquestrianPage && (<nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
-        <button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isMensShoesPage && !isWomensScarvesPage && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && !isHomeArtPage && !isGiftWomenPage && !isGiftMenPage && !isGiftChildPage && !isGiftDogsPage && !isWatchWomenPage && !isWatchMenPage && !isJewelryMenPage && (
+      {!isHomeArtPage && !isGiftsPage && !isWatchesPage && !isFragrancesPage && (<nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
+        {isBeachPage ? (<span className="tracking-normal text-black">{titleText}</span>) : isFashionJewelryParentPage ? (<button aria-label="Breadcrumb Women" className="underline underline-offset-4" onClick={() => go({ t: "category", cat: "women" })}>Women</button>) : isWomensBagsPage ? (<button aria-label="Breadcrumb Leather goods" className="underline underline-offset-4" onClick={() => go({ t: "category", cat: "leather" })}>Leather goods</button>) : (<button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>)}
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isMensShoesPage && !isWomensScarvesPage && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && !isHomeArtPage && !isGiftWomenPage && !isGiftMenPage && !isGiftChildPage && !isGiftDogsPage && !isWatchWomenPage && !isWatchMenPage && !isJewelryMenPage && !isHorsePage && !isFragViewPage && !isSlgSub && !isTablewarePage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
             {" | "}
             <span className="tracking-normal text-black">{titleText}</span>
+          </>
+        )}
+        {/* Sweep Wave 2 (2026-11-19): the Beach page's bottom breadcrumb
+            names the leaf first ("Beach — Home and Art of living"); the
+            first segment is the title span above, so this branch adds
+            only the em-dash + parent segment. */}
+        {sub && isBeachPage && (
+          <>
+            {" — "}
+            <span className="tracking-normal text-black">Home and Art of living</span>
           </>
         )}
         {/* The original's breadcrumb for the leather Accessories / Luggage
@@ -4314,6 +4857,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <>
             {" | "}
             <span className="tracking-normal text-black">{(isCharmsPage || isReadingPage || isLeatherAccPage || isStrapsPage) ? "ACCESSORIES" : "LUGGAGE"}</span>
+            {(isCharmsPage || isTravAccPage || isSuitcasesPage || isReadingPage) && (<>{" | "}<span className="tracking-normal text-black">{titleText}</span></>)}
           </>
         )}
         {/* The original's breadcrumb for the women's Hats and gloves
@@ -4336,6 +4880,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <>
             {" | "}
             <span className="tracking-normal text-black">TIES AND SCARVES</span>
+            {(isTiesPage || isMensScarvesPage) && (<>{" | "}<span className="tracking-normal text-black">{titleText}</span></>)}
           </>
         )}
         {/* Group 6 (2026-11-17): the original's Timepieces page
@@ -4346,6 +4891,24 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <>
             {" | "}
             <span className="tracking-normal text-black">TIMEPIECES</span>
+          </>
+        )}
+        {/* Sweep Wave 2 (2026-11-19): the fragrances view-all page's
+            bottom breadcrumb is 2 levels (FRAGRANCES AND MAKE-UP |
+            FRAGRANCES) — the generic middle branch would leak the first
+            row's subcategory (PERFUMES). The Horse page's is 2 levels
+            (EQUESTRIAN | HORSE) — the generic middle would leak the
+            first row's subcategory (TACK). */}
+        {sub && isFragViewPage && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">FRAGRANCES</span>
+          </>
+        )}
+        {sub && isHorsePage && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">HORSE</span>
           </>
         )}
         {/* Group 9 (2026-11-18): the original's bottom breadcrumbs for
@@ -4410,24 +4973,31 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <>
             {" | "}
             <span className="tracking-normal text-black">HOME</span>
+            {" | "}
+            <span className="tracking-normal text-black">{titleText}</span>
           </>
         )}
         {sub && isBalletPage && (
           <>
             {" | "}
             <span className="tracking-normal text-black">SHOES</span>
+            {" | "}
+            <span className="tracking-normal text-black">{titleText}</span>
           </>
         )}
         {sub && isTwillyPage && (
           <>
             {" | "}
             <span className="tracking-normal text-black">SCARVES, SHAWLS AND STOLES</span>
+            {" | "}
+            <span className="tracking-normal text-black">{titleText}</span>
           </>
         )}
         {sub && (isWondersPage || isPreciousPage || isCollectionsPage || isChainedAncrePage) && (
           <>
             {" | "}
             <span className="tracking-normal text-black">COLLECTIONS</span>
+            {isChainedAncrePage && (<>{" | "}<span className="tracking-normal text-black">{titleText}</span></>)}
           </>
         )}
         {/* The SLG parent's bottom breadcrumb is 2 levels on the original
@@ -4436,6 +5006,26 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             all-caps form per the 2026-11-16 Fall-Winter measurement). */}
         {sub && isSlgParent && (
           <>
+            {" | "}
+            <span className="tracking-normal text-black">{titleText}</span>
+          </>
+        )}
+        {/* Sweep Wave 2 (2026-11-19): the SLG sub-pages' bottom breadcrumb
+            is the filter view's 2-level parent trail (LEATHER GOODS |
+            SMALL LEATHER GOODS) — the original has no dedicated SLG
+            sub-pages, so the leaf level the generic branch would add is
+            extra. The Tableware page's middle crumb is HOME, not the
+            first row's subcategory (TABLEWARE) the generic branch leaks. */}
+        {sub && isSlgSub && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">SMALL LEATHER GOODS</span>
+          </>
+        )}
+        {sub && isTablewarePage && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">HOME</span>
             {" | "}
             <span className="tracking-normal text-black">{titleText}</span>
           </>
@@ -4461,6 +5051,18 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             <span className="tracking-normal text-black">{titleText}</span>
           </>
         )}
+        {/* Sweep Wave 2 (2026-11-19): the Women's Bags page's bottom
+            breadcrumb is 3 levels (LEATHER GOODS | BAGS AND CLUTCHES |
+            Women's bags and clutches) but the route resolves with no sub,
+            so the generic middle branch never fires — this branch adds
+            the missing middle level. The first segment is the "Leather
+            goods" button above. */}
+        {!sub && isWomensBagsPage && (
+          <>
+            {" | "}
+            <button aria-label="Breadcrumb Bags and clutches" className="underline underline-offset-4" onClick={() => go({ t: "category", cat: "leather", sub: "Bags and clutches" })}>Bags and clutches</button>
+          </>
+        )}
         {!sub && (<>{" | "}<span className="tracking-normal text-black">{titleText}</span></>)}
       </nav>)}
 
@@ -4482,6 +5084,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <FallWinterThemeCarousel go={go} themes={petitHThemes} />
         ) : isGiftMenPage ? (
           <FallWinterThemeCarousel go={go} themes={giftMenThemes} />
+        ) : isGiftChildPage ? (
+          <FallWinterThemeCarousel go={go} themes={giftChildThemes} />
+        ) : isGiftDogsPage ? (
+          <FallWinterThemeCarousel go={go} themes={giftDogsThemes} />
         ) : isGiftsPage || isGiftWomenPage || isGiftChildPage || isGiftDogsPage ? (
           <FallWinterThemeCarousel go={go} themes={giftsThemes} />
         ) : isWatchesPage ? (
@@ -4510,10 +5116,54 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <FallWinterThemeCarousel go={go} themes={childThemes} />
         ) : cat === "jewelry" && !sub ? (
           <FallWinterThemeCarousel go={go} themes={fineJewelryThemes} />
+        ) : isFashionJewelryParentPage ? (
+          <FallWinterThemeCarousel go={go} themes={fashJewelryThemes} />
         ) : isBagsViewPage || isWomensBagsPage ? (
           <FallWinterThemeCarousel go={go} themes={bagsThemes} />
         ) : isWomensShoesPage ? (
           <FallWinterThemeCarousel go={go} themes={shoesThemes} />
+        ) : isBeachPage ? (
+          <FallWinterThemeCarousel go={go} themes={beachThemes} />
+        ) : isCasesPage ? (
+          <FallWinterThemeCarousel go={go} themes={casesThemes} />
+        ) : isChainedAncrePage ? (
+          <FallWinterThemeCarousel go={go} themes={chainedAncreThemes} />
+        ) : isCollectionsPage ? (
+          <FallWinterThemeCarousel go={go} themes={collectionsThemes} />
+        ) : isCharmsPage ? (
+          <FallWinterThemeCarousel go={go} themes={charmsThemes} />
+        ) : isDressesPage ? (
+          <FallWinterThemeCarousel go={go} themes={dressesThemes} />
+        ) : isEquestrianPage ? (
+          <FallWinterThemeCarousel go={go} themes={equestrianThemes} />
+        ) : isEyesPage ? (
+          <FallWinterThemeCarousel go={go} themes={eyesThemes} />
+        ) : isFurnPage ? (
+          <FallWinterThemeCarousel go={go} themes={furnitureThemes} />
+        ) : isHorsePage ? (
+          <FallWinterThemeCarousel go={go} themes={horseThemes} />
+        ) : isLuggagePage ? (
+          <FallWinterThemeCarousel go={go} themes={luggageThemes} />
+        ) : isMensFwPage ? (
+          <FallWinterThemeCarousel go={go} themes={menFwThemes} />
+        ) : isMensRtwPage ? (
+          <FallWinterThemeCarousel go={go} themes={menRtwThemes} />
+        ) : isMensScarvesPage ? (
+          <FallWinterThemeCarousel go={go} themes={menScarvesThemes} />
+        ) : isOfficePage ? (
+          <FallWinterThemeCarousel go={go} themes={officeThemes} />
+        ) : isReadingPage ? (
+          <FallWinterThemeCarousel go={go} themes={readingThemes} />
+        ) : isSuitcasesPage ? (
+          <FallWinterThemeCarousel go={go} themes={suitcasesThemes} />
+        ) : isTablewarePage ? (
+          <FallWinterThemeCarousel go={go} themes={tablewareThemes} />
+        ) : isTextilesPage ? (
+          <FallWinterThemeCarousel go={go} themes={textilesThemes} />
+        ) : isTimepiecesPage ? (
+          <FallWinterThemeCarousel go={go} themes={timepiecesThemes} />
+        ) : isTravAccPage ? (
+          <FallWinterThemeCarousel go={go} themes={travelAccThemes} />
         ) : (
         <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
           {(() => {

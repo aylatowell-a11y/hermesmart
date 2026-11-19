@@ -92,6 +92,15 @@ const CATEGORY_PATHS: Record<string, string> = {
   "fashion-jewelry|rings": "women/fashion-jewelry/rings",
   "fashion-jewelry|hair accessories and combs": "women/fashion-jewelry/hair-accessories-and-combs",
   "women|bracelets": "women/fashion-jewelry/bracelets",
+  // Sweep Wave 2 (2026-11-19): the WOMEN-menu FJ sub-pages resolve to
+  // cat "fashion-jewelry" (like bracelets above) so the fashPos sort
+  // applies on menu clicks. "Necklaces and pendants" is NOT mapped
+  // here: its combined page lives at /women/necklaces-and-pendants/
+  // (72 tiles incl. pendants) and mapping it to the necklaces-only
+  // FJ URL would drop the pendants — the sort widening below covers it.
+  "women|rings": "women/fashion-jewelry/rings",
+  "women|earrings": "women/fashion-jewelry/earrings",
+  "women|necklaces": "women/fashion-jewelry/necklaces",
   // The women's default page (cat "women", no sub) IS the women's bags page.
   "women|": "leather-goods/bags-and-clutches/womens-bags-and-clutches",
   "leather|women's bags and clutches": "leather-goods/bags-and-clutches/womens-bags-and-clutches",
