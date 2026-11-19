@@ -2008,6 +2008,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       // the old fall-through returned every category-"jewelry" row
       // (408) and the page read Gold Jewelry[408] against the live 323.
       if (cat === "jewelry") return products.filter((p) => p.jewPos !== undefined);
+      // Fashion jewelry parent page (cat "fashion-jewelry", no sub,
+      // sweep 2026-11-19): it lists exactly the 789 live tiles from
+      // the original's order (fashPos 1–789); the 48 clone rows not
+      // on the live list stay in the catalogue but never appear on
+      // this page (same rule as Gold Jewelry). The 2 compose tiles
+      // (live positions 790–791) have no rows. NOTE: this page
+      // resolves as cat "fashion-jewelry" with NO sub, so it never
+      // reaches the "fashion jewelry" syn below — the base gate here
+      // is what actually filters it.
+      if (cat === "fashion-jewelry") return products.filter((p) => p.fashPos !== undefined);
       return catList;
     }
     const low = sub.toLowerCase();
@@ -2294,9 +2304,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "small leather goods": (p) => p.category === "leather" && p.subcategory === "Small leather goods" && p.slgParentPos !== undefined,
       // Fashion jewelry — the costume-jewelry page. The WOMEN menu's
       // FASHION JEWELRY "View all" lands here (cat "women", sub
-      // "Fashion jewelry"); the predicate is category-based so it
-      // works from any menu.
-      "fashion jewelry": (p) => p.category === "fashion-jewelry",
+      // "Fashion jewelry"); the gate is fashPos-based (the original's
+      // live order, retagged 2026-11-19) so it works from any menu and
+      // excludes rows delisted from the original.
+      "fashion jewelry": (p) => p.fashPos !== undefined,
       // Men's RTW sub-pages — products carry fineSub (the sub-page name)
       // and subPos (their order on that sub-page); the rows keep their own
       // subcategory/line, so the FW collection page is unaffected.

@@ -8351,6 +8351,23 @@ const NEW_TILE: Record<number, string> = {
   8247: "https://assets.hermes.com/is/image/hermesproduct/templateaw-f34?$cad=0001181+01_composite_105&$brac=0000621OAJ_composite_105&$product_default_bg$",
   8248: "https://assets.hermes.com/is/image/hermesproduct/templateaw-f34?$cad=0000971+01_composite_105&$brac=0003231J37_composite_105&$product_default_bg$",
 
+8249:"https://assets.hermes.com/is/image/hermesproduct/011129CK6O_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8250:"https://assets.hermes.com/is/image/hermesproduct/500058FC37_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8251:"https://assets.hermes.com/is/image/hermesproduct/500342FK6O_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8252:"https://assets.hermes.com/is/image/hermesproduct/500344FD10_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8253:"https://assets.hermes.com/is/image/hermesproduct/500357FC1K_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8254:"https://assets.hermes.com/is/image/hermesproduct/500373FC89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8255:"https://assets.hermes.com/is/image/hermesproduct/500373FD55_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8256:"https://assets.hermes.com/is/image/hermesproduct/071689F%20X9_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8257:"https://assets.hermes.com/is/image/hermesproduct/500349FD6U_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8258:"https://assets.hermes.com/is/image/hermesproduct/416421FOM1_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8259:"https://assets.hermes.com/is/image/hermesproduct/000209FJ37_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8260:"https://assets.hermes.com/is/image/hermesproduct/500058FC18_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8261:"https://assets.hermes.com/is/image/hermesproduct/240001F%206V_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8262:"https://assets.hermes.com/is/image/hermesproduct/500344FC10_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8263:"https://assets.hermes.com/is/image/hermesproduct/500310FD18_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8264:"https://assets.hermes.com/is/image/hermesproduct/700001F%2087_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+8265:"https://assets.hermes.com/is/image/hermesproduct/608002FP85_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
 };
 
 const BAG_POOL = [picotinLock18V2, kellyShoulderV2, tablierSellier, boxBag, doubleLonge, neoDoubleSens35, fallbackHandbag];
