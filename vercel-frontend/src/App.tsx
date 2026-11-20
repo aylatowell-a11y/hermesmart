@@ -1534,7 +1534,13 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             a strip. Starts with FASHION JEWELRY (index 0) in the centre. The window
             renders the 11 slides around the active index (circular), so
             wrapping 15→1 / 1→15 is seamless and no slide mounts/unmounts
-            in view. */}
+            in view. Interaction (measured live on hermes.com 2026-11-20):
+            hovering a side strip scales ONLY its photo to 1.05 (600ms
+            ease-out; the strip frame does not move, the enlarged photo is
+            cropped at the strip edges); the centre slide does NOT zoom on
+            hover. One click on a side strip centres it only — no
+            navigation; a second click on the centred slide (or its label)
+            navigates to the theme page. */}
         <div className="carousel-full-bleed mt-6 hidden overflow-hidden lg:mt-8 lg:block" role="tablist" aria-label="Discover themes">
           <div className="flex h-[35vw] justify-center gap-[3px]">
             {Array.from({ length: 11 }, (_, k) => k - 5).map((off) => {
@@ -1544,10 +1550,10 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
               if (!ed) return null;
               const isActive = off === 0;
               return (
-                <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${(logicalIdx % 5) + 1} of 5`} onClick={() => goToSlide(logicalIdx)}
-                  className="relative h-full shrink-0 overflow-hidden transition-[width] duration-500 ease-out"
+                <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${(logicalIdx % 5) + 1} of 5`} onClick={() => { if (isActive) go(themeDest(t)); else goToSlide(logicalIdx); }}
+                  className="group relative h-full shrink-0 overflow-hidden transition-[width] duration-500 ease-out"
                   style={{ width: isActive ? "60.8vw" : 185 }}>
-                  <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
+                  <img src={ed.img} alt={ed.alt} loading="lazy" className={`h-full w-full object-cover transition-transform duration-[600ms] ease-out${isActive ? "" : " group-hover:scale-105"}`} />
                   {isActive && (
                     <span className="font-mono-d absolute bottom-8 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black">{t}</span>
                   )}
@@ -1576,7 +1582,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
               const isActive = off === 0;
               return (
                 <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${(logicalIdx % 5) + 1} of 5`}
-                  onClick={() => { if (suppressClickRef.current) return; if (!isActive) goToSlide(logicalIdx); }}
+                  onClick={() => { if (suppressClickRef.current) return; if (isActive) go(themeDest(t)); else goToSlide(logicalIdx); }}
                   className="relative h-full shrink-0 cursor-pointer overflow-hidden transition-[width] duration-500 ease-out"
                   style={{ width: isActive ? "73vw" : 64 }}>
                   <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
@@ -1901,11 +1907,11 @@ function FallWinterThemeCarousel({ go, themes: themesProp }: { go: (v: View, opt
             const n = (logicalIdx % themes.length) + 1;
             return (
               <div key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Visible Category ${slide.label}, ${n} of ${themes.length}`} tabIndex={0}
-                onClick={() => { if (!isActive) goTo(logicalIdx); }}
+                onClick={() => { if (isActive) go(slide.view); else goTo(logicalIdx); }}
                 onKeyDown={(e) => { if (e.key === "Enter" && !isActive) goTo(logicalIdx); }}
-                className="relative h-full shrink-0 cursor-pointer overflow-hidden transition-[width] duration-500 ease-out"
+                className="group relative h-full shrink-0 cursor-pointer overflow-hidden transition-[width] duration-500 ease-out"
                 style={{ width: isActive ? "60.8vw" : 128 }}>
-                <img src={slide.imgDesktop} alt={slide.label} loading="lazy" className="h-full w-full object-cover" />
+                <img src={slide.imgDesktop} alt={slide.label} loading="lazy" className={`h-full w-full object-cover transition-transform duration-[600ms] ease-out${isActive ? "" : " group-hover:scale-105"}`} />
                 {isActive && (
                   <button aria-label={`Go to ${slide.label}`} className="font-mono-d absolute bottom-8 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black" onClick={(e) => { e.stopPropagation(); go(slide.view); }}>{slide.label}</button>
                 )}
@@ -1928,7 +1934,7 @@ function FallWinterThemeCarousel({ go, themes: themesProp }: { go: (v: View, opt
             const n = (logicalIdx % themes.length) + 1;
             return (
               <div key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Visible Category ${slide.label}, ${n} of ${themes.length}`} tabIndex={0}
-                onClick={() => { if (suppressClickRef.current) return; if (!isActive) goTo(logicalIdx); }}
+                onClick={() => { if (suppressClickRef.current) return; if (isActive) go(slide.view); else goTo(logicalIdx); }}
                 onKeyDown={(e) => { if (e.key === "Enter" && !isActive) goTo(logicalIdx); }}
                 className="relative h-full shrink-0 cursor-pointer overflow-hidden transition-[width] duration-500 ease-out"
                 style={{ width: isActive ? "73vw" : 64 }}>
