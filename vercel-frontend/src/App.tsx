@@ -3546,14 +3546,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // the title, each with its first product's photo, label and count.
   // Counts are the ORIGINAL's live filter-view counts, re-read on the
   // original's SLG parent page 2026-11-20 (To Go 59, Wallets 170, Card
-  // holders 90, Pouches and cases 40, Customizable 2) — these are the
+  // holders 89, Pouches and cases 40, Customizable 2) — these are the
   // filter-view counts, NOT the dedicated-page totals: the sub-pages
   // they link to show the dedicated totals. (2026-11-19 read was To Go
-  // 59, Wallets 171, Card holders 91, Pouches and cases 41.)
+  // 59, Wallets 171, Card holders 91, Pouches and cases 41. The Card
+  // holders filtered view itself read [89] on 2026-11-20 while its
+  // sub-tile showed [90]; the filtered view is the ground truth.)
   const SLG_CARDS: { label: string; count: number; view: View; first: Product | undefined }[] = [
     { label: "To Go wallets", count: 59, view: { t: "category", cat: "leather", sub: "To Go wallets" }, first: base.find((p) => p.fineSub === "To Go wallets" && p.slgPos === 1) },
     { label: "Wallets", count: 170, view: { t: "category", cat: "leather", sub: "Wallets" }, first: base.find((p) => p.fineSub === "Wallets" && p.slgPos === 1) },
-    { label: "Card holders", count: 90, view: { t: "category", cat: "leather", sub: "Card holders" }, first: base.find((p) => p.fineSub === "Card holders" && p.slgPos === 1) },
+    { label: "Card holders", count: 89, view: { t: "category", cat: "leather", sub: "Card holders" }, first: base.find((p) => p.fineSub === "Card holders" && p.slgPos === 1) },
     { label: "Pouches and cases", count: 40, view: { t: "category", cat: "leather", sub: "Pouches and cases" }, first: base.find((p) => p.fineSub === "Pouches and cases" && p.slgPos === 1) },
     { label: "Customizable", count: 2, view: { t: "category", cat: "leather", sub: "Customizable" }, first: base.find((p) => /customizable/i.test(p.name)) },
   ];
