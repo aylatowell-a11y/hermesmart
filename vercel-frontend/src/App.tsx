@@ -2295,13 +2295,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       "pouches and cases": (p) => p.fineSub === "Pouches and cases" && p.slgPos !== undefined,
       "customizable": (p) => /customizable/i.test(p.name),
       // Small leather goods PARENT page — the original's live order
-      // (354 tiles, extracted 2026-11-15) lives in slgParentPos; the
-      // parent lists exactly those rows. The two slgPos rows not on the
-      // parent page (id1380 Tarmac, id1427 Maillon) stay on their
-      // dedicated sub-pages only. The dead tile H087381CPY9 is gone from
-      // the original's page. The 13 remaining slgPos-less rows are
-      // filter-only colourways that never appear on the parent grid.
-      // The display total is overridden to 354 below (see totalForCounter).
+      // (350 tiles, re-read 2026-11-20) lives in slgParentPos; the
+      // parent lists exactly those rows. Rows with slgPos but no
+      // slgParentPos (23) are filter-only and never appear here.
+      // The display total is overridden to 350 below (see totalForCounter).
       "small leather goods": (p) => p.category === "leather" && p.subcategory === "Small leather goods" && p.slgParentPos !== undefined,
       // Fashion jewelry — the costume-jewelry page. The WOMEN menu's
       // FASHION JEWELRY "View all" lands here (cat "women", sub
@@ -2374,11 +2371,11 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const isWomensKnitwearPage = cat === "women" && subLow === "knitwear and twillaines";
   // SLG sub-pages sort by slgPos (their own order on that dedicated page),
   // not by sortOrder. The SLG parent page is not a sub-page; it sorts by
-  // slgParentPos (the original's live parent order, 2026-11-15).
+  // slgParentPos (the original's live parent order, 2026-11-20).
   const isSlgSub = cat === "leather" && ["to go wallets", "wallets", "card holders", "pouches and cases"].includes(subLow);
   // The SLG parent page (cat "leather", sub "Small leather goods") —
-  // its own [354] display total, filter cards, editorial inserts,
-  // paragraph and breadcrumbs (2026-11-15).
+  // its own [350] display total, filter cards, editorial inserts,
+  // paragraph and breadcrumbs (2026-11-20).
   const isSlgParent = cat === "leather" && subLow === "small leather goods";
   // Men's FW collection page (cat "men", sub "Fall-Winter 2026
   // Collection") — its own editorial inserts (2026-11-15).
@@ -3167,12 +3164,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // actually carries in this list (the filtered count while filters apply).
   // On the expanded Home grid the count is tiles, not rows.
   const displayCount = filtersActive ? filtered.length : homeTilesActive || beltTilesActive ? gridList.length : base.length;
-  // The SLG parent's display total is 354 — the original's live count
-  // (2026-11-15) — and the store carries exactly those 354 rows
-  // (slgParentPos 1–354). The title and the "viewed out of" counters use
+  // The SLG parent's display total is 350 — the original's live count
+  // (2026-11-20) — and the store carries exactly those 350 rows
+  // (slgParentPos 1–350). The title and the "viewed out of" counters use
   // this total when no filters apply; the grid and SEE MORE progress
   // still use the real row count.
-  const totalForCounter = isSlgParent && !filtersActive ? 354 : displayCount;
+  const totalForCounter = isSlgParent && !filtersActive ? 350 : displayCount;
 
   // Drawer toggles edit the STAGED draft only — the grid is untouched until
   // APPLY / drawer close commits the draft (§F).
@@ -3548,16 +3545,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // SLG parent filter cards — the original's 5 subcategory cards under
   // the title, each with its first product's photo, label and count.
   // Counts are the ORIGINAL's live filter-view counts, re-read on the
-  // original's SLG parent page 2026-11-19 (To Go 59, Wallets 171, Card
-  // holders 91, Pouches and cases 41, Customizable 2) — these are the
+  // original's SLG parent page 2026-11-20 (To Go 59, Wallets 170, Card
+  // holders 90, Pouches and cases 40, Customizable 2) — these are the
   // filter-view counts, NOT the dedicated-page totals: the sub-pages
-  // they link to show the dedicated totals. (2026-11-15 read was To Go
-  // 58, Wallets 174, Card holders 94, Pouches and cases 39.)
+  // they link to show the dedicated totals. (2026-11-19 read was To Go
+  // 59, Wallets 171, Card holders 91, Pouches and cases 41.)
   const SLG_CARDS: { label: string; count: number; view: View; first: Product | undefined }[] = [
     { label: "To Go wallets", count: 59, view: { t: "category", cat: "leather", sub: "To Go wallets" }, first: base.find((p) => p.fineSub === "To Go wallets" && p.slgPos === 1) },
-    { label: "Wallets", count: 171, view: { t: "category", cat: "leather", sub: "Wallets" }, first: base.find((p) => p.fineSub === "Wallets" && p.slgPos === 1) },
-    { label: "Card holders", count: 91, view: { t: "category", cat: "leather", sub: "Card holders" }, first: base.find((p) => p.fineSub === "Card holders" && p.slgPos === 1) },
-    { label: "Pouches and cases", count: 41, view: { t: "category", cat: "leather", sub: "Pouches and cases" }, first: base.find((p) => p.fineSub === "Pouches and cases" && p.slgPos === 1) },
+    { label: "Wallets", count: 170, view: { t: "category", cat: "leather", sub: "Wallets" }, first: base.find((p) => p.fineSub === "Wallets" && p.slgPos === 1) },
+    { label: "Card holders", count: 90, view: { t: "category", cat: "leather", sub: "Card holders" }, first: base.find((p) => p.fineSub === "Card holders" && p.slgPos === 1) },
+    { label: "Pouches and cases", count: 40, view: { t: "category", cat: "leather", sub: "Pouches and cases" }, first: base.find((p) => p.fineSub === "Pouches and cases" && p.slgPos === 1) },
     { label: "Customizable", count: 2, view: { t: "category", cat: "leather", sub: "Customizable" }, first: base.find((p) => /customizable/i.test(p.name)) },
   ];
   // SLG theme carousel slides (2026-11-15) — the original's 5 themes in
@@ -4499,7 +4496,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // from the Children page's SSR category blob (home-children.html,
   // 2026-11-17) + the live reads (2026-11-19). The original's links are
   // filtered views; the clone maps each to the closest working page
-  // (Textiles [153], SLG [354], Scarves [448], Timepieces [230], the
+  // (Textiles [153], SLG [350], Scarves [448], Timepieces [230], the
   // jewelry landing [323]). All 10 hermesedito images HEAD-verified 200.
   const childThemes: ThemeSlide[] = (() => {
     if (!isChildPage) return [];
