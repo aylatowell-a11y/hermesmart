@@ -47,8 +47,6 @@ import saddleBridleImg from "./assets/products/saddle-bridle.webp";
 import scarfColliersImg from "./assets/products/scarf-90-colliers.webp";
 import { fileToBase64 } from "./fileToBase64";
 import { productImageFor } from "./productImages";
-import { HOME_TILE_ORDER } from "./homeTiles";
-import { BELT_TILE_ORDER } from "./beltTiles";
 import { galleryForProduct, hiResHermes } from "./galleryImages";
 import { accountUrl, bespokeUrl, categoryUrl, contactUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
 
@@ -58,67 +56,76 @@ type View =
   | { t: "home" } | { t: "category"; cat: string; sub?: string }
   | { t: "product"; id: number } | { t: "page"; page: string }
   | { t: "faq"; topic: string }
-  | { t: "account"; mode?: "login" | "signup" } | { t: "checkout" } | { t: "admin" } | { t: "about" } | { t: "cart" };
+  | { t: "account"; mode?: "login" | "signup" } | { t: "checkout" } | { t: "admin" } | { t: "about" } | { t: "cart" } | { t: "external"; url: string };
 type CartItem = { key: string; productId: number; name: string; price: number; qty: number; color: string; size: string; glyph: string; tone: string; refCode: string };
 
+// France menus (france-nav-table.json): 10 top menus in the original's
+// order, transcribed from the France nav enumeration. `caption` is the
+// menu-image link label ("" when the France image/caption is
+// unverified — see STAGE-B-REMAINDER.md G1); `imgView` is the view the
+// menu image opens. `fashion-jewelry` does not exist as a France
+// parent; the Femme Bijouterie fantaisie pages live under FEMME.
 type MegaSection = { heading: string; items: string[] };
-type MegaEntry = { key: string; label: string; caption: string; tone: string; glyph: string; img: string; columns: MegaSection[][] };
+type MegaEntry = {
+  key: string;
+  label: string;
+  caption: string;
+  tone: string;
+  glyph: string;
+  img: string;
+  imgView: View;
+  columns: MegaSection[][];
+};
 const MEGA_RAW: MegaEntry[] = [
-  { key: "women", label: "WOMEN", caption: "SPRING-SUMMER 2027 RUNWAY SHOW", tone: "#e85d1f", glyph: "👗", img: "runway", columns: [
-    [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026 Collection","Spring-Summer 2027 Collection","Coats and jackets","Leather","Dresses and skirts","Tops and shirts","Pants and shorts","Knitwear and twillaines","T-shirts and sweatshirts","Beachwear","Spring-Summer 2027 runway show","Fall-Winter 2026 runway show","Fall-Winter 2026 the second chapter"] }],
-    [{ heading: "SHOES", items: ["Sandals","Sneakers","Boots and ankle boots","Pumps","Loafers and mules","Ballet flats","View all"] }],
-    [{ heading: "SCARVES SHAWLS AND STOLES", items: ["Silk scarves and accessories","Cashmere shawls and stoles","Twilly and other small formats","View all","How to tie your scarf","Styled in Silk"] }, { heading: "FASHION JEWELRY", items: ["Bracelets","Necklaces and pendants","Earrings","Rings","View all"] }],
-    [{ heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }, { heading: "HAIR ACCESSORIES", items: [] }],
+  { key: "femme", label: "FEMME", caption: "CHAUSSURES FEMME", tone: "#e85d1f", glyph: "👗", img: "runway", imgView: { t: "category", cat: "femme", sub: "Chaussures" }, columns: [
+    [{ heading: "PRÊT-À-PORTER", items: ["Collection automne-hiver 2026", "Collection printemps-été 2027", "Manteaux et vestes", "Cuir", "Robes et jupes", "Hauts et chemises", "Pantalons et shorts", "Mailles et twillaines", "T-shirts et sweat-shirts", "Bain", "Défilé printemps-été 2027", "Défilé automne-hiver 2026", "Automne-Hiver 2026, le second chapitre"] }, { heading: "CHAUSSURES", items: ["Sandales", "Sneakers", "Bottes et bottines", "Escarpins", "Mocassins et mules", "Ballerines", "Toute la collection"] }],
+    [{ heading: "CARRÉS, CHÂLES ET ÉCHARPES", items: ["Carrés et accessoires de soie", "Châles et écharpes en cachemire", "Twillys et autres petits formats", "Toute la collection", "Comment nouer son carré", "Expressions de soie"] }, { heading: "BIJOUTERIE FANTAISIE", items: ["Bracelets", "Colliers et pendentifs", "Boucles d'oreilles", "Bagues", "Toute la collection"] }],
+    [{ heading: "CEINTURES", items: [] }, { heading: "CHAPEAUX ET GANTS", items: [] }],
+    [{ heading: "ACCESSOIRES CHEVEUX", items: [] }],
   ]},
-  { key: "men", label: "MEN", caption: "MEN'S READY-TO-WEAR", tone: "#c8a97e", glyph: "🧥", img: "mensLeatherJacket", columns: [
-    [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026 Collection","Coats and parkas","Jackets and blazers","Knitwear","Shirts","T-shirts and sweatshirts","Pants and shorts","Beachwear","Fall-Winter 2026 runway show"] }],
-    [{ heading: "SHOES", items: ["Sneakers","Sandals","Loafers and mules","Derbies and Oxford shoes","Boots and ankle boots","View all"] }],
-    [{ heading: "TIES AND SCARVES", items: ["Ties, bow ties and pocket squares","Scarves","Styled in Silk"] }, { heading: "FASHION JEWELRY", items: [] }, { heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }],
+  { key: "homme", label: "HOMME", caption: "Écharpes et carrés", tone: "#c8a97e", glyph: "🧥", img: "mensLeatherJacket", imgView: { t: "category", cat: "homme", sub: "Écharpes et carrés" }, columns: [
+    [{ heading: "PRÊT-À-PORTER", items: ["Collection automne-hiver 2026", "Manteaux et parkas", "Blousons et vestes", "Mailles", "Chemises", "T-shirts et sweat-shirts", "Pantalons et shorts", "Bain", "Défilé automne-hiver 2026"] }, { heading: "CHAUSSURES", items: ["Sneakers", "Sandales", "Mocassins et mules", "Derbies et richelieus", "Bottes et bottines", "Toute la collection"] }],
+    [{ heading: "CRAVATES, ÉCHARPES ET CARRÉS", items: ["Cravates, nœuds papillons et pochettes", "Écharpes et carrés", "Expressions de soie"] }, { heading: "BIJOUTERIE FANTAISIE", items: [] }],
+    [{ heading: "CEINTURES", items: [] }, { heading: "CHAPEAUX ET GANTS", items: [] }],
   ]},
-  { key: "leather", label: "LEATHER GOODS", caption: "BAGS AND CLUTCHES", tone: "#d97b36", glyph: "👜", img: "kelly", columns: [
-    [{ heading: "BAGS AND CLUTCHES", items: ["Women's bags and clutches","Men's bags and clutches","View all"] }],
-    [{ heading: "SMALL LEATHER GOODS", items: ["To Go wallets","Wallets","Card holders","Pouches and cases","View all"] }],
-    [{ heading: "ACCESSORIES", items: ["Charms","Straps","Reading and writing"] }],
-    [{ heading: "LUGGAGE", items: ["Suitcases and travel bags","Travel accessories"] }],
+  { key: "maroquinerie", label: "MAROQUINERIE", caption: "Petite maroquinerie", tone: "#d97b36", glyph: "👜", img: "kelly", imgView: { t: "category", cat: "maroquinerie", sub: "Petite maroquinerie" }, columns: [
+    [{ heading: "SACS ET POCHETTES", items: ["Sacs et pochettes femme", "Sacs et pochettes homme", "Toute la collection"] }],
+    [{ heading: "PETITE MAROQUINERIE", items: ["Portefeuilles To Go", "Portefeuilles", "Porte-cartes", "Trousses et étuis", "Toute la collection"] }],
+    [{ heading: "ACCESSOIRES", items: ["Accessoires de sac", "Bandoulières", "Lire et écrire"] }],
+    [{ heading: "VOYAGE", items: ["Valises et sacs de voyage", "Accessoires de voyage"] }],
   ]},
-  { key: "jewelry", label: "JEWELRY", caption: "PRECIOUS MOMENTS", tone: "#b98a4a", glyph: "✦", img: "chaineNecklace", columns: [
-    [{ heading: "GOLD JEWELRY", items: ["Rings","Wedding rings","Bracelets","Necklaces and pendants","Earrings","View all"] }],
-    [{ heading: "SILVER JEWELRY", items: ["Rings","Bracelets","Necklaces and pendants","Earrings","View all"] }],
-    [{ heading: "COLLECTIONS", items: ["Kelly","Chaînes d'ancre","Equestrian","The Wonders","Precious moments"] }],
-    [{ heading: "MEN", items: [] }],
+  { key: "bijouterie", label: "BIJOUTERIE", caption: "Bijouterie en or", tone: "#b98a4a", glyph: "✦", img: "chaineNecklace", imgView: { t: "category", cat: "bijouterie", sub: "Bijoux en or" }, columns: [
+    [{ heading: "BIJOUX EN OR", items: ["Bagues", "Alliances", "Bracelets", "Colliers et pendentifs", "Bijoux d'oreilles", "Toute la collection"] }, { heading: "BIJOUX EN ARGENT", items: ["Bagues", "Bracelets", "Colliers et pendentifs", "Bijoux d'oreilles", "Toute la collection"] }],
+    [{ heading: "COLLECTIONS", items: ["Kelly", "Chaînes d'ancre", "L'Equestre", "Les Fétiches", "Moments précieux"] }],
+    [{ heading: "HOMME", items: [] }],
+    [{ heading: "HAUTE BIJOUTERIE", items: [] }],
   ]},
-  { key: "watches", label: "WATCHES", caption: "CAPE COD", tone: "#8a7a68", glyph: "⌚", img: "capeCod", columns: [
-    [{ heading: "TIMEPIECES", items: ["Our collections","Women","Men","Straps"] }],
-    [{ heading: "HERMÈS TIME", items: ["Watches and Wonders Geneva"] }, { heading: "APPLE WATCH HERMÈS", items: [] }],
+  { key: "montres", label: "MONTRES", caption: "Voir la catégorie Montres", tone: "#8a7a68", glyph: "⌚", img: "capeCod", imgView: { t: "category", cat: "montres" }, columns: [
+    [{ heading: "", items: ["Nos collections", "Femme", "Homme", "Bracelets", "Watches & Wonders Geneva"] }],
+    [{ heading: "APPLE WATCH HERMÈS", items: [] }],
   ]},
-  { key: "fragrances", label: "FRAGRANCES AND MAKE-UP", caption: "LIMITED EDITION GRIGRIS D'HERMÈS COLLECTION", tone: "#dfb3ba", glyph: "◈", img: "muscPallida", columns: [
-    [{ heading: "FRAGRANCES", items: ["Hermessence collection","The Women's Universe","The Men's Universe","Bath","View all"] }],
-    [{ heading: "MAKE-UP", items: ["Lips","Face","Eyes","Hands","Accessories","View all"] }],
-    [{ heading: "GIFTS", items: [] }, { heading: "SERVICES", items: ["Virtual try on","Foundation Shade Finder","Fragrance Finder"] }],
+  { key: "parfums-et-maquillage", label: "PARFUMS ET MAQUILLAGE", caption: "Collection Grigris", tone: "#dfb3ba", glyph: "◈", img: "muscPallida", imgView: { t: "category", cat: "parfums-et-maquillage", sub: "Maquillage" }, columns: [
+    [{ heading: "PARFUMS", items: ["Hermessence", "Femme", "Homme", "Bain", "Toute la collection"] }],
+    [{ heading: "MAQUILLAGE", items: ["Lèvres", "Teint", "Yeux", "Mains", "Accessoires", "Toute la collection"] }],
+    [{ heading: "CADEAUX", items: ["Cadeaux", "Essayez virtuellement nos rouges à lèvres et vernis à ongles", "Trouvez votre teinte de fond de teint", "Trouvez votre parfum"] }],
   ]},
-  { key: "home", label: "HOME AND ART OF LIVING", caption: "BLANKETS AND PILLOWS", tone: "#d8cfc4", glyph: "▦", img: "avalonBlanket", columns: [
-    [{ heading: "HOME", items: ["Tableware","Blankets and pillows","Decorative objects and games","Furniture, lighting and rugs","Office and writing","Cases and bath linens"] }],
-    [{ heading: "CHILDREN AND BABY", items: [] }, { heading: "BEACH", items: [] }, { heading: "SPORTS AND OUTDOOR", items: [] }, { heading: "TECH UNIVERSE", items: [] }, { heading: "HORIZONS ATELIERS", items: [] }],
-    [{ heading: "PETIT H", items: [] }],
+  { key: "maison-art-de-vivre", label: "MAISON ET ART DE VIVRE", caption: "Art de la table", tone: "#d8cfc4", glyph: "▦", img: "avalonBlanket", imgView: { t: "category", cat: "maison-art-de-vivre", sub: "Art de la table" }, columns: [
+    [{ heading: "MAISON", items: ["Art de la table", "Plaids et textiles", "Objets", "Mobilier et luminaires", "Bureau et écriture", "Trousses et linge de toilette"] }, { heading: "ENFANT", items: [] }, { heading: "PLAGE", items: [] }],
+    [{ heading: "SPORTS ET PLEIN AIR", items: [] }, { heading: "UNIVERS TECH", items: [] }],
+    [{ heading: "ATELIERS HORIZONS", items: [] }, { heading: "PETIT H", items: [] }],
   ]},
-  { key: "equestrian", label: "EQUESTRIAN", caption: "HORSE", tone: "#a6703f", glyph: "♞", img: "saddleBridle", columns: [
-    [{ heading: "SADDLES", items: [] }, { heading: "HORSE", items: [] }, { heading: "RIDER", items: [] }],
+  { key: "equitation", label: "ÉQUITATION", caption: "Cheval", tone: "#a6703f", glyph: "♞", img: "saddleBridle", imgView: { t: "category", cat: "equitation", sub: "Cheval" }, columns: [
+    [{ heading: "SELLES", items: [] }, { heading: "CHEVAL", items: [] }, { heading: "CAVALIER", items: [] }],
   ]},
-  { key: "gifts", label: "GIFTS", caption: "CASHMERE SHAWLS AND STOLES", tone: "#7d8b6f", glyph: "🎁", img: "scarfColliers", columns: [
-    [{ heading: "GIFTS FOR WOMEN", items: [] }, { heading: "GIFTS FOR MEN", items: [] }, { heading: "GIFTS FOR CHILDREN AND BABIES", items: [] }, { heading: "GIFTS FOR DOGS", items: [] }],
+  { key: "cadeaux", label: "CADEAUX", caption: "", tone: "#7d8b6f", glyph: "🎁", img: "scarfColliers", imgView: { t: "category", cat: "cadeaux" }, columns: [
+    [{ heading: "", items: ["Parfums"] }, { heading: "CADEAUX POUR", items: ["Femme", "Homme", "Enfants", "Chien"] }],
   ]},
-  { key: "about", label: "ABOUT HERMÈS", caption: "HERMÈS PARIS", tone: "#efe9df", glyph: "H", img: "heroBench", columns: [
-    [{ heading: "", items: ["Contemporary Artisans Since 1837","Finance & Governance","Join Hermès","Sustainable Development"] }],
+  { key: "about", label: "A PROPOS D'HERMÈS", caption: "", tone: "#efe9df", glyph: "H", img: "heroBench", imgView: { t: "about" }, columns: [
+    [{ heading: "", items: ["ARTISAN CONTEMPORAIN DEPUIS 1837", "FINANCE & GOUVERNANCE", "REJOINDRE HERMÈS", "DÉVELOPPEMENT DURABLE"] }],
   ]},
 ];
-// Desktop mega menu for WOMEN, verified on hermes.com (7 Nov 2026). The shared
-// MEGA_RAW structure still drives the mobile drawer, which follows the user's video.
-const MEGA_DESKTOP_WOMEN: MegaSection[][] = [
-  [{ heading: "READY-TO-WEAR", items: ["Fall-Winter 2026", "Spring-Summer 2027", "Coats and jackets", "Leather", "Dresses", "Tops and shirts", "Pants and shorts", "Knitwear and twillaines", "T-shirts and sweatshirts", "Beachwear", "Discover the runway shows"] }],
-  [{ heading: "SHOES", items: ["Fall-Winter 2026", "Sneakers", "Loafers", "Sandals", "Boots", "Pumps", "Ballet flats", "Mules"] }, { heading: "SCARVES AND STOLES", items: ["Twillys", "Scarves 90 cm", "Equestrian", "Cashmere", "Stole", "Discover scarf tying"] }],
-  [{ heading: "FASHION JEWELRY", items: ["Bracelets", "Earrings", "Necklaces", "Rings", "Hair accessories and combs"] }],
-  [{ heading: "BELTS", items: [] }, { heading: "HATS AND GLOVES", items: [] }, { heading: "HAIR ACCESSORIES", items: [] }],
-];
+// France conversion (Stage B): the US WOMEN desktop mega menu is dropped;
+// the desktop mega menu uses entry.columns for all entries.
 type NavOverride = { label?: string; caption?: string; hidden?: boolean; dest?: string };
 type NavOverrides = Record<string, NavOverride>;
 function applyNavOverrides(overrides: NavOverrides): MegaEntry[] {
@@ -155,68 +162,326 @@ function megaImage(e: MegaEntry): string {
   }
 }
 function headingToSub(h: string): string { const t = h.toLowerCase(); return t.charAt(0).toUpperCase() + t.slice(1); }
-function megaTarget(entry: MegaEntry, overrides: NavOverrides, heading: string, item?: string): View {
+// Menu items that open the original's own France URL in a new tab
+// (content pages, Finance, Careers, Fragrance Finder tool). Key is
+// `${parentKey}|${heading}|${item}` (heading-only entries have an
+// empty item). Internal content links (bespoke, about, sustainability,
+// guides) are NOT here — frMenuTarget routes them in-app.
+const FR_MENU_EXTERNAL: Record<string, string> = {
+  "about||FINANCE & GOUVERNANCE": "https://finance.hermes.com/",
+  "about||REJOINDRE HERMÈS": "https://talents.hermes.com/",
+  "bijouterie|HAUTE BIJOUTERIE|": "https://www.hermes.com/fr/fr/content/334182-hautebijouterie/",
+  "femme|CARRÉS, CHÂLES ET ÉCHARPES|Expressions de soie": "https://www.hermes.com/fr/fr/content/343983-expressions-de-soie-femme/",
+  "homme|CRAVATES, ÉCHARPES ET CARRÉS|Expressions de soie": "https://www.hermes.com/fr/fr/content/344171-expressions-de-soie-homme/",
+  "homme|PRÊT-À-PORTER|Défilé automne-hiver 2026": "https://www.hermes.com/fr/fr/content/344007-defile-homme-automne-hiver-2026/",
+  "maison-art-de-vivre|ATELIERS HORIZONS|": "https://www.hermes.com/fr/fr/content/186736-campagne-institutionnelle-2019/",
+  "maison-art-de-vivre|MAISON|Art de la table": "https://www.hermes.com/fr/fr/content/308227-collections-art-de-la-table/",
+  "montres||Nos collections": "https://www.hermes.com/fr/fr/content/346183-montres/",
+  "montres||Watches & Wonders Geneva": "https://www.hermes.com/fr/fr/content/338946-watches-and-wonders-geneva/",
+  "parfums-et-maquillage|CADEAUX|Cadeaux": "https://www.hermes.com/fr/fr/content/339528-cadeaux-parfums-beaute/",
+  "parfums-et-maquillage|CADEAUX|Essayez virtuellement nos rouges à lèvres et vernis à ongles": "https://www.hermes.com/fr/fr/content/343491-essayage-virtuel-maquillage/",
+  "parfums-et-maquillage|CADEAUX|Trouvez votre parfum": "https://www.hermes.com/fr/fr/fragrance-finder/",
+  "parfums-et-maquillage|CADEAUX|Trouvez votre teinte de fond de teint": "https://www.hermes.com/fr/fr/content/344254-trouvez-votre-teinte-de-fond-teint/",
+};
+
+// Menu items that must NOT be linked: the original returns 404 or loads
+// no products for these (DO-NOT-BUILD). Rendered as plain text; the
+// menu order is preserved.
+const FR_MENU_UNLINKED: Set<string> = new Set([
+  "femme|PRÊT-À-PORTER|Automne-Hiver 2026, le second chapitre",
+  "femme|PRÊT-À-PORTER|Collection automne-hiver 2026",
+  "femme|PRÊT-À-PORTER|Collection printemps-été 2027",
+  "femme|PRÊT-À-PORTER|Défilé automne-hiver 2026",
+  "femme|PRÊT-À-PORTER|Défilé printemps-été 2027",
+  "femme|PRÊT-À-PORTER|T-shirts et sweat-shirts",
+  "homme|PRÊT-À-PORTER|Collection automne-hiver 2026",
+]);
+
+// Headings that ARE pages (click opens the page); any other heading
+// click opens the parent category view. Key `${parentKey}|${heading}`.
+const FR_HEADING_PAGE: Record<string, string> = {
+  "bijouterie|BIJOUX EN ARGENT": "Bijoux en argent",
+  "bijouterie|BIJOUX EN OR": "Bijoux en or",
+  "bijouterie|HOMME": "Homme",
+  "equitation|CAVALIER": "Cavalier",
+  "equitation|CHEVAL": "Cheval",
+  "femme|ACCESSOIRES CHEVEUX": "Accessoires cheveux",
+  "femme|BIJOUTERIE FANTAISIE": "Bijouterie fantaisie",
+  "femme|CARRÉS, CHÂLES ET ÉCHARPES": "Carrés, châles et écharpes",
+  "femme|CEINTURES": "Ceintures",
+  "femme|CHAPEAUX ET GANTS": "Chapeaux et gants",
+  "femme|CHAUSSURES": "Chaussures",
+  "femme|CHAUSSURES FEMME": "Chaussures",
+  "homme|BIJOUTERIE FANTAISIE": "Bijouterie fantaisie",
+  "homme|CEINTURES": "Ceintures",
+  "homme|CHAPEAUX ET GANTS": "Chapeaux et gants",
+  "homme|CHAUSSURES": "Chaussures",
+  "maison-art-de-vivre|ENFANT": "Enfant et naissance",
+  "maison-art-de-vivre|PETIT H": "petit h",
+  "maison-art-de-vivre|PLAGE": "Plage",
+  "maison-art-de-vivre|SPORTS ET PLEIN AIR": "Sports et plein air",
+  "maison-art-de-vivre|UNIVERS TECH": "Univers tech",
+  "maroquinerie|PETITE MAROQUINERIE": "Petite maroquinerie",
+  "maroquinerie|SACS ET POCHETTES": "Sacs et pochettes",
+  "montres|APPLE WATCH HERMÈS": "Apple Watch Hermès",
+  "parfums-et-maquillage|MAQUILLAGE": "Maquillage",
+  "parfums-et-maquillage|PARFUMS": "Parfums",
+};
+
+// Menu items whose view sub differs from the item label (same-label
+// pages in different sections, e.g. Bijoux en or vs Bijoux en argent,
+// and the cross-menu CADEAUX "Parfums" item). Key `${parentKey}|${heading}|${item}`.
+const FR_ITEM_SUB: Record<string, View> = {
+  "bijouterie|BIJOUX EN ARGENT|Bagues": { t: "category", cat: "bijouterie", sub: "Bagues en argent" },
+  "bijouterie|BIJOUX EN ARGENT|Bijoux d'oreilles": { t: "category", cat: "bijouterie", sub: "Bijoux d'oreilles en argent" },
+  "bijouterie|BIJOUX EN ARGENT|Bracelets": { t: "category", cat: "bijouterie", sub: "Bracelets en argent" },
+  "bijouterie|BIJOUX EN ARGENT|Colliers et pendentifs": { t: "category", cat: "bijouterie", sub: "Colliers et pendentifs en argent" },
+  "bijouterie|COLLECTIONS|HOMME": { t: "category", cat: "bijouterie", sub: "Homme" },
+  "cadeaux|CADEAUX POUR|Chien": { t: "category", cat: "cadeaux", sub: "Pour chien" },
+  "cadeaux|CADEAUX POUR|Enfants": { t: "category", cat: "cadeaux", sub: "Enfants et naissance" },
+  "cadeaux|CADEAUX POUR|Femme": { t: "category", cat: "cadeaux", sub: "Pour femme" },
+  "cadeaux|CADEAUX POUR|Homme": { t: "category", cat: "cadeaux", sub: "Pour homme" },
+  "cadeaux||Parfums": { t: "category", cat: "parfums-et-maquillage", sub: "Parfums" },
+  "equitation||CAVALIER": { t: "category", cat: "equitation", sub: "Cavalier" },
+  "equitation||CHEVAL": { t: "category", cat: "equitation", sub: "Cheval" },
+  "femme|BIJOUTERIE FANTAISIE|ACCESSOIRES CHEVEUX": { t: "category", cat: "femme", sub: "Accessoires cheveux" },
+  "femme|BIJOUTERIE FANTAISIE|CEINTURES": { t: "category", cat: "femme", sub: "Ceintures" },
+  "femme|BIJOUTERIE FANTAISIE|CHAPEAUX ET GANTS": { t: "category", cat: "femme", sub: "Chapeaux et gants" },
+  "homme|CRAVATES, ÉCHARPES ET CARRÉS|BIJOUTERIE FANTAISIE": { t: "category", cat: "homme", sub: "Bijouterie fantaisie" },
+  "homme|CRAVATES, ÉCHARPES ET CARRÉS|CEINTURES": { t: "category", cat: "homme", sub: "Ceintures" },
+  "homme|CRAVATES, ÉCHARPES ET CARRÉS|CHAPEAUX ET GANTS": { t: "category", cat: "homme", sub: "Chapeaux et gants" },
+  "maison-art-de-vivre|MAISON|ENFANT": { t: "category", cat: "maison-art-de-vivre", sub: "Enfant et naissance" },
+  "maison-art-de-vivre|MAISON|PETIT H": { t: "category", cat: "maison-art-de-vivre", sub: "petit h" },
+  "maison-art-de-vivre|MAISON|PLAGE": { t: "category", cat: "maison-art-de-vivre", sub: "Plage" },
+  "maison-art-de-vivre|MAISON|Plaids et textiles": { t: "category", cat: "maison-art-de-vivre", sub: "Textiles" },
+  "maison-art-de-vivre|MAISON|SPORTS ET PLEIN AIR": { t: "category", cat: "maison-art-de-vivre", sub: "Sports et plein air" },
+  "maison-art-de-vivre|MAISON|UNIVERS TECH": { t: "category", cat: "maison-art-de-vivre", sub: "Univers tech" },
+  "montres||APPLE WATCH HERMÈS": { t: "category", cat: "montres", sub: "Apple Watch Hermès" },
+};
+
+// France menu target: null means render the item as plain non-clickable
+// text (DO-NOT-BUILD). Content links that stay in-app (bespoke, about,
+// sustainability, guides) are routed here, not through FR_MENU_EXTERNAL.
+// `overrides` is the admin nav overrides (NavOverrides); `dest` redirects
+// a category view to another parent, as the US megaTarget did.
+function frMenuTarget(entry: MegaEntry, overrides: NavOverrides, heading: string, item?: string): View | null {
   const dest = overrides[entry.key]?.dest || entry.key;
+  const key = `${entry.key}|${heading}|${item ?? ""}`;
+  if (FR_MENU_UNLINKED.has(key)) return null;
+  const ext = FR_MENU_EXTERNAL[key];
+  if (ext) return { t: "external", url: ext };
   if (entry.key === "about") {
     const txt = item || heading;
-    if (txt.includes("Finance")) return { t: "page", page: "finance" };
-    if (txt.includes("Join")) return { t: "page", page: "join" };
-    if (txt.includes("Sustainable")) return { t: "page", page: "sustainability" };
+    if (txt.includes("Finance")) return { t: "external", url: "https://finance.hermes.com" };
+    if (txt.includes("Rejoindre")) return { t: "external", url: "https://talents.hermes.com" };
+    if (txt.includes("Développement durable")) return { t: "page", page: "sustainability" };
     return { t: "about" };
   }
-  if (item) {
-    if (item === "How to tie your scarf" || item === "Discover scarf tying") return { t: "page", page: "guides" };
-    // "Hair accessories and combs" (FASHION JEWELRY section of the
-    // WOMEN menu, 2026-11-16) is the original's women's Hair
-    // accessories page — it lives at /women/hair-accessories/, not
-    // under fashion-jewelry, so it resolves to the women's hair page
-    // instead of an empty fashion-jewelry sub-page.
-    if (item === "Hair accessories and combs") return { t: "category", cat: "women", sub: "Hair accessories" };
-    if (item === "Discover the runway shows") return { t: "category", cat: dest, sub: "Ready-to-Wear" };
-    return { t: "category", cat: dest, sub: item === "View all" ? headingToSub(heading) : item };
+  if (item === undefined) {
+    if (heading === "SELLES") return { t: "page", page: "bespoke-equestrian" };
+    const pageSub = FR_HEADING_PAGE[key];
+    if (pageSub !== undefined) return { t: "category", cat: dest, sub: pageSub };
+    return { t: "category", cat: dest };
   }
-  // The Equestrian menu's SADDLES heading is the original's bespoke
-  // editorial page (not a product listing) — 2026-11-17.
-  if (entry.key === "equestrian" && heading === "SADDLES") return { t: "page", page: "bespoke-equestrian" };
-  // The Home menu's HOME heading is the original's Home and Art of
-  // living heading page (Group 8, 2026-11-18) — /home-art-living/,
-  // NOT the /home/ parent. Without this the heading resolved to sub
-  // "Home", which matches no syn and renders the sorry message.
-  if (entry.key === "home" && heading === "HOME") return { t: "category", cat: "home", sub: "Home and art of living" };
-  // standalone heading
-  const special: Record<string,string> = { "GIFTS FOR WOMEN":"For women","GIFTS FOR MEN":"For men","GIFTS FOR CHILDREN AND BABIES":"For children","GIFTS FOR DOGS":"For dogs","APPLE WATCH HERMÈS":"Cape Cod" };
-  return { t: "category", cat: dest, sub: special[heading] || headingToSub(heading) };
+  if (item === "Toute la collection") {
+    const pageSub = FR_HEADING_PAGE[key];
+    if (pageSub !== undefined) return { t: "category", cat: dest, sub: pageSub };
+    return { t: "category", cat: dest };
+  }
+  if (item === "Comment nouer son carré") return { t: "page", page: "guides" };
+  const override = FR_ITEM_SUB[key];
+  if (override) return override;
+  return { t: "category", cat: dest, sub: item };
 }
-const NAV: { key: string; label: string; subs: string[] }[] = MEGA_RAW.filter(e=>e.key!=="about").map(e => ({ key: e.key, label: e.label, subs: [...new Set(e.columns.flatMap(col => col.flatMap(sec => [headingToSub(sec.heading), ...sec.items])).filter(Boolean))] }));
-// Candidate sub-names per top-level category, for reversing slug category
-// URLs back into views (routing). Built from the nav lists plus the two
-// short collection spellings the desktop mega menu uses.
-// Categories with no mega-menu entry (fashion jewelry lives under the
-// WOMEN menu on the original, at /women/fashion-jewelry/) still need a
-// proper-case label for titles and breadcrumbs.
-const CAT_LABELS: Record<string, string> = { "fashion-jewelry": "Fashion jewelry" };
+// Menu nav per parent: the France sub-page names in menu order,
+// transcribed from france-routing-table.json (not derived from menu
+// headings, so non-page headings never become routable subs).
+const NAV: Record<string, { cat: string; subs: string[] }> = {
+  "femme": { cat: "femme", subs: ["Manteaux et vestes", "Cuir", "Robes et jupes", "Hauts et chemises", "Pantalons et shorts", "Mailles et twillaines", "Bain", "Sandales", "Sneakers", "Bottes et bottines", "Escarpins", "Mocassins et mules", "Ballerines", "Carrés et accessoires de soie", "Châles et écharpes en cachemire", "Twillys et autres petits formats", "Carrés, châles et écharpes", "Bracelets", "Colliers et pendentifs", "Boucles d'oreilles", "Bagues", "Bijouterie fantaisie", "Ceintures", "Chapeaux et gants", "Accessoires cheveux"] },
+  "homme": { cat: "homme", subs: ["Manteaux et parkas", "Blousons et vestes", "Mailles", "Chemises", "T-shirts et sweat-shirts", "Pantalons et shorts", "Bain", "Sneakers", "Sandales", "Mocassins et mules", "Derbies et richelieus", "Bottes et bottines", "Chaussures", "Cravates, nœuds papillons et pochettes", "Bijouterie fantaisie", "Ceintures", "Chapeaux et gants"] },
+  "maroquinerie": { cat: "maroquinerie", subs: ["Sacs et pochettes femme", "Sacs et pochettes homme", "Sacs et pochettes", "Portefeuilles To Go", "Portefeuilles", "Porte-cartes", "Trousses et étuis", "Accessoires de sac", "Bandoulières", "Lire et écrire", "Valises et sacs de voyage", "Accessoires de voyage"] },
+  "bijouterie": { cat: "bijouterie", subs: ["Bagues", "Alliances", "Bracelets", "Colliers et pendentifs", "Bijoux d'oreilles", "Bagues en argent", "Bracelets en argent", "Colliers et pendentifs en argent", "Bijoux d'oreilles en argent", "Bijoux en argent", "Kelly", "Chaînes d'ancre", "L'Equestre", "Les Fétiches", "Moments précieux", "Homme"] },
+  "montres": { cat: "montres", subs: ["Femme", "Homme", "Bracelets", "Apple Watch Hermès"] },
+  "parfums-et-maquillage": { cat: "parfums-et-maquillage", subs: ["Hermessence", "Femme", "Homme", "Bain", "Parfums", "Lèvres", "Teint", "Yeux", "Mains", "Accessoires"] },
+  "maison-art-de-vivre": { cat: "maison-art-de-vivre", subs: ["Art de la table", "Textiles", "Objets", "Mobilier et luminaires", "Bureau et écriture", "Trousses et linge de toilette", "Enfant et naissance", "Plage", "Sports et plein air", "Univers tech", "petit h"] },
+  "equitation": { cat: "equitation", subs: ["Cavalier"] },
+  "cadeaux": { cat: "cadeaux", subs: ["Pour femme", "Pour homme", "Enfants et naissance", "Pour chien"] },
+};
+
+const CAT_LABELS: Record<string, string> = {
+  "femme": "Femme",
+  "homme": "Homme",
+  "maroquinerie": "Maroquinerie",
+  "bijouterie": "Bijouterie",
+  "montres": "Montres",
+  "parfums-et-maquillage": "Parfums et Maquillage",
+  "maison-art-de-vivre": "Maison et Art de Vivre",
+  "equitation": "Équitation",
+  "cadeaux": "Cadeaux",
+};
+
+// France label for a category value; a US catalogue category is mapped
+// to its France parent first (the PDP breadcrumb passes p.category).
 function catLabel(cat: string): string {
-  return CAT_LABELS[cat] ?? NAV.find((n) => n.key === cat)?.label ?? cat.toUpperCase();
+  const fr = US_TO_FR_CAT[cat] ?? cat;
+  return CAT_LABELS[fr] ?? fr.toUpperCase();
 }
-// Sub-page titles render in sentence case on the original, but the `sub`
-// value arrives in mixed case — lowercase from the URL slug map
-// (routing.ts keys: "dresses and skirts") yet title case from menu
-// labels ("To Go wallets", which rendered with a capital G until this
-// fix). Normalise to sentence case: capitalise the first letter and
-// lowercase the rest — the original writes "Dresses and skirts", "To go
-// wallets", "Scarves, shawls and stoles", not title case. "T-shirts"
-// still renders "T-shirts" and "Hermessence" / "Make-up" are unaffected.
-// COLLECTION_TITLES still wins first for the season collections and the
-// RTW parents.
-function titleCaseSub(s: string): string {
-  return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
-}
-const SUBS_BY_CAT: Record<string, string[]> = (() => {
-  const m: Record<string, string[]> = {};
-  for (const n of NAV) m[n.key] = [...n.subs];
-  m["women"] = [...new Set([...(m["women"] ?? []), "Fall-Winter 2026", "Spring-Summer 2027"])];
-  return m;
-})();
+
+const titleCaseSub = (s: string) => {
+  return s.split(" ").map((w) => (w ? w[0]!.toUpperCase() + w.slice(1) : "")).join(" ");
+};
+
+const SUBS_BY_CAT: Record<string, string[]> = Object.fromEntries(
+  Object.values(NAV).map((n) => [n.cat, n.subs]),
+);
+
+// France position fields (A1 page-field-map.json): staging data.ts has no
+// fr*Pos fields yet (A3 lands them), so every France syn reads the field
+// through a record cast. frPos(p, field) is semantically identical to
+// p.<field> !== undefined and keeps working once A3 adds the fields.
+const frPos = (p: Product, field: string): number | undefined => {
+  const v = (p as unknown as Record<string, unknown>)[field];
+  return typeof v === "number" ? v : undefined;
+};
+const frHas = (field: string) => (p: Product) => frPos(p, field) !== undefined;
+const frAny = (...fields: string[]) => (p: Product) => fields.some((f) => frPos(p, f) !== undefined);
+
+// France page -> position field(s), keyed `${cat}|${sub.toLowerCase()}`.
+// Single-field pages sort by that field; union ("Toute la collection")
+// pages concatenate their child fields in menu order; the Collections
+// pages (Kelly, Chaînes d'ancre, L'Equestre, Les Fétiches, Moments
+// précieux) and Hermessence have no field yet and sort in catalogue
+// order (name-substring syn, Stage B approximation — needs the real
+// extraction, see STAGE-B-REMAINDER.md G8).
+const FR_PAGE_FIELDS: Record<string, string[]> = {
+  "femme|": ["frFemmeParentPos"],
+  "homme|": ["frHommeParentPos"],
+  "maroquinerie|": ["frMaroquinerieParentPos"],
+  "bijouterie|": ["frBijouterieParentPos"],
+  "montres|": ["frMontresParentPos"],
+  "parfums-et-maquillage|": ["frParfumsMaquillageParentPos"],
+  "maison-art-de-vivre|": ["frMaisonParentPos"],
+  "equitation|": ["frEquitationParentPos"],
+  "cadeaux|": ["frCadeauxParentPos"],
+  "femme|chaussures": ["frFemmeSandalesPos", "frFemmeSneakersPos", "frFemmeBottesEtBottinesPos", "frFemmeEscarpinsPos", "frFemmeMocassinsEtMulesPos", "frFemmeBallerinesPos"],
+  "femme|manteaux et vestes": ["frFemmeManteauxEtVestesPos"],
+  "femme|cuir": ["frFemmeCuirPos"],
+  "femme|robes et jupes": ["frFemmeRobesEtJupesPos"],
+  "femme|hauts et chemises": ["frFemmeHautsEtChemisesPos"],
+  "femme|pantalons et shorts": ["frFemmePantalonsEtShortsPos"],
+  "femme|mailles et twillaines": ["frFemmeMaillesEtTwillainesPos"],
+  "femme|bain": ["frFemmeBainPos"],
+  "femme|sandales": ["frFemmeSandalesPos"],
+  "femme|sneakers": ["frFemmeSneakersPos"],
+  "femme|bottes et bottines": ["frFemmeBottesEtBottinesPos"],
+  "femme|escarpins": ["frFemmeEscarpinsPos"],
+  "femme|mocassins et mules": ["frFemmeMocassinsEtMulesPos"],
+  "femme|ballerines": ["frFemmeBallerinesPos"],
+  "femme|carrés et accessoires de soie": ["frFemmeCarresEtAccessoiresDeSoiePos"],
+  "femme|châles et écharpes en cachemire": ["frFemmeChalesEtEcharpesEnCachemirePos"],
+  "femme|twillys et autres petits formats": ["frFemmeTwillysEtAutresPetitsFormatsPos"],
+  "femme|carrés, châles et écharpes": ["frFemmeCarresEtAccessoiresDeSoiePos", "frFemmeChalesEtEcharpesEnCachemirePos", "frFemmeTwillysEtAutresPetitsFormatsPos"],
+  "femme|bracelets": ["frFemmeBraceletsPos"],
+  "femme|colliers et pendentifs": ["frFemmeColliersEtPendentifsPos"],
+  "femme|boucles d'oreilles": ["frFemmeBouclesDOreillesPos"],
+  "femme|bagues": ["frFemmeBaguesPos"],
+  "femme|bijouterie fantaisie": ["frFemmeBraceletsPos", "frFemmeColliersEtPendentifsPos", "frFemmeBouclesDOreillesPos", "frFemmeBaguesPos"],
+  "femme|ceintures": ["frFemmeCeinturesPos"],
+  "femme|chapeaux et gants": ["frFemmeChapeauxEtGantsPos"],
+  "femme|accessoires cheveux": ["frFemmeAccessoiresCheveuxPos"],
+  "homme|écharpes et carrés": ["frHommeEcharpesEtCarresPos"],
+  "homme|manteaux et parkas": ["frHommeManteauxEtParkasPos"],
+  "homme|blousons et vestes": ["frHommeBlousonsEtVestesPos"],
+  "homme|mailles": ["frHommeMaillesPos"],
+  "homme|chemises": ["frHommeChemisesPos"],
+  "homme|t-shirts et sweat-shirts": ["frHommeTShirtsEtSweatShirtsPos"],
+  "homme|pantalons et shorts": ["frHommePantalonsEtShortsPos"],
+  "homme|bain": ["frHommeBainPos"],
+  "homme|sneakers": ["frHommeSneakersPos"],
+  "homme|sandales": ["frHommeSandalesPos"],
+  "homme|mocassins et mules": ["frHommeMocassinsEtMulesPos"],
+  "homme|derbies et richelieus": ["frHommeDerbiesEtRichelieusPos"],
+  "homme|bottes et bottines": ["frHommeBottesEtBottinesPos"],
+  "homme|chaussures": ["frHommeMocassinsEtMulesPos", "frHommeDerbiesEtRichelieusPos", "frHommeBottesEtBottinesPos", "frHommeSneakersPos", "frHommeSandalesPos"],
+  "homme|cravates, nœuds papillons et pochettes": ["frHommeCravatesNUdsPapillonsEtPochettesPos"],
+  "homme|bijouterie fantaisie": ["frHommeBijouterieFantaisiePos"],
+  "homme|ceintures": ["frHommeCeinturesPos"],
+  "homme|chapeaux et gants": ["frHommeChapeauxEtGantsPos"],
+  "maroquinerie|petite maroquinerie": ["frMaroquineriePortefeuillesToGoPos", "frMaroquinerieTroussesEtEtuisPos", "frMaroquineriePortefeuillesPos", "frMaroquineriePorteCartesPos"],
+  "maroquinerie|sacs et pochettes femme": ["frMaroquinerieSacsEtPochettesFemmePos"],
+  "maroquinerie|sacs et pochettes homme": ["frMaroquinerieSacsEtPochettesHommePos"],
+  "maroquinerie|sacs et pochettes": ["frMaroquinerieSacsEtPochettesFemmePos", "frMaroquinerieSacsEtPochettesHommePos"],
+  "maroquinerie|portefeuilles to go": ["frMaroquineriePortefeuillesToGoPos"],
+  "maroquinerie|portefeuilles": ["frMaroquineriePortefeuillesPos"],
+  "maroquinerie|porte-cartes": ["frMaroquineriePorteCartesPos"],
+  "maroquinerie|trousses et étuis": ["frMaroquinerieTroussesEtEtuisPos"],
+  "maroquinerie|accessoires de sac": ["frMaroquinerieAccessoiresDeSacPos"],
+  "maroquinerie|bandoulières": ["frMaroquinerieBandoulieresPos"],
+  "maroquinerie|lire et écrire": ["frMaroquinerieLireEtEcrirePos"],
+  "maroquinerie|valises et sacs de voyage": ["frMaroquinerieValisesEtSacsDeVoyagePos"],
+  "maroquinerie|accessoires de voyage": ["frMaroquinerieAccessoiresDeVoyagePos"],
+  "bijouterie|bijoux en or": ["frBijouterieBijouxEnOrBaguesPos", "frBijouterieAlliancesPos", "frBijouterieBijouxEnOrBraceletsPos", "frBijouterieBijouxEnOrColliersEtPendentifsPos", "frBijouterieBijouxEnOrBijouxDOreillesPos"],
+  "bijouterie|bagues": ["frBijouterieBijouxEnOrBaguesPos"],
+  "bijouterie|alliances": ["frBijouterieAlliancesPos"],
+  "bijouterie|bracelets": ["frBijouterieBijouxEnOrBraceletsPos"],
+  "bijouterie|colliers et pendentifs": ["frBijouterieBijouxEnOrColliersEtPendentifsPos"],
+  "bijouterie|bijoux d'oreilles": ["frBijouterieBijouxEnOrBijouxDOreillesPos"],
+  "bijouterie|bagues en argent": ["frBijouterieBijouxEnArgentBaguesPos"],
+  "bijouterie|bracelets en argent": ["frBijouterieBijouxEnArgentBraceletsPos"],
+  "bijouterie|colliers et pendentifs en argent": ["frBijouterieBijouxEnArgentColliersEtPendentifsPos"],
+  "bijouterie|bijoux d'oreilles en argent": ["frBijouterieBijouxEnArgentBijouxDOreillesPos"],
+  "bijouterie|bijoux en argent": ["frBijouterieBijouxEnArgentBaguesPos", "frBijouterieBijouxEnArgentBraceletsPos", "frBijouterieBijouxEnArgentColliersEtPendentifsPos", "frBijouterieBijouxEnArgentBijouxDOreillesPos"],
+  "bijouterie|kelly": [],
+  "bijouterie|chaînes d'ancre": [],
+  "bijouterie|l'equestre": [],
+  "bijouterie|les fétiches": [],
+  "bijouterie|moments précieux": [],
+  "bijouterie|homme": ["frBijouterieHommePos"],
+  "montres|femme": ["frMontresFemmePos"],
+  "montres|homme": ["frMontresHommePos"],
+  "montres|bracelets": ["frMontresBraceletsPos"],
+  "montres|apple watch hermès": ["frMontresAppleWatchHermesPos"],
+  "parfums-et-maquillage|maquillage": ["frMaquillageLevresPos", "frMaquillageTeintPos", "frMaquillageYeuxPos", "frMaquillageMainsPos", "frMaquillageAccessoiresPos"],
+  "parfums-et-maquillage|hermessence": [],
+  "parfums-et-maquillage|femme": ["frParfumsFemmePos"],
+  "parfums-et-maquillage|homme": ["frParfumsHommePos"],
+  "parfums-et-maquillage|bain": ["frParfumsLArtDeVivrePos"],
+  "parfums-et-maquillage|parfums": ["frParfumsFemmePos", "frParfumsHommePos", "frParfumsLArtDeVivrePos"],
+  "parfums-et-maquillage|lèvres": ["frMaquillageLevresPos"],
+  "parfums-et-maquillage|teint": ["frMaquillageTeintPos"],
+  "parfums-et-maquillage|yeux": ["frMaquillageYeuxPos"],
+  "parfums-et-maquillage|mains": ["frMaquillageMainsPos"],
+  "parfums-et-maquillage|accessoires": ["frMaquillageAccessoiresPos"],
+  "maison-art-de-vivre|art de la table": ["frArtTablePos"],
+  "maison-art-de-vivre|textiles": ["frMaisonTextilesPos"],
+  "maison-art-de-vivre|objets": ["frMaisonObjetsPos"],
+  "maison-art-de-vivre|mobilier et luminaires": ["frMaisonMobilierEtLuminairesPos"],
+  "maison-art-de-vivre|bureau et écriture": ["frMaisonBureauEtEcriturePos"],
+  "maison-art-de-vivre|trousses et linge de toilette": ["frMaisonTroussesEtLingeDeToilettePos"],
+  "maison-art-de-vivre|enfant et naissance": ["frMaisonEnfantEtNaissancePos"],
+  "maison-art-de-vivre|plage": ["frMaisonPlagePos"],
+  "maison-art-de-vivre|sports et plein air": ["frMaisonSportsEtPleinAirPos"],
+  "maison-art-de-vivre|univers tech": ["frMaisonUniversTechPos"],
+  "maison-art-de-vivre|petit h": ["frPetitHPos"],
+  "equitation|cheval": ["frEquitationChevalPos"],
+  "equitation|cavalier": ["frEquitationCavalierPos"],
+  "cadeaux|pour femme": ["frCadeauxPourFemmePos"],
+  "cadeaux|pour homme": ["frCadeauxPourHommePos"],
+  "cadeaux|enfants et naissance": ["frCadeauxEnfantsEtNaissancePos"],
+  "cadeaux|pour chien": ["frCadeauxPourChienPos"],
+};
+
+// US catalogue category -> France parent (the rows keep their US category
+// value; only the fr*Pos fields are France). Used by catLabel and by the
+// PDP breadcrumb / back link so a US category never navigates to a dead
+// France cat. fashion-jewelry retargets to Femme (Bijouterie fantaisie).
+const US_TO_FR_CAT: Record<string, string> = {
+  women: "femme", men: "homme", leather: "maroquinerie", jewelry: "bijouterie",
+  watches: "montres", fragrances: "parfums-et-maquillage",
+  home: "maison-art-de-vivre", equestrian: "equitation", gifts: "cadeaux",
+  "fashion-jewelry": "femme", "petit-h": "maison-art-de-vivre",
+};
+
 const THEMES = ["Silk", "Beauty", "Belts", "Men's Shoes", "Fashion Jewelry", "Fragrances", "Watches", "Leather Goods", "Home"];
 // Discover carousel — verified on hermes.com (7 Nov 2026) by clicking controls 1–15,
 // re-verified live 2026-11-15, REPLACED 2026-11-17 by the NOV_PHASE_2
@@ -298,7 +563,7 @@ const BEAUTY_EYEBROWS: Record<number, string> = {
   31: "Ombres d'Hermès",
   338: "Limited edition Powders",
 };
-const fmt = (n: number) => "$" + n.toLocaleString("en-US");
+const fmt = (n: number) => n.toLocaleString("fr-FR") + " €";
 const priceText = (p: Product) => (p.priceLabel ? p.priceLabel : fmt(p.price));
 
 // Fixed rotation for the loading horse: Trot → Jump-then-Run → Gallop →
@@ -423,7 +688,7 @@ export function ProductVisual({ p, large: _large, altSrc, altActive, hideStatus 
   // mobile the tile renders it as text below the photo instead).
   // Recommendation tiles (RelatedRow) hide it entirely — the original's
   // Perfect Partner / Keep exploring tiles carry no status at all.
-  const statusLabel = p.status === "available_soon" ? "Available soon" : p.status === "in_store_only" ? "In store only" : p.status === "out_of_stock" ? "Out of stock" : "";
+  const statusLabel = p.status === "available_soon" ? "Bientôt disponible" : p.status === "in_store_only" ? "In store only" : p.status === "out_of_stock" ? "Out of stock" : "";
   return (
     <div className="relative h-full w-full overflow-hidden" style={{ background: p.tone }} aria-label={p.name}>
       <img src={img} alt={p.name} loading="lazy" className="h-full w-full object-cover" />
@@ -522,7 +787,7 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile, eyebrow, 
   // the coat or the sweater tiles, while the clone rendered it below the
   // photo on mobile. The status stays screen-reader-only here and drives
   // buyability (isBuyableStatus) only.
-  const statusText = p.status === "available_soon" ? "Available soon" : p.status === "in_store_only" ? "In store only" : p.status === "out_of_stock" ? "Out of stock" : "";
+  const statusText = p.status === "available_soon" ? "Bientôt disponible" : p.status === "in_store_only" ? "In store only" : p.status === "out_of_stock" ? "Out of stock" : "";
   const altViews = useMemo(() => {
     const views = galleryForProduct(p, 0);
     const afterFirst = views.filter((v, i) => i >= 1 && !v.video && v.src !== tileSrc).map((v) => v.src);
@@ -728,7 +993,7 @@ export function App() {
   const qc = useQueryClient();
   const store = useQuery({ queryKey: ["storefront"], queryFn: () => api.getStorefront({}) });
   const products = useMemo(() => store.data?.products ?? [], [store.data]);
-  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "800-441-4488", heroTitle: "A winter's tale", heroText: "", shipTo: "UNITED STATES", deliveryText: "", returnsText: "", paymentMethods: "", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10am - 9pm EST", logoMode: "both", logoUrl: "", flagshipStore: "691 Madison Avenue, New York", shipToCountries: "UNITED STATES", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. All rights reserved.", serviceDeliveryBody: "Free standard delivery. Herm\u00e8s offers several fast and secure delivery options.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
+  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "", heroTitle: "L'hiver sera conte", heroText: "", shipTo: "FRANCE", deliveryText: "Free standard delivery in France.", returnsText: "Free returns within 30 days. See conditions and procedure in our FAQ.", paymentMethods: "By card: Visa®, MasterCard® and American Express®. By PayPal® and Apple Pay®.", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10am - 9pm EST", logoMode: "both", logoUrl: "", flagshipStore: "", shipToCountries: "FRANCE", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. Tous droits r\u00e9serv\u00e9s", serviceDeliveryBody: "Free standard delivery in France.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
 
   // Real URLs (History API routing): the initial view comes from the URL
   // when it is a routed one (category, contact page, or home); a product
@@ -745,11 +1010,11 @@ export function App() {
     if (parsed && parsed.kind === "bespoke") return { view: { t: "page", page: "bespoke-equestrian" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "faq") return { view: { t: "faq", topic: parsed.topic } as View, productRef: null as string | null };
     // routing.ts only parses the payment FAQ topic; every other FAQ topic
-    // (and the /us/en/faq/ landing) is resolved here from the path.
+    // (and the /fr/fr/faq/ landing) is resolved here from the path.
     if (!parsed) {
       const clean = window.location.pathname.replace(/^\/+/, "").replace(/\/+$/, "");
-      if (clean === "us/en/faq" || clean === "faq") return { view: { t: "faq", topic: "index" } as View, productRef: null as string | null };
-      const fm = clean.replace(/^us\/en\//, "").match(/^faq\/([a-z-]+)\/([a-z0-9-]+)$/);
+      if (clean === "fr/fr/faq" || clean === "us/en/faq" || clean === "faq") return { view: { t: "faq", topic: "index" } as View, productRef: null as string | null };
+      const fm = clean.replace(/^(?:fr\/fr|us\/en)\//, "").match(/^faq\/([a-z-]+)\/([a-z0-9-]+)$/);
       if (fm && FAQ_BY_SLUG[fm[2]]) return { view: { t: "faq", topic: fm[2] } as View, productRef: null as string | null };
     }
     if (parsed && parsed.kind === "home") return { view: { t: "home" } as View, productRef: null as string | null };
@@ -967,14 +1232,16 @@ export function App() {
   };
   const go = (v: View, opts?: { restore?: boolean }) => {
     const cur = viewRef.current;
+    // External menu links open the original's own France URL in a new tab.
+    if (v.t === "external") { window.open(v.url, "_blank", "noopener,noreferrer"); return; }
     if (cur.t === "category") saveCatState(cur);
     if (v.t === "product" && (cur.t === "category" || cur.t === "home")) setFromView(cur);
     // Real URL for routed views (home / category / product / contact /
     // account / faq / cart); other views (checkout, admin, other pages,
     // about) stay unrouted. The cart IS routed — the original's cart is
-    // a full page at /us/en/cart/, and without its own history entry
+    // a full page at /fr/fr/cart/, and without its own history entry
     // browser Back from the cart skipped the product page entirely.
-    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "page" && v.page === "bespoke-equestrian" ? bespokeUrl() : v.t === "account" ? accountUrl() : v.t === "cart" ? "/us/en/cart/" : v.t === "faq" ? faqPath(v.topic) : null;
+    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "page" && v.page === "bespoke-equestrian" ? bespokeUrl() : v.t === "account" ? accountUrl() : v.t === "cart" ? "/fr/fr/cart/" : v.t === "faq" ? faqPath(v.topic) : null;
     if (url) { try { window.history.pushState(null, "", url); } catch { /* ignore */ } }
     if (v.t === "category" && !opts?.restore) pulse(2200);
     setView(v); setMobileNav(false); setMenuCat(null);
@@ -992,13 +1259,13 @@ export function App() {
         // FAQ topics and the FAQ landing here, the same as on initial load.
         const clean = window.location.pathname.replace(/^\/+/, "").replace(/\/+$/, "");
         const cur = viewRef.current;
-        if (clean === "us/en/faq" || clean === "faq") {
+        if (clean === "fr/fr/faq" || clean === "us/en/faq" || clean === "faq") {
           if (cur.t === "category") saveCatState(cur);
           setView({ t: "faq", topic: "index" }); setMobileNav(false); setMenuCat(null);
           window.scrollTo({ top: 0 });
           return;
         }
-        const fm = clean.replace(/^us\/en\//, "").match(/^faq\/([a-z-]+)\/([a-z0-9-]+)$/);
+        const fm = clean.replace(/^(?:fr\/fr|us\/en)\//, "").match(/^faq\/([a-z-]+)\/([a-z0-9-]+)$/);
         if (fm && FAQ_BY_SLUG[fm[2]]) {
           if (cur.t === "category") saveCatState(cur);
           setView({ t: "faq", topic: fm[2] }); setMobileNav(false); setMenuCat(null);
@@ -1100,6 +1367,14 @@ export function App() {
       const v = VARIANTS[w];
       if (v) return v;
       if (/ies$/.test(w) && w.length > 3) return w.slice(0, -3) + "y";
+      // French plurals (Stage B): chevaux -> cheval, bateaux -> bateau,
+      // cheveux -> cheveu, bijoux -> bijou. A bare trailing "x" is never
+      // stripped, so "prix" stays "prix". "eaux" is checked before "aux"
+      // ("bateaux" ends in "aux" too — "bateal" would be wrong).
+      if (/eaux$/.test(w)) return w.slice(0, -4) + "eau";
+      if (/aux$/.test(w)) return w.slice(0, -3) + "al";
+      if (/eux$/.test(w)) return w.slice(0, -3) + "eu";
+      if (/oux$/.test(w)) return w.slice(0, -3) + "ou";
       if (/s$/.test(w) && !/ss$/.test(w)) return w.slice(0, -1);
       return w;
     };
@@ -1185,20 +1460,20 @@ export function App() {
               <button aria-label={`Open ${n.label} menu`} aria-expanded={menuCat === n.key} aria-haspopup="true" className={`whitespace-nowrap px-3 ${slim ? "py-[14px]" : "pb-3"} text-[10px] font-bold uppercase tracking-[1px] ${menuCat === n.key ? "underline underline-offset-8 decoration-1" : "hover:underline underline-offset-4"}`} onClick={() => setMenuCat(n.key)}>{n.label}</button>
             </div>
           ))}
-          {menuCat && (() => { const entry = mega.find(e => e.key === menuCat); if (!entry) return null; const cols = entry.key === "women" ? MEGA_DESKTOP_WOMEN : entry.columns; return (
+          {menuCat && (() => { const entry = mega.find(e => e.key === menuCat); if (!entry) return null; const cols = entry.columns; return (
             <div className="absolute inset-x-0 top-full z-50 border-t border-[#f6f1eb] bg-[#fffcf7]" role="menu" aria-label={`${entry.label} mega menu`} onMouseEnter={() => setMenuCat(entry.key)}>
               <div className="mx-auto flex max-w-7xl gap-10 px-6 py-8">
-                <button aria-label={`${entry.label} ${entry.caption}`} className="relative block h-[340px] w-[260px] shrink-0 overflow-hidden text-left" onClick={() => go(megaTarget(entry, navOverrides, entry.columns[0]?.[0]?.heading || "", entry.columns[0]?.[0]?.items[0]))}>
+                <button aria-label={`${entry.label} ${entry.caption}`} className="relative block h-[340px] w-[260px] shrink-0 overflow-hidden text-left" onClick={() => go(entry.imgView)}>
                   <img src={megaImage(entry)} alt={entry.caption} className="h-full w-full object-cover" />
-                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 pb-4 pt-10 text-[13px] font-bold uppercase leading-snug tracking-wide text-white">{entry.caption}{entry.key === "women" && <span className="mt-1 block text-[11px] font-semibold normal-case tracking-normal underline underline-offset-4">Discover the runway show</span>}</span>
+                  <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 pb-4 pt-10 text-[13px] font-bold uppercase leading-snug tracking-wide text-white">{entry.caption}</span>
                 </button>
                 <div className="flex flex-1 gap-10 overflow-x-auto">
                   {cols.map((col, ci) => (
                     <div key={ci} className="min-w-[170px] space-y-7">
                       {col.map((sec) => (
                         <div key={sec.heading || sec.items.join(",")}>
-                          {sec.heading ? <button aria-label={`${entry.label} ${sec.heading}`} className="mb-2 block text-left text-[11px] font-bold uppercase tracking-[0.14em] hover:underline" onClick={() => go(megaTarget(entry, navOverrides, sec.heading))}>{sec.heading}</button> : null}
-                          {sec.items.map((it) => <button key={it} aria-label={`${entry.label} ${it}`} className="block w-full py-[5px] text-left text-sm leading-5 text-black hover:underline" onClick={() => go(megaTarget(entry, navOverrides, sec.heading, it))}>{it}</button>)}
+                          {sec.heading ? <button aria-label={`${entry.label} ${sec.heading}`} className="mb-2 block text-left text-[11px] font-bold uppercase tracking-[0.14em] hover:underline" onClick={() => { const t = frMenuTarget(entry, navOverrides, sec.heading); if (t) go(t); }}>{sec.heading}</button> : null}
+                          {sec.items.map((it) => { const t = frMenuTarget(entry, navOverrides, sec.heading, it); return t ? <button key={it} aria-label={`${entry.label} ${it}`} className="block w-full py-[5px] text-left text-sm leading-5 text-black hover:underline" onClick={() => go(t)}>{it}</button> : <span key={it} className="block w-full py-[5px] text-left text-sm leading-5 text-neutral-500">{it}</span>; })}
                         </div>
                       ))}
                     </div>
@@ -1244,17 +1519,22 @@ export function App() {
                           const hasKids = sec.items.length > 0;
                           return (
                             <div key={subKey}>
-                              <button aria-label={`Mobile ${n.label} ${sec.heading || sec.items[0]}`} aria-expanded={hasKids ? subOpen : undefined} className="flex w-full items-center justify-between py-[9px] text-left text-[11px] uppercase tracking-[0.12em]" onClick={() => { if (hasKids) setMobileSub(subOpen ? null : subKey); else go(megaTarget(n, navOverrides, sec.heading)); }}>
+                              <button aria-label={`Mobile ${n.label} ${sec.heading || sec.items[0]}`} aria-expanded={hasKids ? subOpen : undefined} className="flex w-full items-center justify-between py-[9px] text-left text-[11px] uppercase tracking-[0.12em]" onClick={() => { if (hasKids) setMobileSub(subOpen ? null : subKey); else { const t = frMenuTarget(n, navOverrides, sec.heading); if (t) go(t); } }}>
                                 <span>{sec.heading || sec.items[0]}</span>{hasKids && <span aria-hidden="true" className="text-sm leading-none">{subOpen ? "−" : "+"}</span>}
                               </button>
-                              {hasKids && subOpen && sec.items.map((it) => (
-                                <button key={it} aria-label={`Mobile ${n.label} ${it}`} className="block w-full py-[7px] pl-3 text-left text-sm normal-case tracking-normal text-neutral-800" onClick={() => go(megaTarget(n, navOverrides, sec.heading, it))}>{it}</button>
-                              ))}
+                              {hasKids && subOpen && sec.items.map((it) => {
+                                const t = frMenuTarget(n, navOverrides, sec.heading, it);
+                                return t ? (
+                                  <button key={it} aria-label={`Mobile ${n.label} ${it}`} className="block w-full py-[7px] pl-3 text-left text-sm normal-case tracking-normal text-neutral-800" onClick={() => go(t)}>{it}</button>
+                                ) : (
+                                  <span key={it} className="block w-full py-[7px] pl-3 text-left text-sm normal-case tracking-normal text-neutral-500">{it}</span>
+                                );
+                              })}
                             </div>
                           );
                         })}
                         {n.key !== "about" && (
-                          <button aria-label={`Mobile ${n.label} ${n.caption}`} className="relative mt-3 block h-36 w-full overflow-hidden text-left" onClick={() => go(megaTarget(n, navOverrides, sections[0]?.heading || "", sections[0]?.items[0]))}>
+                          <button aria-label={`Mobile ${n.label} ${n.caption}`} className="relative mt-3 block h-36 w-full overflow-hidden text-left" onClick={() => go(n.imgView)}>
                             <img src={megaImage(n)} alt={n.caption} className="h-full w-full object-cover" />
                             <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-3 pb-2.5 pt-10 text-[11px] font-bold uppercase tracking-wide text-white">{n.caption}</span>
                           </button>
@@ -1370,9 +1650,9 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
   // unless an admin sets one, and the paragraph renders only then. (The
   // old "Threading ideas" blanket text was the NOV_PHASE_1 hero copy.)
   const heroText = settings.heroText || "";
-  const heroWords = (settings.heroTitle || "A winter's tale").split(" ");
-  const heroFirst = heroWords[0] ?? "Threading";
-  const heroRest = heroWords.slice(1).join(" ") || "ideas";
+  const heroWords = (settings.heroTitle || "L'hiver sera conte").split(" ");
+  const heroFirst = heroWords[0] ?? "L'hiver";
+  const heroRest = heroWords.slice(1).join(" ") || "sera conte";
   const CAROUSEL_N = CAROUSEL_THEMES.length; // 15 slides (5 themes x 3)
   // The mobile carousel is a WINDOW (like the desktop carousel and like
   // hermes.com): 11 slides around the active index, the centre slide wide
@@ -1449,14 +1729,14 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
   useEffect(() => { const el = vidRef.current; if (!el) return; const ob = new IntersectionObserver((es) => setVidInView(!!es[0]?.isIntersecting), { threshold: 0.2 }); ob.observe(el); return () => ob.disconnect(); }, []);
   return (
     <div className="overflow-x-clip">
-      {/* BOARD a) HERO — full-viewport, full-bleed video ("A winter's tale",
+      {/* BOARD a) HERO — full-viewport, full-bleed video ("L'hiver sera conte",
           NOV_PHASE_2, 2026-11-17). On the original the video itself is a
           "Play the illustration video" button (click toggles play/pause) and
           ONLY the CTA navigates — to women's shoes. The title sits ~100px
           above the bottom, the CTA ~55px above it (measured live 2026-11-17,
           1919x998); Pause + sound controls sit bottom-right, ~25-30px above
           the bottom, sound closest to the right edge. */}
-      <section className="relative overflow-x-clip" aria-label="A winter's tale — wander into our collection">
+      <section className="relative overflow-x-clip" aria-label="L'hiver sera conte">
         <div role="button" aria-label={heroPaused ? "Play the illustration video" : "Pause the illustration video"} aria-pressed={!heroPaused} tabIndex={0} className="cursor-pointer"
           onClick={() => setHeroPaused(!heroPaused)}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setHeroPaused(!heroPaused); } }}>
@@ -1483,7 +1763,7 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           <div className="mx-auto max-w-[629px] px-[15px] text-center">
             <h1 className="font-serif-d text-[34px] italic leading-tight"><span>{heroFirst}</span> {heroRest}</h1>
             {heroText ? <p className="mx-auto mt-1 w-full max-w-[500px] break-words font-serif-d text-[16px] italic leading-[21px]">{heroText}</p> : null}
-            <button aria-label="Wander into our collection" className="font-mono-d mt-4 text-[11px] uppercase tracking-[1px] underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "women", sub: "Shoes" })}>Wander into our collection</button>
+            <button aria-label="Parcourez nos collections" className="font-mono-d mt-4 text-[11px] uppercase tracking-[1px] underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "femme", sub: "Chaussures" })}>PARCOUREZ NOS COLLECTIONS</button>
           </div>
         </div>
         <div className="absolute bottom-[10px] right-[10px] z-10 flex items-center gap-[5px]">
@@ -1500,176 +1780,12 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         </div>
       </section>
 
-      {/* BOARDS b)+c) DISCOVER CAROUSEL + PRODUCTS FOR THE THEME — one warm
-          cream board, no divider between carousel and theme products */}
-      <section className="group w-full" style={{ background: settings.bgColor || "#fcf7f1" }}>
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:pb-12 lg:pt-16">
-        {/* Mobile heading — centred, two lines, as in the user's video */}
-        <h2 className="font-serif-d text-center text-[34px] italic leading-snug lg:hidden">Discover the world <span className="block">of Hermès</span></h2>
-        {/* Desktop heading — top-left, as verified on hermes.com */}
-        <div className="hidden lg:block">
-          <div className="relative">
-            <div className="mx-auto max-w-[629px] text-center">
-              <h2 className="font-serif-d text-[34px] italic leading-snug">Discover the world of Hermès</h2>
-            </div>
-            {/* Desktop carousel arrows, top-right. The original shows NO visible
-                numeric counter here — only the segmented progress bar below the
-                carousel (verified live 2026-11-15); mobile has only the
-                progress line below the carousel. */}
-            <div className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-3">
-              <button type="button" aria-label="Previous theme" onClick={() => goToSlide(activeIdx - 1)} className="flex h-8 w-8 items-center justify-center text-xl leading-none text-black">‹</button>
-              <button type="button" aria-label="Next theme" onClick={() => goToSlide(activeIdx + 1)} className="flex h-8 w-8 items-center justify-center text-xl leading-none text-black">›</button>
-            </div>
-          </div>
-        </div>
-        {/* DESKTOP carousel (lg+) — matches hermes.com desktop exactly
-            (measured from the user's laptop screenshots of hermes.com):
-            full-bleed; centre slide 60.8vw wide × 35vw tall (16:9 desktop
-            editorial); side slides as 185px strips (same 16:9 image,
-            centre-cropped), 2 visible per side (5 slices total — the
-            128px strips the old code used showed 3 per side, 7 total);
-            white label button only on the centre slide, 32px above its
-            bottom. Clicking a strip (or an arrow) brings it to the centre
-            with a smooth width transition and the previous centre becomes
-            a strip. Starts with FASHION JEWELRY (index 0) in the centre. The window
-            renders the 11 slides around the active index (circular), so
-            wrapping 15→1 / 1→15 is seamless and no slide mounts/unmounts
-            in view. Interaction (measured live on hermes.com 2026-11-20):
-            hovering a side strip scales ONLY its photo to 1.05 (600ms
-            ease-out; the strip frame does not move, the enlarged photo is
-            cropped at the strip edges); the centre slide does NOT zoom on
-            hover. One click on a side strip centres it only — no
-            navigation; a second click on the centred slide (or its label)
-            navigates to the theme page. Zoom is a plain :hover rule in
-            theme.css (.carousel-slide) — Tailwind group-hover produced no
-            visible zoom on this carousel in two live checks (2026-11-20)
-            despite being verified in the DOM and built CSS. */}
-        <div className="carousel-full-bleed mt-6 hidden overflow-hidden lg:mt-8 lg:block" role="tablist" aria-label="Discover themes">
-          <div className="flex h-[35vw] justify-center gap-[3px]">
-            {Array.from({ length: 11 }, (_, k) => k - 5).map((off) => {
-              const logicalIdx = (((activeIdx + off) % CAROUSEL_THEMES.length) + CAROUSEL_THEMES.length) % CAROUSEL_THEMES.length;
-              const t = CAROUSEL_THEMES[logicalIdx] ?? "Fashion Jewelry";
-              const ed = CAROUSEL_EDITORIAL_DESKTOP[t];
-              if (!ed) return null;
-              const isActive = off === 0;
-              return (
-                <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${(logicalIdx % 5) + 1} of 5`} onClick={() => { if (isActive) go(themeDest(t)); else goToSlide(logicalIdx); }}
-                  className={`carousel-slide${isActive ? " carousel-slide-active" : ""} relative h-full shrink-0 overflow-hidden transition-[width] duration-500 ease-out`}
-                  style={{ width: isActive ? "60.8vw" : 185 }}>
-                  <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
-                  {isActive && (
-                    <span className="font-mono-d absolute bottom-8 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black">{t}</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        {/* MOBILE carousel — windowed (like desktop): the centre slide is
-            wide (73vw, 3:4) and the side strips are narrow slices; tapping
-            a side strip GROWS it to the centre while the old centre
-            shrinks to a strip (width transition, exactly as on hermes.com
-            — the user's video shows the side photo growing into the
-            middle on tap). No scrolling: the width transition does the
-            move. Swipe left/right moves one theme. The row height is the
-            centre slide's height (73vw x 4/3 = 97.33vw) so it never jumps
-            while the widths animate. Label only on the centre slide. */}
-        <div className="-mx-4 mt-6 overflow-hidden lg:hidden" role="tablist" aria-label="Discover themes"
-          onTouchStart={onCarouselTouchStart} onTouchEnd={onCarouselTouchEnd}>
-          <div className="flex h-[97.33vw] justify-center gap-[3px]">
-            {Array.from({ length: 11 }, (_, k) => k - 5).map((off) => {
-              const logicalIdx = (((activeIdx + off) % CAROUSEL_THEMES.length) + CAROUSEL_THEMES.length) % CAROUSEL_THEMES.length;
-              const t = CAROUSEL_THEMES[logicalIdx] ?? "Fashion Jewelry";
-              const ed = CAROUSEL_EDITORIAL[t];
-              if (!ed) return null;
-              const isActive = off === 0;
-              return (
-                <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${(logicalIdx % 5) + 1} of 5`}
-                  onClick={() => { if (suppressClickRef.current) return; if (isActive) go(themeDest(t)); else goToSlide(logicalIdx); }}
-                  className="relative h-full shrink-0 cursor-pointer overflow-hidden transition-[width] duration-500 ease-out"
-                  style={{ width: isActive ? "73vw" : 64 }}>
-                  <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
-                  {isActive && (
-                    <span className="font-mono-d absolute bottom-4 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-sm font-medium uppercase text-black">{t}</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        <div className="mx-auto mt-6 h-px w-[120px] bg-black/15 lg:mt-8" aria-hidden="true">
-          <div className="h-full bg-black transition-transform duration-300" style={{ width: `${100 / CAROUSEL_THEMES.length}%`, transform: `translateX(${activeIdx * 100}%)` }} />
-        </div>
-        {/* No counter/arrows on mobile — the original's mobile carousel has only
-            the progress line above (verified on hermes.com, phone). The 1/15
-            counter + arrows are in the desktop heading above (hidden lg:block). */}
-        {/* The original renders this heading sr-only (visually hidden,
-            screen-reader only) — verified in hermes.com's rendered HTML:
-            <h2 class="sr-only">Products for the theme Belts</h2>. The 4
-            products below ARE visible on the original, so only the heading
-            is hidden, not the products. */}
-        <h2 className="sr-only">PRODUCTS FOR THE THEME {theme.toUpperCase()}</h2>
-        <div key={theme} className="-mx-4 mt-6 grid grid-cols-2 gap-x-[2px] gap-y-8 sm:mx-0 lg:mt-8 lg:grid-cols-4 lg:gap-[2px]">
-          {shown.map((p) => <ProductCard key={p.id} p={p} plainTile eyebrow={theme === "Beauty" ? BEAUTY_EYEBROWS[p.id] : undefined} onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
-        </div>
-      </div>
-      </section>
-
-      {/* BOARD d) VIDEO — Cottage film, full-bleed board (NOV_PHASE_2,
-          2026-11-17; the Baladeur board was removed from the original
-          homepage in the same republish). Same board geometry as the old
-          Baladeur board (desktop FULL viewport height, 100vh; mobile 75vh)
-          and the same overlay pattern: a dark gradient over the bottom
-          ~53% (near-black at the bottom) and NO black block below the
-          video. The original shows NO title here — only the CTA, centred
-          ~60px above the video bottom (measured live 2026-11-17,
-          1919x998). Controls are bare white glyphs (no white squares) at
-          the video's bottom-right, ~25px above the bottom, sound closest
-          to the right edge. The Horsescape banner abuts directly below
-          (no gap). */}
-      <section ref={vidRef} className="relative overflow-hidden bg-black" aria-label="Explore our small leather goods collection video">
-        <div className="relative overflow-hidden">
-        <ProductVideo src={cottageSrc} poster={cottagePoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[75vh] w-full object-cover lg:h-screen" />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[53%] bg-gradient-to-t from-black via-black/60 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-[58px] z-10 px-4 text-center text-white">
-          <button aria-label="Explore our small leather goods collection" className="font-mono-d pointer-events-auto text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => go({ t: "category", cat: "leather", sub: "Small leather goods" })}>Explore our small leather goods collection</button>
-        </div>
-        <div className="absolute bottom-[10px] right-[10px] z-10 flex items-center gap-[5px]">
-          <button aria-label={vidPaused ? "Play video" : "Pause video"} aria-pressed={vidPaused} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setVidPaused(!vidPaused)}>
-            {vidPaused
-              ? <svg width="10" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>
-              : <svg width="10" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>}
-          </button>
-          <button aria-label={vidMuted ? "Enable sound" : "Mute"} aria-pressed={!vidMuted} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setVidMuted(!vidMuted)}>
-            {vidMuted
-              ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16 9l6 6M22 9l-6 6" /></svg>
-              : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>}
-          </button>
-        </div>
-        </div>
-      </section>
-
-      {/* Horsescape High Jewelry banner — on the original it sits below the
-          Cottage video board and above the service strip (Baladeur removed
-          from the original homepage 2026-11-17; Kelly editorial removed
-          2026-11-16; verified via homepage JSON + live).
-          Full-bleed photo, caption + DISCOVER at the bottom centre; the
-          original's DISCOVER goes to the "Hermès: jeweler of shapes" story
-          page, which the clone does not have — the section links to the
-          jewelry category (as the removed Kelly board did). */}
-      <section className="relative mb-12 cursor-pointer overflow-hidden lg:mb-16" onClick={() => go({ t: "category", cat: "jewelry" })} aria-label="Into the Horsescape, High Jewelry collection — discover">
-        <div className="relative aspect-[9/16] overflow-hidden sm:aspect-auto">
-          <picture>
-            <source media="(max-width: 640px)" srcSet={horsescapeImgMobile} />
-            <img src={horsescapeImg} alt="Woman in white by the sea with white horse sculptures, wearing Hermès high jewelry" className="block w-full" />
-          </picture>
-          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 pb-6 pt-6 text-center text-white sm:pb-8 sm:pt-8">
-            <p className="font-serif-d mx-auto max-w-3xl px-4 text-[20px] italic leading-[28px]">Into the Horsescape, High Jewelry collection</p>
-            <button aria-label="Discover the Horsescape High Jewelry collection" className="font-mono-d mt-4 text-xs font-medium uppercase tracking-normal underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "jewelry" })}>Discover</button>
-          </div>
-        </div>
-      </section>
+      {/* France conversion (Stage B) — HOMEPAGE HOLDING STATE: the US
+          theme carousel, the Cottage board and the Horsescape banner
+          are dropped, not adapted. The homepage renders the French
+          hero + French nav/footer only until the fresh France
+          homepage read lands (STAGE-B-REMAINDER.md G1). No invented
+          France themes, collection tiles or video boards. */}
     </div>
   );
 }
@@ -1959,401 +2075,153 @@ function FallWinterThemeCarousel({ go, themes: themesProp }: { go: (v: View, opt
 }
 
 function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, initialVisible, onVisibleChange }: { products: Product[]; cat: string; sub?: string; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product) => void; pinTop: number; stickyTop: number; initialVisible?: number; onVisibleChange?: (n: number) => void }) {
-  const nav = NAV.find((n) => n.key === cat);
+  const nav = NAV[cat];
   const label = catLabel(cat);
   const base = useMemo(() => {
-    const catList = products.filter((p) => p.category === cat);
     if (!sub) {
-      // Home parent page (Home rebuild, 2026-11-18): it lists EXACTLY
-      // the 1,269 live tiles from the original's /home/ listing
-      // (homePos 1–1269). The old list was every category-"home" row
-      // (1,802) plus the 8 cases/mirror rows, and the tile order only
-      // reordered them — the page read [1882] (1,810 rows + 72
-      // duplicate tile pushes). The gate is homePos-only (no category
-      // condition): the 8 cases/mirror rows live under fragrances /
-      // Make-up but carry homePos, so they stay on /home/ without a
-      // second product row. Rows not on the live list stay in the
-      // catalogue but never appear on this page (same rule as Women's
-      // Bags / Watches / Fragrances).
-      if (cat === "home") return products.filter((p) => p.homePos !== undefined);
-      // The women's default page (cat "women", no sub) IS the women's
-      // bags page (routing.ts "women|" → the bags URL, 2026-11-15):
-      // it lists exactly the 45 live tiles from the original's order
-      // (wBagPos); the rows not on the live list stay in the catalogue
-      // but never appear on this page (same rule as Scarves/Belts).
-      if (cat === "women") return products.filter((p) => p.wBagPos !== undefined);
-      // Watches parent page (cat "watches", no sub, 2026-11-15): it
-      // lists exactly the 380 live tiles from the original's order
-      // (watchPos); the 58 clone rows not on the live list stay in the
-      // catalogue but never appear on this page (same rule as Women's
-      // Bags).
-      if (cat === "watches") return products.filter((p) => p.watchPos !== undefined);
-      // Fragrances parent page (cat "fragrances", no sub, 2026-11-15):
-      // it lists exactly the 272 live tiles from the original's order
-      // (fragPos); the 40 clone rows not on the live list stay in the
-      // catalogue but never appear on this page (same rule as Watches).
-      if (cat === "fragrances") return products.filter((p) => p.fragPos !== undefined);
-      // Equestrian parent page (cat "equestrian", no sub, 2026-11-16):
-      // it lists exactly the 149 live tiles from the original's order
-      // (eqPos); the 5 clone rows not on the live list stay in the
-      // catalogue but never appear on this page (same rule as Watches).
-      if (cat === "equestrian") return products.filter((p) => p.eqPos !== undefined);
-      // Gifts parent page (cat "gifts", no sub, 2026-11-16): it lists
-      // exactly the 620 live tiles from the original's order (giftPos);
-      // the 6,216 clone rows not on the live list stay in the catalogue
-      // but never appear on this page (same rule as Equestrian). The
-      // two pre-existing gift rows (id48 Gift card, id49 Silk gift set)
-      // are NOT on the original's Gifts page and carry no giftPos.
-      if (cat === "gifts") return products.filter((p) => p.giftPos !== undefined);
-      // Gold Jewelry parent page (cat "jewelry", no sub, Group 11,
-      // 2026-11-18): it lists exactly the 323 live tiles from the
-      // original's Gold Jewelry listing (jewPos); the 85 other
-      // category-"jewelry" rows stay in the catalogue but never appear
-      // on this page — 37 of them are the Jewelry Men rows (menJewPos,
-      // they belong on the Men page) and the rest are rows the original
-      // dropped from this listing (incl. the 74 stripped by the Group 11
-      // retag). Same over-broad-gate bug class as Jewelry Men (Group 10,
-      // clone showed 1,758) and the Home rebuild ([1882] -> [1269]):
-      // the old fall-through returned every category-"jewelry" row
-      // (408) and the page read Gold Jewelry[408] against the live 323.
-      if (cat === "jewelry") return products.filter((p) => p.jewPos !== undefined);
-      // Fashion jewelry parent page (cat "fashion-jewelry", no sub,
-      // sweep 2026-11-19): it lists exactly the 789 live tiles from
-      // the original's order (fashPos 1–789); the 48 clone rows not
-      // on the live list stay in the catalogue but never appear on
-      // this page (same rule as Gold Jewelry). The 2 compose tiles
-      // (live positions 790–791) have no rows. NOTE: this page
-      // resolves as cat "fashion-jewelry" with NO sub, so it never
-      // reaches the "fashion jewelry" syn below — the base gate here
-      // is what actually filters it.
-      if (cat === "fashion-jewelry") return products.filter((p) => p.fashPos !== undefined);
-      return catList;
+      // France parents (A1 page-field-map.json): each parent page lists
+      // exactly the rows carrying its parent position field.
+      if (cat === "femme") return products.filter(frHas("frFemmeParentPos"));
+      if (cat === "homme") return products.filter(frHas("frHommeParentPos"));
+      if (cat === "maroquinerie") return products.filter(frHas("frMaroquinerieParentPos"));
+      if (cat === "bijouterie") return products.filter(frHas("frBijouterieParentPos"));
+      if (cat === "montres") return products.filter(frHas("frMontresParentPos"));
+      if (cat === "parfums-et-maquillage") return products.filter(frHas("frParfumsMaquillageParentPos"));
+      if (cat === "maison-art-de-vivre") return products.filter(frHas("frMaisonParentPos"));
+      if (cat === "equitation") return products.filter(frHas("frEquitationParentPos"));
+      if (cat === "cadeaux") return products.filter(frHas("frCadeauxParentPos"));
+      return [];
     }
     const low = sub.toLowerCase();
-    // Synonym / group mapping so a menu item shows ONLY its own products
+    // France syn map: one entry per buildable page, keyed
+    // `${cat}|${sub.toLowerCase()}`. Predicates are FIELD-ONLY — a syn
+    // never category-gates (the SYN CATEGORY-GATE TRAP: rows span
+    // categories). The Collections pages (Kelly, Chaînes d'ancre,
+    // L'Equestre, Les Fétiches, Moments précieux) and Hermessence
+    // have no extracted position field yet; their predicates match the
+    // collection name in the product name/line, scoped to the parent
+    // category, and are marked approximations (see STAGE-B-REMAINDER.md
+    // G8) — they must be replaced by field predicates once extracted.
     const syn: Record<string, (p: Product) => boolean> = {
-      // Women's Bags parent page — the original's live order (45
-      // tiles, extracted 2026-11-15) lives in wBagPos; the parent lists
-      // exactly those rows. The 5 clone rows not on the live list stay
-      // in the catalogue but never appear on the parent grid (same rule
-      // as Scarves/Belts/Dresses). Men's bags (sub "Men's bags and
-      // clutches") are a separate page and are NOT gated by wBagPos.
-      "women's bags and clutches": (p) => p.subcategory === "Bags and clutches" && (p.category === "women" || p.category === "leather") && p.wBagPos !== undefined,
-      // Men's Bags parent page — the original's live order (104
-      // tiles, extracted 2026-11-15) lives in mBagPos; the parent lists
-      // exactly those rows. The gate is mBagPos-only (no category
-      // condition): 5 of the 104 tiles are women-category rows
-      // (dual-tagged, they keep their wBagPos for the women's page).
-      // The 19 clone bag rows not on the original stay in the
-      // catalogue but never appear on the parent grid.
-      "men's bags and clutches": (p) => p.subcategory === "Bags and clutches" && p.mBagPos !== undefined,
-      // Group 11 (2026-11-18): the Bags and clutches PARENT page
-      // ("View all", /leather-goods/bags-and-clutches/, 143 tiles) —
-      // its own live order lives in bagsViewPos. Field-only gate: the
-      // parent list OVERLAPS the Women's (47) and Men's (104) lists,
-      // so a row may carry both wBagPos/mBagPos and bagsViewPos. The
-      // page previously fell to the strict subcategory fallback (all
-      // Bags and clutches rows in sortOrder).
-      "bags and clutches": (p) => p.bagsViewPos !== undefined,
-      "silk scarves and accessories": (p) => p.subcategory === "Scarves, shawls and stoles",
-      "cashmere shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles",
-      // Fragrances sub-pages (2026-11-17) — each page lists exactly its
-      // own live tiles, gated on its own position field (Bath 54 bathPos,
-      // Women's Universe 97 wUniPos, Men's Universe 90 mUniPos,
-      // Hermessence 38 hermPos, Lips 30 lipsPos, Face 11 facePos, Eyes 15
-      // eyesPos, Hands 30 handsPos, Accessories 24 accPos, Make-up 96
-      // mkPos, Fragrances 177 frgViewPos). The old ungated / regex syns
-      // returned the whole category or the wrong products (the Bath [0]
-      // bug the user reported 2026-11-17).
-      "bath": (p) => p.category === "fragrances" && p.bathPos !== undefined,
-      "hermessence collection": (p) => p.category === "fragrances" && p.hermPos !== undefined,
-      "the women's universe": (p) => p.category === "fragrances" && p.wUniPos !== undefined,
-      "the men's universe": (p) => p.category === "fragrances" && p.mUniPos !== undefined,
-      "fragrances": (p) => p.category === "fragrances" && p.frgViewPos !== undefined,
-      "make-up": (p) => p.category === "fragrances" && p.mkPos !== undefined,
-      // Leather Accessories / Luggage + Home Tech universe (2026-11-17).
-      // Field-only gates (NOT category-gated like the fragrances syns):
-      // these pages' rows span categories — travelacc has leather +
-      // fashion-jewelry rows (Paddock + AirTags), suitcases has leather +
-      // women + men rows (id82/67/62 stay women, id6305 stays men), tech
-      // has home + leather + fashion-jewelry rows. The keys only ever
-      // fire on their own page (no other menu sub shares these names).
-      "charms": (p) => p.charmPos !== undefined,
-      "travel accessories": (p) => p.travAccPos !== undefined,
-      "suitcases and travel bags": (p) => p.suitPos !== undefined,
-      "tech universe": (p) => p.techPos !== undefined,
-      // Group 1 empty pages (2026-11-17). Field-only gates (NOT
-      // category-gated): these pages' rows span categories — furniture /
-      // cases / office / children are home rows (Decor, Furniture,
-      // Blankets and throws), ballet rows are women Shoes rows, wonders /
-      // precious are jewelry rows, reading rows are home Decor rows.
-      // The keys only ever fire on their own page (no other menu sub
-      // shares these names).
-      "furniture, lighting and rugs": (p) => p.furnPos !== undefined,
-      "twilly and other small formats": (p) => p.twillyPos !== undefined,
-      "children and baby": (p) => p.childPos !== undefined,
-      "ballet flats": (p) => p.balletPos !== undefined,
-      "the wonders": (p) => p.wondersPos !== undefined,
-      "precious moments": (p) => p.preciousPos !== undefined,
-      "cases and bath linens": (p) => p.casesPos !== undefined,
-      "office and writing": (p) => p.officePos !== undefined,
-      "reading and writing": (p) => p.readingPos !== undefined,
-      // Group 2 (2026-11-17): Jewelry Collections parent + Chaînes
-      // d'ancre sub-page, FIELD-ONLY gates (same pattern as the Group 1
-      // jewelry pages). Do NOT touch the existing "our collections" syn
-      // (watchPos-gated, different key, different page).
-      "collections": (p) => p.collectionsPos !== undefined,
-      "chaînes d'ancre": (p) => p.chainedancrePos !== undefined,
-      // Watches "Our collections" view (2026-11-15): the all-watches
-      // list, gated on watchPos like the parent page.
-      "our collections": (p) => p.category === "watches" && p.watchPos !== undefined,
-      // Group 9 (2026-11-18): the Watches Women / Men pages are
-      // gendered listings with their own live orders (200 / 51 tiles,
-      // watchWomenPos / watchMenPos). The old gate returned every
-      // watches row + every women/men row (2,664 / 1,146). Branch on
-      // cat: only cat "watches" uses the new fields.
-      // Group 10 (2026-11-18): the Jewelry Men page (cat "jewelry",
-      // sub "men") is the same bug class — the old gate returned
-      // every watches row + every men row (1,758). It now uses its
-      // own live order (92 tiles, menJewPos).
-      "women": (p) => cat === "watches" ? p.watchWomenPos !== undefined : p.category === "watches" || p.category === "women",
-      "men": (p) => cat === "watches" ? p.watchMenPos !== undefined : cat === "jewelry" ? p.menJewPos !== undefined : p.category === "watches" || p.category === "men",
-      // Group 4 (2026-11-17) — "Straps" is TWO pages sharing one sub
-      // name: leather bag straps (16, category leather) under
-      // ACCESSORIES, and watch straps (50, category watches) under
-      // TIMEPIECES. Gate on cat, or the leather Straps page shows 50
-      // watch straps and the watches page gains 16 bag straps.
-      "straps": (p) => p.subcategory === "Straps" && p.category === cat,
-      "sandals": (p) => /sandal/i.test(p.name),
-      "sneakers": (p) => /sneaker/i.test(p.name),
-      "boots and ankle boots": (p) => /boot/i.test(p.name),
-      "pumps": (p) => /pump/i.test(p.name),
-      "loafers and mules": (p) => /loafer/i.test(p.name),
-      "derbies and oxford shoes": (p) => /derby|oxford/i.test(p.name),
-      "rings": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Rings" || (/\bring\b/i.test(p.name) && !/earring/i.test(p.name))) && (p.category === "fashion-jewelry" ? p.fashPos !== undefined : true),
-      "wedding rings": (p) => p.category === cat && /wedding/i.test(p.name) && /\bring\b|\bband\b/i.test(p.name),
-      "bracelets": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Bracelets" || (/bracelet|bangle/i.test(p.name) && p.subcategory !== "Rings")) && (p.category === "fashion-jewelry" ? p.fashPos !== undefined : true),
-      "necklaces and pendants": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Necklaces" || p.subcategory === "Pendants" || (/necklace|pendant/i.test(p.name) && p.subcategory !== "Earrings")) && (p.category === "fashion-jewelry" ? p.fashPos !== undefined : true),
-      "earrings": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Earrings" || /earring|ear cuff/i.test(p.name)) && (p.category === "fashion-jewelry" ? p.fashPos !== undefined : true),
-      "lips": (p) => p.category === cat && p.lipsPos !== undefined,
-      "face": (p) => p.category === cat && p.facePos !== undefined,
-      "eyes": (p) => p.category === cat && p.eyesPos !== undefined,
-      "hands": (p) => p.category === cat && p.handsPos !== undefined,
-      // Group 4 (2026-11-17) — "accessories" is THREE different pages
-      // sharing one sub name: leather Accessories (107, leatherAccPos),
-      // women Accessories / Hats and gloves (115, wAccPos) and the
-      // fragrances make-up Accessories (24, accPos). Branch on cat, or
-      // the leather page falls through to the fragrances predicate and
-      // renders [] (the dead-collection message). FIELD-ONLY gates for
-      // leather/women (2026-11-17 fix): their rows SPAN categories —
-      // 76 of the 107 leather rows are category "home" (Decor agendas
-      // and notebooks) and 9 of the 115 women's rows are category
-      // "home" (beach Textiles). A `p.category === cat` gate hid them
-      // all live (Accessories showed [31], Hats [106]).
-      "accessories": (p) => (cat === "leather" ? p.leatherAccPos !== undefined : cat === "women" ? p.wAccPos !== undefined : p.category === cat && p.accPos !== undefined),
-      // Women's Hats and gloves page (Group 4, 2026-11-17) — the
-      // original's live order (115 tiles) lives in wAccPos. FIELD-ONLY
-      // gate for women (2026-11-17 fix): 9 of the 115 rows are
-      // category "home" (beach Textiles dual-tags) — a category gate
-      // hid them live (page showed [106]). The MEN's Hats and gloves
-      // page shares the sub name, so the men branch replicates the
-      // strict fallback (subcategory/line match, 9 rows).
-      "hats and gloves": (p) => cat === "women" ? p.wAccPos !== undefined : p.category === cat && (p.subcategory.toLowerCase() === "hats and gloves" || p.line.toLowerCase() === "hats and gloves"),
-      // Leather Luggage page (Group 4, 2026-11-17) — the original's
-      // live order (48 tiles) lives in luggagePos. FIELD-ONLY gate
-      // (2026-11-17 fix): 10 of the 48 rows are category women / men /
-      // fashion-jewelry (Bags and clutches + Key rings) — a category
-      // gate hid them live (page showed [38]).
-      "luggage": (p) => p.luggagePos !== undefined,
-      // Group 5 (2026-11-17) — Men's Ties, bow ties and pocket squares
-      // [488], Men's Scarves [146] and the Ties and scarves parent
-      // [634]. FIELD-ONLY gates (the Group 4 category-gate trap): the
-      // menScarfPos rows SPAN categories — the 27 exact-matched men's
-      // scarves are category "women" rows (shared with the women's
-      // scarves page) while the new rows are category "men"; the
-      // menTiesPos rows span men (ties) + women (scarves). A
-      // `p.category === cat` gate would hide them live. The tiePos
-      // rows are all category "men" but the key only ever fires on
-      // this page, so field-only is used for all three.
-      "ties, bow ties and pocket squares": (p) => p.tiePos !== undefined,
-      "ties": (p) => p.tiePos !== undefined,
-      "scarves": (p) => cat === "men" ? p.menScarfPos !== undefined : p.subcategory === "Scarves, shawls and stoles" && p.scarfPos !== undefined,
-      "ties and scarves": (p) => p.menTiesPos !== undefined,
-      // Group 6 (2026-11-17) — Watches Timepieces [229]. FIELD-ONLY
-      // gate (the Group 4 category-gate trap): the key only ever
-      // fires on this page, so field-only is used (same as the
-      // Group 5 ties keys).
-      "timepieces": (p) => p.timepiecePos !== undefined,
-      // Group 7 (2026-11-18) — Petit h [276]. FIELD-ONLY gate (same
-      // Group 4 trap): all tagged rows are category "home", but the
-      // key only ever fires on this page, so field-only is used.
-      "petit h": (p) => p.petitHPos !== undefined,
-      // Group 8 (2026-11-18) — Home and Art of living [1756]. FIELD-ONLY
-      // gate (same Group 4 trap): the 40 tagged rows span categories
-      // (home Decor/Tableware/Blankets and throws/Textiles/Furniture/
-      // Bags and clutches + 1 leather Small leather goods), so a
-      // category gate would hide rows.
-      "home and art of living": (p) => p.homeArtPos !== undefined,
-      "blankets and pillows": (p) => p.textilesPos !== undefined,
-      "decorative objects and games": (p) => p.objectsPos !== undefined,
-      "sports and outdoor": (p) => p.sportsPos !== undefined,
-      "beach": (p) => p.beachPos !== undefined,
-      // Group 9 (2026-11-18): the four Gifts sub-pages are separate
-      // listings with their own live orders (women 278, men 219,
-      // children 72, dogs 54). The old syns returned the whole gifts
-      // category (2 rows each) or a scarves/chiens guess (11 rows).
-      // Field-only gates — tagged rows span categories.
-      "for women": (p) => p.giftWomenPos !== undefined,
-      "for men": (p) => p.giftMenPos !== undefined,
-      "for children": (p) => p.giftChildPos !== undefined,
-      "for dogs": (p) => p.giftDogsPos !== undefined,
-      "dresses": (p) => p.category === cat && p.subcategory === "Dresses and skirts" && (cat === "women" ? p.dressPos !== undefined : true),
-      // Ready-to-wear parent pages (2026-11-16) — the original's live
-      // order lives in wRtwPos (women, 488 tiles) / mRtwPos (men, 207
-      // tiles). The old line/subcategory gate returned only the 84
-      // "Dresses and skirts" rows for both parent pages.
-      "ready-to-wear": (p) => (cat === "women" && p.wRtwPos !== undefined) || (cat === "men" && p.mRtwPos !== undefined),
-      // Fall-Winter 2026 is a gendered collection: the women's page (cat
-      // "women") shows the women's 330 and the men's page (cat "men") shows
-      // the men's 143. Both sets carry the same line value — the product's
-      // own category is what separates them. (Batch 15, 2026-11-11.)
-      "fall-winter 2026 collection": (p) => p.line === "Fall-Winter 2026" && p.category === cat,
-      "spring-summer 2026 collection": (p) => p.line === "Spring-Summer 2026",
-      "spring-summer 2027 collection": (p) => p.line === "Spring-Summer 2027" && p.ssPos !== undefined,
-      "spring-summer 2027": (p) => p.line === "Spring-Summer 2027" && p.ssPos !== undefined,
-      // Women's Scarves parent page — the original's live order (436
-      // tiles, re-read 2026-11-19) lives in scarfPos; the parent lists
-      // exactly those rows. The 61 clone rows not on the live list (19
-      // empty-ref stubs + old-season colourways) stay in the catalogue
-      // but never appear on the parent grid. Men's scarves (cat "men")
-      // are a separate page and are NOT gated by scarfPos.
-      // NOTE: the key MUST carry the commas — subLow is "scarves, shawls
-      // and stoles" (2026-11-15: the comma-less key never matched, so the
-      // page fell through to the strict subcategory match and showed 518).
-      // Group 5 (2026-11-17): the men's branch is now menScarfPos-gated
-      // — the old `true` branch returned ALL 526 scarf-subcategory rows
-      // on the men's page (the homepage carousel's "Scarves" tile links
-      // here with sub "Scarves, shawls and stoles", cat "men").
-      "scarves, shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : cat === "men" ? p.menScarfPos !== undefined : true),
-      // Alias keys (2026-11-17): the mobile menu heading is "Scarves
-      // shawls and stoles" (no commas) and the desktop heading is
-      // "Scarves and stoles" — both missed the comma key above and
-      // rendered EMPTY. Same predicate as the comma key.
-      "scarves shawls and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : cat === "men" ? p.menScarfPos !== undefined : true),
-      "scarves and stoles": (p) => p.subcategory === "Scarves, shawls and stoles" && (cat === "women" ? p.scarfPos !== undefined : cat === "men" ? p.menScarfPos !== undefined : true),
-      // Women's Belts parent page — the original's live order (266
-      // tiles, extracted 2026-11-15) lives in beltPos; the parent lists
-      // exactly those rows. The 101 clone rows not on the live list stay
-      // in the catalogue but never appear on the parent grid (same rule
-      // as Scarves). Men's belts (cat "men") are NOT gated by beltPos.
-      // NOTE: the predicate is category-aware in BOTH branches — the syn
-      // applies to ALL products, so an ungated men's branch would leak
-      // women's belts onto the men's page.
-      "belts": (p) => p.category === cat && p.subcategory === "Belts" && (cat === "women" ? p.beltPos !== undefined : true),
-      // Women's Dresses and skirts parent page — the original's live
-      // order (78 tiles, extracted 2026-11-15) lives in dressPos; the
-      // parent lists exactly those rows. The 6 clone rows not on the live
-      // list stay in the catalogue but never appear on the parent grid
-      // (same rule as Scarves/Belts). No tile map: the live list has no
-      // repeated tiles, so the dressPos sort alone renders all 78.
-      "dresses and skirts": (p) => p.category === cat && (cat === "women" ? p.dressPos !== undefined : p.subcategory === "Dresses and skirts"),
-      // Women's Hair accessories page — the original's live order (26
-      // tiles, extracted 2026-11-16) lives in hairPos; the page lists
-      // exactly those rows. The WOMEN menu "HAIR ACCESSORIES" heading
-      // resolves here via megaTarget (headingToSub), and the
-      // fashion-jewelry "Hair accessories and combs" item is redirected
-      // here too (see megaTarget).
-      "hair accessories": (p) => p.category === "women" && p.hairPos !== undefined,
-      // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's
-      // live orders (50 / 103 tiles) live in horsePos / riderPos.
-      "horse": (p) => p.category === "equestrian" && p.horsePos !== undefined,
-      "rider": (p) => p.category === "equestrian" && p.riderPos !== undefined,
-      // Tableware page (cat "home", sub "Tableware") — the original's
-      // live order (534 tiles, extracted 2026-11-15) lives in tabPos;
-      // the page lists exactly those rows. The 117 clone Tableware
-      // rows not on the live list stay in the catalogue but never
-      // appear on the grid (same rule as Scarves/Belts/Dresses).
-      // The 603 Tableware rows that also carry homePos still appear
-      // on the Home parent page — tabPos does not touch homePos.
-      "tableware": (p) => p.tabPos !== undefined,
-      // Women's Shoes page — gated on shoePos since the Group 12 retag
-      // (2026-11-18): the original's live order (732 tiles) lives in
-      // shoePos; the page lists exactly those rows. The 14 clone rows not
-      // on the live list stay in the catalogue but never appear on the grid
-      // (same rule as Scarves/Belts/Dresses, and the men's branch above).
-      // Before the gate the page showed [746] = 732 live + 14 kept rows.
-      // NOTE: the key MUST be exactly "shoes" — subLow is "shoes" for
-      // both the women's and men's Shoes pages (Scarves comma lesson).
-      "shoes": (p) => p.category === cat && p.subcategory === "Shoes" && (cat === "men" ? p.menShoePos !== undefined : p.shoePos !== undefined),
-      "loafers": (p) => /loafer/i.test(p.name),
-      "boots": (p) => /boot/i.test(p.name),
-      "mules": (p) => /mule|loafer/i.test(p.name),
-      "necklaces": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && (p.subcategory === "Necklaces" || /necklace/i.test(p.name)) && (p.category === "fashion-jewelry" ? p.fashPos !== undefined : true),
-      "twillys": (p) => p.subcategory === "Scarves, shawls and stoles",
-      "scarves 90 cm": (p) => p.subcategory === "Scarves, shawls and stoles",
-      "cashmere": (p) => p.subcategory === "Scarves, shawls and stoles",
-      "stole": (p) => p.subcategory === "Scarves, shawls and stoles",
-      "pins and brooches": (p) => (cat === "women" ? p.category === "fashion-jewelry" : p.category === cat) && /\bpin\b|\bbrooch/i.test(p.name),
-      // Small leather goods fine subcategories — products carry fineSub
-      // ("To Go wallets" / "Wallets" / "Card holders" / "Pouches and
-      // cases" / "Customizable") while their subcategory stays "Small
-      // leather goods", so the parent page still lists every row.
-      "to go wallets": (p) => p.fineSub === "To Go wallets" && p.slgPos !== undefined,
-      "wallets": (p) => p.fineSub === "Wallets" && p.slgPos !== undefined,
-      "card holders": (p) => p.fineSub === "Card holders" && p.slgPos !== undefined,
-      "pouches and cases": (p) => p.fineSub === "Pouches and cases" && p.slgPos !== undefined,
-      "customizable": (p) => /customizable/i.test(p.name),
-      // Small leather goods PARENT page — the original's live order
-      // (350 tiles, re-read 2026-11-20) lives in slgParentPos; the
-      // parent lists exactly those rows. Rows with slgPos but no
-      // slgParentPos (23) are filter-only and never appear here.
-      // The display total is overridden to 350 below (see totalForCounter).
-      "small leather goods": (p) => p.category === "leather" && p.subcategory === "Small leather goods" && p.slgParentPos !== undefined,
-      // Fashion jewelry — the costume-jewelry page. The WOMEN menu's
-      // FASHION JEWELRY "View all" lands here (cat "women", sub
-      // "Fashion jewelry"); the gate is fashPos-based (the original's
-      // live order, retagged 2026-11-19) so it works from any menu and
-      // excludes rows delisted from the original.
-      "fashion jewelry": (p) => p.fashPos !== undefined,
-      // Men's RTW sub-pages — products carry fineSub (the sub-page name)
-      // and subPos (their order on that sub-page); the rows keep their own
-      // subcategory/line, so the FW collection page is unaffected.
-      "coats and parkas": (p) => p.fineSub === "Coats and parkas",
-      "jackets and blazers": (p) => p.fineSub === "Jackets and blazers",
-      "knitwear": (p) => p.fineSub === "Knitwear",
-      "shirts": (p) => p.fineSub === "Shirts",
-      // Group 10 (2026-11-18): the women's T-shirts page is a
-      // dedicated live order (53 tiles, tshirtPos) — the old fineSub
-      // gate returned the MEN's 57 t-shirts (every fineSub row is
-      // category "men"), so the women's page showed men's products.
-      // Branch on cat: only cat "women" uses tshirtPos; the men's
-      // page keeps the fineSub gate + subPos order.
-      "t-shirts and sweatshirts": (p) => cat === "women" ? p.tshirtPos !== undefined : p.fineSub === "T-shirts and sweatshirts",
-      // Alias keys (2026-11-17, empty-pages audit): the stale desktop
-      // labels "T-shirts and polos" and "Knitwear and sweaters" produced
-      // subs that missed every syn and rendered EMPTY. The labels are
-      // corrected in MEGA_DESKTOP_WOMEN, but these aliases keep old
-      // links/bookmarks working.
-      "t-shirts and polos": (p) => cat === "women" ? p.tshirtPos !== undefined : p.fineSub === "T-shirts and sweatshirts",
-      // Group 10 (2026-11-18): the women's Knitwear page is a
-      // dedicated live order (154 tiles, knitPos) — it rendered via
-      // the strict subcategory fallback (193 rows, men + women mixed).
-      // The "knitwear" key below is the MEN's page (fineSub "Knitwear").
-      "knitwear and twillaines": (p) => p.knitPos !== undefined,
-      "knitwear and sweaters": (p) => p.knitPos !== undefined,
-      "pants and shorts": (p) => p.fineSub === "Pants and shorts",
-      "beachwear": (p) => p.fineSub === "Beachwear",
+    "femme|chaussures": frAny("frFemmeSandalesPos", "frFemmeSneakersPos", "frFemmeBottesEtBottinesPos", "frFemmeEscarpinsPos", "frFemmeMocassinsEtMulesPos", "frFemmeBallerinesPos"),
+    "femme|manteaux et vestes": frHas("frFemmeManteauxEtVestesPos"),
+    "femme|cuir": frHas("frFemmeCuirPos"),
+    "femme|robes et jupes": frHas("frFemmeRobesEtJupesPos"),
+    "femme|hauts et chemises": frHas("frFemmeHautsEtChemisesPos"),
+    "femme|pantalons et shorts": frHas("frFemmePantalonsEtShortsPos"),
+    "femme|mailles et twillaines": frHas("frFemmeMaillesEtTwillainesPos"),
+    "femme|bain": frHas("frFemmeBainPos"),
+    "femme|sandales": frHas("frFemmeSandalesPos"),
+    "femme|sneakers": frHas("frFemmeSneakersPos"),
+    "femme|bottes et bottines": frHas("frFemmeBottesEtBottinesPos"),
+    "femme|escarpins": frHas("frFemmeEscarpinsPos"),
+    "femme|mocassins et mules": frHas("frFemmeMocassinsEtMulesPos"),
+    "femme|ballerines": frHas("frFemmeBallerinesPos"),
+    "femme|carrés et accessoires de soie": frHas("frFemmeCarresEtAccessoiresDeSoiePos"),
+    "femme|châles et écharpes en cachemire": frHas("frFemmeChalesEtEcharpesEnCachemirePos"),
+    "femme|twillys et autres petits formats": frHas("frFemmeTwillysEtAutresPetitsFormatsPos"),
+    "femme|carrés, châles et écharpes": frAny("frFemmeCarresEtAccessoiresDeSoiePos", "frFemmeChalesEtEcharpesEnCachemirePos", "frFemmeTwillysEtAutresPetitsFormatsPos"),
+    "femme|bracelets": frHas("frFemmeBraceletsPos"),
+    "femme|colliers et pendentifs": frHas("frFemmeColliersEtPendentifsPos"),
+    "femme|boucles d'oreilles": frHas("frFemmeBouclesDOreillesPos"),
+    "femme|bagues": frHas("frFemmeBaguesPos"),
+    "femme|bijouterie fantaisie": frAny("frFemmeBraceletsPos", "frFemmeColliersEtPendentifsPos", "frFemmeBouclesDOreillesPos", "frFemmeBaguesPos"),
+    "femme|ceintures": frHas("frFemmeCeinturesPos"),
+    "femme|chapeaux et gants": frHas("frFemmeChapeauxEtGantsPos"),
+    "femme|accessoires cheveux": frHas("frFemmeAccessoiresCheveuxPos"),
+    "homme|écharpes et carrés": frHas("frHommeEcharpesEtCarresPos"),
+    "homme|manteaux et parkas": frHas("frHommeManteauxEtParkasPos"),
+    "homme|blousons et vestes": frHas("frHommeBlousonsEtVestesPos"),
+    "homme|mailles": frHas("frHommeMaillesPos"),
+    "homme|chemises": frHas("frHommeChemisesPos"),
+    "homme|t-shirts et sweat-shirts": frHas("frHommeTShirtsEtSweatShirtsPos"),
+    "homme|pantalons et shorts": frHas("frHommePantalonsEtShortsPos"),
+    "homme|bain": frHas("frHommeBainPos"),
+    "homme|sneakers": frHas("frHommeSneakersPos"),
+    "homme|sandales": frHas("frHommeSandalesPos"),
+    "homme|mocassins et mules": frHas("frHommeMocassinsEtMulesPos"),
+    "homme|derbies et richelieus": frHas("frHommeDerbiesEtRichelieusPos"),
+    "homme|bottes et bottines": frHas("frHommeBottesEtBottinesPos"),
+    "homme|chaussures": frAny("frHommeMocassinsEtMulesPos", "frHommeDerbiesEtRichelieusPos", "frHommeBottesEtBottinesPos", "frHommeSneakersPos", "frHommeSandalesPos"),
+    "homme|cravates, nœuds papillons et pochettes": frHas("frHommeCravatesNUdsPapillonsEtPochettesPos"),
+    "homme|bijouterie fantaisie": frHas("frHommeBijouterieFantaisiePos"),
+    "homme|ceintures": frHas("frHommeCeinturesPos"),
+    "homme|chapeaux et gants": frHas("frHommeChapeauxEtGantsPos"),
+    "maroquinerie|petite maroquinerie": frAny("frMaroquineriePortefeuillesToGoPos", "frMaroquinerieTroussesEtEtuisPos", "frMaroquineriePortefeuillesPos", "frMaroquineriePorteCartesPos"),
+    "maroquinerie|sacs et pochettes femme": frHas("frMaroquinerieSacsEtPochettesFemmePos"),
+    "maroquinerie|sacs et pochettes homme": frHas("frMaroquinerieSacsEtPochettesHommePos"),
+    "maroquinerie|sacs et pochettes": frAny("frMaroquinerieSacsEtPochettesFemmePos", "frMaroquinerieSacsEtPochettesHommePos"),
+    "maroquinerie|portefeuilles to go": frHas("frMaroquineriePortefeuillesToGoPos"),
+    "maroquinerie|portefeuilles": frHas("frMaroquineriePortefeuillesPos"),
+    "maroquinerie|porte-cartes": frHas("frMaroquineriePorteCartesPos"),
+    "maroquinerie|trousses et étuis": frHas("frMaroquinerieTroussesEtEtuisPos"),
+    "maroquinerie|accessoires de sac": frHas("frMaroquinerieAccessoiresDeSacPos"),
+    "maroquinerie|bandoulières": frHas("frMaroquinerieBandoulieresPos"),
+    "maroquinerie|lire et écrire": frHas("frMaroquinerieLireEtEcrirePos"),
+    "maroquinerie|valises et sacs de voyage": frHas("frMaroquinerieValisesEtSacsDeVoyagePos"),
+    "maroquinerie|accessoires de voyage": frHas("frMaroquinerieAccessoiresDeVoyagePos"),
+    "bijouterie|bijoux en or": frAny("frBijouterieBijouxEnOrBaguesPos", "frBijouterieAlliancesPos", "frBijouterieBijouxEnOrBraceletsPos", "frBijouterieBijouxEnOrColliersEtPendentifsPos", "frBijouterieBijouxEnOrBijouxDOreillesPos"),
+    "bijouterie|bagues": frHas("frBijouterieBijouxEnOrBaguesPos"),
+    "bijouterie|alliances": frHas("frBijouterieAlliancesPos"),
+    "bijouterie|bracelets": frHas("frBijouterieBijouxEnOrBraceletsPos"),
+    "bijouterie|colliers et pendentifs": frHas("frBijouterieBijouxEnOrColliersEtPendentifsPos"),
+    "bijouterie|bijoux d'oreilles": frHas("frBijouterieBijouxEnOrBijouxDOreillesPos"),
+    "bijouterie|bagues en argent": frHas("frBijouterieBijouxEnArgentBaguesPos"),
+    "bijouterie|bracelets en argent": frHas("frBijouterieBijouxEnArgentBraceletsPos"),
+    "bijouterie|colliers et pendentifs en argent": frHas("frBijouterieBijouxEnArgentColliersEtPendentifsPos"),
+    "bijouterie|bijoux d'oreilles en argent": frHas("frBijouterieBijouxEnArgentBijouxDOreillesPos"),
+    "bijouterie|bijoux en argent": frAny("frBijouterieBijouxEnArgentBaguesPos", "frBijouterieBijouxEnArgentBraceletsPos", "frBijouterieBijouxEnArgentColliersEtPendentifsPos", "frBijouterieBijouxEnArgentBijouxDOreillesPos"),
+    // Approximation (G8): no extracted field yet.
+    "bijouterie|kelly": (p) => p.category === "bijouterie" && (/bijouterie/i.test(p.name) || /bijouterie/i.test(p.line ?? "")),
+    // Approximation (G8): no extracted field yet.
+    "bijouterie|chaînes d'ancre": (p) => p.category === "bijouterie" && (/bijouterie/i.test(p.name) || /bijouterie/i.test(p.line ?? "")),
+    // Approximation (G8): no extracted field yet.
+    "bijouterie|l'equestre": (p) => p.category === "bijouterie" && (/bijouterie/i.test(p.name) || /bijouterie/i.test(p.line ?? "")),
+    // Approximation (G8): no extracted field yet.
+    "bijouterie|les fétiches": (p) => p.category === "bijouterie" && (/bijouterie/i.test(p.name) || /bijouterie/i.test(p.line ?? "")),
+    // Approximation (G8): no extracted field yet.
+    "bijouterie|moments précieux": (p) => p.category === "bijouterie" && (/bijouterie/i.test(p.name) || /bijouterie/i.test(p.line ?? "")),
+    "bijouterie|homme": frHas("frBijouterieHommePos"),
+    "montres|femme": frHas("frMontresFemmePos"),
+    "montres|homme": frHas("frMontresHommePos"),
+    "montres|bracelets": frHas("frMontresBraceletsPos"),
+    "montres|apple watch hermès": frHas("frMontresAppleWatchHermesPos"),
+    "parfums-et-maquillage|maquillage": frAny("frMaquillageLevresPos", "frMaquillageTeintPos", "frMaquillageYeuxPos", "frMaquillageMainsPos", "frMaquillageAccessoiresPos"),
+    // Approximation (G8): no extracted field yet.
+    "parfums-et-maquillage|hermessence": (p) => p.category === "parfums-et-maquillage" && (/parfums-et-maquillage/i.test(p.name) || /parfums-et-maquillage/i.test(p.line ?? "")),
+    "parfums-et-maquillage|femme": frHas("frParfumsFemmePos"),
+    "parfums-et-maquillage|homme": frHas("frParfumsHommePos"),
+    "parfums-et-maquillage|bain": frHas("frParfumsLArtDeVivrePos"),
+    "parfums-et-maquillage|parfums": frAny("frParfumsFemmePos", "frParfumsHommePos", "frParfumsLArtDeVivrePos"),
+    "parfums-et-maquillage|lèvres": frHas("frMaquillageLevresPos"),
+    "parfums-et-maquillage|teint": frHas("frMaquillageTeintPos"),
+    "parfums-et-maquillage|yeux": frHas("frMaquillageYeuxPos"),
+    "parfums-et-maquillage|mains": frHas("frMaquillageMainsPos"),
+    "parfums-et-maquillage|accessoires": frHas("frMaquillageAccessoiresPos"),
+    "maison-art-de-vivre|art de la table": frHas("frArtTablePos"),
+    "maison-art-de-vivre|textiles": frHas("frMaisonTextilesPos"),
+    "maison-art-de-vivre|objets": frHas("frMaisonObjetsPos"),
+    "maison-art-de-vivre|mobilier et luminaires": frHas("frMaisonMobilierEtLuminairesPos"),
+    "maison-art-de-vivre|bureau et écriture": frHas("frMaisonBureauEtEcriturePos"),
+    "maison-art-de-vivre|trousses et linge de toilette": frHas("frMaisonTroussesEtLingeDeToilettePos"),
+    "maison-art-de-vivre|enfant et naissance": frHas("frMaisonEnfantEtNaissancePos"),
+    "maison-art-de-vivre|plage": frHas("frMaisonPlagePos"),
+    "maison-art-de-vivre|sports et plein air": frHas("frMaisonSportsEtPleinAirPos"),
+    "maison-art-de-vivre|univers tech": frHas("frMaisonUniversTechPos"),
+    "maison-art-de-vivre|petit h": frHas("frPetitHPos"),
+    "equitation|cheval": frHas("frEquitationChevalPos"),
+    "equitation|cavalier": frHas("frEquitationCavalierPos"),
+    "cadeaux|pour femme": frHas("frCadeauxPourFemmePos"),
+    "cadeaux|pour homme": frHas("frCadeauxPourHommePos"),
+    "cadeaux|enfants et naissance": frHas("frCadeauxEnfantsEtNaissancePos"),
+    "cadeaux|pour chien": frHas("frCadeauxPourChienPos"),
     };
-    if (syn[low]) return products.filter(syn[low]);
-    const strict = (x: Product) => x.subcategory.toLowerCase() === low || x.line.toLowerCase() === low;
-    const inCat = catList.filter(strict);
-    if (inCat.length) return inCat;
-    const across = products.filter(strict);
-    if (across.length) return across;
-    // Heading-style subs (e.g. "Bags and clutches", "Belts", "Shoes", "Perfumes", "Make-up", "Tableware", "Tack")
-    const bySubCat = products.filter((x) => x.subcategory.toLowerCase() === low);
-    if (bySubCat.length) return bySubCat;
-    return [];
+    // Route: the France syn table is the only source of truth. A page
+    // with no syn entry renders the empty state rather than a wrong list.
+    const key = `${cat}|${low}`;
+    const pred = syn[key];
+    if (!pred) return [];
+    return products.filter(pred);
   }, [products, cat, sub]);
 
   // ---- Page identity -------------------------------------------------------
@@ -2361,295 +2229,139 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // Men's RTW sub-pages sort by subPos (their own order on that page),
   // not by fwPos (the FW collection order). The FW collection page itself
   // is not a sub-page, so it still sorts by fwPos.
-  const isMensRtwSub = cat === "men" && ["coats and parkas", "jackets and blazers", "knitwear", "shirts", "t-shirts and sweatshirts", "pants and shorts", "beachwear"].includes(subLow);
-  // Men's RTW parent page (cat "men", sub "Ready-to-wear") — its
-  // descriptive paragraph (verbatim from hermes.com, 2026-11-16).
-  const isMensRtwPage = cat === "men" && subLow === "ready-to-wear";
-  // Women's RTW parent page (cat "women", sub "Ready-to-wear") — its
-  // own [421] display order (wRtwPos) and descriptive paragraph
-  // (verbatim from hermes.com, 2026-11-16).
-  const isWomensRtwPage = cat === "women" && subLow === "ready-to-wear";
-  // Spring-Summer 2027 Collection page (sweep 2026-11-19) — cat "women",
-  // sub "Spring-Summer 2027 Collection" (alias "Spring-Summer 2027").
-  const isSpringSummerPage = cat === "women" && (subLow === "spring-summer 2027 collection" || subLow === "spring-summer 2027");
-  // Group 10 (2026-11-18): the women's T-shirts and Knitwear
-  // sub-pages have their own live orders (53 / 154 tiles,
-  // tshirtPos / knitPos) — they are RTW sub-pages, so isRTWPage
-  // still covers their top breadcrumb ("WOMEN | READY-TO-WEAR").
-  const isWomensTshirtsPage = cat === "women" && subLow === "t-shirts and sweatshirts";
-  const isWomensKnitwearPage = cat === "women" && subLow === "knitwear and twillaines";
-  // SLG sub-pages sort by slgPos (their own order on that dedicated page),
-  // not by sortOrder. The SLG parent page is not a sub-page; it sorts by
-  // slgParentPos (the original's live parent order, 2026-11-20).
-  const isSlgSub = cat === "leather" && ["to go wallets", "wallets", "card holders", "pouches and cases"].includes(subLow);
-  // The SLG parent page (cat "leather", sub "Small leather goods") —
-  // its own [350] display total, filter cards, editorial inserts,
-  // paragraph and breadcrumbs (2026-11-20).
-  const isSlgParent = cat === "leather" && subLow === "small leather goods";
-  // Men's FW collection page (cat "men", sub "Fall-Winter 2026
-  // Collection") — its own editorial inserts (2026-11-15).
-  const isMensFwPage = cat === "men" && (subLow === "fall-winter 2026 collection" || subLow === "fall-winter 2026");
-  // Fine jewelry (2026-11-15) sorts by jewPos — the original's order,
-  // rings first — and fashion jewelry by fashPos; both apply to the
-  // parent page and to the sub-pages (rings, bracelets, ...), whose
-  // lists keep their original relative order.
-  const isJewelryPage = cat === "jewelry";
-  const isFashionJewelryPage = cat === "fashion-jewelry";
-  const isFashionJewelryParentPage = cat === "fashion-jewelry" && !sub;
-  // Home parent page (cat "home", no sub) — sorts by homePos (2026-11-15),
-  // dual-lists the 8 fragrances/Make-up cases + mirror, and carries the
-  // collapsed editorial block + cross-universe theme carousel.
-  const isHomePage = cat === "home" && !sub;
-  // Women's Shoes page (cat "women", sub "Shoes") — sorts by shoePos
-  // (the original's order, 2026-11-15) and carries the descriptive
-  // paragraph. Men's shoes (cat "men") are a separate page and are
-  // NOT affected.
-  const isWomensShoesPage = cat === "women" && subLow === "shoes";
-  // Women's Scarves page (cat "women", sub "Scarves, shawls and
-  // stoles") — sorts by scarfPos (the original's order, 2026-11-15).
-  // Men's scarves (cat "men") are a separate page and are NOT affected.
-  const isWomensScarvesPage = cat === "women" && ["scarves, shawls and stoles", "scarves shawls and stoles", "scarves and stoles"].includes(subLow);
-  const isWomensBeltsPage = cat === "women" && subLow === "belts";
-  const isWomensDressesPage = cat === "women" && (subLow === "dresses and skirts" || subLow === "dresses");
-  // Women's Bags parent page (cat "women", no sub — the default page —
-  // or sub "Women's bags and clutches", 2026-11-15) — sorts by wBagPos
-  // (the original's live order, 45 tiles) and carries the descriptive
-  // paragraph + "Equestrian style" insert. The men's bags page (sub
-  // "Men's bags and clutches") is a separate page and is NOT affected.
-  const isWomensBagsPage = (cat === "women" && !sub) || subLow === "women's bags and clutches";
-  // Men's Bags parent page (cat "leather", sub "Men's bags and
-  // clutches", 2026-11-15) — sorts by mBagPos (the original's live
-  // order, 104 tiles) and carries the descriptive paragraph +
-  // "Kelly in the city" / "Hands-free mode" inserts. The women's
-  // bags page is a separate page and is NOT affected.
-  const isMensBagsPage = cat === "leather" && subLow === "men's bags and clutches";
-  // Bags and clutches parent page ("View all", cat "leather", sub
-  // "Bags and clutches", Group 11, 2026-11-18) — the original's
-  // /leather-goods/bags-and-clutches/ listing (143 tiles), sorted by
-  // bagsViewPos, with the "The goldsmith's touch" / "City style"
-  // inserts and the full footer paragraph below the grid.
-  const isBagsViewPage = cat === "leather" && subLow === "bags and clutches";
-  // Watches parent page (cat "watches", no sub, 2026-11-15) — sorts
-  // by watchPos (the original's live order, 370 tiles) and carries
-  // the descriptive paragraph. The sub-views (Women / Men / Straps)
-  // are NOT gated — their original totals were not measured; only
-  // the parent page is.
-  const isWatchesPage = cat === "watches" && !sub;
-  // Watches Timepieces page (Group 6, 2026-11-17) — the original's
-  // /us/en/category/timepieces/ listing (229 tiles), sorted by
-  // timepiecePos, with the "Discover what's possible" / "Ahead of
-  // time" inserts and the horology paragraph below the grid.
-  const isTimepiecesPage = cat === "watches" && subLow === "timepieces";
-  // Watches Women / Men pages (Group 9, 2026-11-18) — the original's
-  // /us/en/category/watches/women/ (200 tiles) and /watches/men/
-  // (51 tiles) listings, sorted by watchWomenPos / watchMenPos, with
-  // their own inserts, paragraphs and theme carousels below the grid.
-  // No sub-nav row on either page (live category page text fetch).
-  const isWatchWomenPage = cat === "watches" && subLow === "women";
-  const isWatchMenPage = cat === "watches" && subLow === "men";
-  // Petit h page (Group 7, 2026-11-18) — the original's
-  // /us/en/category/petit-h/ listing (276 tiles), sorted by
-  // petitHPos, with the "Applied creativity" / "Deconstructing the
-  // norm" inserts and the 3-paragraph "reverse creation" text below
-  // the grid.
-  const isPetitHPage = cat === "home" && subLow === "petit h";
-  // Home and Art of living page (Group 8, 2026-11-18) — the original's
-  // heading page /home-art-living/ (1,756 tiles, homeArtPos order). NOT
-  // the /home/ parent (isHomePage, homePos, 1,269 tiles): different URL,
-  // different title, different order — a separate listing that largely
-  // overlaps the Home parent's products. No paragraph on the original
-  // (the category description lives only in meta tags), no editorial
-  // inserts in the first 40, no sub-nav row; the theme carousel below
-  // the grid is the same 5 themes as the Home parent's.
-  const isHomeArtPage = cat === "home" && subLow === "home and art of living";
-  // Fragrances parent page (cat "fragrances", no sub, 2026-11-15) —
-  // sorts by fragPos (the original's live order, 272 tiles) and
-  // carries the "Rouge Brillant Silky" / "Fragrance Finder" inserts.
-  // The sub-pages (Bath / universes / Hermessence / Lips / Face / Eyes
-  // / Hands / Accessories / Make-up / Fragrances, 2026-11-17) are each
-  // gated on their own position field and sorted by it (see the
-  // isBathPage etc. flags below). The original has NO descriptive
-  // paragraph on this page.
-  const isFragrancesPage = cat === "fragrances" && !sub;
-  // Fragrances sub-pages (2026-11-17) — the original's live orders live
-  // in bathPos / wUniPos / mUniPos / hermPos / lipsPos / facePos /
-  // eyesPos / handsPos / accPos / mkPos / frgViewPos (Bath 54, Women's
-  // Universe 97, Men's Universe 90, Hermessence 38, Lips 30, Face 11,
-  // Eyes 15, Hands 30, Accessories 24, Make-up 96, Fragrances 177).
-  const isBathPage = cat === "fragrances" && subLow === "bath";
-  const isWomensUniPage = cat === "fragrances" && subLow === "the women's universe";
-  const isMensUniPage = cat === "fragrances" && subLow === "the men's universe";
-  const isHermPage = cat === "fragrances" && subLow === "hermessence collection";
-  const isLipsPage = cat === "fragrances" && subLow === "lips";
-  const isFacePage = cat === "fragrances" && subLow === "face";
-  const isEyesPage = cat === "fragrances" && subLow === "eyes";
-  const isHandsPage = cat === "fragrances" && subLow === "hands";
-  const isAccPage = cat === "fragrances" && subLow === "accessories";
-  const isMakeupPage = cat === "fragrances" && subLow === "make-up";
-  const isFragViewPage = cat === "fragrances" && subLow === "fragrances";
-  // Leather Accessories / Luggage + Home Tech universe sub-pages
-  // (2026-11-17) — the original's live orders live in charmPos
-  // (Charms 15), travAccPos (Travel accessories 20), suitPos
-  // (Suitcases and travel bags 26), techPos (Tech universe 40).
-  const isCharmsPage = cat === "leather" && subLow === "charms";
-  const isTravAccPage = cat === "leather" && subLow === "travel accessories";
-  const isSuitcasesPage = cat === "leather" && subLow === "suitcases and travel bags";
-  const isTechPage = cat === "home" && subLow === "tech universe";
-  // Group 4 empty pages (2026-11-17) — the original's live orders live
-  // in leatherAccPos (Accessories 107), luggagePos (Luggage 48),
-  // wAccPos (Women's Hats and gloves 115). The women's page resolves
-  // via sub "Hats and gloves" (the WOMEN menu heading) or "Accessories"
-  // (the original's own URL /women/accessories/).
-  const isLeatherAccPage = cat === "leather" && subLow === "accessories";
-  const isLuggagePage = cat === "leather" && subLow === "luggage";
-  const isWomensAccPage = cat === "women" && (subLow === "hats and gloves" || subLow === "accessories");
-  // Leather Straps page (Group 4) — the 16 bag straps now carry
-  // subcategory "Straps" (category leather); the flag gates the section
-  // sub-nav / breadcrumbs the same way as Charms / Reading and writing.
-  const isStrapsPage = cat === "leather" && subLow === "straps";
-  // Group 5 empty pages (2026-11-17) — the original's live orders live
-  // in tiePos (Ties, bow ties and pocket squares 488), menScarfPos
-  // (Men's Scarves 146), menTiesPos (Ties and scarves parent 634 —
-  // first 40 verified from the SSR; positions 41..634 not yet
-  // extracted live, see the Group 5 build report). The men's Scarves
-  // page also resolves via sub "Scarves, shawls and stoles" (the
-  // homepage carousel tile links there) and its comma-less aliases.
-  const isTiesPage = cat === "men" && (subLow === "ties, bow ties and pocket squares" || subLow === "ties");
-  const isMensScarvesPage = cat === "men" && (subLow === "scarves" || subLow === "scarves, shawls and stoles" || subLow === "scarves shawls and stoles" || subLow === "scarves and stoles");
-  const isMenTiesParentPage = cat === "men" && subLow === "ties and scarves";
-  // Group 1 empty pages (2026-11-17) — the original's live orders live
-  // in furnPos (Furniture 161), twillyPos (Twilly 96), childPos
-  // (Children 70), balletPos (Ballet flats 42), wondersPos (The
-  // Wonders 19), preciousPos (Precious moments 21), casesPos (Cases
-  // 96), officePos (Office 139), readingPos (Reading and writing 76).
-  const isFurnPage = cat === "home" && subLow === "furniture, lighting and rugs";
-  const isTwillyPage = cat === "women" && subLow === "twilly and other small formats";
-  const isChildPage = cat === "home" && subLow === "children and baby";
-  const isBalletPage = cat === "women" && subLow === "ballet flats";
-  const isWondersPage = cat === "jewelry" && subLow === "the wonders";
-  const isPreciousPage = cat === "jewelry" && subLow === "precious moments";
-  // Group 10 (2026-11-18): the Jewelry Men page (cat "jewelry",
-  // sub "men") has its own live order (92 tiles, menJewPos).
-  const isJewelryMenPage = cat === "jewelry" && subLow === "men";
-  const isCollectionsPage = cat === "jewelry" && subLow === "collections";
-  const isChainedAncrePage = cat === "jewelry" && subLow === "chaînes d'ancre";
-  const isCasesPage = cat === "home" && subLow === "cases and bath linens";
-  const isOfficePage = cat === "home" && subLow === "office and writing";
-  const isReadingPage = cat === "leather" && subLow === "reading and writing";
-  // Group 3 empty pages (2026-11-17) — the original's live orders live
-  // in objectsPos (Decorative objects and games 279), textilesPos
-  // (Blankets and pillows 153), sportsPos (Sports and outdoor 48),
-  // beachPos (Beach 108).
-  const isObjectsPage = cat === "home" && subLow === "decorative objects and games";
-  const isTextilesPage = cat === "home" && subLow === "blankets and pillows";
-  const isSportsPage = cat === "home" && subLow === "sports and outdoor";
-  const isBeachPage = cat === "home" && subLow === "beach";
-  // Equestrian parent page (cat "equestrian", no sub, 2026-11-16) —
-  // sorts by eqPos (the original's live order, 149 tiles) and
-  // carries the descriptive paragraph (two paragraphs, verbatim).
-  const isEquestrianPage = cat === "equestrian" && !sub;
-  // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's
-  // live orders (50 / 103 tiles) live in horsePos / riderPos.
-  const isHorsePage = cat === "equestrian" && subLow === "horse";
-  const isRiderPage = cat === "equestrian" && subLow === "rider";
-  // Gifts parent page (cat "gifts", no sub, 2026-11-16) — sorts by
-  // giftPos (the original's live order, 592 tiles) and carries the
-  // "Living in color" / "Time travelers" inserts + the 3-paragraph
-  // description (collapsed + See More, as on the original). The
-  // original shows NO sub-nav buttons and NO "GIFTS" eyebrow here.
-  const isGiftsPage = cat === "gifts" && !sub;
-  // Gifts sub-pages (Group 9, 2026-11-18) — the original's
-  // /gifts/gifts-for-women/ (278 tiles), /gifts/gifts-for-men/
-  // (219), /gifts/gifts-for-children-and-babies/ (72) and
-  // /gifts/gifts-for-dogs/ (54) listings, sorted by giftWomenPos /
-  // giftMenPos / giftChildPos / giftDogsPos. No sub-nav row on any
-  // of the four (the parent page has none either, verified live
-  // 2026-11-16; the sub-page reads report none).
-  const isGiftWomenPage = cat === "gifts" && subLow === "for women";
-  const isGiftMenPage = cat === "gifts" && subLow === "for men";
-  // Per-page tile colour override key (Group 12, extended sweep
-  // 2026-11-19): the three watch pages + Home + Gifts parent + Gifts
-  // women show the original's own tile colour words via
-  // TILE_COLOUR_OVERRIDES (tileColourFor at the grid call site); every
-  // other page passes null and the tile uses the row colour. Defined
-  // here (after the Gifts flags) so all page flags are in scope.
-  const tileColourPage = isTimepiecesPage ? "timepieces" : isWatchWomenPage ? "watchWomen" : isWatchMenPage ? "watchMen" : isHomePage ? "home" : isGiftsPage ? "gifts" : isGiftWomenPage ? "giftWomen" : null;
-  const isGiftChildPage = cat === "gifts" && subLow === "for children";
-  const isGiftDogsPage = cat === "gifts" && subLow === "for dogs";
-  // Hair accessories page (cat "women", sub "Hair accessories",
-  // 2026-11-16) — sorts by hairPos (the original's live order, 26
-  // tiles) and lives at /us/en/category/women/hair-accessories/ on the
-  // original. The original has NO descriptive paragraph on this page.
-  const isHairPage = cat === "women" && subLow === "hair accessories";
-  // Tableware page (cat "home", sub "Tableware", 2026-11-15) — sorts
-  // by tabPos (the original's live order, 534 tiles) and carries the
-  // "Gold medals" / "Abyssal beauty" inserts. The original has NO
-  // descriptive paragraph on this page. The Home parent page (cat
-  // "home", no sub) is NOT affected.
-  const isTablewarePage = cat === "home" && subLow === "tableware";
-  // Men's Shoes PARENT page only (sub "Shoes") — distinct from the
-  // broad isMensShoesPage (filters/carousel), which is also true on
-  // the men's main page and sub-pages.
-  const isMensShoesParentPage = cat === "men" && subLow === "shoes";
-  const isMensBags = /men's bags/.test(subLow) && !/women's bags/.test(subLow);
-  const isBagsPage = /bags and clutches/.test(subLow) || (cat === "women" && !sub);
-  const isSneakersPage = /sneaker/.test(subLow);
-  const isDressesPage = /dress/.test(subLow);
-  // Ready-to-Wear pages (Women): the dresses page AND the two season
-  // collections and sibling RTW lists from the user's video — they all share
-  // the same sideways sub-nav and the COLLECTION-first facet order.
-  const RTW_SUBS = ["Fall-Winter 2026 Collection", "Spring-Summer 2027 Collection", "Coats and jackets", "Leather", "Dresses and skirts", "Tops and shirts", "Pants and shorts", "Knitwear and twillaines", "T-shirts and sweatshirts", "Beachwear"];
-  // The desktop mega menu shortens the two collections to "Fall-Winter
-  // 2026" / "Spring-Summer 2027" — those subs land on the same collection
-  // pages (matched by line), so they count as RTW pages too and title
-  // themselves with the full "… Collection" name.
-  const isCollectionSub = subLow === "fall-winter 2026" || subLow === "spring-summer 2026" || subLow === "spring-summer 2027";
-  const isRTWPage = cat === "women" && (isDressesPage || isCollectionSub || RTW_SUBS.some((l) => l.toLowerCase() === subLow));
-  const isShoesPage = isSneakersPage || /sandals|loafers|derbies|boots|shoes/.test(subLow) || (cat === "men" && !sub);
-  // Verified facet orders exist for these two pages only (served facet
-  // JSONs, 2026-11-10): women's belts and men's shoes.
-  const isBeltsPage = subLow === "belts";
-  const isMensShoesPage = cat === "men" && isShoesPage;
+  // France conversion (Stage B): every US page flag is false. The US
+  // editorial inserts, descriptive paragraphs, facet orders and theme
+  // carousels they gate render nothing on France pages; the France
+  // replacements are unbuilt until the browser reads land
+  // (STAGE-B-REMAINDER.md G2). The original flag names are preserved
+  // so every gated branch keeps compiling.
+  const isMensRtwSub = false;
+  const isMensRtwPage = false;
+  const isWomensRtwPage = false;
+  const isSpringSummerPage = false;
+  const isWomensTshirtsPage = false;
+  const isWomensKnitwearPage = false;
+  const isSlgSub = false;
+  const isSlgParent = false;
+  const isMensFwPage = false;
+  const isJewelryPage = false;
+  const isFashionJewelryPage = false;
+  const isFashionJewelryParentPage = false;
+  const isHomePage = false;
+  const isWomensShoesPage = false;
+  const isWomensScarvesPage = false;
+  const isWomensBeltsPage = false;
+  const isWomensDressesPage = false;
+  const isWomensBagsPage = false;
+  const isMensBagsPage = false;
+  const isBagsViewPage = false;
+  const isWatchesPage = false;
+  const isTimepiecesPage = false;
+  const isWatchWomenPage = false;
+  const isWatchMenPage = false;
+  const isPetitHPage = false;
+  const isHomeArtPage = false;
+  const isFragrancesPage = false;
+  const isBathPage = false;
+  const isWomensUniPage = false;
+  const isMensUniPage = false;
+  const isHermPage = false;
+  const isLipsPage = false;
+  const isFacePage = false;
+  const isEyesPage = false;
+  const isHandsPage = false;
+  const isAccPage = false;
+  const isMakeupPage = false;
+  const isFragViewPage = false;
+  const isCharmsPage = false;
+  const isTravAccPage = false;
+  const isSuitcasesPage = false;
+  const isTechPage = false;
+  const isLeatherAccPage = false;
+  const isLuggagePage = false;
+  const isWomensAccPage = false;
+  const isStrapsPage = false;
+  const isTiesPage = false;
+  const isMensScarvesPage = false;
+  const isMenTiesParentPage = false;
+  const isFurnPage = false;
+  const isTwillyPage = false;
+  const isChildPage = false;
+  const isBalletPage = false;
+  const isWondersPage = false;
+  const isPreciousPage = false;
+  const isJewelryMenPage = false;
+  const isCollectionsPage = false;
+  const isChainedAncrePage = false;
+  const isCasesPage = false;
+  const isOfficePage = false;
+  const isReadingPage = false;
+  const isObjectsPage = false;
+  const isTextilesPage = false;
+  const isSportsPage = false;
+  const isBeachPage = false;
+  const isEquestrianPage = false;
+  const isHorsePage = false;
+  const isRiderPage = false;
+  const isGiftsPage = false;
+  const isGiftWomenPage = false;
+  const isGiftMenPage = false;
+  const tileColourPage = null;
+  const isGiftChildPage = false;
+  const isGiftDogsPage = false;
+  const isHairPage = false;
+  const isTablewarePage = false;
+  const isMensShoesParentPage = false;
+  const isMensBags = false;
+  const isBagsPage = false;
+  const isSneakersPage = false;
+  const isDressesPage = false;
+  const isCollectionSub = false;
+  const isRTWPage = false;
+  const isShoesPage = false;
+  const isBeltsPage = false;
+  const isMensShoesPage = false;
+
+  const RTW_SUBS = [
+    "Dresses",
+    "Skirts",
+    "Tops and blouses",
+    "Trousers",
+    "Jeans",
+    "Coats and jackets",
+    "Knitwear",
+    "Sweatshirts",
+    "Beachwear",
+    "Sweaters",
+    "T-shirts",
+  ];
   // Category titles render in proper case (hermes.com: "Fall-Winter 2026
   // Collection"). The `sub` values come from the URL slug map in
   // routing.ts, which is lowercase — map the two season collections to
   // their display titles here instead of title-casing every sub: other
   // subs are already proper case (e.g. "Bags and clutches") and a generic
   // title-case would wrongly capitalise small words ("and").
-  const COLLECTION_TITLES: Record<string, string> = {
-    // The two RTW parent pages title themselves "Ready-to-wear" in proper
-    // case (the sub value arrives lowercase from the URL slug map, so
-    // without this the men's title rendered lowercase "ready-to-wear").
-    "ready-to-wear": "Ready-to-wear",
-    "dresses": "Dresses and skirts",
-    "the wonders": "The Wonders",
-    "ties": "Ties, bow ties and pocket squares",
-    "sports and outdoor": "Sports and Outdoor",
-    "fall-winter 2026": "Fall-Winter 2026 Collection",
-    "fall-winter 2026 collection": "Fall-Winter 2026 Collection",
-    "spring-summer 2026": "Spring-Summer 2026 Collection",
-    "spring-summer 2026 collection": "Spring-Summer 2026 Collection",
-    "spring-summer 2027": "Spring-Summer 2027 Collection",
-    "spring-summer 2027 collection": "Spring-Summer 2027 Collection",
-    // The original's H1 capitalises "Art" ("Home and Art of living");
-    // titleCaseSub would lowercase it ("Home and art of living").
-    "home and art of living": "Home and Art of living",
-    // Group 9 (2026-11-18): the original's Gifts sub-page H1s are
-    // "Gifts for women" / "Gifts for men" / "Gifts for children and
-    // babies" / "Gifts for dogs" (live reads — the children heading
-    // reads "Gifts for children and babies [72]"); titleCaseSub
-    // would render only "For women" etc.
-    "for women": "Gifts for women",
-    "for men": "Gifts for men",
-    "for children": "Gifts for children and babies",
-    "for dogs": "Gifts for dogs",
+  // France collection titles (Stage B): only the subs whose display title
+  // differs from the sentence-cased sub value. The argent pages keep their
+  // plain H1s ("Bagues", "Bracelets", ...) while their view subs stay
+  // section-qualified ("Bagues en argent", ...).
+  const COLLECTION_TITLES_FR: Record<string, string> = {
+    "apple watch hermès": "Apple Watch Hermès",
+    "bagues en argent": "Bagues",
+    "bijoux d'oreilles en argent": "Bijoux d'oreilles",
+    "bracelets en argent": "Bracelets",
+    "colliers et pendentifs en argent": "Colliers et pendentifs",
+    "l'equestre": "L'Equestre",
+    "les fétiches": "Les Fétiches",
+    "petit h": "petit h",
+    "portefeuilles to go": "Portefeuilles To Go",
   };
   // Group 11 (2026-11-18): the original's fine-jewelry listing IS the
   // Gold Jewelry category (/jewelry/gold-jewelry/, H1 "Gold Jewelry");
   // the clone's jewelry parent page (cat "jewelry", no sub) shows
   // that listing, so its H1 is "Gold Jewelry", not "Jewelry".
-  const titleText = (cat === "jewelry" && !sub) ? "Gold Jewelry" : COLLECTION_TITLES[subLow] ?? (isCollectionSub && sub ? `${titleCaseSub(sub)} Collection` : sub ? titleCaseSub(sub) : (cat === "women" ? "Women's bags and clutches" : cat === "home" ? "Home" : label.charAt(0) + label.slice(1).toLowerCase()));
-  const crumbTop = isGiftWomenPage ? "GIFTS | GIFTS FOR WOMEN" : isGiftMenPage ? "GIFTS | GIFTS FOR MEN" : isGiftChildPage ? "GIFTS | GIFTS FOR CHILDREN AND BABIES" : isGiftDogsPage ? "GIFTS | GIFTS FOR DOGS" : isWatchesPage ? "" : isFragrancesPage ? "" : isFragViewPage ? label : isEquestrianPage ? "" : isWatchWomenPage ? "WATCHES | TIMEPIECES | WOMEN" : isWatchMenPage ? "WATCHES | TIMEPIECES | MEN" : isGiftsPage ? "" : isFashionJewelryParentPage ? "Women" : isBagsPage ? "LEATHER GOODS | BAGS AND CLUTCHES" : isSlgParent ? label : isRTWPage ? `${label} | READY-TO-WEAR` : (isCharmsPage || isLeatherAccPage || isStrapsPage) ? "LEATHER GOODS | ACCESSORIES" : (isTravAccPage || isLuggagePage) ? "LEATHER GOODS | LUGGAGE" : isSuitcasesPage ? "LEATHER GOODS | LUGGAGE | SUITCASES AND TRAVEL BAGS" : isTechPage ? label : isHomeArtPage ? "" : isReadingPage ? "LEATHER GOODS | ACCESSORIES" : (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) ? `${label} | HOME` : (isChildPage || isSportsPage || isWomensAccPage) ? label : isBeachPage ? `${label} | BEACH` : isBalletPage ? `${label} | SHOES | BALLET FLATS` : isTwillyPage ? `${label} | SCARVES, SHAWLS AND STOLES` : (isWondersPage || isPreciousPage || isChainedAncrePage || isCollectionsPage) ? `${label} | COLLECTIONS` : (isTiesPage || isMensScarvesPage) ? "MEN | TIES AND SCARVES" : isMenTiesParentPage ? label : (cat === "jewelry" && !sub) ? "JEWELRY | Gold Jewelry" : sub ? `${label} | ${sub.toUpperCase()}` : label;
+  const titleText = COLLECTION_TITLES_FR[subLow] ?? (sub ? titleCaseSub(sub) : catLabel(cat));
+  const crumbTop = !sub ? "" : `${catLabel(cat).toUpperCase()} | ${titleText.toUpperCase()}`;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2842,6 +2554,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // subs + "View all", starting with a "Home" link to /home/home/
     // → the [0] sorry message.
     siblings = [];
+  } else if (cat === "equitation") {
+    // France (Stage B): the Équitation sub-nav is Selles (the bespoke
+    // editorial page), Cheval, Cavalier, View all — the menu order.
+    siblings = [
+      { label: "Selles", view: { t: "page", page: "bespoke-equestrian" } as View, current: false },
+      { label: "Cheval", view: { t: "category", cat, sub: "Cheval" } as View, current: sub === "Cheval" },
+      { label: "Cavalier", view: { t: "category", cat, sub: "Cavalier" } as View, current: sub === "Cavalier" },
+    ];
+    siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
@@ -3147,38 +2868,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
 
   const totalSel = (Object.keys(EMPTY_SEL) as FGroup[]).reduce((n, g) => n + sel[g].length, 0) + (onlineOnly ? 1 : 0) + (priceNarrowed ? 1 : 0);
   const filtersActive = totalSel > 0;
-  // Home colourway tiles (Home rebuild, 2026-11-18): in the default
-  // state (no filters, relevance sort) the Home parent grid renders
-  // one tile per live position from HOME_TILE_ORDER — the rebuilt
-  // order covers exactly the 1,269 live tiles, one entry each, no
-  // duplicates, and `base` is gated to homePos rows, so the tail
-  // (rows the original dropped) is empty. Any filter or sort switches
-  // back to the ordinary row list (same rule as the editorial inserts).
-  const homeTilesActive = isHomePage && !filtersActive && sort === "relevance";
-  // Women's Belts tile grid (2026-11-15): same mechanism as Home — the
-  // original repeats identical tiles (266 tiles, 177 distinct rows), so
-  // the grid renders one tile per live position from BELT_TILE_ORDER.
-  const beltTilesActive = isWomensBeltsPage && !filtersActive && sort === "relevance";
-  const gridList = useMemo(() => {
-    if (!homeTilesActive && !beltTilesActive) return filtered;
-    const byId = new Map(base.map((p) => [p.id, p]));
-    const tiles: Product[] = [];
-    const order = homeTilesActive ? HOME_TILE_ORDER : BELT_TILE_ORDER;
-    for (const t of order) { const p = byId.get(t.id); if (p) tiles.push(p); }
-    const placed = new Set(tiles.map((p) => p.id));
-    for (const p of filtered) if (!placed.has(p.id)) tiles.push(p);
-    return tiles;
-  }, [homeTilesActive, beltTilesActive, base, filtered]);
-  // The heading count is always honest: the number of products this store
-  // actually carries in this list (the filtered count while filters apply).
-  // On the expanded Home grid the count is tiles, not rows.
-  const displayCount = filtersActive ? filtered.length : homeTilesActive || beltTilesActive ? gridList.length : base.length;
-  // The SLG parent's display total is 350 — the original's live count
-  // (2026-11-20) — and the store carries exactly those 350 rows
-  // (slgParentPos 1–350). The title and the "viewed out of" counters use
-  // this total when no filters apply; the grid and SEE MORE progress
-  // still use the real row count.
-  const totalForCounter = isSlgParent && !filtersActive ? 350 : displayCount;
+  // France conversion (Stage B): the US Home / Women's Belts tile orders
+  // (HOME_TILE_ORDER / BELT_TILE_ORDER) are dropped — the grid is the
+  // filtered list in the page's own position order (FR_PAGE_FIELDS sort).
+  const gridList = filtered;
+  const displayCount = filtersActive ? filtered.length : base.length;
+  const totalForCounter = displayCount;
 
   // Drawer toggles edit the STAGED draft only — the grid is untouched until
   // APPLY / drawer close commits the draft (§F).
@@ -3254,7 +2949,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   else { pushSec(secCategory); pushSec(secLine); pushSec(secMaterial); pushSec(secModelSize); pushSec(secSize); pushSec(secFinish); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
   const openSection = sections.some((s) => s.key === openKey) ? openKey : "";
 
-  const quickBuyOn = isSneakersPage;
+  const quickBuyOn = /sneaker/.test(subLow);
 
   // Editorial text interludes inside the unfiltered grid, as on
   // hermes.com — TEXT-ONLY tiles (heading + line, no image, no link).
@@ -3274,259 +2969,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // placeholder). The invented AI-photo wide tile + the invented "Ready
   // to carry" text tile are gone.
   type EdInsert = { after: number; title: string; body: string; img?: string; imgMo?: string; col?: number };
-  const edInserts: EdInsert[] = (() => {
-    if (isBeltsPage) return [{ after: 4, title: "Within reach", body: "The silhouette sharpens, the gait lightens, hands are left free to roam." }];
-    if (isSlgParent) return [
-      { after: 8, title: "Golden hour", body: "The small leather goods escape the bag for a proper sunbath. They look good with a tan." },
-      { after: 28, title: "Charm party", body: "Interrupting the calm of the lines, this charm gallops across the leather." },
-    ];
-    // Women's Bags parent page — the original's "Equestrian style"
-    // editorial block sits after tile #28 (verbatim from the live
-    // category page text fetch, 2026-11-15). The Birkin / Constance /
-    // Kelly block between #8 and #9 is NOT a text tile — it renders
-    // as the "iconic" GridItem kind below (Group 11, 2026-11-18),
-    // with the verified hermesedito images and content links.
-    if (isWomensBagsPage) return [{ after: 28, title: "Equestrian style", body: "Canvas borrows from the codes of the equestrian universe. From the paddock to the pavement, the horse never feels too far away." }];
-    // Bags and clutches parent ("View all", Group 11, 2026-11-18) —
-    // the original's two editorial blocks ("The goldsmith's touch"
-    // after tile #8, "City style" after tile #28), verbatim from the
-    // live category page text fetch, 2026-11-18. On the original they
-    // are wide image tiles (heading + italic subtext + DISCOVER); the
-    // clone renders them as text tiles (same treatment as the Jewelry
-    // Men "Strong links" block) — the wide images stay unwired, their
-    // URLs do not expose in the browser.
-    if (isBagsViewPage) return [
-      { after: 8, title: "The goldsmith's touch", body: "These leather goods complete looks with a precious touch thanks to their signature clasps." },
-      { after: 28, title: "City style", body: "Easy to carry, Hermès leather goods offer countless ways to stride into every day with style." },
-    ];
-    // Fine jewelry parent (Gold Jewelry, Group 11, 2026-11-18) — the
-    // original's editorial blocks, verbatim from the live category
-    // page read + text fetch, 2026-11-18: "New jewelry variations"
-    // after #9, "Precious Moments" after #31 AND again after #49
-    // (the same title twice — the grid key uses the map index, so
-    // the duplicate title renders twice), "Gold and stones" after
-    // #71. The "Alternate views" image carousel after the final
-    // product is image-only with unlocated hermesedito images — NOT
-    // built (known gap, same class as Knitwear / Ballet / Twilly).
-    if (cat === "jewelry" && !sub) return [
-      { after: 9, title: "New jewelry variations", body: "Iconic even when transformed, the Kelly bag has now become a piece of jewelry, still featuring its signature clasp." },
-      { after: 31, title: "Precious Moments", body: "In a choreography of precious stones, balancing movement and lightness, Hermès sets the imagination free around the center stone." },
-      { after: 49, title: "Precious Moments", body: "In a choreography of precious stones, balancing movement and lightness, Hermès sets the imagination free around the center stone." },
-      { after: 71, title: "Gold and stones", body: "Gold and stones speak countless stories directly onto the skin." },
-    ];
-    // Men's Bags parent page — the original's two editorial blocks
-    // ("Kelly in the city" after tile #8, "Hands-free mode" after
-    // tile #28), verbatim from the live category page, 2026-11-15.
-    if (isMensBagsPage) return [
-      { after: 8, title: "Kelly in the city", body: "The Kelly Messenger bag, your everyday companion." },
-      { after: 28, title: "Hands-free mode", body: "The Hac a Dos backpack is a modern and functional accessory." },
-    ];
-    // Fragrances parent page — the original's two editorial blocks
-    // ("Rouge Brillant Silky" after tile #8, "Fragrance Finder" after
-    // tile #28), verbatim from the live category page text fetch,
-    // 2026-11-15. No descriptive paragraph on the original's page.
-    if (isFragrancesPage) return [
-      { after: 8, title: "Rouge Brillant Silky", body: "Its creamy texture melts onto the curve of the lips, illuminating them with a light, silky sheen. A new, delicately tinted, high-shine signature." },
-      { after: 28, title: "Fragrance Finder", body: "Are you ready to find the perfume that suits you? Express your olfactory preferences and discover the perfect fragrances for you or your loved ones." },
-    ];
-    // Watches Timepieces page — the original's two editorial blocks
-    // ("Discover what's possible" after tile #8, "Ahead of time"
-    // after tile #32), verbatim from the live category page text
-    // fetch, 2026-11-17.
-    if (isTimepiecesPage) return [
-      { after: 8, title: "Discover what's possible", body: "A motif ready to set sail and the now-iconic strap… The Cape Cod watch, unique to the very last detail, invites time to be explored in every shape, from square to rectangle." },
-      { after: 28, title: "Ahead of time", body: "Hermès' first ever expression of time, the Arceau watch transforms every second into something new. Moments become suspended in time, free to be traversed, explored, and savored for as long as desired." },
-    ];
-    // Petit h page — the original's two editorial blocks
-    // ("Applied creativity" after tile #9, "Deconstructing the norm"
-    // after tile #31), verbatim from the SSR HTML, 2026-11-17. The
-    // original's blocks also carry an image (hermesedito EDITO 1 /
-    // EDITO 2 16x9) and a CTA link to /us/en/content/154031-petit-h-event/
-    // ("Play along with Petit h" / "Blur the lines") — the clone's
-    // text-tile mechanism renders title + body only, so the image and
-    // CTA are not rendered (same gap class as the Tableware "Take
-    // tables to new depths" link). No inserts are known after tile
-    // #40 (SSR covers only the first 40) — the parent's live read
-    // confirms whether more exist in 41..276.
-    if (isPetitHPage) return [
-      { after: 9, title: "Applied creativity", body: "Hybrid and unbridled, these bags and accessories play with materials, shapes and functions. The Petit h workshop doesn't follow straight lines; it takes pleasure in blurring them." },
-      { after: 31, title: "Deconstructing the norm", body: "Even if creations within the Petit h workshop have been designed down to the most minute detail, they still run against the grain. Excess is embraced as imagination runs wild." },
-    ];
-    // Tableware page — the original's two editorial blocks
-    // ("Gold medals" after tile #8, "Abyssal beauty" after tile #28),
-    // verbatim from the live category page text fetch + server HTML,
-    // 2026-11-15. The "Take tables to new depths" link inside
-    // "Abyssal beauty" is a bare discover link, not a text block, so
-    // it cannot be rendered by the text-tile mechanism (known gap).
-    // No descriptive paragraph on the original's page.
-    if (isTablewarePage) return [
-      { after: 8, title: "Gold medals", body: "Bordered by geometric friezes at the crossroads of Art Deco and Ancient Greece, the Mosaique au 24 tableware set adds gold to a collection where design pays homage to the Faubourg Saint-Honoré store." },
-      { after: 28, title: "Abyssal beauty", body: "Vibrant coral, bright seaweed, and shimmering rays of sunlight. Adorn tables to echo marine gardens that bathe beneath the light." },
-    ];
-    // Gifts parent page — the original's two editorial blocks
-    // ("Living in color" after tile #8, "Time travelers" after tile
-    // #28), verbatim from the live category page, 2026-11-16. The
-    // "Living in color" body ends with TWO periods, as on the original.
-    if (isGiftsPage) return [
-      { after: 8, title: "Living in color", body: "For city riders whose red matters as much as what is wrapped in orange.." },
-      { after: 28, title: "Time travelers", body: "Icons that move through decades without shedding their appeal." },
-    ];
-    // Group 9 (2026-11-18) — Gifts sub-pages + Watches Women / Men
-    // editorial blocks, verbatim from the live category pages.
-    // Gifts for women carries the SAME two blocks as the Gifts
-    // parent ("Living in color" / "Time travelers"); Gifts for
-    // children carries the SAME two as the Children page
-    // ("Building blocks" / "Fauna of fun"). Gifts for dogs has none.
-    // Watches Women reuses the Timepieces "Discover what's possible"
-    // body word for word (same Cape Cod text).
-    if (isGiftWomenPage) return [
-      { after: 8, title: "Living in color", body: "For city riders whose red matters as much as what is wrapped in orange.." },
-      { after: 28, title: "Time travelers", body: "Icons that move through decades without shedding their appeal." },
-    ];
-    if (isGiftMenPage) return [
-      { after: 8, title: "Purity passed down", body: "For men who find the truth in texture and prints that never tire." },
-      { after: 28, title: "Hit the town", body: "Summer-tinged pieces for those who blend grace with eloquence and hold minimalism dear." },
-    ];
-    if (isGiftChildPage) return [
-      { after: 8, title: "Building blocks", body: "Round, square, rectangle. Learning begins in orange boxes." },
-      { after: 28, title: "Fauna of fun", body: "This colorful little herd has swapped jungle and forest for the comfort of an indoor enclosure." },
-    ];
-    if (isWatchWomenPage) return [
-      { after: 9, title: "Discover what's possible", body: "A motif ready to set sail and the now-iconic strap… The Cape Cod watch, unique to the very last detail, invites time to be explored in every shape, from square to rectangle." },
-      { after: 31, title: "Elegance with a capital H", body: "Harnessed by a harmonious burst of beauty, style and symmetry come together at just the right Hour to make every second count." },
-    ];
-    if (isWatchMenPage) return [
-      { after: 9, title: "Switching time", body: "The H08 watch breaks traditional codes and reveals contrast. Sporty, robust and delicate, it has mastered the art of performance by blending the timeless with the contemporary." },
-    ];
-    // Group 10 (2026-11-18): the Jewelry Men page's two editorial
-    // blocks ("Strong links" after tile #8, "Double tour" after tile
-    // #28), verbatim from the live category page read + text fetch,
-    // 2026-11-18. The "Discover the story" link inside each block is
-    // a bare discover link, not a text block, so it cannot be rendered
-    // by the text-tile mechanism (same gap class as Tableware).
-    // The Knitwear page's "Alternate views" image carousel (after
-    // #122) is image-only with unlocated hermesedito images — NOT
-    // built (known gap, same class as Ballet / Twilly / Women's Bags).
-    if (isJewelryMenPage) return [
-      { after: 8, title: "Strong links", body: "With enhanced presence, this jewelry piece fastens securely to the wrist and outlines the contours of a new style." },
-      { after: 28, title: "Double tour", body: "A jewelry design in perpetual motion." },
-    ];
-    if (cat === "leather") {
-      if (subLow === "to go wallets") return [{ after: 8, title: "Minimalist-chic", body: "Compact and structured, To Go wallets assert their style and transform momentum into boldness." }];
-      if (subLow === "wallets") return [
-        { after: 8, title: "Golden hour", body: "The small leather goods escape the bag for a proper sunbath. They look good with a tan." },
-        { after: 28, title: "Charm party", body: "Interrupting the calm of the lines, this charm gallops across the leather." },
-      ];
-      // Sweep 2026-11-19: the original's Card holders + Pouches views
-      // carry the SLG parent's two inserts at the filter-view positions
-      // (Golden hour after #8, Charm party after #28) — the clone's
-      // dedicated sub-pages rendered none. Same bodies as the parent.
-      if (subLow === "card holders") return [
-        { after: 8, title: "Golden hour", body: "The small leather goods escape the bag for a proper sunbath. They look good with a tan." },
-        { after: 28, title: "Charm party", body: "Interrupting the calm of the lines, this charm gallops across the leather." },
-      ];
-      if (subLow === "pouches and cases") return [
-        { after: 8, title: "Golden hour", body: "The small leather goods escape the bag for a proper sunbath. They look good with a tan." },
-        { after: 28, title: "Charm party", body: "Interrupting the calm of the lines, this charm gallops across the leather." },
-      ];
-    }
-    if (cat === "men") {
-      if (subLow === "coats and parkas") return [{ after: 9, title: "Style in action", body: "A raincoat weathers wind, rain, and all the seasons as they come and go. Beneath its familiar exterior, a leather lining turns this classic into something unique." }];
-      if (subLow === "jackets and blazers") return [{ after: 9, title: "Discipline of reinvention", body: "Three techniques, three materials, and one motive: bringing new life to men's wardrobes, the work of a lifetime." }];
-      if (subLow === "knitwear") return [
-        { after: 9, title: "The call of the horizon", body: "Anchored but never immobile, this piece's silhouette is constantly refreshing the bonds between the body, the garment, and the moment." },
-        { after: 31, title: "The perfect detail", body: "The Etriviere lambskin is first to catch the eye. But other more intimate details, noticeable only upon wearing, await discovery. This contrast between visible and invisible forms the basis of a truly signature style." },
-      ];
-      if (subLow === "shirts") return [{ after: 9, title: "The perfect detail", body: "The Etriviere lambskin is first to catch the eye. But other more intimate details, noticeable only upon wearing, await discovery. This contrast between visible and invisible forms the basis of a truly signature style." }];
-      if (isMensFwPage) return [
-        { after: 9, title: "The heart of the matter", body: "At first glance, you see the motif. But look closer, and you'll find the beauty in the details, including the calfskin insert on this cashmere intarsia knit." },
-        { after: 31, title: "Day to night", body: "The sunset effect of this jacket comes into the light. Technical gabardine segues neatly into earthy poplin. Step forth, from day to dusk." },
-      ];
-    }
-    // Equestrian Horse / Rider sub-pages — the original's editorial
-    // blocks, verbatim from the live category pages (2026-11-17).
-    // "Steadfast companion" appears on both pages after different
-    // positions (Horse #31, Rider #9) — both entries are kept.
-    if (isHorsePage) return [
-      { after: 9, title: "Neat at a trot", body: "A spirited little companion, looking for refined cases where elegance sits just right." },
-      { after: 31, title: "Steadfast companion", body: "From stable to street, the bag doesn't miss a beat. In hand, on shoulder, it follows your lead." },
-    ];
-    if (isRiderPage) return [
-      { after: 9, title: "Steadfast companion", body: "From stable to street, the bag doesn't miss a beat. In hand, on shoulder, it follows your lead." },
-    ];
-    // Children and baby page — the original's two editorial blocks
-    // ("Building blocks" after tile #8, "Fauna of fun" after tile #28),
-    // verbatim from the live category page text fetch + SSR HTML,
-    // 2026-11-17. No descriptive paragraph on the original's page.
-    // Photos are the original's own hermesedito images from the same
-    // SSR (home-children.html): desktop 16-9 / mobile 3-4 crops, all
-    // HEAD-verified 200 on 2026-11-19. The original ROTATES insert
-    // photos between loads (a bedroom photo was seen in the user's
-    // screenshots, horse-plush / child-on-carpet in the 2026-11-19
-    // live loads) — these SSR photos are the real originals for
-    // these inserts. Building blocks sits in the RIGHT-hand columns
-    // on desktop (col 3); Fauna of fun in the LEFT-hand columns.
-    if (isChildPage) return [
-      { after: 8, title: "Building blocks", body: "Round, square, rectangle. Learning begins in orange boxes.", img: "https://assets.hermes.com/is/image/hermesedito/EDITO_PE26_STILL-LIFE_T2_16-9_063_2178-1", imgMo: "https://assets.hermes.com/is/image/hermesedito/EDITO_PE26_STILL-LIFE_T2_3-4_063_2178-1", col: 3 },
-      { after: 28, title: "Fauna of fun", body: "This colorful little herd has swapped jungle and forest for the comfort of an indoor enclosure.", img: "https://assets.hermes.com/is/image/hermesedito/PIQUE%20NIQUE_EDITO_DESKTOP%20%2810%29", imgMo: "https://assets.hermes.com/is/image/hermesedito/ANIMAUX%20BLOCKS_EDITO_2" },
-    ];
-    // Chaînes d'ancre page — the original's editorial block ("A chain
-    // of sparkle" after tile #9), verbatim from the live category page
-    // text fetch + SSR HTML, 2026-11-17. Full-list position 9 =
-    // "Geometrie Precieuse single dangle earring" $15,500.
-    if (isChainedAncrePage) return [
-      { after: 9, title: "A chain of sparkle", body: "This jewel's points of sparkle are multiplied across fingers to lend elegance a hand." },
-    ];
-    // Sweep Wave 2 (2026-11-19) — editorial blocks for the drifted pages,
-    // verbatim from the 2026-11-19 live category page reads. Beach: each
-    // block also carries the magazine line ("To read all about the
-    // yachting collection, see the magazine. SEE THE ARTICLE") — the
-    // magazine sentence is appended to the body; the SEE THE ARTICLE
-    // link itself is not wired (no URL captured). Furniture, Home
-    // Objects and Suitcases bodies are TRUNCATED in the live capture
-    // (mid-word / mid-sentence) — used verbatim, endings NOT guessed.
-    // Travel accessories' "DISCOVER THE COLLECTION" link target was not
-    // captured — title + body only, same treatment as the other
-    // discover-link blocks.
-    if (isBeachPage) return [
-      { after: 8, title: "The sea at your heels", body: "The iconic beach towel, a summer essential. To read all about the yachting collection, see the magazine." },
-      { after: 28, title: "Orange in the air", body: "The Neobain, created in 2019, has become a beach essential. To read all about the yachting collection, see the magazine." },
-    ];
-    if (isCasesPage) return [
-      { after: 8, title: "Beauty case style", body: "Small format, huge presence. Bride-a-Brac has more than one trick up its sleeve." },
-      { after: 28, title: "Seeing Double H", body: "The reversible Vice-Versa towels play with your sense of orientation." },
-    ];
-    if (isCharmsPage) return [
-      { after: 9, title: "Charm party", body: "Interrupting the calm of the lines, this charm gallops across the leather." },
-    ];
-    if (isEyesPage) return [
-      { after: 9, title: "Exquisite illusions", body: "Hermès Beauty has plenty of tricks up its sleeve for the holiday season." },
-    ];
-    if (isFurnPage) return [
-      { after: 8, title: "Elegance that holds up", body: "Take a seat on heritage. With its clean lines, slub fabric, and leather details, the Contour sofa do" },
-      { after: 28, title: "A grasp on allure", body: "Leather shows its hand and banks on iconic details while playing the H card. The elegance of emblema" },
-    ];
-    if (isObjectsPage) return [
-      { after: 8, title: "Beauty, boxed", body: "Between a manège and marquetry, leather clears every obstacle with panache. Geometry and craftsmansh…" },
-      { after: 28, title: "Interior horizons", body: "Leather and gold are aligned on the same latitude of craftsmanship. As the world turns, beauty lies" },
-    ];
-    if (isOfficePage) return [
-      { after: 8, title: "Page by page", body: "As the plot breaks into a gallop, Alezan keeps watch, no wild kicks nor fanciful leaps. A measured pace for stories finely reined in." },
-      { after: 28, title: "H Square", body: "A piece of leather, a few stitches: elegance turns into a game at the four corners of a Mises et Relances holdall." },
-    ];
-    if (isSuitcasesPage) return [
-      { after: 8, title: "Traveling H", body: "Whether taken on a quiet getaway or a distant adventure, these bags and suitcases chart a course of" },
-    ];
-    if (isTextilesPage) return [
-      { after: 8, title: "Evergreen elegance", body: "Dyed and woven in Nepal, cashmere is the exception that pampers the rule. The H appears as a ray of sunshine to be saved for a rainy day." },
-      { after: 28, title: "Throw caution to the wind", body: "Beneath its woven texture and demure appearance, bearing the banner of comfort, the British-inspired Avalon throw blanket hides a horse-racing story." },
-    ];
-    if (isTravAccPage) return [
-      { after: 9, title: "A LEATHER ODYSSEY", body: "With an intrepid heart and a wandering spirit, Hermès luggage has always been synonymous with travel" },
-    ];
-    return [];
-  })();
-  type GridItem = { kind: "product"; p: Product; tileKey?: string } | { kind: "video"; p: Product; tileKey?: string } | { kind: "text"; title: string; body: string; imgDesktop?: string; imgMo?: string; col?: number } | { kind: "iconic" };
+  // France conversion (Stage B): the US editorial inserts are dropped —
+  // the France insert titles/bodies are unverified (STAGE-B-REMAINDER.md G2).
+  const edInserts: EdInsert[] = [];
+  type GridItem = { kind: "product"; p: Product; tileKey?: string } | { kind: "video"; p: Product; tileKey?: string } | { kind: "text"; title: string; body: string; imgDesktop?: string; imgMo?: string; col?: number };
   const gridItems: GridItem[] = [];
   // The Fall-Winter collection page carries NO editorial tiles on the
   // original (verified in its first 120 products). Every other page
@@ -3538,7 +2984,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // autoplay video tiles instead of photo tiles (original behaviour).
     // Home colourway tiles (2026-11-15): duplicate rows need a unique
     // React key — the live tile position — or the grid drops repeats.
-    const tileKey = homeTilesActive || beltTilesActive ? `${homeTilesActive ? "home" : "belt"}-tile-${i + 1}` : undefined;
+    const tileKey = undefined;
     if (isFallWinterPage && FW_VIDEO_TILE_IDS.has(p.id)) gridItems.push({ kind: "video", p, tileKey });
     else gridItems.push({ kind: "product", p, tileKey });
     if (showEdInserts) for (const ins of edInserts) if (ins.after === i + 1) gridItems.push({ kind: "text", title: ins.title, body: ins.body, imgDesktop: ins.img, imgMo: ins.imgMo, col: ins.col });
@@ -3548,7 +2994,6 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // links. It is a full-width row, not a text tile, so it has its
     // own GridItem kind. Same showEdInserts gate as the text inserts
     // (unfiltered + relevance-sorted).
-    if (showEdInserts && isWomensBagsPage && i + 1 === 8) gridItems.push({ kind: "iconic" });
   });
 
   // SLG parent filter cards — the original's 5 subcategory cards under
@@ -4730,43 +4175,6 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             <ProductCard key={it.tileKey ?? it.p.id} p={it.p} colourInName tileColour={tileColourFor(tileColourPage, it.p.id)} onOpen={(id) => go({ t: "product", id })} onQuickBuy={quickBuyOn && isSneakerProduct(it.p) ? (prod) => addToCart(prod) : undefined} />
           ) : it.kind === "video" ? (
             <VideoTile key={it.tileKey ?? it.p.id} p={it.p} onOpen={(id) => go({ t: "product", id })} />
-          ) : it.kind === "iconic" ? (
-            // Women's Bags iconic block (Group 11, 2026-11-18) — the
-            // original's Birkin / Constance / Kelly "Discover" block
-            // between tiles #8 and #9: a feature tile for the Bel-Il
-            // bag (#9, ref H088537CKAB) + three Discover links. The
-            // hermesedito images are the original's own (all 6 URLs
-            // HEAD-verified 200 on 2026-11-18); the feature tile uses
-            // the Bel-Il product's own photo. The three links go to
-            // the original's content pages (/content/106191-birkin/
-            // etc.) — the clone has no content pages for them (same
-            // class as the bespoke SADDLES exception), so a click
-            // loads the URL the original uses.
-            <div key="ed-iconic" className="col-span-2 grid grid-cols-2 gap-[2px] lg:col-span-4 lg:grid-cols-4">
-              {(() => {
-                const belIl = products.find((p) => p.refCode === "H088537CKAB");
-                const links = [
-                  { name: "Birkin", href: "/us/en/content/106191-birkin/", imgMo: "https://assets.hermes.com/is/image/hermesedito/Tuile_KBC_Mobile_2048x1536_Birkin", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/006_worn_1_DESKTOP-3" },
-                  { name: "Constance", href: "/us/en/content/186146-constance/", imgMo: "https://assets.hermes.com/is/image/hermesedito/Tuile_KBC_Mobile_2048x1536_Constance", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/019_worn_1_DESKTOP-2" },
-                  { name: "Kelly", href: "/us/en/content/106196-kelly/", imgMo: "https://assets.hermes.com/is/image/hermesedito/Tuile_KBC_Mobile_2048x1536_Kelly", imgDesktop: "https://assets.hermes.com/is/image/hermesedito/022_worn_1_DESKTOP-3" },
-                ];
-                return (<>
-                  <button key="ed-iconic-belil" aria-label="Discover the Bel-Il bag" className="relative block aspect-square overflow-hidden text-left" onClick={() => belIl && go({ t: "product", id: belIl.id })}>
-                    {belIl && <img src={productImageFor(belIl)} alt="Bel-Il bag" loading="lazy" className="h-full w-full object-cover" />}
-                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 pb-4 pt-10 text-left text-[13px] font-bold uppercase leading-snug tracking-wide text-white">Bel-Il bag<span className="mt-1 block text-[11px] font-semibold normal-case tracking-normal underline underline-offset-4">Discover</span></span>
-                  </button>
-                  {links.map((l) => (
-                    <a key={`ed-iconic-${l.name}`} href={l.href} aria-label={`Discover ${l.name}`} className="relative block aspect-square overflow-hidden">
-                      <picture>
-                        <source media="(min-width: 1024px)" srcSet={l.imgDesktop} />
-                        <img src={l.imgMo} alt={l.name} loading="lazy" className="h-full w-full object-cover" />
-                      </picture>
-                      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 pb-4 pt-10 text-left text-[13px] font-bold uppercase leading-snug tracking-wide text-white">{l.name}<span className="mt-1 block text-[11px] font-semibold normal-case tracking-normal underline underline-offset-4">Discover</span></span>
-                    </a>
-                  ))}
-                </>);
-              })()}
-            </div>
           ) : it.imgDesktop ? (
             // Editorial tile WITH a photo (Children page only, 2026-11-19):
             // the original's tile is 2 columns wide and spans 2 product
@@ -4797,7 +4205,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         <div>
           <div className="mt-8 columns-2 gap-2 sm:columns-4 lg:columns-7">
             {gridList.map((p, i) => (
-              <button key={homeTilesActive || beltTilesActive ? `${homeTilesActive ? "home" : "belt"}-tile-${i + 1}` : p.id} aria-label={p.name} className="mb-2 block w-full break-inside-avoid overflow-hidden" style={{ background: p.tone }} onClick={() => go({ t: "product", id: p.id })}>
+              <button key={p.id} aria-label={p.name} className="mb-2 block w-full break-inside-avoid overflow-hidden" style={{ background: p.tone }} onClick={() => go({ t: "product", id: p.id })}>
                 <img src={productImageFor(p)} alt={p.name} loading="lazy" className={`w-full object-cover ${MOSAIC_ASPECTS[i % MOSAIC_ASPECTS.length] ?? "aspect-square"}`} />
               </button>
             ))}
@@ -4810,7 +4218,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         <div className="mt-12 text-center">
           <p className="text-xs text-neutral-500">{`${Math.min(visible, gridList.length)} products viewed out of ${totalForCounter}`}</p>
           <div className="mx-auto mt-4 h-px w-[120px] bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${totalForCounter ? (Math.min(visible, gridList.length) / totalForCounter) * 100 : 0}%` }} /></div>
-          <button aria-label="SEE MORE PRODUCTS" className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal" onClick={() => { const next = Math.min(visible + 40, gridList.length); const added = next - visible; setVisible(next); setLoadedMsg(`${added} products loaded`); }}>SEE MORE PRODUCTS</button>
+          <button aria-label="VOIR PLUS DE PRODUITS" className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal" onClick={() => { const next = Math.min(visible + 40, gridList.length); const added = next - visible; setVisible(next); setLoadedMsg(`${added} products loaded`); }}>VOIR PLUS DE PRODUITS</button>
           {loadedMsg && <p className="sr-only" role="status">{loadedMsg}</p>}
         </div>
       )}
@@ -5076,135 +4484,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         {!sub && (<>{" | "}<span className="tracking-normal text-black">{titleText}</span></>)}
       </nav>)}
 
-      {/* Product theme carousel — the original's category page has this swiper
-          (aria-label "Product theme carousel", 15 slides = 5 categories x 3)
-          with NO visible heading, NO counter and NO arrow buttons (verified
-          in hermes.com's rendered category HTML: no "Product theme" heading
-          text, no "/15" counter anywhere — swipe-only). */}
-      <section className="mt-12 lg:mt-10" aria-label="Product theme carousel">
-        {isFallWinterPage ? (
-          <FallWinterThemeCarousel go={go} />
-        ) : isSlgParent || isSlgSub ? (
-          <FallWinterThemeCarousel go={go} themes={slgThemes} />
-        ) : isHomePage ? (
-          <FallWinterThemeCarousel go={go} themes={homeThemes} />
-        ) : isHomeArtPage ? (
-          <FallWinterThemeCarousel go={go} themes={homeArtThemes} />
-        ) : isPetitHPage ? (
-          <FallWinterThemeCarousel go={go} themes={petitHThemes} />
-        ) : isGiftMenPage ? (
-          <FallWinterThemeCarousel go={go} themes={giftMenThemes} />
-        ) : isGiftChildPage ? (
-          <FallWinterThemeCarousel go={go} themes={giftChildThemes} />
-        ) : isGiftDogsPage ? (
-          <FallWinterThemeCarousel go={go} themes={giftDogsThemes} />
-        ) : isGiftsPage || isGiftWomenPage || isGiftChildPage || isGiftDogsPage ? (
-          <FallWinterThemeCarousel go={go} themes={giftsThemes} />
-        ) : isWatchesPage ? (
-          <FallWinterThemeCarousel go={go} themes={watchesThemes} />
-        ) : isSpringSummerPage ? (
-          <FallWinterThemeCarousel go={go} themes={ssThemes} />
-        ) : isWomensRtwPage ? (
-          <FallWinterThemeCarousel go={go} themes={wRtwThemes} />
-        ) : isWatchWomenPage ? (
-          <FallWinterThemeCarousel go={go} themes={watchWomenThemes} />
-        ) : isWatchMenPage ? (
-          <FallWinterThemeCarousel go={go} themes={watchMenThemes} />
-        ) : isJewelryMenPage ? (
-          <FallWinterThemeCarousel go={go} themes={jewelryMenThemes} />
-        ) : isWomensTshirtsPage ? (
-          <FallWinterThemeCarousel go={go} themes={tshirtThemes} />
-        ) : isWomensKnitwearPage ? (
-          <FallWinterThemeCarousel go={go} themes={knitwearThemes} />
-        ) : isWomensScarvesPage ? (
-          <FallWinterThemeCarousel go={go} themes={scarvesThemes} />
-        ) : isBalletPage ? (
-          <FallWinterThemeCarousel go={go} themes={balletThemes} />
-        ) : isTwillyPage ? (
-          <FallWinterThemeCarousel go={go} themes={twillyThemes} />
-        ) : isChildPage ? (
-          <FallWinterThemeCarousel go={go} themes={childThemes} />
-        ) : cat === "jewelry" && !sub ? (
-          <FallWinterThemeCarousel go={go} themes={fineJewelryThemes} />
-        ) : isFashionJewelryParentPage ? (
-          <FallWinterThemeCarousel go={go} themes={fashJewelryThemes} />
-        ) : isBagsViewPage || isWomensBagsPage ? (
-          <FallWinterThemeCarousel go={go} themes={bagsThemes} />
-        ) : isWomensShoesPage ? (
-          <FallWinterThemeCarousel go={go} themes={shoesThemes} />
-        ) : isBeachPage ? (
-          <FallWinterThemeCarousel go={go} themes={beachThemes} />
-        ) : isCasesPage ? (
-          <FallWinterThemeCarousel go={go} themes={casesThemes} />
-        ) : isChainedAncrePage ? (
-          <FallWinterThemeCarousel go={go} themes={chainedAncreThemes} />
-        ) : isCollectionsPage ? (
-          <FallWinterThemeCarousel go={go} themes={collectionsThemes} />
-        ) : isCharmsPage ? (
-          <FallWinterThemeCarousel go={go} themes={charmsThemes} />
-        ) : isDressesPage ? (
-          <FallWinterThemeCarousel go={go} themes={dressesThemes} />
-        ) : isEquestrianPage ? (
-          <FallWinterThemeCarousel go={go} themes={equestrianThemes} />
-        ) : isEyesPage ? (
-          <FallWinterThemeCarousel go={go} themes={eyesThemes} />
-        ) : isFurnPage ? (
-          <FallWinterThemeCarousel go={go} themes={furnitureThemes} />
-        ) : isHorsePage ? (
-          <FallWinterThemeCarousel go={go} themes={horseThemes} />
-        ) : isLuggagePage ? (
-          <FallWinterThemeCarousel go={go} themes={luggageThemes} />
-        ) : isMensFwPage ? (
-          <FallWinterThemeCarousel go={go} themes={menFwThemes} />
-        ) : isMensRtwPage ? (
-          <FallWinterThemeCarousel go={go} themes={menRtwThemes} />
-        ) : isMensScarvesPage ? (
-          <FallWinterThemeCarousel go={go} themes={menScarvesThemes} />
-        ) : isOfficePage ? (
-          <FallWinterThemeCarousel go={go} themes={officeThemes} />
-        ) : isReadingPage ? (
-          <FallWinterThemeCarousel go={go} themes={readingThemes} />
-        ) : isSuitcasesPage ? (
-          <FallWinterThemeCarousel go={go} themes={suitcasesThemes} />
-        ) : isTablewarePage ? (
-          <FallWinterThemeCarousel go={go} themes={tablewareThemes} />
-        ) : isTextilesPage ? (
-          <FallWinterThemeCarousel go={go} themes={textilesThemes} />
-        ) : isTimepiecesPage ? (
-          <FallWinterThemeCarousel go={go} themes={timepiecesThemes} />
-        ) : isTravAccPage ? (
-          <FallWinterThemeCarousel go={go} themes={travelAccThemes} />
-        ) : (
-        <div ref={themeRef} className="no-scrollbar flex snap-x gap-4 overflow-x-auto pb-1">
-          {(() => {
-            const themed = isBeltsPage ? THEME_CAROUSEL_DATA.belts : isMensShoesPage ? THEME_CAROUSEL_DATA.menshoes : null;
-            if (themed) {
-              // 5 page-dependent themes x 3 repeats = 15 slides, editorial
-              // images with the overlay title bottom-right (as on hermes.com).
-              const slides = [...themed, ...themed, ...themed];
-              return slides.map((slide, i) => (
-                <button key={`${slide.label}-${i}`} data-theme-card aria-label={`Product theme ${slide.label}`} className="relative w-[42%] shrink-0 snap-start overflow-hidden text-left sm:w-[23%] lg:w-[18.6%]" onClick={() => go(slide.view)}>
-                  <picture>
-                    <source media="(min-width: 1024px)" srcSet={slide.imgDesktop} />
-                    <img src={slide.imgMo} alt={slide.label} loading="lazy" className="aspect-[3/4] w-full object-cover lg:aspect-[16/9]" />
-                  </picture>
-                  <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent px-2 pb-2 pt-10 text-right text-[12px] font-bold uppercase leading-5 text-white">{slide.label}</span>
-                </button>
-              ));
-            }
-            return THEME_CARDS.map((card) => {
-              const rep = products.find((p) => p.category === (card.view.t === "category" ? card.view.cat : ""));
-              return (
-                <button key={card.label} data-theme-card aria-label={`Product theme ${card.label}`} className="w-[42%] shrink-0 snap-start text-left sm:w-[23%] lg:w-[18.6%]" onClick={() => go(card.view)}>
-                  <span className="block aspect-[4/3] overflow-hidden bg-[#ece7dd]">{rep && <img src={productImageFor(rep)} alt="" className="h-full w-full object-cover" />}</span>
-                  <span className="mt-2 block text-sm">{card.label}</span>
-                </button>
-              );
-            });
-          })()}
-        </div>
-        )}
-      </section>
+      {/* France conversion (Stage B): the US category-page theme carousel
+          is dropped — the France themes/order are unverified
+          (STAGE-B-REMAINDER.md G2). No carousel renders here. */}
       {/* /jewelry/ descriptive paragraph — Group 11 (2026-11-18): the
           original's Gold Jewelry paragraph, verbatim from the live
           category page text fetch (2026-11-18 07:57 UTC). It REPLACES
@@ -5256,22 +4538,24 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setSlgParaOpen(!slgParaOpen)}>{slgParaOpen ? "See less" : "See More"}</button>
         </div>
       )}
-      {cat === "leather" && subLow === "to go wallets" && (
+      {/* France conversion (Stage B): the US SLG sub-page paragraphs are disabled —
+          the France paragraph text is unverified (STAGE-B-REMAINDER.md G2). */}
+      {false && cat === "leather" && subLow === "to go wallets" && (
         <p className="mx-auto mt-12 max-w-3xl text-center text-sm leading-7 text-neutral-700">
           Combine lightness and style with Hermès To Go wallets, true hybrids between small leather goods and bags. Designed for absolute freedom of movement thanks to their strap, they come in timeless shades like black or the iconic orange. These compact cases, crafted in resistant leather or enhanced with silk details, hold your essentials with elegance. Palladium or gold finishes perfect these modern companions.
         </p>
       )}
-      {cat === "leather" && subLow === "wallets" && (
+      {false && cat === "leather" && subLow === "wallets" && (
         <p className="mx-auto mt-12 max-w-3xl text-center text-sm leading-7 text-neutral-700">
           Discover the excellence of Hermès wallets, an essential collection designed for women and men. Fashioned from exceptional leathers, our models combine aesthetics and practicality. From the classic long format to compact wallets, each piece is designed for daily use, just like our clever coin purses. Find the emblematic signature of the Kelly line and an elegant color palette, from timeless black to natural brown. Gold or silver finishes enhance these durable creations.
         </p>
       )}
-      {cat === "leather" && subLow === "card holders" && (
+      {false && cat === "leather" && subLow === "card holders" && (
         <p className="mx-auto mt-12 max-w-3xl text-center text-sm leading-7 text-neutral-700">
           Discover the refined minimalism of Hermès card holders, discreet companions for him and her. From the ingenious Citizen Twill lined with silk to clean lines, each model celebrates leather in all its forms, from grained to smooth calfskin. These small leather goods accessories combine compact functionality and hand finishes. Available in a timeless palette including deep black or soft beige, our selection slips elegance into every pocket.
         </p>
       )}
-      {cat === "leather" && subLow === "pouches and cases" && (
+      {false && cat === "leather" && subLow === "pouches and cases" && (
         <p className="mx-auto mt-12 max-w-3xl text-center text-sm leading-7 text-neutral-700">
           Bring a touch of order to your daily life with Hermès cases and pouches. These nomadic accessories, designed to protect your essentials, marry functionality and refinement. Whether cut from heritage leather or light technical silk, they slip easily into a bag or suitcase. Available in a palette ranging from deep black to the emblematic orange, our creations offer neat finishes to accompany all your travels.
         </p>
@@ -6283,7 +5567,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   // The category this product was opened from (tracked in App when
   // navigating to a product). Back controls return to it; a deep link has
   // no origin, so it falls back to the product's own subcategory page.
-  const backCat: { t: "category"; cat: string; sub?: string } = from && from.t === "category" ? from : { t: "category", cat: p.category, sub: p.subcategory };
+  const backCat: { t: "category"; cat: string; sub?: string } = from && from.t === "category" ? from : { t: "category", cat: US_TO_FR_CAT[p.category] ?? p.category };
   const backView: View = from ?? backCat;
   const goBack = () => go(backView, { restore: true });
   // Breadcrumb middle crumb: the product's season collection when it has
@@ -6663,14 +5947,10 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
     { title: "DELIVERY & RETURNS", content: (<>
       <p className="font-semibold text-black">Shipping</p>
       {settings.deliveryText ? <p className="mt-1">{settings.deliveryText}</p> : <>
-        <p className="mt-1">Free standard delivery. Hermès offers several fast and secure delivery options.</p>
-        <p className="mt-3 font-semibold text-black">Delivery options</p>
-        <p className="mt-1">Standard Delivery (Free): An estimated delivery date will be provided at checkout (expected delivery date is visible during the payment step). Your order will be prepared within 1 to 2 business days and delivered within 3 to 5 business days.</p>
-        <p className="mt-1">Express Delivery ($35): Your order will be prepared within 1 business day and delivered within 1 to 2 business days.</p>
-        <p className="mt-1">Same-Day Delivery ($35): Order by 2:00 PM EST (except on weekends and holidays), your order will be delivered within 1 to 2 business days.</p>
+        <p className="mt-1">Free standard delivery in France.</p>
       </>}
       <p className="mt-4 font-semibold text-black">Payment methods</p>
-      {settings.paymentMethods ? <p className="mt-1">{settings.paymentMethods}</p> : <p className="mt-1">By card: Visa®, MasterCard®, American Express®, Discover®, Diners Club®, JCB® and China Union Pay®. By PayPal® and Apple Pay®. Payment is debited immediately for personalized product.</p>}
+      {settings.paymentMethods ? <p className="mt-1">{settings.paymentMethods}</p> : <p className="mt-1">By card: Visa®, MasterCard® and American Express®. By PayPal® and Apple Pay®. Payment is debited immediately for personalized product.</p>}
       <p className="mt-4 font-semibold text-black">Returns and exchanges</p>
       {settings.returnsText ? <p className="mt-1">{settings.returnsText}</p> : <>
         <p className="mt-1">Free returns within 30 days. See conditions and procedure in our FAQ.</p>
@@ -6700,7 +5980,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
     isConfigProduct(p) ? (
             <div className="mt-4">
               <button aria-label="Personalize" className="font-mono-d flex h-12 w-full items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => setConfigOpen((v) => !v)}>Personalize</button>
-              {configOpen && <p className="mt-4 border border-black/20 p-3 text-sm">Personalization for this article is not available in this store yet. Please call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a> for assistance.</p>}
+              {configOpen && <p className="mt-4 border border-black/20 p-3 text-sm">Personalization for this article is not available in this store yet.{settings.phone ? (<> Please call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a> for assistance.</>) : null}</p>}
             </div>
           ) : isBuyableStatus(p.status) ? (
             <div className="mt-4">
@@ -6710,7 +5990,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               </div>
             </div>
           ) : p.status === "in_store_only" ? (
-            <p className="mt-4 border border-black/20 p-3 text-sm">This article is available in store only. Please visit a boutique or call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a>.</p>
+            <p className="mt-4 border border-black/20 p-3 text-sm">This article is available in store only. Please visit a boutique{settings.phone ? (<> or call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></>) : null}.</p>
           ) : (
             <div className="mt-4">
               <p className="text-sm">We will notify you when this product is back in stock</p>
@@ -6751,6 +6031,9 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           <button aria-label="Back" className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center bg-white text-black shadow 2xl:hidden" onClick={goBack}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg>
           </button>
+          {views.length > 1 && (
+            <span className="absolute right-3 top-3 z-20 bg-white/90 px-2 py-1 text-[11px] font-medium tracking-wide text-black shadow">{thumb + 1} sur {views.length}</span>
+          )}
           <div ref={stripRef} className="no-scrollbar flex snap-x snap-mandatory gap-[1px] overflow-x-auto" role="group" aria-label="Product gallery">
             {views.map((v, i) => (
               <div key={v.label + i} data-panel data-viewsrc={v.src} className={`relative aspect-[3/4] w-full shrink-0 snap-start overflow-hidden bg-[#efe9df] sm:w-[48%] lg:w-[34.8%] ${thumb === i ? "ring-1 ring-black/50" : ""}`}>
@@ -6793,7 +6076,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
         {views.length > 1 && (
           <div className="mt-3 flex justify-center gap-1.5 lg:hidden" role="tablist" aria-label="Product gallery pages">
             {views.map((v, i) => (
-              <button key={`dot-${i}`} aria-label={`Go to image ${i + 1} of ${views.length}`} aria-current={thumb === i} onClick={() => setThumb(i)} className={`h-[5px] w-[5px] rounded-full ${thumb === i ? "bg-black" : "bg-black/25"}`} />
+              <button key={`dot-${i}`} aria-label={`Aller à l'image ${i + 1} sur ${views.length}`} aria-current={thumb === i} onClick={() => setThumb(i)} className={`h-[5px] w-[5px] rounded-full ${thumb === i ? "bg-black" : "bg-black/25"}`} />
             ))}
           </div>
         )}
@@ -6949,9 +6232,9 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
       <RelatedRow title="Last viewed products" items={lastViewed} go={go} mt="mt-20 lg:mt-28" hidePrice onQuickBuy={(p) => addToCart(p)} />
 
       <nav aria-label="Breadcrumb" className="font-mono-d mx-auto mt-14 max-w-5xl border-t border-black/10 px-4 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 sm:px-6">
-        <button aria-label={`Breadcrumb ${catLabel(p.category)}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category })}>{catLabel(p.category)}</button>
+        <button aria-label={`Breadcrumb ${catLabel(p.category)}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: US_TO_FR_CAT[p.category] ?? p.category })}>{catLabel(p.category)}</button>
         <span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" />
-        <button aria-label={`Breadcrumb ${crumbMid}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: p.category, sub: crumbMid })}>{crumbMid}</button>
+        <button aria-label={`Breadcrumb ${crumbMid}`} className="underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: US_TO_FR_CAT[p.category] ?? p.category, sub: crumbMid })}>{crumbMid}</button>
         <span aria-hidden="true" className="mx-2 inline-block h-2 w-px bg-[#696969]" />
         <span className="text-black">{p.name}</span>
       </nav>
@@ -7023,7 +6306,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
             {dialogViews.map((v, i) => (
               <button
                 key={v.label + i}
-                aria-label={`View ${i + 1} of ${dialogViews.length}: ${v.label}`}
+                aria-label={`Voir ${i + 1} sur ${dialogViews.length}: ${v.label}`}
                 aria-current={dialogIdx === i}
                 className={`relative h-[47px] w-9 shrink-0 overflow-hidden border-2 ${dialogIdx === i ? "border-black" : "border-transparent"}`}
                 onClick={() => { setDialogIdx(i); const vi = views.findIndex((x) => x.src === v.src); if (vi >= 0) setThumb(vi); setPan({ x: 0, y: 0 }); }}
@@ -7355,31 +6638,31 @@ const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
   { title: "LEGAL", links: [["Terms and conditions", "terms"], ["Privacy & cookies", "privacy"], ["Binding Corporate Rules (BCRs)", "bcr"], ["California Transparency in Supply Chain Act", "california"], ["Transparency in coverage", "coverage"], ["Do Not Sell/Share My Personal Information", "donotsell"], ["Legal issues", "legal"], ["Accessibility", "accessibility"], ["Hermès Sitemap", "sitemap"]] },
 ];
 const PAGES: Record<string, { title: string; body: string[] }> = {
-  contact: { title: "Customer Service", body: ["Monday to Saturday 10am - 9pm EST: 800-441-4488.", "The answer to your question can certainly be found in the FAQs.", "You can also contact us outside public holidays:"] },
-  faq: { title: "FAQ", body: ["How long is delivery? Complimentary Ground delivery applies to orders up to $2,000; Express 2 day $35, Standard Overnight $60, Priority Overnight $70, Saturday Delivery $85, White Glove $500. Express is required over $2,000 and White Glove over $25,000.", "Can I return an article? Yes — free returns within 30 days of delivery, in its original condition and packaging.", "Which payment methods are accepted? MasterCard, Visa, American Express, Diners Club, Carte Blanche, JCB, Discover, Accel, Pulse, Nyce, Star and China Union Pay; PayPal and Apple Pay for select products.", "Are Birkin and Kelly quota bags sold online? No. These articles are offered in store only."] },
-  stores: { title: "Find a store", body: ["Hermès boutiques welcome you across the United States. Flagship: 691 Madison Avenue, New York — Monday to Saturday 10 AM – 9 PM.", "Beauty products and Apple Watch Hermès are available in selected boutiques; please call 800-441-4488 to confirm availability before your visit."] },
+  contact: { title: "Customer Service", body: ["Monday to Saturday 10 AM - 9 PM.", "The answer to your question can certainly be found in the FAQs.", "You can also contact us outside public holidays:"] },
+  faq: { title: "FAQ", body: ["How long is delivery? Free standard delivery in France. Free returns within 30 days of delivery.", "Can I return an article? Yes — free returns within 30 days of delivery, in its original condition and packaging.", "Which payment methods are accepted? MasterCard, Visa, American Express; PayPal and Apple Pay for select products.", "Are Birkin and Kelly quota bags sold online? No. These articles are offered in store only."] },
+  stores: { title: "Find a store", body: ["Hermès boutiques welcome you across France.", "Beauty products and Apple Watch Hermès are available in selected boutiques."] },
   gifting: { title: "Gifting", body: ["Every order arrives in the orange box tied with Bolduc ribbon. Add a gift message at checkout; the delivery note never shows prices. Gift cards are available under Gifts → Gift cards."] },
-  measure: { title: "Made to measure", body: ["The Sur Mesure atelier creates pieces measured, cut and finished for one person only. Appointments are arranged in boutique or by phone at 800-441-4488."] },
+  measure: { title: "Made to measure", body: ["The Sur Mesure atelier creates pieces measured, cut and finished for one person only. Appointments are arranged in boutique."] },
   maintenance: { title: "Maintenance and repair", body: ["Hermès artisans restore leather goods, silk, watches and jewelry in the Maison's workshops. Bring your article to any boutique for an assessment; a quotation is provided before any work begins."] },
   guides: { title: "User guides", body: ["Watch user guide: pull the crown to set the time; keep away from magnetic fields; service every 3–5 years.", "Scarf guide: your scarf 90 can be worn around the neck, as a top, a belt or on a bag handle. Dry clean only.", "Leather guide: wipe with a soft dry cloth and store in the dust bag provided.", "Wrist size guide: measure around your wrist and choose the closest size between 5.5\" and 6.5\" for Petite Lune straps."] },
-  payment: { title: "Payment", body: ["We accept MasterCard, Visa, American Express, Diners Club, Carte Blanche, JCB, Discover, Accel, Pulse, Nyce, Star and China Union Pay. PayPal and Apple Pay are available for select products.", "All the transactions made on the Hermes.com website are secure."] },
-  shipping: { title: "Shipping", body: ["Complimentary Ground delivery for orders up to $2,000. Express 2 day $35; Standard Overnight $60; Priority Overnight $70; Saturday Delivery $85; White Glove $500. Furniture transport is 6% of the order, up to a maximum of $5,000.", "Express delivery is required for orders over $2,000; White Glove delivery is required over $25,000. Every parcel is delivered in the orange box tied with Bolduc ribbon, with signature required for high-value orders."] },
+  payment: { title: "Payment", body: ["We accept MasterCard, Visa and American Express. PayPal and Apple Pay are available for select products.", "All the transactions made on the Hermes.com website are secure."] },
+  shipping: { title: "Shipping", body: ["Free standard delivery in France.", "Every parcel is delivered in the orange box tied with Bolduc ribbon, with signature required for high-value orders."] },
   collect: { title: "Collect in store", body: ["Select articles can be reserved online and collected in boutique. Bring your order confirmation and an ID; your article will be held for 48 hours."] },
   track: { title: "Track orders", body: ["Order tracking is available from your account after sign-in."] },
-  returns: { title: "Returns and exchanges", body: ["Free returns within 30 days of delivery. Articles must be returned in their original condition and packaging, with the Sellier tag intact; personalised articles are not eligible for return.", "A complimentary FedEx pre-paid return label is available from your account. Fragrances must be unopened, shoes must have undamaged soles, and an Apple Watch Hermès must be unpaired before return. Returns made in store are eligible for exchange or store credit only."] },
+  returns: { title: "Returns and exchanges", body: ["Free returns within 30 days of delivery. Articles must be returned in their original condition and packaging, with the Sellier tag intact; personalised articles are not eligible for return.", "A complimentary pre-paid return label is available from your account. Fragrances must be unopened, shoes must have undamaged soles, and an Apple Watch Hermès must be unpaired before return. Returns made in store are eligible for exchange or store credit only."] },
   sustainability: { title: "Sustainable development", body: ["Hermès builds objects made to last and be repaired. Materials are sourced responsibly and craftsmanship is passed down through six generations of artisans."] },
   foundation: { title: "The Hermès Foundation", body: ["Created in 2008, the Fondation d'entreprise Hermès supports creators, artisans and biodiversity through programmes in the arts, training and the environment."] },
   join: { title: "Join Hermès", body: ["The Maison recruits artisans, sales associates and head-office talent throughout the year. A human adventure since 1837 — bring your savoir-faire."] },
   finance: { title: "Finance & Governance", body: ["Hermès International is listed on Euronext Paris. Annual reports, regulated information and governance documents are published for shareholders each year."] },
   partners: { title: "Our partner brands", body: ["The group includes Puiforcat (silversmith), Saint-Louis (crystal), John Lobb (bootmaker) and Shang Xia — Maisons that share the same demand for exceptional craftsmanship."] },
-  terms: { title: "Terms and conditions", body: ["By purchasing on this store you accept these terms. Prices are shown in US dollars, taxes calculated at checkout. Articles remain the property of the Maison until payment is received in full."] },
+  terms: { title: "Terms and conditions", body: ["By purchasing on this store you accept these terms. Prices are shown in euros, taxes calculated at checkout. Articles remain the property of the Maison until payment is received in full."] },
   privacy: { title: "Privacy & cookies", body: ["We process your data to fulfil orders, manage your account and — with your consent — send the newsletter. You may refuse or accept cookies at any time from the cookie dialog shown on your first visit."] },
   bcr: { title: "Binding Corporate Rules", body: ["The group's Binding Corporate Rules govern international transfers of personal data and have been approved by the competent European authorities."] },
   california: { title: "California Transparency in Supply Chain Act", body: ["The Maison audits its supply chain to verify that materials are not produced by forced or trafficked labour, and trains employees with direct responsibility for supply-chain management."] },
   coverage: { title: "Transparency in coverage", body: ["Machine-readable files for the group's US health plans are made available in accordance with the Transparency in Coverage rule."] },
-  donotsell: { title: "Do Not Sell/Share My Personal Information", body: ["We do not sell your personal information. To exercise your privacy rights, contact customer service at 800-441-4488 or from your account page."] },
+  donotsell: { title: "Do Not Sell/Share My Personal Information", body: ["We do not sell your personal information. To exercise your privacy rights, contact customer service from your account page."] },
   legal: { title: "Legal issues", body: ["All content on this site — texts, images and the Hermès name — is protected. Counterfeit articles harm artisans and customers; report suspected counterfeits to customer service."] },
-  accessibility: { title: "Accessibility", body: ["We aim to make this store usable by everyone: full keyboard navigation, labelled controls and text alternatives for imagery. Tell us at 800-441-4488 if any page is difficult to use."] },
+  accessibility: { title: "Accessibility", body: ["We aim to make this store usable by everyone: full keyboard navigation, labelled controls and text alternatives for imagery. Tell us via our contact page if any page is difficult to use."] },
 };
 
 // Contact form, per the original hermes.com/us/en/contact-us/ (audited
@@ -7391,7 +6674,7 @@ const PAGES: Record<string, { title: string; body: string[] }> = {
 const SUBJECTS = ["Product information", "Order follow up", "Returns and exchanges for online purchases", "Returns and exchanges for in-store purchases", "Customer experience", "Product care and repair", "Press and communication", "Bespoke", "Furniture specialist", "Equestrian specialist", "Do not sell my data", "Other"];
 
 function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void }) {
-  const [f, setF] = useState({ first: "", last: "", email: "", area: "US +1", phone: "", subject: "", message: "" });
+  const [f, setF] = useState({ first: "", last: "", email: "", area: "FR +33", phone: "", subject: "", message: "" });
   const [sent, setSent] = useState("");
   const [err, setErr] = useState("");
   const [subjectOpen, setSubjectOpen] = useState(false);
@@ -7402,19 +6685,17 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
   const fieldCls = "w-full rounded-none border-0 border-b border-black/30 bg-transparent px-0 py-2 text-sm text-black focus:border-black focus:outline-none";
   const labelCls = "mb-0.5 block text-xs text-neutral-700";
   const flag = (
-    <span aria-hidden="true" className="inline-block h-[13px] w-[19px] shrink-0 overflow-hidden border border-black/10" title="United States">
-      <span className="block h-full w-full" style={{ background: "linear-gradient(to bottom, #b22234 0 7.7%, #ffffff 7.7% 15.4%, #b22234 15.4% 23.1%, #ffffff 23.1% 30.8%, #b22234 30.8% 38.5%, #ffffff 38.5% 46.2%, #b22234 46.2% 53.8%, #ffffff 53.8% 61.5%, #b22234 61.5% 69.2%, #ffffff 69.2% 76.9%, #b22234 76.9% 84.6%, #ffffff 84.6% 92.3%, #b22234 92.3% 100%)" }}>
-        <span className="block h-[54%] w-[40%] bg-[#3c3b6e]" />
-      </span>
+    <span aria-hidden="true" className="inline-block h-[13px] w-[19px] shrink-0 overflow-hidden border border-black/10" title="France">
+      <span className="block h-full w-full" style={{ background: "linear-gradient(to right, #002654 0 33.3%, #ffffff 33.3% 66.6%, #ed2939 66.6% 100%)" }} />
     </span>
   );
   const chevron = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>;
   if (sent) return <p className="mt-6 border border-black/15 bg-[#fffcf7] p-5 text-sm" role="status">{sent}</p>;
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!f.first || !f.last || !isValidEmail(f.email) || !/^\d{10}$/.test(f.phone.replace(/\D/g, "").replace(/^1/, "")) || !f.message || !f.subject) {
+    if (!f.first || !f.last || !isValidEmail(f.email) || !/^\d{10}$/.test(f.phone.replace(/\D/g, "")) || !f.message || !f.subject) {
       setSubjectTouched(true);
-      setErr("Please complete all fields — the telephone must be a US number (+1 followed by 10 digits).");
+      setErr("Please complete all fields — the telephone must be a French number (10 digits).");
       return;
     }
     // No email backend exists in this build: the message is saved locally
@@ -7446,7 +6727,7 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
           <div className="flex items-center gap-2 border-b border-black/30 py-2 focus-within:border-black">
             {flag}
             <select id="cf-area" aria-label="Contact area code" className="w-full appearance-none bg-transparent text-sm text-black focus:outline-none" value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })}>
-              <option value="US +1">US +1</option>
+              <option value="FR +33">FR +33</option>
             </select>
             <span className="text-neutral-500">{chevron}</span>
           </div>
@@ -7897,13 +7178,13 @@ const FAQ_LABEL_TO_SLUG: Record<string, string> = {
   "Cookies": "cookies",
   "Security and Data Protection": "security-and-data-protection",
 };
-// The original's FAQ topic URL: /us/en/faq/<group>/<slug>/ (the landing page
-// is /us/en/faq/); routing.ts only knows the payment topic, so the full path
+// The original's FAQ topic URL: /fr/fr/faq/<group>/<slug>/ (the landing page
+// is /fr/fr/faq/); routing.ts only knows the payment topic, so the full path
 // is computed here and the App-level route fallbacks resolve direct loads.
 function faqPath(topic: string): string {
-  if (topic === "index") return "/us/en/faq/";
+  if (topic === "index") return "/fr/fr/faq/";
   const t = FAQ_BY_SLUG[topic];
-  return t ? `/us/en/faq/${t.group}/${t.slug}/` : `/us/en/faq/online-shopping/${topic}/`;
+  return t ? `/fr/fr/faq/${t.group}/${t.slug}/` : `/fr/fr/faq/online-shopping/${topic}/`;
 }
 
 // "More questions?" photo — the original's own FAQ banner image
@@ -8119,18 +7400,10 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
       <div className="mx-auto max-w-5xl px-4 py-12">
         <h1 className="font-serif-d text-3xl italic">Hermès Sitemap</h1>
         <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {NAV.map((n) => (
-            <div key={n.key}>
-              <button aria-label={`Sitemap ${n.label}`} className="text-xs font-semibold uppercase tracking-[0.2em] underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: n.key })}>{n.label}</button>
-              {/* The "Home" sub under HOME AND ART OF LIVING comes from the
-                  NAV "HOME" heading (Group 12, 2026-11-18): left as-is it
-                  resolves to sub "Home", which matches no syn and renders
-                  the sorry message. The original's menu heading "HOME AND
-                  ART OF LIVING" links to /home-art-living/, so this entry
-                  lands on the artliving page instead — same mapping as the
-                  megaTarget HOME-heading fix. The /home/ parent page
-                  itself is untouched (its sub-nav stays siblings []). */}
-              {n.subs.map((s) => <button key={s} aria-label={`Sitemap ${n.label} ${s}`} className="block py-1 text-sm text-neutral-600 hover:underline" onClick={() => go(n.key === "home" && s === "Home" ? { t: "category", cat: "home", sub: "Home and art of living" } : { t: "category", cat: n.key, sub: s })}>{s}</button>)}
+          {Object.values(NAV).map((n) => (
+            <div key={n.cat}>
+              <button aria-label={`Sitemap ${catLabel(n.cat)}`} className="text-xs font-semibold uppercase tracking-[0.2em] underline-offset-4 hover:underline" onClick={() => go({ t: "category", cat: n.cat })}>{catLabel(n.cat)}</button>
+              {n.subs.map((s) => <button key={s} aria-label={`Sitemap ${catLabel(n.cat)} ${s}`} className="block py-1 text-sm text-neutral-600 hover:underline" onClick={() => go({ t: "category", cat: n.cat, sub: s })}>{s}</button>)}
             </div>
           ))}
           {FOOTER_COLS.map((c) => (
@@ -8167,7 +7440,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
               <h2 className="text-[15px] font-bold text-black">Customer Service</h2>
               <p className="mt-4 text-sm leading-7 text-neutral-700">{settings.serviceHours} :</p>
               <p className="text-sm leading-7"><a aria-label="Call Hermès customer service" className="underline underline-offset-4" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
-              <p className="mt-4 text-sm leading-7 text-neutral-700">The answer to your question can certainly be found in the <a href="/us/en/faq/" aria-label="Frequently asked questions" className="font-bold underline underline-offset-4" onClick={(e) => { e.preventDefault(); go({ t: "faq", topic: "index" }); }}>FAQs</a></p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">The answer to your question can certainly be found in the <a href="/fr/fr/faq/" aria-label="Frequently asked questions" className="font-bold underline underline-offset-4" onClick={(e) => { e.preventDefault(); go({ t: "faq", topic: "index" }); }}>FAQs</a></p>
               <p className="mt-4 text-sm leading-7 text-neutral-700">You can also contact us outside public holidays:</p>
               <p className="mt-6 text-right text-xs text-neutral-600">* Required information</p>
               <ContactForm settings={settings} go={go} />
@@ -8179,7 +7452,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
   }
   if (page === "bespoke-equestrian") {
     // Bespoke equestrian editorial page, per the original
-    // /us/en/content/344534-bespoke-equestrian/ (read live 2026-11-17):
+    // /fr/fr/content/329243-sur-mesure-equitation/ (read live 2026-11-17):
     // hero video with the title + intro overlaid at its foot, "Our range
     // of saddles" intro, the 4 saddles in alternating two-column sections
     // (text/photo), "A unique creation", then the 3 partner-rider profiles.
@@ -8197,11 +7470,11 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
     // a cross-country fence) — each verified HEAD 200 + viewed.
     const back = () => { if (window.history.length > 1) window.history.back(); else go({ t: "home" }); };
     const mailto = "mailto:equitation@hermes.com?subject=Measure your desires";
-    const saddles: { name: string; type: string; price: string; img: string; desc: string }[] = [
-      { name: "Faubourg Saddle", type: "Jumping saddle, deep seat.", price: "$ 11000", img: "https://assets.hermes.com/is/image/hermesedito/079955CK3D_FAUBOURG-2?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "Embodying the quintessence of Hermès' centuries-old expertise, the Faubourg saddle, co-developed with world number 2 rider Jérôme Guéry, opens a new chapter in the history of the House's saddles. The desire for excellence and innovation has led to the creation of a saddle that stands out from the rest. It's unique. With its deep seat, narrow saddletree, integrated blocks, and fused flap design, the Faubourg saddle becomes one with the horse and reveals its technical and aesthetic innovations at first glance." },
-      { name: "Cavale Saddle", type: "Jumping saddle, mid-depth seat.", price: "$ 9700", img: "https://assets.hermes.com/is/image/hermesedito/060771CK89_CAVALE%20II?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "In line with the Hermès Cavale developed with Simon Delestre, the Hermès Cavale II saddle keeps the same technical advantages, all the while bringing the rider significantly closer to their horse. Thanks to its central balance that brings great stability and its highly comfortable stitch-free seat, this jumping saddle, carefully designed to meet high-level expectations, also makes an excellent all-purpose saddle." },
-      { name: "Vivace Saddle", type: "Jumping saddle, flat seat.", price: "$ 9700", img: "https://assets.hermes.com/is/image/hermesedito/068493CK3D_VIVACE-2?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "Successor to the Steinkraus saddle and more recently to the Hermès Allegro, the Hermès Vivace saddle offers an unprecedented sensation of closeness between the horse and its rider by eliminating unnecessary thickness and pressure points for improved comfort. Perfectly adapted to riders who enjoy riding as much as jumping, it combines an advanced center of gravity with stability and comfort." },
-      { name: "Arpège Saddle", type: "Dressage saddle, extra-deep seat.", price: "$ 10300", img: "https://assets.hermes.com/is/image/hermesedito/068619CK3D_ARPEGE-3?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "Developed in collaboration with Hermès partner rider Jessica von Bredow-Werndl, world and European champion, the Hermès Arpège saddle is both modern and elegant, enabling riders to compete at the highest level. Its stitch-free calfskin seat and single-flap design ensure unparalleled comfort and proximity to the horse." },
+    const saddles: { name: string; type: string; img: string; desc: string }[] = [
+      { name: "Faubourg Saddle", type: "Jumping saddle, deep seat.", img: "https://assets.hermes.com/is/image/hermesedito/079955CK3D_FAUBOURG-2?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "Embodying the quintessence of Hermès' centuries-old expertise, the Faubourg saddle, co-developed with world number 2 rider Jérôme Guéry, opens a new chapter in the history of the House's saddles. The desire for excellence and innovation has led to the creation of a saddle that stands out from the rest. It's unique. With its deep seat, narrow saddletree, integrated blocks, and fused flap design, the Faubourg saddle becomes one with the horse and reveals its technical and aesthetic innovations at first glance." },
+      { name: "Cavale Saddle", type: "Jumping saddle, mid-depth seat.", img: "https://assets.hermes.com/is/image/hermesedito/060771CK89_CAVALE%20II?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "In line with the Hermès Cavale developed with Simon Delestre, the Hermès Cavale II saddle keeps the same technical advantages, all the while bringing the rider significantly closer to their horse. Thanks to its central balance that brings great stability and its highly comfortable stitch-free seat, this jumping saddle, carefully designed to meet high-level expectations, also makes an excellent all-purpose saddle." },
+      { name: "Vivace Saddle", type: "Jumping saddle, flat seat.", img: "https://assets.hermes.com/is/image/hermesedito/068493CK3D_VIVACE-2?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "Successor to the Steinkraus saddle and more recently to the Hermès Allegro, the Hermès Vivace saddle offers an unprecedented sensation of closeness between the horse and its rider by eliminating unnecessary thickness and pressure points for improved comfort. Perfectly adapted to riders who enjoy riding as much as jumping, it combines an advanced center of gravity with stability and comfort." },
+      { name: "Arpège Saddle", type: "Dressage saddle, extra-deep seat.", img: "https://assets.hermes.com/is/image/hermesedito/068619CK3D_ARPEGE-3?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", desc: "Developed in collaboration with Hermès partner rider Jessica von Bredow-Werndl, world and European champion, the Hermès Arpège saddle is both modern and elegant, enabling riders to compete at the highest level. Its stitch-free calfskin seat and single-flap design ensure unparalleled comfort and proximity to the horse." },
     ];
     const riders: { name: string; since: string; bio: string; img: string }[] = [
       { name: "Jeanne Sadran", since: "Partner rider since 2025", img: "https://assets.hermes.com/is/image/hermesedito/A%20placer%20en%201er?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", bio: "Having ridden horses since she was a child, Jeanne Sadran is now considered a rising star in French show jumping. After making a name for herself at the highest level riding Dexter de Kerglenn, as a Hermès partner rider she is now making her mark on the international circuit with passion and determination." },
@@ -8224,7 +7497,6 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
                 <div className={i % 2 === 1 ? "lg:order-2" : ""}>
                   <h3 className="font-serif-d text-2xl italic">{s.name}</h3>
                   <p className="mt-2 text-sm font-medium">{s.type}</p>
-                  <p className="mt-1 text-sm">{s.price}</p>
                   <p className="mt-4 text-sm leading-7 text-neutral-700">{s.desc}</p>
                 </div>
                 <img src={s.img} alt={s.name} loading="lazy" className={`w-full object-cover ${i % 2 === 1 ? "lg:order-1" : ""}`} />
@@ -8269,7 +7541,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
       <h1 className="font-serif-d text-3xl italic">{data.title}</h1>
       {body.map((b, i) => <p key={i} className="mt-4 text-sm leading-7 text-neutral-700">{b}</p>)}
       {page === "contact" && <ContactForm settings={settings} go={go} />}
-      {(page === "donotsell" || page === "legal") && <p className="mt-4 text-sm">Customer service: <a aria-label="Call customer service" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a> — {settings.serviceHours}.</p>}
+      {(page === "donotsell" || page === "legal") && <p className="mt-4 text-sm">Customer service{settings.phone ? (<>: <a aria-label="Call customer service" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></>) : null} — {settings.serviceHours}.</p>}
       <button aria-label="Continue shopping" className="mt-8 border border-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => go({ t: "home" })}>Continue shopping</button>
     </div>
   );
@@ -8317,7 +7589,7 @@ function TrackOrders({ user, go }: { settings: Settings; user: { name: string; e
         return (
         <div key={o.id} className="mt-4 border border-black/10 bg-[#fffcf7] p-4">
           <p className="text-sm font-medium">Order #{o.id} — {fmt(o.total)} — <span className="uppercase tracking-wider">{o.status}</span></p>
-          <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString()}{o.paymentMethod ? ` · Paid with ${o.paymentMethod}` : ""}{o.deliveryOption ? ` · ${o.deliveryOption}` : ""}</p>
+          <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString("fr-FR")}{o.paymentMethod ? ` · Paid with ${o.paymentMethod}` : ""}{o.deliveryOption ? ` · ${o.deliveryOption}` : ""}</p>
           {items.map((it, i) => <p key={i} className="mt-1 text-sm text-neutral-700">{it.qty} × {it.name} — {fmt(it.price * it.qty)}</p>)}
           {o.status === "Cancelled" ? <p className="mt-3 text-sm text-red-700">This order was cancelled.</p> : (
             <div className="mt-4 flex items-center" aria-label={`Order ${o.id} status timeline`}>{steps.map((st, i) => <div key={st} className="flex flex-1 items-center last:flex-none"><div className="flex flex-col items-center"><span className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] ${i <= idx ? "bg-black text-white" : "border border-black/30 text-neutral-400"}`}>{i <= idx ? "✓" : i + 1}</span><span className="mt-1 whitespace-nowrap text-[10px] uppercase tracking-wider">{st}</span></div>{i < steps.length - 1 && <span className={`mx-1 mb-4 h-px flex-1 ${i < idx ? "bg-black" : "bg-black/20"}`} />}</div>)}</div>
@@ -8345,7 +7617,7 @@ function AboutPage({ go }: { go: (v: View, opts?: { restore?: boolean }) => void
   );
 }
 
-const fmt2 = (n: number) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt2 = (n: number) => n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 
 function CartPage({ cart, setCart, settings, go, total, count, products }: { cart: CartItem[]; setCart: (c: CartItem[]) => void; settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; total: number; count: number; products: Product[] }) {
   const [giftOpen, setGiftOpen] = useState(false);
@@ -8397,7 +7669,7 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
         {" | "}
         <button aria-label="Cart footer Site map" className="hover:underline" onClick={() => go({ t: "page", page: "sitemap" })}>Site map</button>
       </p>
-      <p className="pt-1">{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
+      <p className="pt-1">{settings.copyrightText || "© Hermès 2026. Tous droits réservés"}</p>
     </div>
   );
   return (
@@ -8544,8 +7816,8 @@ function ChatBubble({ settings, go, view, buyBarVisible }: { settings: Settings;
   const [closedNote, setClosedNote] = useState<"closed" | "new" | null>(null);
   if (!settings.chatEnabled) return null;
   const load = () => { void api.getChatMessages({}).then((r) => setMsgs(r.messages)); };
-  const fmtTime = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? "" : d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); };
-  const nowTime = () => new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const fmtTime = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? "" : d.toLocaleTimeString("fr-FR", { hour: "numeric", minute: "2-digit" }); };
+  const nowTime = () => new Date().toLocaleTimeString("fr-FR", { hour: "numeric", minute: "2-digit" });
   const hasAdvisorMsg = msgs.some((m) => m.from !== "customer");
   const openPanel = () => { setOpen(true); setStage("consent"); setClosedNote(null); load(); };
   const closePanel = () => { const wasChat = stage === "chat"; setOpen(false); if (wasChat) setClosedNote(hasAdvisorMsg ? "new" : "closed"); };
@@ -8638,7 +7910,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
   const [done, setDone] = useState("");
   const [ship, setShip] = useState(settings.shipTo);
   const [shipOpen, setShipOpen] = useState(false);
-  const shipCountries = (settings.shipToCountries || "UNITED STATES").split(",").map((c) => c.trim()).filter(Boolean);
+  const shipCountries = (settings.shipToCountries || "FRANCE").split(",").map((c) => c.trim()).filter(Boolean);
   const [openCol, setOpenCol] = useState<string | null>(null);
   const [subOpen, setSubOpen] = useState(false);
   const [svcIdx, setSvcIdx] = useState(0);
@@ -8651,12 +7923,12 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
     "SECURED PAYMENT": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><rect x="2.5" y="6" width="15" height="11" rx="1.5" /><path d="M2.5 9.8h15" /><path d="M17.2 13.2v-1.4a1.5 1.5 0 0 1 3 0v1.4" /><rect x="15.8" y="13.2" width="5.7" height="5" rx="0.8" fill="currentColor" stroke="none" /></svg>,
   };
   const services: { title: string; body: React.ReactNode; page: string }[] = [
-    { title: "STANDARD DELIVERY", page: "shipping", body: <>{settings.serviceDeliveryBody || "Free standard delivery. Hermès offers several fast and secure delivery options."}</> },
+    { title: "STANDARD DELIVERY", page: "shipping", body: <>{settings.serviceDeliveryBody || "Free standard delivery in France."}</> },
     { title: "RETURNS", page: "returns", body: settings.serviceReturnsBody ? <>{settings.serviceReturnsBody}</> : <>Free returns within 30 days. See conditions and procedure in our return<button aria-label="Return FAQs" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "returns" }); }}>FAQs</button>.</> },
     // Footer CUSTOMER SERVICE card: the original's footer reads "Monday to Saturday
     // 10 AM - 9 PM" with no EST (verified from hermes.com's own footer data
     // 2026-11-15). The contact page keeps the EST form via settings.serviceHours.
-    { title: "CUSTOMER SERVICE", page: "contact", body: <>Monday to Saturday 10 AM - 9 PM<br /><a aria-label="Call Hermès customer service" className="underline underline-offset-2" href={`tel:${settings.phone}`} onClick={(e) => e.stopPropagation()}>{settings.phone}</a> | <button aria-label="Contact us from footer" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Contact us</button></> },
+    { title: "CUSTOMER SERVICE", page: "contact", body: <>Monday to Saturday 10 AM - 9 PM<br />{settings.phone ? (<><a aria-label="Call Hermès customer service" className="underline underline-offset-2" href={`tel:${settings.phone}`} onClick={(e) => e.stopPropagation()}>{settings.phone}</a> | </>) : null}<button aria-label="Contact us from footer" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Contact us</button></> },
     { title: "SECURED PAYMENT", page: "payment", body: <>{settings.servicePaymentBody || "All the transactions made on Hermes.com are secured"}</> },
   ];
   const newsletterForm = (boxed: boolean) => done ? <p className="mt-3 text-sm font-medium" role="status">{done}</p> : boxed ? (
@@ -8738,11 +8010,11 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
           <p className="font-mono-d mt-8 text-xs font-light uppercase tracking-normal">Follow us</p>
           <div className="mt-3"><SocialCircles /></div>
           <div className="relative mt-7 border-t border-[#f6f1eb] pt-5">
-            <button aria-label="Ship to country selector" aria-expanded={shipOpen} className="flex items-center gap-2 text-xs text-neutral-700 uppercase tracking-wider" onClick={() => setShipOpen(!shipOpen)}>
-              <span>Ship to : <span className="font-medium underline underline-offset-4">{ship}</span></span>
-              {/* hermes.com shows only "SHIP TO : UNITED STATES" — "Change
-                  your location" is the button's hidden label, not visible text. */}
-              <span className="sr-only">Change your location</span>
+            <button aria-label="Modifier votre emplacement" aria-expanded={shipOpen} className="flex items-center gap-2 text-xs text-neutral-700 uppercase tracking-wider" onClick={() => setShipOpen(!shipOpen)}>
+              <span>VOTRE EMPLACEMENT: <span className="font-medium underline underline-offset-4">{ship}</span></span>
+              {/* hermes.com shows only "VOTRE EMPLACEMENT: FRANCE" — "Modifier
+                  votre emplacement" is the button's hidden label, not visible text. */}
+              <span className="sr-only">Modifier votre emplacement</span>
             </button>
             {shipOpen && (
               <div className="absolute bottom-full left-0 z-50 mb-2 w-72 max-w-[85vw] border border-[#f6f1eb] bg-[#fffcf7] py-2" role="listbox" aria-label="Choose your location">
@@ -8753,7 +8025,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
             )}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600">
-            <p>{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
+            <p>{settings.copyrightText || "© Hermès 2026. Tous droits réservés"}</p>
           </div>
         </div>
       </div>
@@ -8778,11 +8050,11 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
       <div className="hidden border-t border-[#e2d8ce] lg:block" style={{ background: "#f6f1eb" }}>
         <div className="flex max-w-[1585px] flex-wrap items-center justify-between gap-3 px-6 py-4 text-xs text-neutral-600">
           <div className="relative">
-            <button aria-label="Ship to country selector" aria-expanded={shipOpen} className="flex items-center gap-2 uppercase tracking-wider" onClick={() => setShipOpen(!shipOpen)}>
-              <span>Ship to : <span className="font-medium underline underline-offset-4">{ship}</span></span>
-              {/* hermes.com shows only "SHIP TO : UNITED STATES" — "Change
-                  your location" is the button's hidden label, not visible text. */}
-              <span className="sr-only">Change your location</span>
+            <button aria-label="Modifier votre emplacement" aria-expanded={shipOpen} className="flex items-center gap-2 uppercase tracking-wider" onClick={() => setShipOpen(!shipOpen)}>
+              <span>VOTRE EMPLACEMENT: <span className="font-medium underline underline-offset-4">{ship}</span></span>
+              {/* hermes.com shows only "VOTRE EMPLACEMENT: FRANCE" — "Modifier
+                  votre emplacement" is the button's hidden label, not visible text. */}
+              <span className="sr-only">Modifier votre emplacement</span>
             </button>
             {shipOpen && (
               <div className="absolute bottom-full left-0 z-50 mb-2 w-72 border border-[#f6f1eb] bg-[#fffcf7] py-2" role="listbox" aria-label="Choose your location">
@@ -8792,7 +8064,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
               </div>
             )}
           </div>
-          <p>{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
+          <p>{settings.copyrightText || "© Hermès 2026. Tous droits réservés"}</p>
         </div>
       </div>
       {/* BOARD h) BELOW THE FOOTER — the lockup band: a large plain area in
@@ -8818,7 +8090,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   // Create-account form (Hermes create-account page layout).
   const [suTitle, setSuTitle] = useState(""); const [suFirst, setSuFirst] = useState(""); const [suLast, setSuLast] = useState("");
   const [suEmail, setSuEmail] = useState(""); const [suCode, setSuCode] = useState(""); const [suShowCode, setSuShowCode] = useState(false);
-  const [suPw, setSuPw] = useState(""); const [suShowPw, setSuShowPw] = useState(false); const [suArea, setSuArea] = useState("US +1"); const [suPhone, setSuPhone] = useState(""); const [suDob, setSuDob] = useState(""); const [suMarketing, setSuMarketing] = useState(false);
+  const [suPw, setSuPw] = useState(""); const [suShowPw, setSuShowPw] = useState(false); const [suArea, setSuArea] = useState("FR +33"); const [suPhone, setSuPhone] = useState(""); const [suDob, setSuDob] = useState(""); const [suMarketing, setSuMarketing] = useState(false);
   const [suMsg, setSuMsg] = useState(""); const [sentCode, setSentCode] = useState(""); const [sentCodeAt, setSentCodeAt] = useState(0); const [codeTries, setCodeTries] = useState(0); const [codeWait, setCodeWait] = useState(0);
   const login = useMutation({ mutationFn: async () => {
     const th = loginThrottleStatus();
@@ -8844,7 +8116,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     const u = await api.loginUser({ email: liEmail, password: liPw });
     return { ...u, isAdmin: false, token: "" };
   }, onSuccess: (r) => { setLiMsg(r.message); if (r.ok) { if (r.isAdmin) { if (r.token) save("hlx-admin-auth", { email: liEmail, token: r.token }); go({ t: "admin" }); } else { setUser({ name: r.name, email: liEmail, expiresAt: Date.now() + 24 * 3600 * 1000 }); go({ t: "home" }); } } } });
-  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, "").replace(/^1/, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+1"; const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; const dobParts = suDob.split("-"); const dobDisplay = dobParts.length === 3 ? `${monthNames[Number(dobParts[1]) - 1] ?? ""} ${Number(dobParts[2])}, ${dobParts[0]}` : ""; const profiles = load<Record<string, { title: string; phone: string; dob: string }>>("hlx-profiles", {}); profiles[suEmail.trim().toLowerCase()] = { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }; save("hlx-profiles", profiles); save("hlx-just-registered", { email: suEmail }); // Switch the form DIRECTLY (2026-11-17 fix, second attempt): the
+  const reg = useMutation({ mutationFn: () => api.registerUser({ name: `${suFirst} ${suLast}`.trim(), email: suEmail, password: suPw }), onSuccess: (r) => { setSuMsg(r.message); if (r.ok) { const digits = suPhone.replace(/\D/g, ""); const areaDigits = suArea.match(/\+\d+/)?.[0] ?? "+33"; const monthNames = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"]; const dobParts = suDob.split("-"); const dobDisplay = dobParts.length === 3 ? `${Number(dobParts[2])} ${monthNames[Number(dobParts[1]) - 1] ?? ""} ${dobParts[0]}` : ""; const profiles = load<Record<string, { title: string; phone: string; dob: string }>>("hlx-profiles", {}); profiles[suEmail.trim().toLowerCase()] = { title: suTitle, phone: `${areaDigits} ${digits}`, dob: dobDisplay }; save("hlx-profiles", profiles); save("hlx-just-registered", { email: suEmail }); // Switch the form DIRECTLY (2026-11-17 fix, second attempt): the
       // go() below does NOT reliably change anything — when the visitor
       // reached this page by signing out, view.mode is ALREADY "login",
       // so the mode does not change, the mode effect never re-runs and
@@ -8924,7 +8196,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
                     return (
                       <div key={o.id} className="mt-3 border border-black/10 bg-[#fffcf7] p-4">
                         <p className="text-sm font-medium">Order #{o.id} — {fmt(o.total)} — <span className="uppercase tracking-wider">{o.status}</span></p>
-                        <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString()}</p>
+                        <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString("fr-FR")}</p>
                         {items.map((it, i) => <p key={i} className="mt-1 text-sm text-neutral-700">{it.qty} × {it.name} — {fmt(it.price * it.qty)}</p>)}
                       </div>
                     );
@@ -9018,7 +8290,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     if (!critOk) return setSuMsg("Please choose a password that meets all the criteria below.");
     if (!suTitle) return setSuMsg("Please choose a title.");
     if (!suFirst.trim() || !suLast.trim()) return setSuMsg("Please enter your first and last name.");
-    const digits = suPhone.replace(/\D/g, "").replace(/^1/, "");
+    const digits = suPhone.replace(/\D/g, "");
     if (!/^\d{10}$/.test(digits)) return setSuMsg("Please enter a 10-digit telephone number.");
     // Date of birth comes from the calendar picker (YYYY-MM-DD), so it is
     // always complete — month, day and year together. Age is checked by
@@ -9125,7 +8397,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
           <div className="mt-5 flex items-end gap-3">
             <label className={`${lab} w-32 shrink-0`}>Area code *
               <select aria-label="Area code" className={underline} value={suArea} onChange={(e) => setSuArea(e.target.value)}>
-                <option value="US +1">🇺🇸 US +1</option>
+                <option value="FR +33">🇫🇷 FR +33</option>
               </select>
             </label>
             <label className={`${lab} min-w-0 flex-1`}>Telephone number *
@@ -9155,7 +8427,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
 
 }
 
-const US_STATES = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"];
+
 const CO_HEAD = "font-mono-d text-xs font-medium uppercase tracking-normal";
 // Orange Box heading on the original: Overpass Mono 16px/24px/300
 // (cart shell CSS .orange-box-title), not the 12px/500 section head.
@@ -9205,7 +8477,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
   const [termsErr, setTermsErr] = useState("");
   const [emailErr, setEmailErr] = useState("");
   const [tab, setTab] = useState<"ship" | "collect">("ship");
-  const [f, setF] = useState({ location: "United States", title: "", first: user?.name.split(" ")[0] ?? "", last: user?.name.split(" ").slice(1).join(" ") ?? "", company: "", address: "", address2: "", city: "", state: "", zip: "", zipPlus: "", area: "US +1", phone: "" });
+  const [f, setF] = useState({ location: "France", title: "", first: user?.name.split(" ")[0] ?? "", last: user?.name.split(" ").slice(1).join(" ") ?? "", company: "", address: "", address2: "", city: "", state: "", zip: "", zipPlus: "", area: "FR +33", phone: "" });
   const [attempted, setAttempted] = useState(false);
   const [deliverySaved, setDeliverySaved] = useState(false);
   const [storeQuery, setStoreQuery] = useState("");
@@ -9218,13 +8490,13 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
   useEffect(() => { if (mountCartCount.current === 0) go({ t: "cart" }); }, []);
   // Payment methods are admin-editable (Theme & Settings); the default
   // list is the original's US methods, in the original's order.
-  const payMethods = settings.paymentMethods ? settings.paymentMethods.split(",").map((m) => m.trim()).filter(Boolean) : ["MasterCard", "Visa", "American Express", "Diners Club", "Carte Blanche", "JCB", "Discover", "Accel", "Pulse", "Nyce", "Star", "China Union Pay", "PayPal", "Apple Pay"];
+  const payMethods = settings.paymentMethods ? settings.paymentMethods.split(",").map((m) => m.trim()).filter(Boolean) : ["MasterCard", "Visa", "American Express", "PayPal", "Apple Pay"];
   const order = useMutation({
-    mutationFn: () => api.placeOrder({ customerName: `${f.first} ${f.last}`.trim() || (user?.name ?? "Customer"), email, address: tab === "collect" ? `Collect in store — ${storePicked}` : `${f.address}${f.address2 ? ", " + f.address2 : ""}, ${f.city}, ${f.state} ${f.zip}`, paymentMethod: pay, deliveryOption: tab === "collect" ? "Collect in store" : "Ship to an address", items: cart.map((i) => ({ productId: i.productId, name: i.name, price: i.price, qty: i.qty, color: i.color, size: i.size })) }),
+    mutationFn: () => api.placeOrder({ customerName: `${f.first} ${f.last}`.trim() || (user?.name ?? "Customer"), email, address: tab === "collect" ? `Collect in store — ${storePicked}` : `${f.address}${f.address2 ? ", " + f.address2 : ""}, ${f.city} ${f.zip}`, paymentMethod: pay, deliveryOption: tab === "collect" ? "Collect in store" : "Ship to an address", items: cart.map((i) => ({ productId: i.productId, name: i.name, price: i.price, qty: i.qty, color: i.color, size: i.size })) }),
     onSuccess: (r) => { setPlacedTotal(total); setPlaced(r.orderId); setCart([]); window.scrollTo({ top: 0 }); },
   });
   const req = (v: string) => attempted && !v.trim();
-  const phoneDigits = f.phone.replace(/\D/g, "").replace(/^1/, "");
+  const phoneDigits = f.phone.replace(/\D/g, "");
   const phoneBad = attempted && !/^\d{10}$/.test(phoneDigits);
   const fieldErr = (bad: boolean) => bad ? <p className="mt-1 text-xs text-[#b3261e]">Required information</p> : null;
   const underline = "w-full border-0 border-b border-black/40 bg-transparent px-0 py-2 text-[15px] outline-none focus:border-black";
@@ -9319,7 +8591,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
             <button aria-label="Continue from account step" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => { if (!isValidEmail(email)) { setEmailErr("Please enter a valid email address."); return; } setAccountEdit(false); }}>Continue</button>
             <div className="mt-6 space-y-2 border-t border-[#f6f1eb] pt-4 text-[13px] text-neutral-600">
               {footerLinks.map(([l, pg]) => <button key={l} aria-label={`Account footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
-              <p className="pt-1">{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
+              <p className="pt-1">{settings.copyrightText || "© Hermès 2026. Tous droits réservés"}</p>
             </div>
           </div>
         )}
@@ -9346,7 +8618,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
               <label className={labelCls}>Location *
                 <span className="relative block">
                   <select aria-label="Location" className={`${underline} appearance-none pr-8`} value={f.location} onChange={(e) => setF({ ...f, location: e.target.value })}>
-                    {["United States"].map((c) => <option key={c} value={c}>{c}</option>)}
+                    {["France"].map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                   <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2" aria-hidden="true">⌄</span>
                 </span>
@@ -9384,18 +8656,6 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
                 <input aria-label="City" maxLength={100} className={underline} value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} />
                 {fieldErr(req(f.city))}
               </label>
-              <label className={labelCls}>State *
-                <span className="relative block">
-                  <select aria-label="State" className={`${underline} appearance-none pr-10`} value={f.state} onChange={(e) => setF({ ...f, state: e.target.value })}>
-                    <option value=""> </option>{US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  {f.state ? (
-                    <button type="button" aria-label="Clear state" className="absolute right-6 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center text-sm" onClick={(e) => { e.preventDefault(); setF({ ...f, state: "" }); }}>✕</button>
-                  ) : null}
-                  <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2" aria-hidden="true">⌄</span>
-                </span>
-                {fieldErr(req(f.state))}
-              </label>
               <label className={labelCls}>Zip code *
                 <input aria-label="Zip code" inputMode="numeric" maxLength={10} className={underline} value={f.zip} onChange={(e) => setF({ ...f, zip: e.target.value })} />
                 {fieldErr(req(f.zip))}
@@ -9407,7 +8667,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
               <div className="grid grid-cols-[1fr_1.2fr] gap-4">
                 <label className={labelCls}>Area code *
                   <select aria-label="Area code" className={`${underline} appearance-none`} value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })}>
-                    <option value="US +1">🇺🇸 US +1</option>
+                    <option value="FR +33">🇫🇷 FR +33</option>
                   </select>
                 </label>
                 <label className={labelCls}>Telephone number *
@@ -9421,7 +8681,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
             </div>
             <button aria-label="Save delivery address" className="mt-7 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => {
               setAttempted(true);
-              const ok = f.title && f.first.trim() && f.last.trim() && f.address.trim() && f.city.trim() && f.state && f.zip.trim() && /^\d{10}$/.test(phoneDigits);
+              const ok = f.title && f.first.trim() && f.last.trim() && f.address.trim() && f.city.trim() && f.zip.trim() && /^\d{10}$/.test(phoneDigits);
               if (ok) { setDeliverySaved(true); }
             }}>Save</button>
             {deliverySaved && <p className="mt-3 text-sm font-medium" role="status">Delivery address saved — payment is now available below.</p>}
@@ -9439,7 +8699,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
             {storeErr && <p className="mt-2 text-xs text-neutral-600" role="status">{storeErr}</p>}
             <button aria-label="Find a store to collect from" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => {
               if (!storeQuery.trim()) { setStoreErr("Please enter a location."); return; }
-              setStorePicked(`Hermès — ${settings.flagshipStore || "691 Madison Avenue, New York"}`); setDeliverySaved(true);
+              setStorePicked(settings.flagshipStore ? `Hermès — ${settings.flagshipStore}` : "Hermès"); setDeliverySaved(true);
             }}>Find</button>
             {storePicked && (
               <div className="mt-4 border border-[#f6f1eb] p-4" role="status">
@@ -9505,7 +8765,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
         </div>
         <div className="mt-8 space-y-2 border-t border-[#f6f1eb] pt-4 text-[13px] text-neutral-600">
           {footerLinks.map(([l, pg]) => <button key={l} aria-label={`Checkout footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
-          <p className="pt-1">{settings.copyrightText || "© Hermès 2026. All rights reserved."}</p>
+          <p className="pt-1">{settings.copyrightText || "© Hermès 2026. Tous droits réservés"}</p>
         </div>
       </section>
     </div>, 2);
@@ -9538,7 +8798,7 @@ function AdminChat({ email, password, sessionToken, contact }: { email: string; 
       {msgs.length === 0 && <p className="mt-4 text-sm text-neutral-600">No chat messages yet.</p>}
       {msgs.map((m) => (
         <div key={m.id} className="mb-2 mt-3 border border-black/10 bg-[#fffdf9] p-4">
-          <p className="text-xs text-neutral-500">{m.from === "customer" ? "Customer" : "Admin"}{m.name ? ` — ${m.name}` : ""} · {new Date(m.createdAt).toLocaleString()}{m.readByAdmin ? "" : " · UNREAD"}</p>
+          <p className="text-xs text-neutral-500">{m.from === "customer" ? "Customer" : "Admin"}{m.name ? ` — ${m.name}` : ""} · {new Date(m.createdAt).toLocaleString("fr-FR")}{m.readByAdmin ? "" : " · UNREAD"}</p>
           <p className="mt-1 text-sm">{m.text}</p>
           <button aria-label={`Delete chat message ${m.id}`} className="mt-2 border border-red-800 px-3 py-1 text-[11px] uppercase tracking-wider text-red-800" onClick={async () => { await api.adminDeleteChatMessage({ email, password, sessionToken, id: m.id }); void load(); }}>Delete</button>
         </div>
@@ -9552,7 +8812,7 @@ function AdminChat({ email, password, sessionToken, contact }: { email: string; 
       {contact.length === 0 && <p className="mt-4 text-sm text-neutral-600">No contact messages yet.</p>}
       {contact.map((c) => (
         <div key={c.id} className="mb-2 mt-3 border border-black/10 bg-[#fffdf9] p-4">
-          <p className="text-xs text-neutral-500">{c.first} {c.last} · {c.email} · {new Date(c.createdAt).toLocaleString()}</p>
+          <p className="text-xs text-neutral-500">{c.first} {c.last} · {c.email} · {new Date(c.createdAt).toLocaleString("fr-FR")}</p>
           <p className="mt-1 text-sm font-medium">Subject: {c.subject}</p>
           <p className="mt-1 text-sm">{c.message}</p>
         </div>
@@ -9673,7 +8933,7 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
       {tab === "Dashboard" && d && (
         <div className="mt-6">
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {[["Total Store Visits", d.stats.visitsTotal], ["Visits today", d.stats.visitsToday], ["Total orders", d.stats.orders], ["Pending orders", d.stats.pendingOrders], ["Total Sales / Revenue (USD)", fmt(d.stats.revenue)], ["Registered accounts", d.stats.users], ["New accounts today", d.stats.newAccountsToday], ["Newsletter subscribers", d.stats.newsletter], ["Notify-Me requests", d.stats.notify], ["Return requests", d.stats.returns], ["Total products", d.stats.products], ["Unviewed (NEW) orders", d.stats.newOrders]].map(([l, v]) => (
+            {[["Total Store Visits", d.stats.visitsTotal], ["Visits today", d.stats.visitsToday], ["Total orders", d.stats.orders], ["Pending orders", d.stats.pendingOrders], ["Total Sales / Revenue (EUR)", fmt(d.stats.revenue)], ["Registered accounts", d.stats.users], ["New accounts today", d.stats.newAccountsToday], ["Newsletter subscribers", d.stats.newsletter], ["Notify-Me requests", d.stats.notify], ["Return requests", d.stats.returns], ["Total products", d.stats.products], ["Unviewed (NEW) orders", d.stats.newOrders]].map(([l, v]) => (
               <div key={String(l)} className="border border-black/10 bg-[#fffdf9] p-5"><p className="text-[11px] uppercase tracking-[0.22em] text-neutral-500">{l}</p><p className="mt-2 text-3xl">{v}</p></div>
             ))}
           </div>
@@ -9708,7 +8968,7 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
             <div className="mt-4 space-y-3">
               <input aria-label="Product name" className={inputCls} placeholder="Name *" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               <div className="grid grid-cols-2 gap-2">
-                <select aria-label="Product category" className={inputCls} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{NAV.map((n) => <option key={n.key} value={n.key}>{n.label}</option>)}<option value="leather">LEATHER (shared)</option></select>
+                <select aria-label="Product category" className={inputCls} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{Object.values(NAV).map((n) => <option key={n.cat} value={n.cat}>{catLabel(n.cat)}</option>)}<option value="maroquinerie">MAROQUINERIE (shared)</option></select>
                 <input aria-label="Product subcategory" className={inputCls} placeholder="Subcategory" value={form.subcategory} onChange={(e) => setForm({ ...form, subcategory: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -9716,8 +8976,8 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
                 <select aria-label="Product stock status" className={inputCls} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as typeof blank.status })}><option value="available">Available</option><option value="available_soon">Available soon</option><option value="out_of_stock">Out of stock</option><option value="in_store_only">In store only</option></select>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <input aria-label="Product price USD" type="number" min={0} className={inputCls} placeholder="Price USD *" required value={form.price || ""} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
-                <input aria-label="Product price label" className={inputCls} placeholder="Price label (e.g. $385 and up)" value={form.priceLabel} onChange={(e) => setForm({ ...form, priceLabel: e.target.value })} />
+                <input aria-label="Product price EUR" type="number" min={0} className={inputCls} placeholder="Price EUR *" required value={form.price || ""} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
+                <input aria-label="Product price label" className={inputCls} placeholder="Price label (e.g. 385 € and up)" value={form.priceLabel} onChange={(e) => setForm({ ...form, priceLabel: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <input aria-label="Product line" className={inputCls} placeholder="Line" value={form.line} onChange={(e) => setForm({ ...form, line: e.target.value })} />
@@ -9756,7 +9016,7 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
               <div className="flex flex-wrap items-center gap-3">
                 <button aria-label={`Order ${o.id} detail`} className="min-w-0 flex-1 text-left" onClick={() => { setOrderDetail(open ? null : o.id); if (!o.viewedByAdmin) markViewed.mutate({ kind: "order", id: o.id }); }}>
                   <p className="text-sm font-medium">#{o.id} — {o.customerName} ({o.email}) {!o.viewedByAdmin && <span className="bg-black px-1.5 py-0.5 text-[10px] font-bold text-white">NEW</span>}</p>
-                  <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString()} · {o.paymentMethod || "—"} · {o.deliveryOption || "—"}</p>
+                  <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString("fr-FR")} · {o.paymentMethod || "—"} · {o.deliveryOption || "—"}</p>
                 </button>
                 <p className="text-sm">{fmt(o.total)}</p>
                 <select aria-label={`Order ${o.id} status`} className="border border-black/30 px-2 py-2 text-sm" value={["Pending", "Processing", "Shipped", "Delivered", "Cancelled"].includes(o.status) ? o.status : "Pending"} onChange={(e) => updOrder.mutate({ id: o.id, status: e.target.value })}>
@@ -9785,7 +9045,7 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
               <div className="flex flex-wrap items-center gap-3">
                 <button aria-label={`Customer ${u.email} detail`} className="min-w-0 flex-1 text-left text-sm" onClick={() => { setCustDetail(open ? null : u.id); if (!u.viewedByAdmin) markViewed.mutate({ kind: "user", id: u.id }); }}>
                   {u.name} — {u.email} {!u.viewedByAdmin && <span className="bg-black px-1.5 py-0.5 text-[10px] font-bold text-white">NEW</span>} {u.disabled ? <span className="border border-red-800 px-1.5 py-0.5 text-[10px] font-bold text-red-800">DISABLED</span> : null}
-                  <span className="block text-xs text-neutral-500">Joined {new Date(u.createdAt).toLocaleDateString()} · {u.totalOrders} orders · {fmt(u.totalSpent)} spent</span>
+                  <span className="block text-xs text-neutral-500">Joined {new Date(u.createdAt).toLocaleDateString("fr-FR")} · {u.totalOrders} orders · {fmt(u.totalSpent)} spent</span>
                 </button>
                 <button aria-label={`${u.disabled ? "Enable" : "Disable"} account ${u.email}`} className="border border-black px-3 py-1.5 text-[11px] uppercase tracking-wider" onClick={() => setDisabled.mutate({ id: u.id, disabled: !u.disabled })}>{u.disabled ? "Enable" : "Disable"}</button>
                 {confirmDelete === u.id ? <>
