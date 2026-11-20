@@ -1,14 +1,21 @@
 // Real URLs for categories, products and the contact page (History API
-// routing), matching the original hermes.com URL shape:
-// /us/en/category/<path>/, /us/en/product/<slug>-<REF>/ and
-// /us/en/contact-us/. Deep links are served by vercel.json rewrites (every
+// routing), matching the original hermes.com/fr/fr URL shape:
+// /fr/fr/category/<path>/, /fr/fr/product/<slug>-<REF>/ and
+// /fr/fr/contact-us/. Deep links are served by vercel.json rewrites (every
 // app path serves index.html) and parsed back here on load and on popstate.
 // Views that cannot be routed safely (cart, checkout, admin, info
 // pages other than contact, about) are left unrouted: navigating to them
 // does not push a history entry, so browser Back returns to the last
-// routed view. Nothing here invents products, prices or copy — the known
-// category paths below are the original's own URLs, verified live
-// 2026-11-11; anything else uses the same shape with a slugified name.
+// routed view.
+//
+// France conversion (Stage B, 2026-11-21): every category path below is
+// the original hermes.com/fr/fr URL, transcribed from the France nav
+// enumeration (france-routing-table.json) and re-keyed to A1's field map
+// (page-field-map.json). DO-NOT-BUILD links (7) are deliberately absent:
+// the menu renders them as plain non-clickable text and a direct load
+// falls back to the parent page. Legacy /us/en/ deep links are accepted
+// by parseUrl and resolved to the same France view (canonical URLs stay
+// /fr/fr/).
 
 export type ParsedRoute =
   | { kind: "home" }
@@ -30,288 +37,330 @@ export function slugify(s: string): string {
     .replace(/-+/g, "-");
 }
 
-// Original hermes.com category URLs, verified live 2026-11-11 (Fall-Winter
-// collection page + the 13 extracted categories). Key is
-// `${cat}|${sub.toLowerCase()}` where cat/sub are this store's view values.
+// France category URLs, verified against the original's own URLs
+// (france-routing-table.json). Key is `${cat}|${sub.toLowerCase()}`
+// where cat/sub are this store's view values. Aggregate ("Toute la
+// collection") pages list exactly their extracted child pages; the
+// Collections pages (Kelly, Chaînes d'ancre, L'Equestre, Les
+// Fétiches, Moments précieux) and Hermessence have no extracted
+// position field yet (Stage B approximation: name-substring syn).
 const CATEGORY_PATHS: Record<string, string> = {
-  "women|belts": "women/belts",
-  "women|fall-winter 2026 collection": "women/ready-wear/fall-winter-collection",
-  "women|fall-winter 2026": "women/ready-wear/fall-winter-collection",
-  "women|spring-summer 2027 collection": "women/ready-wear/spring-summer-collection",
-  "women|spring-summer 2027": "women/ready-wear/spring-summer-collection",
-  "women|spring-summer 2026 collection": "women/ready-wear/spring-summer-collection",
-  "women|spring-summer 2026": "women/ready-wear/spring-summer-collection",
-  "women|dresses and skirts": "women/ready-wear/dresses-and-skirts",
-  // Group 10 (2026-11-18) — the women's T-shirts and Knitwear
-  // sub-pages: the original's own URLs are
-  // /women/ready-wear/t-shirts-and-sweatshirts/ and
-  // /women/ready-wear/knitwear-and-twillaines/. Without these the
-  // generic slug fallback resolved them to
-  // /women/t-shirts-and-sweatshirts/ and /women/knitwear-and-twillaines/
-  // (wrong URLs), and a direct load of the original's URLs fell
-  // through to the women's default page (bags [45]).
-  "women|t-shirts and sweatshirts": "women/ready-wear/t-shirts-and-sweatshirts",
-  "women|knitwear and twillaines": "women/ready-wear/knitwear-and-twillaines",
-  // The desktop WOMEN menu's "Dresses" item resolves to sub "Dresses"
-  // (MEGA_DESKTOP_WOMEN), whose URL is /women/dresses/. Without this
-  // entry a direct load of that URL fell through to the women's default
-  // page (bags [45]) — the same failure the RTW parent had (2026-11-17:
-  // cart Back landed on /women/dresses/ and showed bags).
-  "women|dresses": "women/dresses",
-  // The women's RTW PARENT page (2026-11-16): the original's own URL is
-  // /women/ready-wear/ (no "to"). Without this entry the slug fell through
-  // to the generic matcher, found no sub called "ready-wear", and rendered
-  // the women's default page (bags [45]) instead of the [421] parent list.
-  "women|ready-to-wear": "women/ready-wear",
-  // Women's Hair accessories page (2026-11-16) — the original's own
-  // URL is /women/hair-accessories/ (26 tiles, hairPos order).
-  "women|hair accessories": "women/hair-accessories",
-  // Group 4 (2026-11-17) — the women's Hats and gloves page: the
-  // original's own URL is /women/accessories/ (the menu heading is
-  // "Hats and gloves"). "women|hats and gloves" is listed FIRST so the
-  // reverse lookup of /women/accessories/ returns sub "Hats and
-  // gloves" (REVERSE_PATHS is first-writer-wins); "women|accessories"
-  // keeps a direct sub-"Accessories" view on the same URL. The old
-  // generic URL /women/hats-and-gloves/ still resolves to the same
-  // view via the generic matcher — no duplicate page.
-  "women|hats and gloves": "women/accessories",
-  "women|accessories": "women/accessories",
-  // Women's Ballet flats page (Group 1, 2026-11-17) — the original's
-  // own URL /women/shoes/ballet-flats/ (42 tiles, balletPos order).
-  "women|ballet flats": "women/shoes/ballet-flats",
-  // Women's Twilly page (Group 1, 2026-11-17) — the original's own
-  // URL /women/scarves-shawls-and-stoles/twillys-and-other-small-formats/
-  // (96 tiles, twillyPos order).
-  "women|twilly and other small formats": "women/scarves-shawls-and-stoles/twillys-and-other-small-formats",
-  "women|scarves, shawls and stoles": "women/scarves-shawls-and-stoles",
-  "women|shoes": "women/shoes",
-  "fashion-jewelry|": "women/fashion-jewelry",
-  "fashion-jewelry|bracelets": "women/fashion-jewelry/bracelets",
-  "fashion-jewelry|earrings": "women/fashion-jewelry/earrings",
-  "fashion-jewelry|necklaces": "women/fashion-jewelry/necklaces",
-  "fashion-jewelry|rings": "women/fashion-jewelry/rings",
-  "fashion-jewelry|hair accessories and combs": "women/fashion-jewelry/hair-accessories-and-combs",
-  "women|bracelets": "women/fashion-jewelry/bracelets",
-  // Sweep Wave 2 (2026-11-19): the WOMEN-menu FJ sub-pages resolve to
-  // cat "fashion-jewelry" (like bracelets above) so the fashPos sort
-  // applies on menu clicks. "Necklaces and pendants" is NOT mapped
-  // here: its combined page lives at /women/necklaces-and-pendants/
-  // (72 tiles incl. pendants) and mapping it to the necklaces-only
-  // FJ URL would drop the pendants — the sort widening below covers it.
-  "women|rings": "women/fashion-jewelry/rings",
-  "women|earrings": "women/fashion-jewelry/earrings",
-  "women|necklaces": "women/fashion-jewelry/necklaces",
-  // The women's default page (cat "women", no sub) IS the women's bags page.
-  "women|": "leather-goods/bags-and-clutches/womens-bags-and-clutches",
-  "leather|women's bags and clutches": "leather-goods/bags-and-clutches/womens-bags-and-clutches",
-  "leather|men's bags and clutches": "leather-goods/bags-and-clutches/mens-bags-and-clutches",
-  // Group 11 (2026-11-18) — the Bags and clutches PARENT page
-  // ("View all"): the original's own URL is
-  // /leather-goods/bags-and-clutches/ (143 tiles, bagsViewPos).
-  // Without this the generic slug fallback resolved it to
-  // /leather/bags-and-clutches/ (wrong URL), and a direct load of
-  // the original's URL fell through to the homepage (parseUrl
-  // returns null for a "leather-goods" first segment).
-  "leather|bags and clutches": "leather-goods/bags-and-clutches",
-  "leather|small leather goods": "leather-goods/small-leather-goods",
-  // Leather Accessories / Luggage sub-pages (2026-11-17) — the original's
-  // own URLs. Charms / Travel accessories / Suitcases are the new pages;
-  // Straps + Reading and writing get entries too so the Charms sub-nav
-  // siblings link to the original's URLs (not the generic /leather/ slugs).
-  "leather|charms": "leather-goods/accessories/charms",
-  "leather|straps": "leather-goods/accessories/straps",
-  "leather|reading and writing": "leather-goods/accessories/reading-and-writing",
-  // Group 4 (2026-11-17) — the Accessories / Luggage PARENT pages:
-  // the original's own URLs are /leather-goods/accessories/ and
-  // /leather-goods/luggage/ (the sub-pages hang under them). The old
-  // generic URLs /leather/accessories/ and /leather/luggage/ still
-  // resolve to the same views via the generic matcher (the headings
-  // are in the leather NAV subs), so no duplicate page is created.
-  "leather|accessories": "leather-goods/accessories",
-  "leather|luggage": "leather-goods/luggage",
-  "leather|travel accessories": "leather-goods/luggage/travel-accessories",
-  "leather|suitcases and travel bags": "leather-goods/luggage/suitcases-and-travel-bags",
-  "men|shoes": "men/shoes",
-  "men|ready-to-wear": "men/ready-wear",
-  "men|fall-winter 2026 collection": "men/ready-wear/fall-winter-collection",
-  "men|fall-winter 2026": "men/ready-wear/fall-winter-collection",
-  // Men's Ties and scarves (Group 5, 2026-11-17) — the original's own
-  // URLs under /men/ties-stoles-and-scarves/. "men|scarves" is listed
-  // FIRST so the reverse lookup of
-  // /men/ties-stoles-and-scarves/stoles-and-scarves/ returns sub
-  // "Scarves" (REVERSE_PATHS is first-writer-wins); the "scarves,
-  // shawls and stoles" alias (homepage carousel tile) resolves to the
-  // same URL. The old generic URLs (/men/scarves-shawls-and-stoles/
-  // etc.) still resolve to the same views via the generic matcher —
-  // no duplicate page is created.
-  // Ties page short URL (Order B correction, 2026-11-19) — the original's
-  // own URL is /men/ties-stoles-and-scarves/ties/; it fell back to the Men
-  // parent because no routing entry mapped it. The long menu URL below is
-  // unchanged (first-writer-wins keeps it for the menu route).
-  "men|ties": "men/ties-stoles-and-scarves/ties",
-  "men|ties, bow ties and pocket squares": "men/ties-stoles-and-scarves/ties-bow-ties-and-pocket-squares",
-  "men|scarves": "men/ties-stoles-and-scarves/stoles-and-scarves",
-  "men|scarves, shawls and stoles": "men/ties-stoles-and-scarves/stoles-and-scarves",
-  "men|scarves shawls and stoles": "men/ties-stoles-and-scarves/stoles-and-scarves",
-  "men|scarves and stoles": "men/ties-stoles-and-scarves/stoles-and-scarves",
-  "men|ties and scarves": "men/ties-stoles-and-scarves",
-  "watches|": "watches",
-  // Watches Timepieces page (Group 6, 2026-11-17) — the original's
-  // own URL /us/en/category/timepieces/.
-  "watches|timepieces": "timepieces",
-  // Watches Women / Men pages (Group 9, 2026-11-18) — the original's
-  // own URLs /us/en/category/watches/women/ and /watches/men/.
-  // (The generic slug fallback already produced these, but explicit
-  // entries pin them.)
-  "watches|women": "watches/women",
-  "watches|men": "watches/men",
-  // Gifts sub-pages (Group 9, 2026-11-18) — the original's own URLs.
-  // Without these the generic slug fallback resolved "for women" to
-  // /gifts/for-women/ (wrong) and the other three likewise.
-  "gifts|for women": "gifts/gifts-for-women",
-  "gifts|for men": "gifts/gifts-for-men",
-  "gifts|for children": "gifts/gifts-for-children-and-babies",
-  "gifts|for dogs": "gifts/gifts-for-dogs",
-  "fragrances|": "fragrances-and-make-up",
-  // Fragrances sub-pages (2026-11-17) — the original's own URLs
-  // (/fragrances/art-living/ is the Bath page; /fragrances/women/ and
-  // /fragrances/men/ are the universes; the make-up sub-pages live
-  // under /make-up/). Without these the generic slug fallback resolved
-  // some of them, but Bath had no route at all (the Bath [0] bug).
-  "fragrances|bath": "fragrances/art-living",
-  "fragrances|the women's universe": "fragrances/women",
-  "fragrances|the men's universe": "fragrances/men",
-  "fragrances|hermessence collection": "fragrances/hermessence-collection",
-  "fragrances|fragrances": "fragrances",
-  "fragrances|make-up": "make-up",
-  "fragrances|lips": "make-up/lips",
-  "fragrances|face": "make-up/face",
-  "fragrances|eyes": "make-up/eyes",
-  "fragrances|hands": "make-up/hands",
-  "fragrances|accessories": "make-up/accessories",
-  "home|": "home",
-  "home|tableware": "home/tableware",
-  // Home Tech universe page (2026-11-17) — the original's own URL
-  // /home-art-living/tech-universe/ (40 tiles, techPos order).
-  "home|tech universe": "home-art-living/tech-universe",
-  // Group 1 Home pages (2026-11-17) — the original's own URLs.
-  // Furniture 161 tiles (furnPos), Cases 96 (casesPos), Office 139
-  // (officePos), Children 70 (childPos).
-  "home|furniture, lighting and rugs": "home/furniture-and-lighting",
-  "home|cases and bath linens": "home/cases-and-bath-linen",
-  "home|office and writing": "home/office-and-writing",
-  "home|children and baby": "home-art-living/children-and-baby",
-  // Group 3 Home pages (2026-11-17) — the original's own URLs.
-  // Decorative objects 279 tiles (objectsPos), Blankets and pillows
-  // 153 (textilesPos) — the menu item RETARGETS here from the old
-  // /home/blankets-and-pillows/ slug (the old URL still resolves to
-  // the same view via the generic slug match, so it shows [153] too,
-  // not a duplicate page). Sports and outdoor 48 (sportsPos), Beach
-  // 108 (beachPos).
-  "home|decorative objects and games": "home/objects",
-  "home|blankets and pillows": "home/textiles",
-  "home|sports and outdoor": "home-art-living/sports-and-outdoor",
-  "home|beach": "home-art-living/beach",
-  // Petit h page (Group 7, 2026-11-18) — the original's own URL is
-  // /us/en/category/petit-h/ (top-level, NOT under /home/). The menu
-  // heading "PETIT H" (cat "home") clicks to sub "Petit h" via
-  // headingToSub; without this entry the generic slug fallback would
-  // resolve it to /home/petit-h/ (wrong URL, and a direct load of
-  // /petit-h/ would fall through to the home parent page).
-  "home|petit h": "petit-h",
-  // Home and Art of living page (Group 8, 2026-11-18) — the original's
-  // own URL is /us/en/category/home-art-living/ (top-level, NOT under
-  // /home/). The menu heading "HOME" (cat "home") clicks to sub "Home
-  // and art of living" via the megaTarget special case; without this
-  // entry the generic slug fallback would resolve it to
-  // /home/home-and-art-of-living/ (wrong URL, and a direct load of
-  // /home-art-living/ would return null from parseUrl and fall through
-  // to the homepage). First writer wins: no other key maps to
-  // "home-art-living".
-  "home|home and art of living": "home-art-living",
-  // Equestrian Horse / Rider sub-pages (2026-11-17) — the original's
-  // own URLs; without these the generic slug fallback still resolved
-  // them, but the explicit entries keep the routing table truthful.
-  "equestrian|horse": "equestrian/horse",
-  "equestrian|rider": "equestrian/rider",
-  // Jewelry Collections sub-pages (Group 1, 2026-11-17) — the
-  // original's own URLs. The Wonders 19 tiles (wondersPos), Precious
-  // moments 21 (preciousPos).
-  "jewelry|the wonders": "jewelry/collections/wonders",
-  "jewelry|precious moments": "jewelry/collections/precious-moments",
-  "jewelry|collections": "jewelry/collections",
-  "jewelry|chaînes d'ancre": "jewelry/collections/chaine-d-ancre",
-  // Jewelry Men page (Group 10, 2026-11-18) — the original's own URL
-  // /us/en/category/jewelry/men/ (92 tiles, menJewPos). The generic
-  // slug fallback already produced this, but the explicit entry pins it.
-  "jewelry|men": "jewelry/men",
-  // Group 11 (2026-11-18) — the Jewelry parent page IS the Gold
-  // Jewelry category: the original's own URL is
-  // /us/en/category/jewelry/gold-jewelry/ (323 tiles, jewPos). Without
-  // this the clone's parent URL was /us/en/category/jewelry/, and a
-  // direct load of the original's URL fell through to the parent view
-  // only via the generic sub-slug fallback.
-  "jewelry|": "jewelry/gold-jewelry",
+  "femme|": "femme",
+  "homme|": "homme",
+  "maroquinerie|": "maroquinerie",
+  "bijouterie|": "bijouterie",
+  "montres|": "montres",
+  "parfums-et-maquillage|": "parfums-et-maquillage",
+  "maison-art-de-vivre|": "maison-art-de-vivre",
+  "equitation|": "equitation",
+  "cadeaux|": "cadeaux",
+  "femme|chaussures": "femme/chaussures",
+  "femme|manteaux et vestes": "femme/pret-a-porter/manteaux-et-vestes",
+  "femme|cuir": "femme/pret-a-porter/cuir",
+  "femme|robes et jupes": "femme/pret-a-porter/robes-et-jupes",
+  "femme|hauts et chemises": "femme/pret-a-porter/hauts-et-chemises",
+  "femme|pantalons et shorts": "femme/pret-a-porter/pantalons-et-shorts",
+  "femme|mailles et twillaines": "femme/pret-a-porter/mailles-et-twillaines",
+  "femme|bain": "femme/pret-a-porter/bain",
+  "femme|sandales": "femme/chaussures/sandales",
+  "femme|sneakers": "femme/chaussures/sneakers",
+  "femme|bottes et bottines": "femme/chaussures/bottes-et-bottines",
+  "femme|escarpins": "femme/chaussures/escarpins",
+  "femme|mocassins et mules": "femme/chaussures/mocassins-et-mules",
+  "femme|ballerines": "femme/chaussures/ballerines",
+  "femme|carrés et accessoires de soie": "femme/carres-chales-et-echarpes/carres-et-accessoires-de-soie",
+  "femme|châles et écharpes en cachemire": "femme/carres-chales-et-echarpes/chales-et-echarpes-en-cachemire",
+  "femme|twillys et autres petits formats": "femme/carres-chales-et-echarpes/twillys-et-autres-petits-formats",
+  "femme|carrés, châles et écharpes": "femme/carres-chales-et-echarpes",
+  "femme|bracelets": "femme/accessoires-bijoux/bracelets",
+  "femme|colliers et pendentifs": "femme/accessoires-bijoux/colliers-et-pendentifs",
+  "femme|boucles d'oreilles": "femme/accessoires-bijoux/boucles-d-oreilles",
+  "femme|bagues": "femme/accessoires-bijoux/bagues",
+  "femme|bijouterie fantaisie": "femme/accessoires-bijoux",
+  "femme|ceintures": "femme/ceintures",
+  "femme|chapeaux et gants": "femme/accessoires",
+  "femme|accessoires cheveux": "femme/accessoires-cheveux",
+  "homme|écharpes et carrés": "homme/cravates-echarpes-et-carres/echarpes-et-carres",
+  "homme|manteaux et parkas": "homme/pret-a-porter/manteaux-et-parkas",
+  "homme|blousons et vestes": "homme/pret-a-porter/blousons-et-vestes",
+  "homme|mailles": "homme/pret-a-porter/mailles",
+  "homme|chemises": "homme/pret-a-porter/chemises",
+  "homme|t-shirts et sweat-shirts": "homme/pret-a-porter/t-shirts-et-sweat-shirts",
+  "homme|pantalons et shorts": "homme/pret-a-porter/pantalons-et-shorts",
+  "homme|bain": "homme/pret-a-porter/bain",
+  "homme|sneakers": "homme/chaussures/sneakers",
+  "homme|sandales": "homme/chaussures/sandales",
+  "homme|mocassins et mules": "homme/chaussures/mocassins-et-mules",
+  "homme|derbies et richelieus": "homme/chaussures/derbies-et-richelieus",
+  "homme|bottes et bottines": "homme/chaussures/bottes-et-bottines",
+  "homme|chaussures": "homme/chaussures",
+  "homme|cravates, nœuds papillons et pochettes": "homme/cravates-echarpes-et-carres/cravates-noeuds-papillons-et-pochettes",
+  "homme|bijouterie fantaisie": "homme/accessoires/accessoires-bijoux",
+  "homme|ceintures": "homme/ceintures",
+  "homme|chapeaux et gants": "homme/accessoires/chapeaux-et-gants",
+  "maroquinerie|petite maroquinerie": "maroquinerie/petite-maroquinerie",
+  "maroquinerie|sacs et pochettes femme": "maroquinerie/sacs-et-pochettes/sacs-et-pochettes-femme",
+  "maroquinerie|sacs et pochettes homme": "maroquinerie/sacs-et-pochettes/sacs-et-pochettes-homme",
+  "maroquinerie|sacs et pochettes": "maroquinerie/sacs-et-pochettes",
+  "maroquinerie|portefeuilles to go": "maroquinerie/petite-maroquinerie/portefeuilles-to-go",
+  "maroquinerie|portefeuilles": "maroquinerie/petite-maroquinerie/portefeuilles",
+  "maroquinerie|porte-cartes": "maroquinerie/petite-maroquinerie/porte-cartes",
+  "maroquinerie|trousses et étuis": "maroquinerie/petite-maroquinerie/trousses-et-etuis",
+  "maroquinerie|accessoires de sac": "maroquinerie/accessoires/accessoires-de-sac",
+  "maroquinerie|bandoulières": "maroquinerie/accessoires/bandoulieres",
+  "maroquinerie|lire et écrire": "maroquinerie/accessoires/lire-et-ecrire",
+  "maroquinerie|valises et sacs de voyage": "maroquinerie/voyage/valises-et-sacs-de-voyage",
+  "maroquinerie|accessoires de voyage": "maroquinerie/voyage/accessoires-de-voyage",
+  "bijouterie|bijoux en or": "bijouterie/bijoux-en-or",
+  "bijouterie|bagues": "bijouterie/bijoux-en-or/bagues",
+  "bijouterie|alliances": "bijouterie/bijoux-en-or/alliances",
+  "bijouterie|bracelets": "bijouterie/bijoux-en-or/bracelets",
+  "bijouterie|colliers et pendentifs": "bijouterie/bijoux-en-or/colliers-et-pendentifs",
+  "bijouterie|bijoux d'oreilles": "bijouterie/bijoux-en-or/bijoux-doreilles",
+  "bijouterie|bagues en argent": "bijouterie/bijoux-en-argent/bagues",
+  "bijouterie|bracelets en argent": "bijouterie/bijoux-en-argent/bracelets",
+  "bijouterie|colliers et pendentifs en argent": "bijouterie/bijoux-en-argent/colliers-et-pendentifs",
+  "bijouterie|bijoux d'oreilles en argent": "bijouterie/bijoux-en-argent/bijoux-doreilles",
+  "bijouterie|bijoux en argent": "bijouterie/bijoux-en-argent",
+  "bijouterie|kelly": "bijouterie/collections/kelly",
+  "bijouterie|chaînes d'ancre": "bijouterie/collections/chaine-d-ancre",
+  "bijouterie|l'equestre": "bijouterie/collections/l-equestre",
+  "bijouterie|les fétiches": "bijouterie/collections/les-fetiches",
+  "bijouterie|moments précieux": "bijouterie/collections/moments-precieux",
+  "bijouterie|homme": "bijouterie/homme",
+  "montres|femme": "montres/femme",
+  "montres|homme": "montres/homme",
+  "montres|bracelets": "montres/bracelets",
+  "montres|apple watch hermès": "montres/apple-watch-hermes",
+  "parfums-et-maquillage|maquillage": "maquillage",
+  "parfums-et-maquillage|hermessence": "parfums/collection-hermessence",
+  "parfums-et-maquillage|femme": "parfums/femme",
+  "parfums-et-maquillage|homme": "parfums/homme",
+  "parfums-et-maquillage|bain": "parfums/lart-de-vivre",
+  "parfums-et-maquillage|parfums": "parfums",
+  "parfums-et-maquillage|lèvres": "maquillage/levres",
+  "parfums-et-maquillage|teint": "maquillage/teint",
+  "parfums-et-maquillage|yeux": "maquillage/yeux",
+  "parfums-et-maquillage|mains": "maquillage/mains",
+  "parfums-et-maquillage|accessoires": "maquillage/accessoires",
+  "maison-art-de-vivre|art de la table": "maison/art-de-la-table",
+  "maison-art-de-vivre|textiles": "maison/textiles",
+  "maison-art-de-vivre|objets": "maison/objets",
+  "maison-art-de-vivre|mobilier et luminaires": "maison/mobilier-et-luminaires",
+  "maison-art-de-vivre|bureau et écriture": "maison/bureau-et-ecriture",
+  "maison-art-de-vivre|trousses et linge de toilette": "maison/trousses-et-linge-de-toilette",
+  "maison-art-de-vivre|enfant et naissance": "maison-art-de-vivre/enfant-et-naissance",
+  "maison-art-de-vivre|plage": "maison-art-de-vivre/plage",
+  "maison-art-de-vivre|sports et plein air": "maison-art-de-vivre/sports-et-plein-air",
+  "maison-art-de-vivre|univers tech": "maison-art-de-vivre/univers-tech",
+  "maison-art-de-vivre|petit h": "petit-h",
+  "equitation|cheval": "equitation/cheval",
+  "equitation|cavalier": "equitation/cavalier",
+  "cadeaux|pour femme": "cadeaux/cadeaux-pour-femme",
+  "cadeaux|pour homme": "cadeaux/cadeaux-pour-homme",
+  "cadeaux|enfants et naissance": "cadeaux/cadeaux-enfants-et-naissance",
+  "cadeaux|pour chien": "cadeaux/cadeaux-pour-chien",
 };
 
-const REVERSE_PATHS: Record<string, { cat: string; sub?: string }> = {};
-for (const [key, path] of Object.entries(CATEGORY_PATHS)) {
-  const [cat = "", sub = ""] = key.split("|");
-  // First writer wins: several keys share one path (e.g. the two
-  // Fall-Winter spellings); the canonical sub is the full "… Collection".
-  if (!REVERSE_PATHS[path]) REVERSE_PATHS[path] = sub ? { cat, sub } : { cat };
-}
+const REVERSE_PATHS: Record<string, { cat: string; sub?: string }> = {
+  "femme": { cat: "femme" },
+  "homme": { cat: "homme" },
+  "maroquinerie": { cat: "maroquinerie" },
+  "bijouterie": { cat: "bijouterie" },
+  "montres": { cat: "montres" },
+  "parfums-et-maquillage": { cat: "parfums-et-maquillage" },
+  "maison-art-de-vivre": { cat: "maison-art-de-vivre" },
+  "equitation": { cat: "equitation" },
+  "cadeaux": { cat: "cadeaux" },
+  "femme/chaussures": { cat: "femme", sub: "Chaussures" },
+  "femme/pret-a-porter/manteaux-et-vestes": { cat: "femme", sub: "Manteaux et vestes" },
+  "femme/pret-a-porter/cuir": { cat: "femme", sub: "Cuir" },
+  "femme/pret-a-porter/robes-et-jupes": { cat: "femme", sub: "Robes et jupes" },
+  "femme/pret-a-porter/hauts-et-chemises": { cat: "femme", sub: "Hauts et chemises" },
+  "femme/pret-a-porter/pantalons-et-shorts": { cat: "femme", sub: "Pantalons et shorts" },
+  "femme/pret-a-porter/mailles-et-twillaines": { cat: "femme", sub: "Mailles et twillaines" },
+  "femme/pret-a-porter/bain": { cat: "femme", sub: "Bain" },
+  "femme/chaussures/sandales": { cat: "femme", sub: "Sandales" },
+  "femme/chaussures/sneakers": { cat: "femme", sub: "Sneakers" },
+  "femme/chaussures/bottes-et-bottines": { cat: "femme", sub: "Bottes et bottines" },
+  "femme/chaussures/escarpins": { cat: "femme", sub: "Escarpins" },
+  "femme/chaussures/mocassins-et-mules": { cat: "femme", sub: "Mocassins et mules" },
+  "femme/chaussures/ballerines": { cat: "femme", sub: "Ballerines" },
+  "femme/carres-chales-et-echarpes/carres-et-accessoires-de-soie": { cat: "femme", sub: "Carrés et accessoires de soie" },
+  "femme/carres-chales-et-echarpes/chales-et-echarpes-en-cachemire": { cat: "femme", sub: "Châles et écharpes en cachemire" },
+  "femme/carres-chales-et-echarpes/twillys-et-autres-petits-formats": { cat: "femme", sub: "Twillys et autres petits formats" },
+  "femme/carres-chales-et-echarpes": { cat: "femme", sub: "Carrés, châles et écharpes" },
+  "femme/accessoires-bijoux/bracelets": { cat: "femme", sub: "Bracelets" },
+  "femme/accessoires-bijoux/colliers-et-pendentifs": { cat: "femme", sub: "Colliers et pendentifs" },
+  "femme/accessoires-bijoux/boucles-d-oreilles": { cat: "femme", sub: "Boucles d'oreilles" },
+  "femme/accessoires-bijoux/bagues": { cat: "femme", sub: "Bagues" },
+  "femme/accessoires-bijoux": { cat: "femme", sub: "Bijouterie fantaisie" },
+  "femme/ceintures": { cat: "femme", sub: "Ceintures" },
+  "femme/accessoires": { cat: "femme", sub: "Chapeaux et gants" },
+  "femme/accessoires-cheveux": { cat: "femme", sub: "Accessoires cheveux" },
+  "homme/cravates-echarpes-et-carres/echarpes-et-carres": { cat: "homme", sub: "Écharpes et carrés" },
+  "homme/pret-a-porter/manteaux-et-parkas": { cat: "homme", sub: "Manteaux et parkas" },
+  "homme/pret-a-porter/blousons-et-vestes": { cat: "homme", sub: "Blousons et vestes" },
+  "homme/pret-a-porter/mailles": { cat: "homme", sub: "Mailles" },
+  "homme/pret-a-porter/chemises": { cat: "homme", sub: "Chemises" },
+  "homme/pret-a-porter/t-shirts-et-sweat-shirts": { cat: "homme", sub: "T-shirts et sweat-shirts" },
+  "homme/pret-a-porter/pantalons-et-shorts": { cat: "homme", sub: "Pantalons et shorts" },
+  "homme/pret-a-porter/bain": { cat: "homme", sub: "Bain" },
+  "homme/chaussures/sneakers": { cat: "homme", sub: "Sneakers" },
+  "homme/chaussures/sandales": { cat: "homme", sub: "Sandales" },
+  "homme/chaussures/mocassins-et-mules": { cat: "homme", sub: "Mocassins et mules" },
+  "homme/chaussures/derbies-et-richelieus": { cat: "homme", sub: "Derbies et richelieus" },
+  "homme/chaussures/bottes-et-bottines": { cat: "homme", sub: "Bottes et bottines" },
+  "homme/chaussures": { cat: "homme", sub: "Chaussures" },
+  "homme/cravates-echarpes-et-carres/cravates-noeuds-papillons-et-pochettes": { cat: "homme", sub: "Cravates, nœuds papillons et pochettes" },
+  "homme/accessoires/accessoires-bijoux": { cat: "homme", sub: "Bijouterie fantaisie" },
+  "homme/ceintures": { cat: "homme", sub: "Ceintures" },
+  "homme/accessoires/chapeaux-et-gants": { cat: "homme", sub: "Chapeaux et gants" },
+  "maroquinerie/petite-maroquinerie": { cat: "maroquinerie", sub: "Petite maroquinerie" },
+  "maroquinerie/sacs-et-pochettes/sacs-et-pochettes-femme": { cat: "maroquinerie", sub: "Sacs et pochettes femme" },
+  "maroquinerie/sacs-et-pochettes/sacs-et-pochettes-homme": { cat: "maroquinerie", sub: "Sacs et pochettes homme" },
+  "maroquinerie/sacs-et-pochettes": { cat: "maroquinerie", sub: "Sacs et pochettes" },
+  "maroquinerie/petite-maroquinerie/portefeuilles-to-go": { cat: "maroquinerie", sub: "Portefeuilles To Go" },
+  "maroquinerie/petite-maroquinerie/portefeuilles": { cat: "maroquinerie", sub: "Portefeuilles" },
+  "maroquinerie/petite-maroquinerie/porte-cartes": { cat: "maroquinerie", sub: "Porte-cartes" },
+  "maroquinerie/petite-maroquinerie/trousses-et-etuis": { cat: "maroquinerie", sub: "Trousses et étuis" },
+  "maroquinerie/accessoires/accessoires-de-sac": { cat: "maroquinerie", sub: "Accessoires de sac" },
+  "maroquinerie/accessoires/bandoulieres": { cat: "maroquinerie", sub: "Bandoulières" },
+  "maroquinerie/accessoires/lire-et-ecrire": { cat: "maroquinerie", sub: "Lire et écrire" },
+  "maroquinerie/voyage/valises-et-sacs-de-voyage": { cat: "maroquinerie", sub: "Valises et sacs de voyage" },
+  "maroquinerie/voyage/accessoires-de-voyage": { cat: "maroquinerie", sub: "Accessoires de voyage" },
+  "bijouterie/bijoux-en-or": { cat: "bijouterie", sub: "Bijoux en or" },
+  "bijouterie/bijoux-en-or/bagues": { cat: "bijouterie", sub: "Bagues" },
+  "bijouterie/bijoux-en-or/alliances": { cat: "bijouterie", sub: "Alliances" },
+  "bijouterie/bijoux-en-or/bracelets": { cat: "bijouterie", sub: "Bracelets" },
+  "bijouterie/bijoux-en-or/colliers-et-pendentifs": { cat: "bijouterie", sub: "Colliers et pendentifs" },
+  "bijouterie/bijoux-en-or/bijoux-doreilles": { cat: "bijouterie", sub: "Bijoux d'oreilles" },
+  "bijouterie/bijoux-en-argent/bagues": { cat: "bijouterie", sub: "Bagues en argent" },
+  "bijouterie/bijoux-en-argent/bracelets": { cat: "bijouterie", sub: "Bracelets en argent" },
+  "bijouterie/bijoux-en-argent/colliers-et-pendentifs": { cat: "bijouterie", sub: "Colliers et pendentifs en argent" },
+  "bijouterie/bijoux-en-argent/bijoux-doreilles": { cat: "bijouterie", sub: "Bijoux d'oreilles en argent" },
+  "bijouterie/bijoux-en-argent": { cat: "bijouterie", sub: "Bijoux en argent" },
+  "bijouterie/collections/kelly": { cat: "bijouterie", sub: "Kelly" },
+  "bijouterie/collections/chaine-d-ancre": { cat: "bijouterie", sub: "Chaînes d'ancre" },
+  "bijouterie/collections/l-equestre": { cat: "bijouterie", sub: "L'Equestre" },
+  "bijouterie/collections/les-fetiches": { cat: "bijouterie", sub: "Les Fétiches" },
+  "bijouterie/collections/moments-precieux": { cat: "bijouterie", sub: "Moments précieux" },
+  "bijouterie/homme": { cat: "bijouterie", sub: "Homme" },
+  "montres/femme": { cat: "montres", sub: "Femme" },
+  "montres/homme": { cat: "montres", sub: "Homme" },
+  "montres/bracelets": { cat: "montres", sub: "Bracelets" },
+  "montres/apple-watch-hermes": { cat: "montres", sub: "Apple Watch Hermès" },
+  "maquillage": { cat: "parfums-et-maquillage", sub: "Maquillage" },
+  "parfums/collection-hermessence": { cat: "parfums-et-maquillage", sub: "Hermessence" },
+  "parfums/femme": { cat: "parfums-et-maquillage", sub: "Femme" },
+  "parfums/homme": { cat: "parfums-et-maquillage", sub: "Homme" },
+  "parfums/lart-de-vivre": { cat: "parfums-et-maquillage", sub: "Bain" },
+  "parfums": { cat: "parfums-et-maquillage", sub: "Parfums" },
+  "maquillage/levres": { cat: "parfums-et-maquillage", sub: "Lèvres" },
+  "maquillage/teint": { cat: "parfums-et-maquillage", sub: "Teint" },
+  "maquillage/yeux": { cat: "parfums-et-maquillage", sub: "Yeux" },
+  "maquillage/mains": { cat: "parfums-et-maquillage", sub: "Mains" },
+  "maquillage/accessoires": { cat: "parfums-et-maquillage", sub: "Accessoires" },
+  "maison/art-de-la-table": { cat: "maison-art-de-vivre", sub: "Art de la table" },
+  "maison/textiles": { cat: "maison-art-de-vivre", sub: "Textiles" },
+  "maison/objets": { cat: "maison-art-de-vivre", sub: "Objets" },
+  "maison/mobilier-et-luminaires": { cat: "maison-art-de-vivre", sub: "Mobilier et luminaires" },
+  "maison/bureau-et-ecriture": { cat: "maison-art-de-vivre", sub: "Bureau et écriture" },
+  "maison/trousses-et-linge-de-toilette": { cat: "maison-art-de-vivre", sub: "Trousses et linge de toilette" },
+  "maison-art-de-vivre/enfant-et-naissance": { cat: "maison-art-de-vivre", sub: "Enfant et naissance" },
+  "maison-art-de-vivre/plage": { cat: "maison-art-de-vivre", sub: "Plage" },
+  "maison-art-de-vivre/sports-et-plein-air": { cat: "maison-art-de-vivre", sub: "Sports et plein air" },
+  "maison-art-de-vivre/univers-tech": { cat: "maison-art-de-vivre", sub: "Univers tech" },
+  "petit-h": { cat: "maison-art-de-vivre", sub: "petit h" },
+  "equitation/cheval": { cat: "equitation", sub: "Cheval" },
+  "equitation/cavalier": { cat: "equitation", sub: "Cavalier" },
+  "cadeaux/cadeaux-pour-femme": { cat: "cadeaux", sub: "Pour femme" },
+  "cadeaux/cadeaux-pour-homme": { cat: "cadeaux", sub: "Pour homme" },
+  "cadeaux/cadeaux-enfants-et-naissance": { cat: "cadeaux", sub: "Enfants et naissance" },
+  "cadeaux/cadeaux-pour-chien": { cat: "cadeaux", sub: "Pour chien" },
+  "horlogerie": { cat: "montres" },
+};
 
-export const TOP_CATS = ["women", "men", "leather", "jewelry", "fashion-jewelry", "watches", "fragrances", "home", "equestrian", "gifts", "about"];
+export const TOP_CATS = ["femme", "homme", "maroquinerie", "bijouterie", "montres", "parfums-et-maquillage", "maison-art-de-vivre", "equitation", "cadeaux", "about"];
 
 export function categoryUrl(cat: string, sub?: string): string {
   const key = `${cat}|${(sub ?? "").toLowerCase()}`;
   const known = CATEGORY_PATHS[key];
-  if (known) return `/us/en/category/${known}/`;
+  if (known) return `/fr/fr/category/${known}/`;
   const slug = sub ? slugify(sub) : "";
-  return slug ? `/us/en/category/${cat}/${slug}/` : `/us/en/category/${cat}/`;
+  return slug ? `/fr/fr/category/${cat}/${slug}/` : `/fr/fr/category/${cat}/`;
 }
 
 export function productUrl(name: string, refCode: string, id: number): string {
   const ref = (refCode || "").replace(/\s+/g, "");
   const slug = slugify(name);
-  if (ref) return `/us/en/product/${slug ? `${slug}-` : ""}${ref}/`;
-  return `/us/en/product/${slug ? `${slug}-` : ""}${id}/`;
+  if (ref) return `/fr/fr/product/${slug ? `${slug}-` : ""}${ref}/`;
+  return `/fr/fr/product/${slug ? `${slug}-` : ""}${id}/`;
 }
 
-// The original's contact page URL, verified live 2026-11-11.
+// The original's contact page URL (hermes.com/fr/fr).
 export function contactUrl(): string {
-  return "/us/en/contact-us/";
+  return "/fr/fr/contact-us/";
 }
 
-// The original's bespoke equestrian editorial page, verified live
-// 2026-11-17 (the Equestrian menu's SADDLES item links here, not to a
-// product listing).
+// The original's bespoke equestrian editorial page (hermes.com/fr/fr):
+// /fr/fr/content/329243-sur-mesure-equitation/ (the Equestrian menu's
+// SELLES item links here, not to a product listing).
 export function bespokeUrl(): string {
-  return "/us/en/content/344534-bespoke-equestrian/";
+  return "/fr/fr/content/329243-sur-mesure-equitation/";
 }
 
-// The account page URL — a direct load of /us/en/account/ used to render
-// the homepage (parseUrl returned null for it), so the account view only
-// appeared after clicking the header Account icon at the same URL.
+// The account page URL — a direct load of /fr/fr/account/ renders the
+// account view.
 export function accountUrl(): string {
-  return "/us/en/account/";
+  return "/fr/fr/account/";
 }
 
-// The original's FAQ topic URL, verified live 2026-11-12 (Payment page).
-// Only "payment" has a built FAQ page so far; other topics are not routed.
+// The original's FAQ topic URL. Only "payment" has a built FAQ page so
+// far; other topics are not routed. (France FAQ groups are unverified —
+// the /online-shopping/ group slug is carried over from the US build.)
 export function faqUrl(topic: string): string {
-  return `/us/en/faq/online-shopping/${slugify(topic)}/`;
+  return `/fr/fr/faq/online-shopping/${slugify(topic)}/`;
 }
 
 // The product ref embedded in a product URL path, if the path is one.
+// Accepts the canonical /fr/fr/ prefix and the legacy /us/en/ prefix.
 export function productRefFromPath(path: string): string | null {
   const clean = path.split("?")[0]?.split("#")[0] ?? "";
-  const m = clean.replace(/\/+$/, "").match(/\/us\/en\/product\/([^/]+)$/);
+  const m = clean.replace(/\/+$/, "").match(/\/(?:fr\/fr|us\/en)\/product\/([^/]+)$/);
   if (!m || !m[1]) return null;
   const last = m[1].split("-").pop() ?? "";
   return last || null;
 }
+
+// Legacy /us/en/ deep links resolve to the same France view: the first
+// segment maps to the France parent of the same top section. Old
+// /women/fashion-jewelry/ routes retarget to the France Bijouterie
+// fantaisie pages (Femme /fr/fr/category/femme/accessoires-bijoux/).
+const LEGACY_CAT: Record<string, string> = {
+  "women": "femme",
+  "men": "homme",
+  "leather-goods": "maroquinerie",
+  "leather": "maroquinerie",
+  "jewelry": "bijouterie",
+  "watches": "montres",
+  "timepieces": "montres",
+  "fragrances": "parfums-et-maquillage",
+  "make-up": "parfums-et-maquillage",
+  "home": "maison-art-de-vivre",
+  "home-art-living": "maison-art-de-vivre",
+  "equestrian": "equitation",
+  "gifts": "cadeaux",
+  "petit-h": "maison-art-de-vivre",
+};
+const LEGACY_FJ: Record<string, string> = {
+  "": "Bijouterie fantaisie",
+  "bracelets": "Bracelets",
+  "necklaces": "Colliers et pendentifs",
+  "earrings": "Boucles d'oreilles",
+  "rings": "Bagues",
+  "hair-accessories-and-combs": "Accessoires cheveux",
+};
 
 export function parseUrl(
   path: string,
@@ -320,14 +369,15 @@ export function parseUrl(
 ): ParsedRoute | null {
   let clean = (path.split("?")[0]?.split("#")[0] ?? "").replace(/^\/+/, "").replace(/\/+$/, "");
   if (clean === "") return { kind: "home" };
-  if (clean.startsWith("us/en/")) clean = clean.slice("us/en/".length);
+  let legacy = false;
+  if (clean.startsWith("fr/fr/")) clean = clean.slice("fr/fr/".length);
+  else if (clean.startsWith("us/en/")) { clean = clean.slice("us/en/".length); legacy = true; }
   if (clean === "") return { kind: "home" };
   if (clean === "contact-us") return { kind: "contact" };
   if (clean === "account") return { kind: "account" };
-  if (clean === "content/344534-bespoke-equestrian") return { kind: "bespoke" };
-  // The cart is a full page on the original (/us/en/cart/) — routed so
-  // browser Back from it returns to the page the user came from
-  // (2026-11-17: unrouted, Back skipped the product page entirely).
+  if (clean === "content/329243-sur-mesure-equitation" || clean === "content/344534-bespoke-equestrian") return { kind: "bespoke" };
+  // The cart is a full page on the original (/fr/fr/cart/) — routed so
+  // browser Back from it returns to the page the user came from.
   if (clean === "cart") return { kind: "cart" };
   if (clean.startsWith("faq/online-shopping/")) {
     const topic = clean.slice("faq/online-shopping/".length).split("/")[0] ?? "";
@@ -354,6 +404,29 @@ export function parseUrl(
     const known = REVERSE_PATHS[rest];
     if (known) return { kind: "category", cat: known.cat, sub: known.sub };
     const segs = rest.split("/").filter(Boolean);
+    const first = segs[0] ?? "";
+    // Legacy /us/en/ deep link: map the top section to its France parent.
+    if (legacy) {
+      // Old /women/fashion-jewelry/ routes retarget to the France
+      // Bijouterie fantaisie pages.
+      if (first === "women" && segs[1] === "fashion-jewelry") {
+        const fj = LEGACY_FJ[segs[2] ?? ""] ?? "Bijouterie fantaisie";
+        return { kind: "category", cat: "femme", sub: fj };
+      }
+      if (first === "fashion-jewelry") {
+        const fj = LEGACY_FJ[segs[1] ?? ""] ?? "Bijouterie fantaisie";
+        return { kind: "category", cat: "femme", sub: fj };
+      }
+      const mapped = LEGACY_CAT[first];
+      if (!mapped) return null;
+      if (segs.length === 1) return { kind: "category", cat: mapped };
+      const subSlug = segs.slice(1).join("/");
+      const candidates = subsByCat[mapped] ?? [];
+      const match = candidates.find((s) => slugify(s) === subSlug);
+      if (match) return { kind: "category", cat: mapped, sub: match };
+      // Unknown sub slug: fall back to the France parent rather than home.
+      return { kind: "category", cat: mapped };
+    }
     const cat = segs[0] ?? "";
     if (!TOP_CATS.includes(cat)) return null;
     if (segs.length === 1) return { kind: "category", cat };
