@@ -6926,14 +6926,22 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
 
       {/* "The story behind" — on hermes.com the product story is its own
           headed editorial section BELOW the description/accordions and ABOVE
-          "The Perfect Partner", but ONLY for products whose story is real
-          editorial copy. The templated "The story behind — …" rows render
-          nothing here (and nothing in the description panel either) — the
-          `editorial` const above already implements that split. */}
-      {editorial && (
+          "The Perfect Partner". Text renders ONLY for products whose story is
+          real editorial copy (the templated "The story behind — …" rows render
+          no text — the `editorial` const above implements that split), but a
+          product with a `storyVideo` still shows its editorial film here
+          (e.g. the Rouge H lipstick film, square 1:1, autoplay muted loop). */}
+      {(editorial || p.storyVideo) && (
         <section className="mx-auto mt-12 max-w-5xl px-4 text-center sm:px-6 lg:mt-20">
           <h2 className="font-serif-d text-center text-[30px] italic leading-snug">The story behind</h2>
-          <p className="font-serif-d mx-auto mt-8 max-w-3xl text-[20px] italic leading-[28px]">{editorial}</p>
+          {p.storyVideo && (
+            <div className="mx-auto mt-8 w-full max-w-3xl">
+              <ProductVideo src={p.storyVideo} poster={views[0]?.src ?? ""} playing muted className="aspect-square w-full object-cover" />
+            </div>
+          )}
+          {editorial && (
+            <p className="font-serif-d mx-auto mt-8 max-w-3xl text-[20px] italic leading-[28px]">{editorial}</p>
+          )}
         </section>
       )}
       <RelatedRow title="The Perfect Partner" items={partners} go={go} onQuickBuy={(p) => addToCart(p)} feature={p} />
