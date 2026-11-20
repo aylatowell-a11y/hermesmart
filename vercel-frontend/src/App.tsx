@@ -6935,12 +6935,12 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
         <section className="mx-auto mt-12 max-w-5xl px-4 text-center sm:px-6 lg:mt-20">
           <h2 className="font-serif-d text-center text-[30px] italic leading-snug">The story behind</h2>
           {p.storyVideo && (
-            <div className="mx-auto mt-8 w-full max-w-3xl">
+            <div className="mx-auto mt-8 w-full">
               <ProductVideo src={p.storyVideo} poster={views[0]?.src ?? ""} playing muted className="h-auto w-full object-cover" />
             </div>
           )}
           {editorial && (
-            <p className="font-serif-d mx-auto mt-8 max-w-3xl text-[20px] italic leading-[28px]">{editorial}</p>
+            <p className="font-serif-d mx-auto mt-8 max-w-3xl whitespace-pre-line text-[20px] italic leading-[28px]">{editorial}</p>
           )}
         </section>
       )}
