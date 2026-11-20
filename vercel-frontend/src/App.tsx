@@ -6936,7 +6936,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           <h2 className="font-serif-d text-center text-[30px] italic leading-snug">The story behind</h2>
           {p.storyVideo && (
             <div className="mx-auto mt-8 w-full max-w-3xl">
-              <ProductVideo src={p.storyVideo} poster={views[0]?.src ?? ""} playing muted className="aspect-square w-full object-cover" />
+              <ProductVideo src={p.storyVideo} poster={views[0]?.src ?? ""} playing muted className="h-auto w-full object-cover" />
             </div>
           )}
           {editorial && (
