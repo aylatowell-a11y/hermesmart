@@ -56,6 +56,17 @@ body { font-family: "Manrope", "Roboto", "Helvetica Neue", system-ui, sans-serif
    to the full viewport width, centred (the HomeView root clips any
    scrollbar-width overshoot via overflow-x-clip). */
 .carousel-full-bleed { width: 100vw; margin-left: calc(50% - 50vw); }
+/* Discover + theme carousels: side-slide photo zoom on hover — measured on
+   hermes.com 2026-11-20 (scale 1.05, ~600ms ease-out, photo only, frame
+   unchanged; centre slide never zooms). Plain :hover rule, NOT Tailwind
+   group-hover: the group-hover:scale-105 variant was verified present in
+   the DOM and the built CSS but produced NO visible zoom on the homepage
+   carousel in two live checks (2026-11-20), while the identical pattern
+   worked on the category theme carousel — so the zoom no longer depends on
+   the group variant. Slides carry .carousel-slide, the centre slide also
+   .carousel-slide-active. */
+.carousel-slide img { transition: transform 600ms ease-out; }
+.carousel-slide:not(.carousel-slide-active):hover img { transform: scale(1.05); }
 /* The loading horse is one of the user's own three animated GIFs (trot /
    jump-then-run / gallop, rotating in that fixed order) — the GIF files
    carry the motion themselves, so no CSS transform animation is applied

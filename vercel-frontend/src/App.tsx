@@ -1540,7 +1540,10 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
             cropped at the strip edges); the centre slide does NOT zoom on
             hover. One click on a side strip centres it only — no
             navigation; a second click on the centred slide (or its label)
-            navigates to the theme page. */}
+            navigates to the theme page. Zoom is a plain :hover rule in
+            theme.css (.carousel-slide) — Tailwind group-hover produced no
+            visible zoom on this carousel in two live checks (2026-11-20)
+            despite being verified in the DOM and built CSS. */}
         <div className="carousel-full-bleed mt-6 hidden overflow-hidden lg:mt-8 lg:block" role="tablist" aria-label="Discover themes">
           <div className="flex h-[35vw] justify-center gap-[3px]">
             {Array.from({ length: 11 }, (_, k) => k - 5).map((off) => {
@@ -1551,9 +1554,9 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
               const isActive = off === 0;
               return (
                 <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${(logicalIdx % 5) + 1} of 5`} onClick={() => { if (isActive) go(themeDest(t)); else goToSlide(logicalIdx); }}
-                  className="group relative h-full shrink-0 overflow-hidden transition-[width] duration-500 ease-out"
+                  className={`carousel-slide${isActive ? " carousel-slide-active" : ""} relative h-full shrink-0 overflow-hidden transition-[width] duration-500 ease-out`}
                   style={{ width: isActive ? "60.8vw" : 185 }}>
-                  <img src={ed.img} alt={ed.alt} loading="lazy" className={`h-full w-full object-cover transition-transform duration-[600ms] ease-out${isActive ? "" : " group-hover:scale-105"}`} />
+                  <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
                   {isActive && (
                     <span className="font-mono-d absolute bottom-8 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black">{t}</span>
                   )}
@@ -1909,9 +1912,9 @@ function FallWinterThemeCarousel({ go, themes: themesProp }: { go: (v: View, opt
               <div key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Visible Category ${slide.label}, ${n} of ${themes.length}`} tabIndex={0}
                 onClick={() => { if (isActive) go(slide.view); else goTo(logicalIdx); }}
                 onKeyDown={(e) => { if (e.key === "Enter" && !isActive) goTo(logicalIdx); }}
-                className="group relative h-full shrink-0 cursor-pointer overflow-hidden transition-[width] duration-500 ease-out"
+                className={`carousel-slide${isActive ? " carousel-slide-active" : ""} relative h-full shrink-0 cursor-pointer overflow-hidden transition-[width] duration-500 ease-out`}
                 style={{ width: isActive ? "60.8vw" : 128 }}>
-                <img src={slide.imgDesktop} alt={slide.label} loading="lazy" className={`h-full w-full object-cover transition-transform duration-[600ms] ease-out${isActive ? "" : " group-hover:scale-105"}`} />
+                <img src={slide.imgDesktop} alt={slide.label} loading="lazy" className="h-full w-full object-cover" />
                 {isActive && (
                   <button aria-label={`Go to ${slide.label}`} className="font-mono-d absolute bottom-8 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black" onClick={(e) => { e.stopPropagation(); go(slide.view); }}>{slide.label}</button>
                 )}
