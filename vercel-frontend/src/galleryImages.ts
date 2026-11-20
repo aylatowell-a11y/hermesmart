@@ -9668,9 +9668,11 @@ const NEW_GALLERY: Record<number, { label: string; src: string; videoSrc?: strin
   8415: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/085291CK7P_front_wm_101?$product_default_bg$" }, { label: "Above", src: "https://assets.hermes.com/is/image/hermesproduct/085291CK7P_above_wm_106?$product_default_bg$" } ],
   8416: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/088129CKN7_front_wm_101?$product_default_bg$" } ],
   8417: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/057946CK65_front_wm_101?$product_default_bg$" } ],
-  8418: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/057946CKN7_front_wm_101?$product_default_bg$" } ],
   8419: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/084817CK37_front_wm_101?$product_default_bg$" } ],
   8420: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/089089CKAA_front_wm_101?$product_default_bg$" } ],
+  8421: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/086888CC37_front_wm_101?$product_default_bg$" } ],
+  8422: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/087285CC89_front_wm_101?$product_default_bg$" } ],
+  8423: [ { label: "Front", src: "https://assets.hermes.com/is/image/hermesproduct/086888CK18_front_wm_101?$product_default_bg$" } ],
 
 };
 
