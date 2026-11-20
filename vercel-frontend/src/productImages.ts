@@ -8498,6 +8498,13 @@ const NEW_TILE: Record<number, string> = {
   8411: "https://assets.hermes.com/is/image/hermesproduct/089095CK89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8412: "https://assets.hermes.com/is/image/hermesproduct/084682CA89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   8413: "https://assets.hermes.com/is/image/hermesproduct/043033CA37_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8414: "https://assets.hermes.com/is/image/hermesproduct/082214CKX3_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8415: "https://assets.hermes.com/is/image/hermesproduct/085291CK7P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8416: "https://assets.hermes.com/is/image/hermesproduct/088129CKN7_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8417: "https://assets.hermes.com/is/image/hermesproduct/057946CK65_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8418: "https://assets.hermes.com/is/image/hermesproduct/057946CKN7_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8419: "https://assets.hermes.com/is/image/hermesproduct/084817CK37_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  8420: "https://assets.hermes.com/is/image/hermesproduct/089089CKAA_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
 
 };
 
