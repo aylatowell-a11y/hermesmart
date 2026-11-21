@@ -2844,6 +2844,18 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     (!s.personalize.length || (isBeltKit(p) && s.personalize.includes("Yes"))) &&
     (!s.universe.length || s.universe.includes(universeVal(p))) &&
     p.price >= lo && p.price <= hi);
+  // France (2026-11-21): the grid lists the page's rows in the original's
+  // live order — the page's own fr*Pos field (FR_PAGE_FIELDS). The store
+  // returns products in the global (sortOrder, id) order, which is NOT any
+  // page's order (verified live 2026-11-21: Sacs Femme showed Bel-Il at 24/25
+  // instead of 10/12, Sandales Oran Blanc at 69 instead of 18 — the
+  // (sortOrder, id) order reproduces the live DOM order exactly). Only
+  // single-field pages sort here; merged pages (several fields, e.g. the
+  // Chaussures parent) keep the store order — their true merged order was
+  // never extracted as one sequence. Rows without the field sort last,
+  // stable, like every other branch below.
+  const frPageFields = FR_PAGE_FIELDS[`${cat}|${(sub ?? "").toLowerCase()}`];
+  const frSortField = frPageFields && frPageFields.length === 1 ? (frPageFields[0] as keyof Product) : undefined;
   const filtered = useMemo(() => {
     let list = filterList(sel, onlineOnly, pMin, pMax);
     if (sort === "low") list = [...list].sort((a, b) => a.price - b.price);
@@ -3020,10 +3032,16 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Hair accessories (2026-11-16) sorts by hairPos — the original's
     // order — the same way (the page lists exactly the 26 live tiles).
     else if (isHairPage && list.some((p) => p.hairPos !== undefined)) list = [...list].sort((a, b) => (a.hairPos ?? Infinity) - (b.hairPos ?? Infinity));
+    // France pages (2026-11-21) sort by their own fr*Pos field — the
+    // original's live order for that page (see frSortField above). Placed
+    // here, before the fwPos/ssPos fallbacks: a France page's rows carry no
+    // US *Pos field, so no earlier branch matches them, and the fwPos/ssPos
+    // collection orders must not win on a France category page.
+    else if (frSortField && list.some((p) => p[frSortField] !== undefined)) list = [...list].sort((a, b) => ((a[frSortField] as number | undefined) ?? Infinity) - ((b[frSortField] as number | undefined) ?? Infinity));
     else if (list.some((p) => p.fwPos !== undefined)) list = [...list].sort((a, b) => (a.fwPos ?? Infinity) - (b.fwPos ?? Infinity));
     else if (list.some((p) => p.ssPos !== undefined)) list = [...list].sort((a, b) => (a.ssPos ?? Infinity) - (b.ssPos ?? Infinity));
     return list;
-  }, [base, sel, onlineOnly, sort, pMin, pMax, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isTimepiecesPage, isPetitHPage, isHomeArtPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isTiesPage, isMensScarvesPage, isMenTiesParentPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isGiftWomenPage, isGiftMenPage, isGiftChildPage, isGiftDogsPage, isWatchWomenPage, isWatchMenPage, isHairPage]);
+  }, [base, sel, onlineOnly, sort, pMin, pMax, cat, sub, isMensRtwSub, isSlgParent, isSlgSub, isJewelryPage, isFashionJewelryPage, isHomePage, isWomensShoesPage, isMensShoesParentPage, isWomensScarvesPage, isWomensBeltsPage, isWomensDressesPage, isWomensBagsPage, isMensBagsPage, isWatchesPage, isTimepiecesPage, isPetitHPage, isHomeArtPage, isFragrancesPage, isBathPage, isWomensUniPage, isMensUniPage, isHermPage, isLipsPage, isFacePage, isEyesPage, isHandsPage, isAccPage, isMakeupPage, isFragViewPage, isCharmsPage, isTravAccPage, isSuitcasesPage, isTechPage, isLeatherAccPage, isLuggagePage, isWomensAccPage, isStrapsPage, isTiesPage, isMensScarvesPage, isMenTiesParentPage, isFurnPage, isTwillyPage, isChildPage, isBalletPage, isWondersPage, isPreciousPage, isCollectionsPage, isChainedAncrePage, isCasesPage, isOfficePage, isReadingPage, isObjectsPage, isTextilesPage, isSportsPage, isBeachPage, isEquestrianPage, isHorsePage, isRiderPage, isTablewarePage, isWomensRtwPage, isMensRtwPage, isGiftsPage, isGiftWomenPage, isGiftMenPage, isGiftChildPage, isGiftDogsPage, isWatchWomenPage, isWatchMenPage, isHairPage]);
   // How many of OUR products the staged draft selection would show — the
   // number in the drawer's "APPLY Update {N} products" button (§F).
   const draftCount = useMemo(() => filterList(dSel, dOnline, dPriceMin ?? priceLo, dPriceMax ?? priceHi).length, [base, dSel, dOnline, dPriceMin, dPriceMax, priceLo, priceHi]);
