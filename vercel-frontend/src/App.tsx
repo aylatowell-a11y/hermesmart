@@ -2635,6 +2635,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "colliers et pendentifs en argent": "Colliers et pendentifs",
     "l'equestre": "L'Equestre",
     "les fétiches": "Les Fétiches",
+    "chaînes d'ancre": "Chaînes d'ancre",
     "petit h": "petit h",
     "portefeuilles to go": "Portefeuilles To Go",
   };
@@ -2642,7 +2643,14 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // Gold Jewelry category (/jewelry/gold-jewelry/, H1 "Gold Jewelry");
   // the clone's jewelry parent page (cat "jewelry", no sub) shows
   // that listing, so its H1 is "Gold Jewelry", not "Jewelry".
-  const titleText = COLLECTION_TITLES_FR[subLow] ?? (sub ? titleCaseSub(sub) : catLabel(cat));
+  // France headings (live-verified 2026-11-21): the original's Parfums Femme/Homme
+  // pages are titled "L'Univers Femme"/"L'Univers Homme" and the parent page
+  // "Parfums et maquillage" (lowercase m). Cat-scoped here because "Femme"/"Homme"
+  // are also Montres/Bijouterie subs with plain titles.
+  const titleText = (cat === "parfums-et-maquillage" && subLow === "femme") ? "L'Univers Femme"
+    : (cat === "parfums-et-maquillage" && subLow === "homme") ? "L'Univers Homme"
+    : (cat === "parfums-et-maquillage" && !sub) ? "Parfums et maquillage"
+    : COLLECTION_TITLES_FR[subLow] ?? (sub ? titleCaseSub(sub) : catLabel(cat));
   const crumbTop = !sub ? "" : `${catLabel(cat).toUpperCase()} | ${titleText.toUpperCase()}`;
 
   // Sub-nav siblings — the row under the title, current one underlined,
