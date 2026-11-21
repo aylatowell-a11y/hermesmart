@@ -92,12 +92,12 @@ const MEGA_RAW: MegaEntry[] = [
     [{ heading: "CEINTURES", items: [] }, { heading: "CHAPEAUX ET GANTS", items: [] }],
     [{ heading: "ACCESSOIRES CHEVEUX", items: [] }],
   ]},
-  { key: "homme", label: "HOMME", caption: "Echarpes et carrés", tone: "#c8a97e", glyph: "🧥", img: "mensLeatherJacket", imgView: { t: "category", cat: "homme", sub: "Écharpes et carrés" }, columns: [
+  { key: "homme", label: "HOMME", caption: "Echarpes et carrés", tone: "#c8a97e", glyph: "🧥", img: "menSilk", imgView: { t: "category", cat: "homme", sub: "Écharpes et carrés" }, columns: [
     [{ heading: "PRÊT-À-PORTER", items: ["Collection automne-hiver 2026", "Manteaux et parkas", "Blousons et vestes", "Mailles", "Chemises", "T-shirts et sweat-shirts", "Pantalons et shorts", "Bain", "Défilé automne-hiver 2026"] }, { heading: "CHAUSSURES", items: ["Sneakers", "Sandales", "Mocassins et mules", "Derbies et richelieus", "Bottes et bottines", "Toute la collection"] }],
     [{ heading: "CRAVATES, ÉCHARPES ET CARRÉS", items: ["Cravates, nœuds papillons et pochettes", "Écharpes et carrés", "Expressions de soie"] }, { heading: "BIJOUTERIE FANTAISIE", items: [] }],
     [{ heading: "CEINTURES", items: [] }, { heading: "CHAPEAUX ET GANTS", items: [] }],
   ]},
-  { key: "maroquinerie", label: "MAROQUINERIE", caption: "Petite maroquinerie", tone: "#d97b36", glyph: "👜", img: "kelly", imgView: { t: "category", cat: "maroquinerie", sub: "Petite maroquinerie" }, columns: [
+  { key: "maroquinerie", label: "MAROQUINERIE", caption: "Petite maroquinerie", tone: "#d97b36", glyph: "👜", img: "leatherGoods", imgView: { t: "category", cat: "maroquinerie", sub: "Petite maroquinerie" }, columns: [
     [{ heading: "SACS ET POCHETTES", items: ["Sacs et pochettes femme", "Sacs et pochettes homme", "Toute la collection"] }],
     [{ heading: "PETITE MAROQUINERIE", items: ["Portefeuilles To Go", "Portefeuilles", "Porte-cartes", "Trousses et étuis", "Toute la collection"] }],
     [{ heading: "ACCESSOIRES", items: ["Accessoires de sac", "Bandoulières", "Lire et écrire"] }],
@@ -113,17 +113,17 @@ const MEGA_RAW: MegaEntry[] = [
     [{ heading: "", items: ["Nos collections", "Femme", "Homme", "Bracelets", "Watches & Wonders Geneva"] }],
     [{ heading: "APPLE WATCH HERMÈS", items: [] }],
   ]},
-  { key: "parfums-et-maquillage", label: "PARFUMS ET MAQUILLAGE", caption: "Collection Grigris d’Hermès", tone: "#dfb3ba", glyph: "◈", img: "muscPallida", imgView: { t: "category", cat: "parfums-et-maquillage", sub: "Maquillage" }, columns: [
+  { key: "parfums-et-maquillage", label: "PARFUMS ET MAQUILLAGE", caption: "Collection Grigris d’Hermès", tone: "#dfb3ba", glyph: "◈", img: "grigrisPortrait", imgView: { t: "category", cat: "parfums-et-maquillage", sub: "Maquillage" }, columns: [
     [{ heading: "PARFUMS", items: ["Hermessence", "Femme", "Homme", "Bain", "Toute la collection"] }],
     [{ heading: "MAQUILLAGE", items: ["Lèvres", "Teint", "Yeux", "Mains", "Accessoires", "Toute la collection"] }],
     [{ heading: "CADEAUX", items: ["Cadeaux", "Essayez virtuellement nos rouges à lèvres et vernis à ongles", "Trouvez votre teinte de fond de teint", "Trouvez votre parfum"] }],
   ]},
-  { key: "maison-art-de-vivre", label: "MAISON ET ART DE VIVRE", caption: "Art de la table", tone: "#d8cfc4", glyph: "▦", img: "avalonBlanket", imgView: { t: "category", cat: "maison-art-de-vivre", sub: "Art de la table" }, columns: [
+  { key: "maison-art-de-vivre", label: "MAISON ET ART DE VIVRE", caption: "Art de la table", tone: "#d8cfc4", glyph: "▦", img: "tableware", imgView: { t: "category", cat: "maison-art-de-vivre", sub: "Art de la table" }, columns: [
     [{ heading: "MAISON", items: ["Art de la table", "Plaids et textiles", "Objets", "Mobilier et luminaires", "Bureau et écriture", "Trousses et linge de toilette"] }, { heading: "ENFANT", items: [] }, { heading: "PLAGE", items: [] }],
     [{ heading: "SPORTS ET PLEIN AIR", items: [] }, { heading: "UNIVERS TECH", items: [] }],
     [{ heading: "ATELIERS HORIZONS", items: [] }, { heading: "PETIT H", items: [] }],
   ]},
-  { key: "equitation", label: "ÉQUITATION", caption: "Cheval", tone: "#a6703f", glyph: "♞", img: "saddleBridle", imgView: { t: "category", cat: "equitation", sub: "Cheval" }, columns: [
+  { key: "equitation", label: "ÉQUITATION", caption: "Cheval", tone: "#a6703f", glyph: "♞", img: "chevalMenu", imgView: { t: "category", cat: "equitation", sub: "Cheval" }, columns: [
     [{ heading: "SELLES", items: [] }, { heading: "CHEVAL", items: [] }, { heading: "CAVALIER", items: [] }],
   ]},
   { key: "cadeaux", label: "CADEAUX", caption: "Parfums", tone: "#7d8b6f", glyph: "🎁", img: "parfumHoliday", imgView: { t: "category", cat: "cadeaux" }, columns: [
@@ -145,16 +145,12 @@ function applyNavOverrides(overrides: NavOverrides): MegaEntry[] {
 // heroBenchImg (the former homepage hero photo, NOV_PHASE_1).
 // Real Hermes photos for the mega-menu slots (hotlinked, as the user
 // requires — NO AI-generated images anywhere on the storefront).
-// VERIFIED 2026-11-21: the original's menu thumbnails are the "L'hiver
-// sera conte" campaign stills — FEMME/BIJOUTERIE/MONTRES/CADEAUX now use
-// the exact stills (scene-matched against the live menu read; see the
-// MEGA_PHOTO_* constants). STILL STAND-INS (original URLs are not exposed
-// in the DOM — <img> src is a 1x1 placeholder, no background URL, no
-// DevTools in the cloud browser): HOMME (mustard scarf on tree trunk),
-// MAROQUINERIE (black wallet on mossy rocks), PARFUMS (Grigris portrait),
-// MAISON (coral plates on moss), ÉQUITATION (saddled horse, studio).
-// Their exact URLs need the owner's Chrome DevTools Network read
-// (F12 → Network → filter "hermesedito" → hover the menu).
+// VERIFIED 2026-11-21: ALL 9 menu thumbnails are now the original's exact
+// stills — FEMME/BIJOUTERIE/MONTRES/CADEAUX from the homepage content JSON
+// (scene-matched 12:07), HOMME/MAROQUINERIE/PARFUMS/MAISON/ÉQUITATION from
+// the owner's DevTools Network capture (undocked, desktop width, initiator
+// "Other" on hover; each scene viewed + matched 13:52). No stand-ins remain
+// in the mega-menu. A PROPOS has no image, as on the original.
 const MEGA_PHOTO_RUNWAY = "https://assets.hermes.com/is/image/hermesproduct/6H0113DAA3_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
 const MEGA_PHOTO_KELLY = "https://assets.hermes.com/is/image/hermesproduct/083189CCBQ_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
 // Mega-menu campaign stills (verified 2026-11-21): the original's menu
@@ -170,6 +166,22 @@ const MEGA_PHOTO_WOMEN_SHOES = "https://assets.hermes.com/is/image/hermesedito/W
 const MEGA_PHOTO_GOLD_JEWELRY = "https://assets.hermes.com/is/image/hermesedito/GOLD_JEWELRY_HOLIDAY_26_9X16?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 const MEGA_PHOTO_WATCH = "https://assets.hermes.com/is/image/hermesedito/WATCH_HOLIDAY_26_9X16?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 const MEGA_PHOTO_PARFUM = "https://assets.hermes.com/is/image/hermesedito/PARFUM_HOLIDAY_26_9X16?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+// Remaining 5 menu stills (verified 2026-11-21 13:52): captured from the
+// owner's own Chrome DevTools Network panel (undocked, desktop width,
+// initiator "Other" on menu hover) and each scene viewed + matched against
+// the live menu read before wiring — MEN_SILK = mustard scarf on a tree
+// trunk (HOMME), LEATHER_GOODS = black wallet with gold clasp on mossy rock
+// (MAROQUINERIE), GRIGRIS = portrait, hand to forehead (PARFUMS),
+// TABLEWARE = coral-pattern plates on moss mounds (MAISON),
+// Cheval_Menu = saddled bay horse, orange cloth, studio (ÉQUITATION).
+// GRIGRIS name has a literal space ("BEAUTE -1920x1080") — %20-encoded;
+// the first read added a phantom "-20" and 403'd, corrected from a zoomed
+// crop of the screenshot. All 5 URLs GET 200 as image/jpeg.
+const MEGA_PHOTO_MEN_SILK = "https://assets.hermes.com/is/image/hermesedito/MEN_SILK_HOLIDAY_26_16x9?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const MEGA_PHOTO_LEATHER_GOODS = "https://assets.hermes.com/is/image/hermesedito/LEATHER_GOODS_HOLIDAY_26_16x9?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const MEGA_PHOTO_GRIGRIS = "https://assets.hermes.com/is/image/hermesedito/LES%20GRIGRIS%20BEAUTE%20-1920x1080?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const MEGA_PHOTO_TABLEWARE = "https://assets.hermes.com/is/image/hermesedito/TABLEWARE_HOLIDAY_26_16x9?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const MEGA_PHOTO_CHEVAL = "https://assets.hermes.com/is/image/hermesedito/Cheval_Menu?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 function megaImage(e: MegaEntry): string {
   if (!e.img) return "";
   switch (e.img) {
@@ -179,6 +191,11 @@ function megaImage(e: MegaEntry): string {
     case "goldJewelry": return MEGA_PHOTO_GOLD_JEWELRY;
     case "watchHoliday": return MEGA_PHOTO_WATCH;
     case "parfumHoliday": return MEGA_PHOTO_PARFUM;
+    case "menSilk": return MEGA_PHOTO_MEN_SILK;
+    case "leatherGoods": return MEGA_PHOTO_LEATHER_GOODS;
+    case "grigrisPortrait": return MEGA_PHOTO_GRIGRIS;
+    case "tableware": return MEGA_PHOTO_TABLEWARE;
+    case "chevalMenu": return MEGA_PHOTO_CHEVAL;
     case "heroBench": return heroBenchImg;
     case "riderJacket": return riderJacketImg;
     case "mensLeatherJacket": return mensLeatherJacketImg;
