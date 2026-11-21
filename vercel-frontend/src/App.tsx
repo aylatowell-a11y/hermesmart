@@ -86,13 +86,13 @@ type MegaEntry = {
   columns: MegaSection[][];
 };
 const MEGA_RAW: MegaEntry[] = [
-  { key: "femme", label: "FEMME", caption: "CHAUSSURES FEMME", tone: "#e85d1f", glyph: "👗", img: "runway", imgView: { t: "category", cat: "femme", sub: "Chaussures" }, columns: [
+  { key: "femme", label: "FEMME", caption: "CHAUSSURES FEMME", tone: "#e85d1f", glyph: "👗", img: "womenShoes", imgView: { t: "category", cat: "femme", sub: "Chaussures" }, columns: [
     [{ heading: "PRÊT-À-PORTER", items: ["Collection automne-hiver 2026", "Collection printemps-été 2027", "Manteaux et vestes", "Cuir", "Robes et jupes", "Hauts et chemises", "Pantalons et shorts", "Mailles et twillaines", "T-shirts et sweat-shirts", "Bain", "Défilé printemps-été 2027", "Défilé automne-hiver 2026", "Automne-Hiver 2026, le second chapitre"] }, { heading: "CHAUSSURES", items: ["Sandales", "Sneakers", "Bottes et bottines", "Escarpins", "Mocassins et mules", "Ballerines", "Toute la collection"] }],
     [{ heading: "CARRÉS, CHÂLES ET ÉCHARPES", items: ["Carrés et accessoires de soie", "Châles et écharpes en cachemire", "Twillys et autres petits formats", "Toute la collection", "Comment nouer son carré", "Expressions de soie"] }, { heading: "BIJOUTERIE FANTAISIE", items: ["Bracelets", "Colliers et pendentifs", "Boucles d'oreilles", "Bagues", "Toute la collection"] }],
     [{ heading: "CEINTURES", items: [] }, { heading: "CHAPEAUX ET GANTS", items: [] }],
     [{ heading: "ACCESSOIRES CHEVEUX", items: [] }],
   ]},
-  { key: "homme", label: "HOMME", caption: "Écharpes et carrés", tone: "#c8a97e", glyph: "🧥", img: "mensLeatherJacket", imgView: { t: "category", cat: "homme", sub: "Écharpes et carrés" }, columns: [
+  { key: "homme", label: "HOMME", caption: "Echarpes et carrés", tone: "#c8a97e", glyph: "🧥", img: "mensLeatherJacket", imgView: { t: "category", cat: "homme", sub: "Écharpes et carrés" }, columns: [
     [{ heading: "PRÊT-À-PORTER", items: ["Collection automne-hiver 2026", "Manteaux et parkas", "Blousons et vestes", "Mailles", "Chemises", "T-shirts et sweat-shirts", "Pantalons et shorts", "Bain", "Défilé automne-hiver 2026"] }, { heading: "CHAUSSURES", items: ["Sneakers", "Sandales", "Mocassins et mules", "Derbies et richelieus", "Bottes et bottines", "Toute la collection"] }],
     [{ heading: "CRAVATES, ÉCHARPES ET CARRÉS", items: ["Cravates, nœuds papillons et pochettes", "Écharpes et carrés", "Expressions de soie"] }, { heading: "BIJOUTERIE FANTAISIE", items: [] }],
     [{ heading: "CEINTURES", items: [] }, { heading: "CHAPEAUX ET GANTS", items: [] }],
@@ -103,17 +103,17 @@ const MEGA_RAW: MegaEntry[] = [
     [{ heading: "ACCESSOIRES", items: ["Accessoires de sac", "Bandoulières", "Lire et écrire"] }],
     [{ heading: "VOYAGE", items: ["Valises et sacs de voyage", "Accessoires de voyage"] }],
   ]},
-  { key: "bijouterie", label: "BIJOUTERIE", caption: "Bijouterie en or", tone: "#b98a4a", glyph: "✦", img: "chaineNecklace", imgView: { t: "category", cat: "bijouterie", sub: "Bijoux en or" }, columns: [
+  { key: "bijouterie", label: "BIJOUTERIE", caption: "Bijouterie or", tone: "#b98a4a", glyph: "✦", img: "goldJewelry", imgView: { t: "category", cat: "bijouterie", sub: "Bijoux en or" }, columns: [
     [{ heading: "BIJOUX EN OR", items: ["Bagues", "Alliances", "Bracelets", "Colliers et pendentifs", "Bijoux d'oreilles", "Toute la collection"] }, { heading: "BIJOUX EN ARGENT", items: ["Bagues", "Bracelets", "Colliers et pendentifs", "Bijoux d'oreilles", "Toute la collection"] }],
     [{ heading: "COLLECTIONS", items: ["Kelly", "Chaînes d'ancre", "L'Equestre", "Les Fétiches", "Moments précieux"] }],
     [{ heading: "HOMME", items: [] }],
     [{ heading: "HAUTE BIJOUTERIE", items: [] }],
   ]},
-  { key: "montres", label: "MONTRES", caption: "Voir la catégorie Montres", tone: "#8a7a68", glyph: "⌚", img: "capeCod", imgView: { t: "category", cat: "montres" }, columns: [
+  { key: "montres", label: "MONTRES", caption: "Montres", tone: "#8a7a68", glyph: "⌚", img: "watchHoliday", imgView: { t: "category", cat: "montres" }, columns: [
     [{ heading: "", items: ["Nos collections", "Femme", "Homme", "Bracelets", "Watches & Wonders Geneva"] }],
     [{ heading: "APPLE WATCH HERMÈS", items: [] }],
   ]},
-  { key: "parfums-et-maquillage", label: "PARFUMS ET MAQUILLAGE", caption: "Collection Grigris", tone: "#dfb3ba", glyph: "◈", img: "muscPallida", imgView: { t: "category", cat: "parfums-et-maquillage", sub: "Maquillage" }, columns: [
+  { key: "parfums-et-maquillage", label: "PARFUMS ET MAQUILLAGE", caption: "Collection Grigris d’Hermès", tone: "#dfb3ba", glyph: "◈", img: "muscPallida", imgView: { t: "category", cat: "parfums-et-maquillage", sub: "Maquillage" }, columns: [
     [{ heading: "PARFUMS", items: ["Hermessence", "Femme", "Homme", "Bain", "Toute la collection"] }],
     [{ heading: "MAQUILLAGE", items: ["Lèvres", "Teint", "Yeux", "Mains", "Accessoires", "Toute la collection"] }],
     [{ heading: "CADEAUX", items: ["Cadeaux", "Essayez virtuellement nos rouges à lèvres et vernis à ongles", "Trouvez votre teinte de fond de teint", "Trouvez votre parfum"] }],
@@ -126,10 +126,10 @@ const MEGA_RAW: MegaEntry[] = [
   { key: "equitation", label: "ÉQUITATION", caption: "Cheval", tone: "#a6703f", glyph: "♞", img: "saddleBridle", imgView: { t: "category", cat: "equitation", sub: "Cheval" }, columns: [
     [{ heading: "SELLES", items: [] }, { heading: "CHEVAL", items: [] }, { heading: "CAVALIER", items: [] }],
   ]},
-  { key: "cadeaux", label: "CADEAUX", caption: "", tone: "#7d8b6f", glyph: "🎁", img: "scarfColliers", imgView: { t: "category", cat: "cadeaux" }, columns: [
+  { key: "cadeaux", label: "CADEAUX", caption: "Parfums", tone: "#7d8b6f", glyph: "🎁", img: "parfumHoliday", imgView: { t: "category", cat: "cadeaux" }, columns: [
     [{ heading: "", items: ["Parfums"] }, { heading: "CADEAUX POUR", items: ["Femme", "Homme", "Enfants", "Chien"] }],
   ]},
-  { key: "about", label: "A PROPOS D'HERMÈS", caption: "", tone: "#efe9df", glyph: "H", img: "heroBench", imgView: { t: "about" }, columns: [
+  { key: "about", label: "A PROPOS D'HERMÈS", caption: "", tone: "#efe9df", glyph: "H", img: "", imgView: { t: "about" }, columns: [
     [{ heading: "", items: ["ARTISAN CONTEMPORAIN DEPUIS 1837", "FINANCE & GOUVERNANCE", "REJOINDRE HERMÈS", "DÉVELOPPEMENT DURABLE"] }],
   ]},
 ];
@@ -144,20 +144,41 @@ function applyNavOverrides(overrides: NavOverrides): MegaEntry[] {
 // on each MEGA_RAW entry selects its photo; anything unknown falls back to
 // heroBenchImg (the former homepage hero photo, NOV_PHASE_1).
 // Real Hermes photos for the mega-menu slots (hotlinked, as the user
-// requires — NO AI-generated images anywhere on the storefront). The
-// original's WOMEN menu photo is the SS27 runway show and its LEATHER
-// menu photo is "Bags and clutches" (a woman running with bags); neither
-// exposes its image URL in the browser (lazy-load placeholder), so these
-// slots use real Hermes product photos instead: the Cashmere coat worn
-// photo for WOMEN, the Picotin Lock 18 bag for LEATHER. The exact
-// editorial stills are a follow-up once their URLs are captured from a
-// desktop browser's Network panel.
+// requires — NO AI-generated images anywhere on the storefront).
+// VERIFIED 2026-11-21: the original's menu thumbnails are the "L'hiver
+// sera conte" campaign stills — FEMME/BIJOUTERIE/MONTRES/CADEAUX now use
+// the exact stills (scene-matched against the live menu read; see the
+// MEGA_PHOTO_* constants). STILL STAND-INS (original URLs are not exposed
+// in the DOM — <img> src is a 1x1 placeholder, no background URL, no
+// DevTools in the cloud browser): HOMME (mustard scarf on tree trunk),
+// MAROQUINERIE (black wallet on mossy rocks), PARFUMS (Grigris portrait),
+// MAISON (coral plates on moss), ÉQUITATION (saddled horse, studio).
+// Their exact URLs need the owner's Chrome DevTools Network read
+// (F12 → Network → filter "hermesedito" → hover the menu).
 const MEGA_PHOTO_RUNWAY = "https://assets.hermes.com/is/image/hermesproduct/6H0113DAA3_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
 const MEGA_PHOTO_KELLY = "https://assets.hermes.com/is/image/hermesproduct/083189CCBQ_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+// Mega-menu campaign stills (verified 2026-11-21): the original's menu
+// thumbnails ARE the "L'hiver sera conte" campaign stills from the France
+// homepage content JSON (id 403686) — each scene was viewed and matched
+// against the live menu read before wiring: WOMEN_SHOES = burgundy heels
+// on mossy rocks (FEMME), GOLD_JEWELRY = gold rings on a frosty branch
+// (BIJOUTERIE), WATCH = steel watch on a pine branch (MONTRES),
+// PARFUM = Musc Pallida bottle on mossy rock (CADEAUX). Bare asset URLs
+// HEAD/GET 200 as image/jpeg; wid=800 params are the site's own Scene7
+// sizing pattern used by the other editorial constants in this file.
+const MEGA_PHOTO_WOMEN_SHOES = "https://assets.hermes.com/is/image/hermesedito/WOMEN_SHOES_HOLIDAY_26_9X16?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const MEGA_PHOTO_GOLD_JEWELRY = "https://assets.hermes.com/is/image/hermesedito/GOLD_JEWELRY_HOLIDAY_26_9X16?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const MEGA_PHOTO_WATCH = "https://assets.hermes.com/is/image/hermesedito/WATCH_HOLIDAY_26_9X16?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const MEGA_PHOTO_PARFUM = "https://assets.hermes.com/is/image/hermesedito/PARFUM_HOLIDAY_26_9X16?fit=wrap%2C0&wid=800&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 function megaImage(e: MegaEntry): string {
+  if (!e.img) return "";
   switch (e.img) {
     case "kelly": return MEGA_PHOTO_KELLY;
     case "runway": return MEGA_PHOTO_RUNWAY;
+    case "womenShoes": return MEGA_PHOTO_WOMEN_SHOES;
+    case "goldJewelry": return MEGA_PHOTO_GOLD_JEWELRY;
+    case "watchHoliday": return MEGA_PHOTO_WATCH;
+    case "parfumHoliday": return MEGA_PHOTO_PARFUM;
     case "heroBench": return heroBenchImg;
     case "riderJacket": return riderJacketImg;
     case "mensLeatherJacket": return mensLeatherJacketImg;
@@ -1471,10 +1492,12 @@ export function App() {
           {menuCat && (() => { const entry = mega.find(e => e.key === menuCat); if (!entry) return null; const cols = entry.columns; return (
             <div className="absolute inset-x-0 top-full z-50 border-t border-[#f6f1eb] bg-[#fffcf7]" role="menu" aria-label={`${entry.label} mega menu`} onMouseEnter={() => setMenuCat(entry.key)}>
               <div className="mx-auto flex max-w-7xl gap-10 px-6 py-8">
-                <button aria-label={`${entry.label} ${entry.caption}`} className="relative block h-[340px] w-[260px] shrink-0 overflow-hidden text-left" onClick={() => go(entry.imgView)}>
+                {entry.img ? (
+                <button aria-label={`${entry.label} ${entry.caption}`} className="relative block h-[146px] w-[260px] shrink-0 overflow-hidden text-left" onClick={() => go(entry.imgView)}>
                   <img src={megaImage(entry)} alt={entry.caption} className="h-full w-full object-cover" />
                   <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-4 pb-4 pt-10 text-[13px] font-bold uppercase leading-snug tracking-wide text-white">{entry.caption}</span>
                 </button>
+                ) : null}
                 <div className="flex flex-1 gap-10 overflow-x-auto">
                   {cols.map((col, ci) => (
                     <div key={ci} className="min-w-[170px] space-y-7">
