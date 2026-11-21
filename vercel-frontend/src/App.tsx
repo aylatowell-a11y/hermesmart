@@ -57,7 +57,7 @@ import scarfColliersImg from "./assets/products/scarf-90-colliers.webp";
 import { fileToBase64 } from "./fileToBase64";
 import { productImageFor } from "./productImages";
 import { galleryForProduct, hiResHermes } from "./galleryImages";
-import { accountUrl, bespokeUrl, categoryUrl, contactUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
+import { accountUrl, bespokeUrl, categoryUrl, contactUrl, defileUrl, parseUrl, productRefFromPath, productUrl } from "./routing";
 
 type Product = ApiResponse<typeof api, "getStorefront">["products"][number];
 type Settings = ApiResponse<typeof api, "getStorefront">["settings"];
@@ -126,7 +126,7 @@ const MEGA_RAW: MegaEntry[] = [
   { key: "equitation", label: "ÉQUITATION", caption: "Cheval", tone: "#a6703f", glyph: "♞", img: "chevalMenu", imgView: { t: "category", cat: "equitation", sub: "Cheval" }, columns: [
     [{ heading: "SELLES", items: [] }, { heading: "CHEVAL", items: [] }, { heading: "CAVALIER", items: [] }],
   ]},
-  { key: "cadeaux", label: "CADEAUX", caption: "Parfums", tone: "#7d8b6f", glyph: "🎁", img: "parfumHoliday", imgView: { t: "category", cat: "cadeaux" }, columns: [
+  { key: "cadeaux", label: "CADEAUX", caption: "Parfums", tone: "#7d8b6f", glyph: "🎁", img: "parfumHoliday", imgView: { t: "category", cat: "parfums-et-maquillage", sub: "Parfums" }, columns: [
     [{ heading: "", items: ["Parfums"] }, { heading: "CADEAUX POUR", items: ["Femme", "Homme", "Enfants", "Chien"] }],
   ]},
   { key: "about", label: "A PROPOS D'HERMÈS", caption: "", tone: "#efe9df", glyph: "H", img: "", imgView: { t: "about" }, columns: [
@@ -235,10 +235,10 @@ const FR_MENU_EXTERNAL: Record<string, string> = {
 // karo sab"): the 7 menu items below used to render as grey plain text
 // (FR_MENU_UNLINKED) because the original returns 404 or loads no
 // products for them. The owner wants them exactly like the original —
-// black links like every other item. So they now fall through to the
-// normal category target; their pages render the clone's existing
-// "We're sorry. These items are no longer available." message, which
-// matches the original's own "ces articles ne sont plus disponibles".
+// black links like every other item. They now have real destinations:
+// the 4 collection items open their year-less collection pages (2026-11-21
+// collections fix, head b7ec787) and the 3 Défilé items open in-app
+// editorial pages (DEFILE_PAGES, 2026-11-21 audit fix).
 // (femme: Collection automne-hiver 2026, Collection printemps-été 2027,
 // T-shirts et sweat-shirts, Défilé printemps-été 2027,
 // Défilé automne-hiver 2026, Automne-Hiver 2026 le second chapitre;
@@ -320,20 +320,33 @@ function frMenuTarget(entry: MegaEntry, overrides: NavOverrides, heading: string
     const txt = item || heading;
     if (txt.includes("Finance")) return { t: "external", url: "https://finance.hermes.com" };
     if (txt.includes("Rejoindre")) return { t: "external", url: "https://talents.hermes.com" };
-    if (txt.includes("Développement durable")) return { t: "page", page: "sustainability" };
+    if (txt.toLowerCase().includes("développement durable")) return { t: "page", page: "sustainability" };
     return { t: "about" };
   }
+  // FR_HEADING_PAGE keys are 2-part `${parentKey}|${heading}` (see the map
+  // above) — the shared `key` here is 3-part, so these two lookups MUST
+  // use the 2-part headingKey, not `key` (2026-11-21 audit: using `key`
+  // never matched and every heading / "Toute la collection" click fell
+  // through to the parent page).
+  const headingKey = `${entry.key}|${heading}`;
   if (item === undefined) {
     if (heading === "SELLES") return { t: "page", page: "bespoke-equestrian" };
-    const pageSub = FR_HEADING_PAGE[key];
+    const pageSub = FR_HEADING_PAGE[headingKey];
     if (pageSub !== undefined) return { t: "category", cat: dest, sub: pageSub };
     return { t: "category", cat: dest };
   }
   if (item === "Toute la collection") {
-    const pageSub = FR_HEADING_PAGE[key];
+    const pageSub = FR_HEADING_PAGE[headingKey];
     if (pageSub !== undefined) return { t: "category", cat: dest, sub: pageSub };
     return { t: "category", cat: dest };
   }
+  // Femme Défilé editorial pages (in-app, 2026-11-21 audit fix): the
+  // original's Défilé pages are content pages, not product listings.
+  // (Homme Défilé is caught above by FR_MENU_EXTERNAL — external to
+  // content/344007 — and is left alone.)
+  if (entry.key === "femme" && item === "Défilé printemps-été 2027") return { t: "page", page: "defile-femme-pe2027" };
+  if (entry.key === "femme" && item === "Défilé automne-hiver 2026") return { t: "page", page: "defile-femme-ah2026" };
+  if (entry.key === "femme" && item === "Automne-Hiver 2026, le second chapitre") return { t: "page", page: "defile-femme-ah2026-chapitre2" };
   if (item === "Comment nouer son carré") return { t: "page", page: "guides" };
   const override = FR_ITEM_SUB[key];
   if (override) return override;
@@ -1086,6 +1099,7 @@ export function App() {
     if (parsed && parsed.kind === "account") return { view: { t: "account" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "cart") return { view: { t: "cart" } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "bespoke") return { view: { t: "page", page: "bespoke-equestrian" } as View, productRef: null as string | null };
+    if (parsed && parsed.kind === "defile") return { view: { t: "page", page: parsed.page } as View, productRef: null as string | null };
     if (parsed && parsed.kind === "faq") return { view: { t: "faq", topic: parsed.topic } as View, productRef: null as string | null };
     // routing.ts only parses the payment FAQ topic; every other FAQ topic
     // (and the /fr/fr/faq/ landing) is resolved here from the path.
@@ -1319,7 +1333,7 @@ export function App() {
     // about) stay unrouted. The cart IS routed — the original's cart is
     // a full page at /fr/fr/cart/, and without its own history entry
     // browser Back from the cart skipped the product page entirely.
-    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "page" && v.page === "bespoke-equestrian" ? bespokeUrl() : v.t === "account" ? accountUrl() : v.t === "cart" ? "/fr/fr/cart/" : v.t === "faq" ? faqPath(v.topic) : null;
+    const url = v.t === "home" ? "/" : v.t === "category" ? categoryUrl(v.cat, v.sub) : v.t === "product" ? (() => { const pr = products.find((x) => x.id === v.id); return pr ? productUrl(pr.name, pr.refCode, pr.id) : null; })() : v.t === "page" && v.page === "contact" ? contactUrl() : v.t === "page" && v.page === "bespoke-equestrian" ? bespokeUrl() : v.t === "page" ? defileUrl(v.page) : v.t === "account" ? accountUrl() : v.t === "cart" ? "/fr/fr/cart/" : v.t === "faq" ? faqPath(v.topic) : null;
     if (url) { try { window.history.pushState(null, "", url); } catch { /* ignore */ } }
     if (v.t === "category" && !opts?.restore) pulse(2200);
     setView(v); setMobileNav(false); setMenuCat(null);
@@ -1379,6 +1393,12 @@ export function App() {
       if (parsed.kind === "bespoke") {
         if (cur.t === "category") saveCatState(cur);
         setView({ t: "page", page: "bespoke-equestrian" }); setMobileNav(false); setMenuCat(null);
+        window.scrollTo({ top: 0 });
+        return;
+      }
+      if (parsed.kind === "defile") {
+        if (cur.t === "category") saveCatState(cur);
+        setView({ t: "page", page: parsed.page }); setMobileNav(false); setMenuCat(null);
         window.scrollTo({ top: 0 });
         return;
       }
@@ -7663,6 +7683,55 @@ function BespokeHero() {
   );
 }
 
+// Femme Défilé editorial pages (in-app, 2026-11-21 audit fix), modeled on
+// the bespoke-equestrian page: title + intro + sections + credits, all copy
+// verbatim from the original's /content/ pages (read via text fetch
+// 2026-11-21). NOT rendered: the show film ("Revivez le défilé") and the
+// highlighted images — their URLs appear in neither the text fetch nor the
+// server-rendered copy; do not guess them (same rule as the bespoke
+// workshop carousel). The text fetch concatenates credit role labels and
+// names ("MusiqueFilippo Fior"); the separators below restore the obvious
+// spacing only — no words added or changed.
+const DEFILE_PAGES: Record<string, { title: string; intro: string[]; sections: { heading: string; body: string[] }[]; credits?: string }> = {
+  "defile-femme-pe2027": {
+    title: "Défilé femme printemps-été 2027",
+    intro: [
+      "La scène se déroule en extérieur, au plus fort de l’été. Le motif de l’éventail revient, encore et encore, insuffler du mouvement. Une brise se glisse entre la peau et le tissu. Sensuelle et assurée, elle traverse la chaleur avec une légèreté insoupçonnée.",
+      "Une garde-robe légère, superposée. Les fermetures éclair modifient le drapé d’une jupe en charmeuse de soie, non sans rappeler les mouvements d’un éventail. Une parka en pongé se gonfle comme un parachute. De fines bandes de cuir sont méticuleusement brodées sur le mesh.",
+    ],
+    sections: [
+      { heading: "Beauté", body: ["Hermès explore la légèreté et l’apesanteur dans une expression aérienne de la beauté. Diaphane et satinée, la peau semble immatérielle. Les sourcils, sauvages et affirmés, structurent le visage. Un voile de poudre de soie blanche capte la lumière sur les paupières quand un rose frais vivifie les lèvres."] },
+    ],
+    credits: "BK France – Film Studio Frédéric Sanchez – Musique Filippo Fior – Photographie runway Salvadore Dragone et Gianluca Carraro – Photographie détails Thue Nørgaard – Photographie ambiance Zoé Joubert – Photographie ambiance Virgile Guinard – Photographie Backstage",
+  },
+  "defile-femme-ah2026": {
+    title: "Défilé femme automne-hiver 2026",
+    intro: [],
+    sections: [
+      { heading: "Revivez le défilé", body: [
+        "Au crépuscule, la perception s’altère et les sens s’aiguisent. Une silhouette ciselée émerge entre les ombres et les lumières. Elle avance, sensuelle, confiante, et ouvre un nouveau regard sur le monde.",
+        "La collection emprunte les variations du clair-obscur. Les matières se métamorphosent à la lumière. Le vêtement dévoile ses lignes au gré des teintes qui se révèlent, tons chauds des derniers rayons de soleil et reflets du clair de lune.",
+        "Un vestiaire dynamique. Le tailleur libère le mouvement, le jodhpur donne de l’élan, la silhouette structurée dessine un subtil trapèze.",
+      ] },
+      { heading: "Beauté", body: ["Les yeux deviennent un espace de profondeur et de vibration. Au crépuscule, la lumière s’efface et les couleurs se transforment. Le maquillage se décline en intensités, suivant le passage du jour à la nuit. Le regard se fait paysage nocturne, profond et captivant."] },
+    ],
+  },
+  "defile-femme-ah2026-chapitre2": {
+    title: "Défilé femme automne-hiver 2026 — Le second chapitre",
+    intro: [],
+    sections: [
+      { heading: "Revivez le défilé", body: [
+        "Au soleil couchant, un pavillon se transforme en scène lumineuse à Los Angeles. La collection et la danse se rencontrent à travers des gestes perfectionnés par le temps.",
+        "Les lignes nettes contrastent avec les drapés et les constructions fluides, expressions d’une féminité aux multiples facettes dans un dialogue entre structure et flou, entre tension et liberté.",
+        "Une silhouette en transformation. La soie, le satin et le velours apportent légèreté, mouvement et grâce, en contraste avec la précision ciselée du cuir, tandis que les couleurs profondes de la nuit viennent sublimer l’éclat des nuances précieuses.",
+      ] },
+      { heading: "Beauté", body: ["Deux maquillages, pour deux évocations de la beauté d’une danseuse : pendant la répétition, et après la représentation. Le blush vient sublimer l’éclat naturel de son corps vibrant d’énergie. Le regard se fait quant à lui plus intense, traduisant le sentiment d’accomplissement qu’elle ressent après la performance."] },
+      { heading: "L’atmosphère", body: ["À la faveur du crépuscule, un jaune flave intense inonde le décor atmosphérique, effaçant toute frontière entre la scène et le paysage. Sur cette toile de fond panoramique, les silhouettes déambulent entre répétition et représentation, entre réalité et rêverie."] },
+    ],
+    credits: "Studio BK – Vidéo Studio Frédéric Sanchez – Musique Filippo Fior – Photographie défilé Salvatore Dragone et Gianluca Carraro – Photographie détails Max Farago – Photographie d’ambiance Justin Leveritt – Photographie d’ambiance Vincent Tullo – Photographie décor",
+  },
+};
+
 function InfoPage({ page, settings, go, user }: { page: string; settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; user: { name: string; email: string } | null }) {
   if (page === "sitemap") {
     return (
@@ -7791,6 +7860,33 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+  const defile = DEFILE_PAGES[page];
+  if (defile) {
+    // Femme Défilé editorial page — same layout as the bespoke page
+    // (back button, centred serif headings, "Découvrez l’univers Femme"
+    // link to the Femme parent). No film / highlighted images: their URLs
+    // are not in the text fetch — see DEFILE_PAGES.
+    const back = () => { if (window.history.length > 1) window.history.back(); else go({ t: "home" }); };
+    return (
+      <div className="mx-auto px-4 py-6 sm:py-8">
+        <div className="mx-auto w-full max-w-[1280px]">
+          <button aria-label="Back" className="font-mono-d mb-4 text-xs font-medium uppercase tracking-[0.15em] text-black" onClick={back}>← BACK</button>
+          <div className="mx-auto mt-12 max-w-3xl text-center">
+            <h1 className="font-serif-d text-3xl italic">{defile.title}</h1>
+            {defile.intro.map((p, i) => <p key={i} className="mt-4 text-sm leading-7 text-neutral-700">{p}</p>)}
+          </div>
+          {defile.sections.map((s) => (
+            <div key={s.heading} className="mx-auto mt-16 max-w-3xl text-center">
+              <h2 className="font-serif-d text-2xl italic">{s.heading}</h2>
+              {s.body.map((p, i) => <p key={i} className="mt-4 text-sm leading-7 text-neutral-700">{p}</p>)}
+            </div>
+          ))}
+          {defile.credits ? <p className="mx-auto mt-16 max-w-3xl text-center text-xs leading-6 text-neutral-500">{defile.credits}</p> : null}
+          <p className="mt-12 text-center"><button aria-label="Découvrez l’univers Femme" className="font-mono-d text-xs font-medium uppercase tracking-[0.15em] underline underline-offset-4" onClick={() => go({ t: "category", cat: "femme" })}>Découvrez l’univers Femme</button></p>
         </div>
       </div>
     );
