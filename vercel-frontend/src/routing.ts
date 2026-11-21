@@ -25,7 +25,8 @@ export type ParsedRoute =
   | { kind: "contact" }
   | { kind: "account" }
   | { kind: "cart" }
-  | { kind: "bespoke" };
+  | { kind: "bespoke" }
+  | { kind: "defile"; page: string };
 
 export function slugify(s: string): string {
   return s
@@ -318,6 +319,16 @@ export function bespokeUrl(): string {
   return "/fr/fr/content/329243-sur-mesure-equitation/";
 }
 
+// The original's Femme Défilé editorial pages (hermes.com/fr/fr), built
+// in-app (2026-11-21 audit fix): the three Femme Défilé menu items link
+// here, not to product listings. Returns null for any other page key.
+export function defileUrl(page: string): string | null {
+  if (page === "defile-femme-pe2027") return "/fr/fr/content/402900-defile-femme-printemps-ete/";
+  if (page === "defile-femme-ah2026") return "/fr/fr/content/345618-defile-femme-automne-hiver-2026/";
+  if (page === "defile-femme-ah2026-chapitre2") return "/fr/fr/content/401282-defile-femme-automne-hiver-chapitre2/";
+  return null;
+}
+
 // The account page URL — a direct load of /fr/fr/account/ renders the
 // account view.
 export function accountUrl(): string {
@@ -384,6 +395,9 @@ export function parseUrl(
   if (clean === "contact-us") return { kind: "contact" };
   if (clean === "account") return { kind: "account" };
   if (clean === "content/329243-sur-mesure-equitation" || clean === "content/344534-bespoke-equestrian") return { kind: "bespoke" };
+  if (clean === "content/402900-defile-femme-printemps-ete") return { kind: "defile", page: "defile-femme-pe2027" };
+  if (clean === "content/345618-defile-femme-automne-hiver-2026") return { kind: "defile", page: "defile-femme-ah2026" };
+  if (clean === "content/401282-defile-femme-automne-hiver-chapitre2") return { kind: "defile", page: "defile-femme-ah2026-chapitre2" };
   // The cart is a full page on the original (/fr/fr/cart/) — routed so
   // browser Back from it returns to the page the user came from.
   if (clean === "cart") return { kind: "cart" };
@@ -411,6 +425,12 @@ export function parseUrl(
     const rest = clean.slice("category/".length);
     const known = REVERSE_PATHS[rest];
     if (known) return { kind: "category", cat: known.cat, sub: known.sub };
+    // Superseded URL (live-confirmed 2026-11-21: the original 404s
+    // /fr/fr/category/parfums-et-maquillage/parfums/; the real Parfums
+    // page is /fr/fr/category/parfums/). Same pattern as the collections
+    // fix's old year-suffixed URLs: fall back to the parent instead of
+    // rendering the sub (the slug below would otherwise match "Parfums").
+    if (rest === "parfums-et-maquillage/parfums") return { kind: "category", cat: "parfums-et-maquillage" };
     const segs = rest.split("/").filter(Boolean);
     const first = segs[0] ?? "";
     // Legacy /us/en/ deep link: map the top section to its France parent.
