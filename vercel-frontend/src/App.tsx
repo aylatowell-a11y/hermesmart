@@ -396,6 +396,31 @@ const HOMME_PAP_SIBS: { label: string; sub: string }[] = [
   { label: "Bain", sub: "Bain" },
 ];
 
+// France Bijouterie Collections + Parfums-section sibling sub-nav
+// (2026-11-21, Bijouterie + Parfums build): on the original, a
+// COLLECTIONS page shows only its own section's siblings — no "View
+// all", no parent-wide list (same pattern as the Prêt-à-porter pages,
+// and as the US original's Jewelry Collections sub-nav, SSR
+// 2026-11-17: Kelly / Chaînes d'ancre / Equestrian / The Wonders /
+// Precious moments, no "View all"). The extraction lists carry NO
+// sub-nav evidence — this is pattern-based; confirm on the live
+// original. `label` is the original's sub-nav word; `sub` is the
+// canonical menu-case value.
+const BIJOUTERIE_COLLECTIONS_SIBS: { label: string; sub: string }[] = [
+  { label: "Kelly", sub: "Kelly" },
+  { label: "Chaînes d'ancre", sub: "Chaînes d'ancre" },
+  { label: "L'Equestre", sub: "L'Equestre" },
+  { label: "Les Fétiches", sub: "Les Fétiches" },
+  { label: "Moments précieux", sub: "Moments précieux" },
+];
+const PARFUMS_SECTION_SIBS: { label: string; sub: string }[] = [
+  { label: "Hermessence", sub: "Hermessence" },
+  { label: "Femme", sub: "Femme" },
+  { label: "Homme", sub: "Homme" },
+  { label: "Bain", sub: "Bain" },
+  { label: "Parfums", sub: "Parfums" },
+];
+
 const CAT_LABELS: Record<string, string> = {
   "femme": "Femme",
   "homme": "Homme",
@@ -436,11 +461,11 @@ const frAny = (...fields: string[]) => (p: Product) => fields.some((f) => frPos(
 
 // France page -> position field(s), keyed `${cat}|${sub.toLowerCase()}`.
 // Single-field pages sort by that field; union ("Toute la collection")
-// pages concatenate their child fields in menu order; the Collections
+// pages concatenate their child fields in menu order. The Collections
 // pages (Kelly, Chaînes d'ancre, L'Equestre, Les Fétiches, Moments
-// précieux) and Hermessence have no field yet and sort in catalogue
-// order (name-substring syn, Stage B approximation — needs the real
-// extraction, see STAGE-B-REMAINDER.md G8).
+// précieux), Hermessence and Parfums now have real extracted fields
+// (2026-11-21, Bijouterie + Parfums build) — no Stage B approximation
+// remains for them.
 const FR_PAGE_FIELDS: Record<string, string[]> = {
   "femme|": ["frFemmeParentPos"],
   "homme|": ["frHommeParentPos"],
@@ -523,22 +548,22 @@ const FR_PAGE_FIELDS: Record<string, string[]> = {
   "bijouterie|colliers et pendentifs en argent": ["frBijouterieBijouxEnArgentColliersEtPendentifsPos"],
   "bijouterie|bijoux d'oreilles en argent": ["frBijouterieBijouxEnArgentBijouxDOreillesPos"],
   "bijouterie|bijoux en argent": ["frBijouterieBijouxEnArgentBaguesPos", "frBijouterieBijouxEnArgentBraceletsPos", "frBijouterieBijouxEnArgentColliersEtPendentifsPos", "frBijouterieBijouxEnArgentBijouxDOreillesPos"],
-  "bijouterie|kelly": [],
-  "bijouterie|chaînes d'ancre": [],
-  "bijouterie|l'equestre": [],
-  "bijouterie|les fétiches": [],
-  "bijouterie|moments précieux": [],
+      "bijouterie|kelly": ["frBijouterieKellyPos"],
+      "bijouterie|chaînes d'ancre": ["frBijouterieChaineAncrePos"],
+      "bijouterie|l'equestre": ["frBijouterieLEquestrePos"],
+      "bijouterie|les fétiches": ["frBijouterieLesFetichesPos"],
+      "bijouterie|moments précieux": ["frBijouterieMomentsPrecieuxPos"],
   "bijouterie|homme": ["frBijouterieHommePos"],
   "montres|femme": ["frMontresFemmePos"],
   "montres|homme": ["frMontresHommePos"],
   "montres|bracelets": ["frMontresBraceletsPos"],
   "montres|apple watch hermès": ["frMontresAppleWatchHermesPos"],
   "parfums-et-maquillage|maquillage": ["frMaquillageLevresPos", "frMaquillageTeintPos", "frMaquillageYeuxPos", "frMaquillageMainsPos", "frMaquillageAccessoiresPos"],
-  "parfums-et-maquillage|hermessence": [],
+      "parfums-et-maquillage|hermessence": ["frParfumsHermessencePos"],
   "parfums-et-maquillage|femme": ["frParfumsFemmePos"],
   "parfums-et-maquillage|homme": ["frParfumsHommePos"],
   "parfums-et-maquillage|bain": ["frParfumsLArtDeVivrePos"],
-  "parfums-et-maquillage|parfums": ["frParfumsFemmePos", "frParfumsHommePos", "frParfumsLArtDeVivrePos"],
+      "parfums-et-maquillage|parfums": ["frParfumsPos"],
   "parfums-et-maquillage|lèvres": ["frMaquillageLevresPos"],
   "parfums-et-maquillage|teint": ["frMaquillageTeintPos"],
   "parfums-et-maquillage|yeux": ["frMaquillageYeuxPos"],
@@ -2354,11 +2379,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // `${cat}|${sub.toLowerCase()}`. Predicates are FIELD-ONLY — a syn
     // never category-gates (the SYN CATEGORY-GATE TRAP: rows span
     // categories). The Collections pages (Kelly, Chaînes d'ancre,
-    // L'Equestre, Les Fétiches, Moments précieux) and Hermessence
-    // have no extracted position field yet; their predicates match the
-    // collection name in the product name/line, scoped to the parent
-    // category, and are marked approximations (see STAGE-B-REMAINDER.md
-    // G8) — they must be replaced by field predicates once extracted.
+    // L'Equestre, Les Fétiches, Moments précieux), Hermessence and
+    // Parfums now use real extracted position fields (2026-11-21,
+    // Bijouterie + Parfums build) — no Stage B approximation remains
+    // for them.
     const syn: Record<string, (p: Product) => boolean> = {
     "femme|chaussures": frAny("frFemmeSandalesPos", "frFemmeSneakersPos", "frFemmeBottesEtBottinesPos", "frFemmeEscarpinsPos", "frFemmeMocassinsEtMulesPos", "frFemmeBallerinesPos"),
     "femme|collection automne-hiver 2026": frHas("frFemmeCollAHPos"),
@@ -2432,28 +2456,22 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "bijouterie|colliers et pendentifs en argent": frHas("frBijouterieBijouxEnArgentColliersEtPendentifsPos"),
     "bijouterie|bijoux d'oreilles en argent": frHas("frBijouterieBijouxEnArgentBijouxDOreillesPos"),
     "bijouterie|bijoux en argent": frAny("frBijouterieBijouxEnArgentBaguesPos", "frBijouterieBijouxEnArgentBraceletsPos", "frBijouterieBijouxEnArgentColliersEtPendentifsPos", "frBijouterieBijouxEnArgentBijouxDOreillesPos"),
-    // Approximation (G8): no extracted field yet.
-    "bijouterie|kelly": (p) => p.category === "bijouterie" && (/bijouterie/i.test(p.name) || /bijouterie/i.test(p.line ?? "")),
-    // Approximation (G8): no extracted field yet.
-    "bijouterie|chaînes d'ancre": (p) => p.category === "bijouterie" && (/bijouterie/i.test(p.name) || /bijouterie/i.test(p.line ?? "")),
-    // Approximation (G8): no extracted field yet.
-    "bijouterie|l'equestre": (p) => p.category === "bijouterie" && (/bijouterie/i.test(p.name) || /bijouterie/i.test(p.line ?? "")),
-    // Approximation (G8): no extracted field yet.
-    "bijouterie|les fétiches": (p) => p.category === "bijouterie" && (/bijouterie/i.test(p.name) || /bijouterie/i.test(p.line ?? "")),
-    // Approximation (G8): no extracted field yet.
-    "bijouterie|moments précieux": (p) => p.category === "bijouterie" && (/bijouterie/i.test(p.name) || /bijouterie/i.test(p.line ?? "")),
+      "bijouterie|kelly": frHas("frBijouterieKellyPos"),
+      "bijouterie|chaînes d'ancre": frHas("frBijouterieChaineAncrePos"),
+      "bijouterie|l'equestre": frHas("frBijouterieLEquestrePos"),
+      "bijouterie|les fétiches": frHas("frBijouterieLesFetichesPos"),
+      "bijouterie|moments précieux": frHas("frBijouterieMomentsPrecieuxPos"),
     "bijouterie|homme": frHas("frBijouterieHommePos"),
     "montres|femme": frHas("frMontresFemmePos"),
     "montres|homme": frHas("frMontresHommePos"),
     "montres|bracelets": frHas("frMontresBraceletsPos"),
     "montres|apple watch hermès": frHas("frMontresAppleWatchHermesPos"),
     "parfums-et-maquillage|maquillage": frAny("frMaquillageLevresPos", "frMaquillageTeintPos", "frMaquillageYeuxPos", "frMaquillageMainsPos", "frMaquillageAccessoiresPos"),
-    // Approximation (G8): no extracted field yet.
-    "parfums-et-maquillage|hermessence": (p) => p.category === "parfums-et-maquillage" && (/parfums-et-maquillage/i.test(p.name) || /parfums-et-maquillage/i.test(p.line ?? "")),
+      "parfums-et-maquillage|hermessence": frHas("frParfumsHermessencePos"),
     "parfums-et-maquillage|femme": frHas("frParfumsFemmePos"),
     "parfums-et-maquillage|homme": frHas("frParfumsHommePos"),
     "parfums-et-maquillage|bain": frHas("frParfumsLArtDeVivrePos"),
-    "parfums-et-maquillage|parfums": frAny("frParfumsFemmePos", "frParfumsHommePos", "frParfumsLArtDeVivrePos"),
+      "parfums-et-maquillage|parfums": frHas("frParfumsPos"),
     "parfums-et-maquillage|lèvres": frHas("frMaquillageLevresPos"),
     "parfums-et-maquillage|teint": frHas("frMaquillageTeintPos"),
     "parfums-et-maquillage|yeux": frHas("frMaquillageYeuxPos"),
@@ -2834,6 +2852,17 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // Prêt-à-porter subs (same code path).
     const papList = cat === "femme" ? FEMME_PAP_SIBS : HOMME_PAP_SIBS;
     siblings = papList.map((s) => ({ label: s.label, view: { t: "category", cat, sub: s.sub } as View, current: s.sub.toLowerCase() === subLow }));
+  } else if (cat === "bijouterie" && BIJOUTERIE_COLLECTIONS_SIBS.some((s) => s.sub.toLowerCase() === subLow)) {
+    // France (2026-11-21, Bijouterie + Parfums build): the original's
+    // Bijouterie COLLECTIONS pages show only the section's own
+    // siblings — no "View all" (pattern-based, see the list above).
+    siblings = BIJOUTERIE_COLLECTIONS_SIBS.map((s) => ({ label: s.label, view: { t: "category", cat, sub: s.sub } as View, current: s.sub.toLowerCase() === subLow }));
+  } else if (cat === "parfums-et-maquillage" && PARFUMS_SECTION_SIBS.some((s) => s.sub.toLowerCase() === subLow)) {
+    // France (2026-11-21, Bijouterie + Parfums build): the original's
+    // PARFUMS-section pages show only the section's own siblings —
+    // Hermessence, Femme, Homme, Bain, Parfums — no "View all"
+    // (pattern-based, see the list above).
+    siblings = PARFUMS_SECTION_SIBS.map((s) => ({ label: s.label, view: { t: "category", cat, sub: s.sub } as View, current: s.sub.toLowerCase() === subLow }));
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
