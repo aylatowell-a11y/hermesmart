@@ -231,18 +231,18 @@ const FR_MENU_EXTERNAL: Record<string, string> = {
   "parfums-et-maquillage|CADEAUX|Trouvez votre teinte de fond de teint": "https://www.hermes.com/fr/fr/content/344254-trouvez-votre-teinte-de-fond-teint/",
 };
 
-// Menu items that must NOT be linked: the original returns 404 or loads
-// no products for these (DO-NOT-BUILD). Rendered as plain text; the
-// menu order is preserved.
-const FR_MENU_UNLINKED: Set<string> = new Set([
-  "femme|PRÊT-À-PORTER|Automne-Hiver 2026, le second chapitre",
-  "femme|PRÊT-À-PORTER|Collection automne-hiver 2026",
-  "femme|PRÊT-À-PORTER|Collection printemps-été 2027",
-  "femme|PRÊT-À-PORTER|Défilé automne-hiver 2026",
-  "femme|PRÊT-À-PORTER|Défilé printemps-été 2027",
-  "femme|PRÊT-À-PORTER|T-shirts et sweat-shirts",
-  "homme|PRÊT-À-PORTER|Collection automne-hiver 2026",
-]);
+// NOTE (2026-11-21, owner instruction "jaise sab original par hai wase
+// karo sab"): the 7 menu items below used to render as grey plain text
+// (FR_MENU_UNLINKED) because the original returns 404 or loads no
+// products for them. The owner wants them exactly like the original —
+// black links like every other item. So they now fall through to the
+// normal category target; their pages render the clone's existing
+// "We're sorry. These items are no longer available." message, which
+// matches the original's own "ces articles ne sont plus disponibles".
+// (femme: Collection automne-hiver 2026, Collection printemps-été 2027,
+// T-shirts et sweat-shirts, Défilé printemps-été 2027,
+// Défilé automne-hiver 2026, Automne-Hiver 2026 le second chapitre;
+// homme: Collection automne-hiver 2026.)
 
 // Headings that ARE pages (click opens the page); any other heading
 // click opens the parent category view. Key `${parentKey}|${heading}`.
@@ -314,7 +314,6 @@ const FR_ITEM_SUB: Record<string, View> = {
 function frMenuTarget(entry: MegaEntry, overrides: NavOverrides, heading: string, item?: string): View | null {
   const dest = overrides[entry.key]?.dest || entry.key;
   const key = `${entry.key}|${heading}|${item ?? ""}`;
-  if (FR_MENU_UNLINKED.has(key)) return null;
   const ext = FR_MENU_EXTERNAL[key];
   if (ext) return { t: "external", url: ext };
   if (entry.key === "about") {
