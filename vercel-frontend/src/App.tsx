@@ -354,6 +354,35 @@ const NAV: Record<string, { cat: string; subs: string[] }> = {
   "cadeaux": { cat: "cadeaux", subs: ["Pour femme", "Pour homme", "Enfants et naissance", "Pour chien"] },
 };
 
+// France Prêt-à-porter sibling sub-nav (2026-11-21, collections fix): on
+// the original, every Prêt-à-porter page shows only its own section's
+// siblings — the 10 Femme / 8 Homme items in menu order. Défilé items are
+// menu-only editorial links, not sub-nav items. `label` is the original's
+// sub-nav word; `sub` is the canonical menu-case value so URLs, syn keys
+// and titles all resolve the same way whichever link was clicked.
+const FEMME_PAP_SIBS: { label: string; sub: string }[] = [
+  { label: "Collection Automne-Hiver 2026", sub: "Collection automne-hiver 2026" },
+  { label: "Collection Printemps-Eté 2027", sub: "Collection printemps-été 2027" },
+  { label: "Manteaux et vestes", sub: "Manteaux et vestes" },
+  { label: "Cuir", sub: "Cuir" },
+  { label: "Robes et jupes", sub: "Robes et jupes" },
+  { label: "Hauts et chemises", sub: "Hauts et chemises" },
+  { label: "Pantalons et shorts", sub: "Pantalons et shorts" },
+  { label: "Mailles et twillaines", sub: "Mailles et twillaines" },
+  { label: "T-shirts et sweat-shirts", sub: "T-shirts et sweat-shirts" },
+  { label: "Bain", sub: "Bain" },
+];
+const HOMME_PAP_SIBS: { label: string; sub: string }[] = [
+  { label: "Collection Automne-Hiver 2026", sub: "Collection automne-hiver 2026" },
+  { label: "Manteaux et parkas", sub: "Manteaux et parkas" },
+  { label: "Blousons et vestes", sub: "Blousons et vestes" },
+  { label: "Mailles", sub: "Mailles" },
+  { label: "Chemises", sub: "Chemises" },
+  { label: "T-shirts et sweat-shirts", sub: "T-shirts et sweat-shirts" },
+  { label: "Pantalons et shorts", sub: "Pantalons et shorts" },
+  { label: "Bain", sub: "Bain" },
+];
+
 const CAT_LABELS: Record<string, string> = {
   "femme": "Femme",
   "homme": "Homme",
@@ -410,12 +439,15 @@ const FR_PAGE_FIELDS: Record<string, string[]> = {
   "equitation|": ["frEquitationParentPos"],
   "cadeaux|": ["frCadeauxParentPos"],
   "femme|chaussures": ["frFemmeSandalesPos", "frFemmeSneakersPos", "frFemmeBottesEtBottinesPos", "frFemmeEscarpinsPos", "frFemmeMocassinsEtMulesPos", "frFemmeBallerinesPos"],
+  "femme|collection automne-hiver 2026": ["frFemmeCollAHPos"],
+  "femme|collection printemps-été 2027": ["frFemmeCollPEPos"],
   "femme|manteaux et vestes": ["frFemmeManteauxEtVestesPos"],
   "femme|cuir": ["frFemmeCuirPos"],
   "femme|robes et jupes": ["frFemmeRobesEtJupesPos"],
   "femme|hauts et chemises": ["frFemmeHautsEtChemisesPos"],
   "femme|pantalons et shorts": ["frFemmePantalonsEtShortsPos"],
   "femme|mailles et twillaines": ["frFemmeMaillesEtTwillainesPos"],
+  "femme|t-shirts et sweat-shirts": ["frFemmeTshirtsPos"],
   "femme|bain": ["frFemmeBainPos"],
   "femme|sandales": ["frFemmeSandalesPos"],
   "femme|sneakers": ["frFemmeSneakersPos"],
@@ -436,6 +468,7 @@ const FR_PAGE_FIELDS: Record<string, string[]> = {
   "femme|chapeaux et gants": ["frFemmeChapeauxEtGantsPos"],
   "femme|accessoires cheveux": ["frFemmeAccessoiresCheveuxPos"],
   "homme|écharpes et carrés": ["frHommeEcharpesEtCarresPos"],
+  "homme|collection automne-hiver 2026": ["frHommeCollAHPos"],
   "homme|manteaux et parkas": ["frHommeManteauxEtParkasPos"],
   "homme|blousons et vestes": ["frHommeBlousonsEtVestesPos"],
   "homme|mailles": ["frHommeMaillesPos"],
@@ -2308,12 +2341,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     // G8) — they must be replaced by field predicates once extracted.
     const syn: Record<string, (p: Product) => boolean> = {
     "femme|chaussures": frAny("frFemmeSandalesPos", "frFemmeSneakersPos", "frFemmeBottesEtBottinesPos", "frFemmeEscarpinsPos", "frFemmeMocassinsEtMulesPos", "frFemmeBallerinesPos"),
+    "femme|collection automne-hiver 2026": frHas("frFemmeCollAHPos"),
+    "femme|collection printemps-été 2027": frHas("frFemmeCollPEPos"),
     "femme|manteaux et vestes": frHas("frFemmeManteauxEtVestesPos"),
     "femme|cuir": frHas("frFemmeCuirPos"),
     "femme|robes et jupes": frHas("frFemmeRobesEtJupesPos"),
     "femme|hauts et chemises": frHas("frFemmeHautsEtChemisesPos"),
     "femme|pantalons et shorts": frHas("frFemmePantalonsEtShortsPos"),
     "femme|mailles et twillaines": frHas("frFemmeMaillesEtTwillainesPos"),
+    "femme|t-shirts et sweat-shirts": frHas("frFemmeTshirtsPos"),
     "femme|bain": frHas("frFemmeBainPos"),
     "femme|sandales": frHas("frFemmeSandalesPos"),
     "femme|sneakers": frHas("frFemmeSneakersPos"),
@@ -2334,6 +2370,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "femme|chapeaux et gants": frHas("frFemmeChapeauxEtGantsPos"),
     "femme|accessoires cheveux": frHas("frFemmeAccessoiresCheveuxPos"),
     "homme|écharpes et carrés": frHas("frHommeEcharpesEtCarresPos"),
+    "homme|collection automne-hiver 2026": frHas("frHommeCollAHPos"),
     "homme|manteaux et parkas": frHas("frHommeManteauxEtParkasPos"),
     "homme|blousons et vestes": frHas("frHommeBlousonsEtVestesPos"),
     "homme|mailles": frHas("frHommeMaillesPos"),
@@ -2551,6 +2588,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // section-qualified ("Bagues en argent", ...).
   const COLLECTION_TITLES_FR: Record<string, string> = {
     "apple watch hermès": "Apple Watch Hermès",
+    "collection automne-hiver 2026": "Collection Automne-Hiver 2026",
+    "collection printemps-été 2027": "Collection Printemps-Eté 2027",
+    "t-shirts et sweat-shirts": "T-shirts et sweat-shirts",
     "bagues en argent": "Bagues",
     "bijoux d'oreilles en argent": "Bijoux d'oreilles",
     "bracelets en argent": "Bracelets",
@@ -2767,6 +2807,13 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       { label: "Cavalier", view: { t: "category", cat, sub: "Cavalier" } as View, current: sub === "Cavalier" },
     ];
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
+  } else if ((cat === "femme" && FEMME_PAP_SIBS.some((s) => s.sub.toLowerCase() === subLow)) || (cat === "homme" && HOMME_PAP_SIBS.some((s) => s.sub.toLowerCase() === subLow))) {
+    // France (2026-11-21, collections fix): the original's Prêt-à-porter
+    // pages show only the section's own siblings — no "View all", no
+    // parent-wide list. Covers the 4 new collection pages and the other
+    // Prêt-à-porter subs (same code path).
+    const papList = cat === "femme" ? FEMME_PAP_SIBS : HOMME_PAP_SIBS;
+    siblings = papList.map((s) => ({ label: s.label, view: { t: "category", cat, sub: s.sub } as View, current: s.sub.toLowerCase() === subLow }));
   } else if (nav) {
     siblings = nav.subs.map((s) => ({ label: s, view: { t: "category", cat, sub: s } as View, current: s === sub }));
     siblings.push({ label: "View all", view: { t: "category", cat }, current: !sub });
