@@ -29,6 +29,15 @@ const cottageImgMobile = "https://assets.hermes.com/is/image/hermesedito/HERMES_
 // sizing params as the Kelly editorial images.
 const horsescapeImg = "https://assets.hermes.com/is/image/hermesedito/HERMES_HB9_IMG10_1920x1080_CLEAN-2?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 const horsescapeImgMobile = "https://assets.hermes.com/is/image/hermesedito/HERMES_HB9_IMG10_1080x1920_CLEAN-1?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+// Original Hermes France homepage NID static banner (hermes.com/fr/fr,
+// verified 2026-11-21 via the fr_fr homepage content JSON, id 403686 —
+// block "block_full_hero_media", below the Cottage video board, above the
+// service strip): a bird's nest on a gold chain with jewelry pendants
+// hanging from a pine branch, blue silk scarves flying like birds in a
+// snowy forest. Desktop source 1920x1080 (16:9), mobile source 1080x1920
+// (9:16). Same Scene7 sizing params as the other homepage images.
+const nidImg = "https://assets.hermes.com/is/image/hermesedito/HOLIDAYS_26_NID_STATIC_16x9?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
+const nidImgMobile = "https://assets.hermes.com/is/image/hermesedito/HOLIDAYS_26_NID_STATIC_9x16?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0";
 import carriageBlackImg from "./assets/hermes-carriage-black.png";
 import carriageWhiteImg from "./assets/hermes-carriage-white.png";
 import logoBlackImg from "./assets/hermes-logo-black.png";
@@ -483,72 +492,71 @@ const US_TO_FR_CAT: Record<string, string> = {
 };
 
 const THEMES = ["Silk", "Beauty", "Belts", "Men's Shoes", "Fashion Jewelry", "Fragrances", "Watches", "Leather Goods", "Home"];
-// Discover carousel — verified on hermes.com (7 Nov 2026) by clicking controls 1–15,
-// re-verified live 2026-11-15, REPLACED 2026-11-17 by the NOV_PHASE_2
-// ("A winter's tale" / Holidays 26) republish, verified via the homepage
-// content JSON (id 403728, published 2026-11-16 09:20 UTC): 15 slides, but
-// only 5 themes, repeated three times in this exact order. Every repeat shows
-// the SAME products at the SAME prices.
+// Discover carousel — France homepage (hermes.com/fr/fr), verified
+// 2026-11-21 via the fr_fr homepage content JSON (id 403686, published
+// 2026-11-16 14:42 UTC): 15 slides, but only 5 themes, repeated three
+// times in this exact order. Every repeat shows the SAME products at the
+// SAME prices. The US NOV_PHASE_2 themes (Fashion Jewelry / Women's shoes /
+// Scarves / Fine Jewelry / Small leather goods, id 403728) are superseded —
+// the original no longer shows them on /fr/fr/.
 // The original shows NO visible numeric counter (only a segmented progress bar
 // under the carousel); each slide is labelled by its theme position, e.g.
-// "Fashion Jewelry, 1 of 5" — the 1/15 numbering lives only in the page structure.
-const CAROUSEL_BASE_THEMES = ["Fashion Jewelry", "Women's shoes", "Scarves", "Fine Jewelry", "Small leather goods"];
-const CAROUSEL_THEMES: string[] = Array.from({ length: 15 }, (_, i) => CAROUSEL_BASE_THEMES[i % CAROUSEL_BASE_THEMES.length] ?? "Fashion Jewelry");
-// Discover carousel editorial photos — the ORIGINAL hermes.com homepage
-// (block_fetish, NOV_PHASE_2 / HOLIDAY_26, verified 2026-11-17 via the
-// homepage content JSON): one editorial/MODEL photo per theme, NOT a product
-// photo. The homepage JSON holds exactly 5 slides; the 5 themes repeat 3×
-// (slides 1/6/11 Fashion Jewelry, 2/7/12 Women's shoes, …), exactly as
-// CAROUSEL_THEMES repeats them — nothing extra added, nothing invented.
-// All 10 URLs below were fetched (HTTP 200) and VIEWED: the 3x4 portrait
-// crop is the original's mobile editorial image and is used on every
-// breakpoint because our slides are portrait (3/4 mobile, 16:9 desktop);
-// the original's desktop 16:9 crops are the same scenes in landscape (all
-// five "9x16"-named desktop files actually serve 1920×1080 = 16:9, as
-// probed 2026-11-17). The 4 products shown under each theme are unchanged
-// (THEME_GRID_ORDER).
+// "Cadeaux Femme, 1 of 5" — the 1/15 numbering lives only in the page structure.
+const CAROUSEL_BASE_THEMES = ["Cadeaux Femme", "Bijouterie Or", "Chaussures Femme", "Chaussures homme", "Montres Homme"];
+const CAROUSEL_THEMES: string[] = Array.from({ length: 15 }, (_, i) => CAROUSEL_BASE_THEMES[i % CAROUSEL_BASE_THEMES.length] ?? "Cadeaux Femme");
+// Discover carousel editorial photos — the ORIGINAL hermes.com/fr/fr
+// homepage (block_fetish, NOV_PHASE_2 / HOLIDAY_26, verified 2026-11-21 via
+// the fr_fr homepage content JSON, id 403686): one editorial photo per
+// theme, NOT a product photo. The homepage JSON holds exactly 5 slides; the
+// 5 themes repeat 3× (slides 1/6/11 Cadeaux Femme, 2/7/12 Bijouterie Or, …),
+// exactly as CAROUSEL_THEMES repeats them — nothing extra added, nothing
+// invented. All 10 URLs below were fetched (HTTP 200) and VIEWED: the 3x4
+// portrait crop is the original's mobile editorial image and is used on
+// every breakpoint because our slides are portrait (3/4 mobile, 16:9
+// desktop); the original's desktop 16:9 crops are the same scenes in
+// landscape (all five "9x16"-named desktop files actually serve 1920×1080
+// = 16:9, as probed 2026-11-17). The 4 products shown under each theme are
+// unchanged (THEME_GRID_ORDER).
 const CAROUSEL_EDITORIAL: Record<string, { img: string; alt: string }> = {
-  "Fashion Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/FASHION_JEWELRY_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Gold Clic H bracelet on a snow-dusted mossy rock in a pine forest" },
-  "Women's shoes": { img: "https://assets.hermes.com/is/image/hermesedito/WOMEN_SHOES_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Burgundy leather slingback heels on moss-covered rocks in a pine forest" },
-  "Scarves": { img: "https://assets.hermes.com/is/image/hermesedito/MEN_SILK_HOLIDAY_26_3x4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Yellow equestrian-pattern fringed scarf draped over a pine branch" },
-  "Fine Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/GOLD_JEWELRY_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Gold rings resting on a frost-covered pine branch" },
-  "Small leather goods": { img: "https://assets.hermes.com/is/image/hermesedito/LEATHER_GOODS_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Black leather wallet with gold clasp on a snow-dusted mossy rock" },
+  "Cadeaux Femme": { img: "https://assets.hermes.com/is/image/hermesedito/PARFUM_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Musc Pallida perfume bottle on a snow-dusted mossy rock in a pine forest" },
+  "Bijouterie Or": { img: "https://assets.hermes.com/is/image/hermesedito/GOLD_JEWELRY_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Gold rings resting on a frost-covered pine branch" },
+  "Chaussures Femme": { img: "https://assets.hermes.com/is/image/hermesedito/WOMEN_SHOES_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Burgundy leather slingback heels on moss-covered rocks in a pine forest" },
+  "Chaussures homme": { img: "https://assets.hermes.com/is/image/hermesedito/MEN_SHOES_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Tan lace-up boots on mossy rocks in a pine forest" },
+  "Montres Homme": { img: "https://assets.hermes.com/is/image/hermesedito/WATCH_HOLIDAY_26_3X4?fit=wrap%2C0&wid=767&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Silver Hermès H08 watch with metal bracelet resting on a frosty pine branch" },
 };
 // Discover carousel DESKTOP editorial photos — the original's desktop
 // (≥1024px) carousel serves the SAME scenes in 16:9 landscape (verified
 // 2026-11-17: all 5 URLs HTTP 200 at wid=1920; the probed files are
-// 1920×1080 = 16:9, including the "9x16"-named ones). The desktop carousel
-// uses these for EVERY slide — centre and side strips alike — so a strip
-// becoming the centre only changes width, never the image (the strips show
-// the 16:9 image centre-cropped to 128px, exactly as on hermes.com).
-// Mobile keeps the 3x4 portrait URLs above.
+// 1920×1080 = 16:9, including the "9x16"-named ones; re-fetched 2026-11-21
+// for the France themes, all HTTP 200). The desktop carousel uses these
+// for EVERY slide — centre and side strips alike — so a strip becoming the
+// centre only changes width, never the image (the strips show the 16:9
+// image centre-cropped to 128px, exactly as on hermes.com). Mobile keeps
+// the 3x4 portrait URLs above.
 const CAROUSEL_EDITORIAL_DESKTOP: Record<string, { img: string; alt: string }> = {
-  "Fashion Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/FASHION_JEWELRY_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Gold Clic H bracelet on a snow-dusted mossy rock in a pine forest" },
-  "Women's shoes": { img: "https://assets.hermes.com/is/image/hermesedito/WOMEN_SHOES_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Burgundy leather slingback heels on moss-covered rocks in a pine forest" },
-  "Scarves": { img: "https://assets.hermes.com/is/image/hermesedito/MEN_SILK_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Yellow equestrian-pattern fringed scarf draped over a pine branch" },
-  "Fine Jewelry": { img: "https://assets.hermes.com/is/image/hermesedito/GOLD_JEWELRY_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Gold rings resting on a frost-covered pine branch" },
-  "Small leather goods": { img: "https://assets.hermes.com/is/image/hermesedito/LEATHER_GOODS_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Black leather wallet with gold clasp on a snow-dusted mossy rock" },
+  "Cadeaux Femme": { img: "https://assets.hermes.com/is/image/hermesedito/PARFUM_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Musc Pallida perfume bottle on a snow-dusted mossy rock in a pine forest" },
+  "Bijouterie Or": { img: "https://assets.hermes.com/is/image/hermesedito/GOLD_JEWELRY_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Gold rings resting on a frost-covered pine branch" },
+  "Chaussures Femme": { img: "https://assets.hermes.com/is/image/hermesedito/WOMEN_SHOES_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Burgundy leather slingback heels on moss-covered rocks in a pine forest" },
+  "Chaussures homme": { img: "https://assets.hermes.com/is/image/hermesedito/MEN_SHOES_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Tan lace-up boots on mossy rocks in a pine forest" },
+  "Montres Homme": { img: "https://assets.hermes.com/is/image/hermesedito/WATCH_HOLIDAY_26_9X16?fit=wrap%2C0&wid=1920&resMode=sharp2&op_usm=1%2C1%2C6%2C0", alt: "Silver Hermès H08 watch with metal bracelet resting on a frosty pine branch" },
 };
-// Verified theme grids on hermes.com — the exact four products, in this
-// order, shown under each carousel theme. Resolved by refCode, NOT by name
-// — name-matching landed on the wrong colour variant before (Bouncing
+// Verified theme grids on hermes.com/fr/fr — the exact four products, in
+// this order, shown under each carousel theme. Resolved by refCode, NOT by
+// name — name-matching landed on the wrong colour variant before (Bouncing
 // sneaker Blanc instead of Beige/Natural, Noe loafer Brun instead of
 // Yellow). Entries starting with "id:" resolve by product id.
-// NOV_PHASE_2 grids (verified 2026-11-17 via the homepage content JSON,
-// id 403728, and live on hermes.com/us/en/ the same day): all five themes
-// and all 20 products replaced — every name, price and colour below was
-// checked against the JSON and exists in data.ts at that refCode.
-// Maillons d'Hiver scarf H394860Tv01: colour corrected Blue -> Beige/Natural
-// in data.ts (the JSON variant is Beige/Natural and the 01 folded asset
-// photo is visibly beige). The old NOV_PHASE_1 grids (Belts / Men's Shoes /
-// Fashion Jewelry / Silk / Beauty, verified 7 Nov 2026, re-verified live
-// 11 Nov 2026) are superseded — the original no longer shows them.
+// FRANCE grids (verified 2026-11-21 via the fr_fr homepage content JSON,
+// id 403686, published 2026-11-16 14:42 UTC): all five themes and all 20
+// products — every name, price and colour below was checked against the
+// JSON and exists in data.ts at that refCode at the same € price. The US
+// NOV_PHASE_2 grids (verified 2026-11-17, id 403728) are superseded — the
+// original no longer shows them on /fr/fr/.
 const THEME_GRID_ORDER: Record<string, string[]> = {
-  "Fashion Jewelry": ["H300003FO6Y", "H262066GvBO", "H011123CK6O", "H251053GvTI"],
-  "Women's shoes": ["H252128ZvL1", "H242107ZvML", "H271194ZvAC", "H261257ZvA3"],
-  "Scarves": ["H394402Tv02", "H394860Tv01", "H362953Sv07", "H243162Sv05"],
-  "Fine Jewelry": ["H225618Bv00", "H125506Bv00", "H123431Bv00", "H126303Bv00"],
-  "Small leather goods": ["H087985CK89", "H041054CK55", "H078384CK55", "H088129CK89"],
+  "Cadeaux Femme": ["V117337V0", "H100132Fv5K", "V60861VV050", "H064297Sv10"],
+  "Bijouterie Or": ["H225615Bv00", "H225507Bv00", "H108615Bv00", "H122404Bv00"],
+  "Chaussures Femme": ["H27104OZvAC", "H2710PHZvAD", "H221103ZvC9", "H2710M2ZvAD"],
+  "Chaussures homme": ["H27107HZHAB", "H222929ZHAA", "H242947ZHE6", "H242925ZHD1"],
+  "Montres Homme": ["W408200WW00", "W049626WW00", "W044347WW00", "W055378WW00"],
 };
 // Homepage theme-grid eyebrow labels — measured on hermes.com's homepage
 // HTML (2026-11-16): only the two Beauty cards carry one, rendered in
@@ -1637,7 +1645,7 @@ export function App() {
 
 function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pulse }: { settings: Settings; products: Product[]; themeIdx: number; setThemeIdx: (i: number) => void; go: (v: View, opts?: { restore?: boolean }) => void; addToCart: (p: Product, c?: string, s?: string, q?: number) => void; pulse: (ms?: number) => void }) {
   const activeIdx = Math.min(CAROUSEL_THEMES.length - 1, Math.max(0, themeIdx));
-  const theme = CAROUSEL_THEMES[activeIdx] ?? "Fashion Jewelry";
+  const theme = CAROUSEL_THEMES[activeIdx] ?? "Cadeaux Femme";
   const strip = products.filter((p) => p.theme === theme);
   // Grid = the verified four products for this theme, in verified order, so
   // positions 1/6/11 (Belts), 2/7/12, … always show identical products/prices.
@@ -1692,20 +1700,15 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
     setThemeIdx(idx);
   };
   const themeDest = (t: string): View => {
-    // The Fashion Jewelry carousel theme is the costume-jewelry page
-    // (/women/fashion-jewelry/), not the fine-jewelry page — the first
-    // product carrying that theme may be a fine row, so do not infer it.
-    if (t === "Fashion Jewelry") return { t: "category", cat: "fashion-jewelry" };
-    // NOV_PHASE_2 themes (2026-11-17): the grid products' stored `theme`
-    // values do not carry these names (shoes/scarves/SLG rows have "" /
-    // "Silk" / "Leather Goods"; fine-jewelry rows carry "Fashion Jewelry"),
-    // so the destinations are explicit. Scarves: the original's theme link
-    // points at men's scarves, but the four grid products are women's rows
-    // in our data — the destination is where the products are.
-    if (t === "Women's shoes") return { t: "category", cat: "women", sub: "Shoes" };
-    if (t === "Scarves") return { t: "category", cat: "women", sub: "Scarves, shawls and stoles" };
-    if (t === "Fine Jewelry") return { t: "category", cat: "jewelry" };
-    if (t === "Small leather goods") return { t: "category", cat: "leather", sub: "Small leather goods" };
+    // FRANCE themes (2026-11-21, fr_fr homepage JSON id 403686): the grid
+    // products' stored `theme` values do not carry these names, so the
+    // destinations are explicit — each one is the JSON token's own category
+    // path (routing.ts maps cat+sub to the same France URL).
+    if (t === "Cadeaux Femme") return { t: "category", cat: "cadeaux", sub: "Pour femme" };
+    if (t === "Bijouterie Or") return { t: "category", cat: "bijouterie", sub: "Bijoux en or" };
+    if (t === "Chaussures Femme") return { t: "category", cat: "femme", sub: "Chaussures" };
+    if (t === "Chaussures homme") return { t: "category", cat: "homme", sub: "Chaussures" };
+    if (t === "Montres Homme") return { t: "category", cat: "montres", sub: "Homme" };
     const rep = products.find((p) => p.theme === t);
     return rep ? { t: "category", cat: rep.category } : { t: "home" };
   };
@@ -1780,12 +1783,174 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
         </div>
       </section>
 
-      {/* France conversion (Stage B) — HOMEPAGE HOLDING STATE: the US
-          theme carousel, the Cottage board and the Horsescape banner
-          are dropped, not adapted. The homepage renders the French
-          hero + French nav/footer only until the fresh France
-          homepage read lands (STAGE-B-REMAINDER.md G1). No invented
-          France themes, collection tiles or video boards. */}
+      {/* BOARDS b)+c) DISCOVER CAROUSEL + PRODUCTS FOR THE THEME — one warm
+          cream board, no divider between carousel and theme products */}
+      <section className="group w-full" style={{ background: settings.bgColor || "#fcf7f1" }}>
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:pb-12 lg:pt-16">
+        {/* Mobile heading — centred, two lines, as in the user's video */}
+        <h2 className="font-serif-d text-center text-[34px] italic leading-snug lg:hidden">Découvrez l'univers <span className="block">Hermès</span></h2>
+        {/* Desktop heading — top-left, as verified on hermes.com */}
+        <div className="hidden lg:block">
+          <div className="relative">
+            <div className="mx-auto max-w-[629px] text-center">
+              <h2 className="font-serif-d text-[34px] italic leading-snug">Découvrez l'univers Hermès</h2>
+            </div>
+            {/* Desktop carousel arrows, top-right. The original shows NO visible
+                numeric counter here — only the segmented progress bar below the
+                carousel (verified live 2026-11-15); mobile has only the
+                progress line below the carousel. */}
+            <div className="absolute right-0 top-1/2 flex -translate-y-1/2 items-center gap-3">
+              <button type="button" aria-label="Previous theme" onClick={() => goToSlide(activeIdx - 1)} className="flex h-8 w-8 items-center justify-center text-xl leading-none text-black">‹</button>
+              <button type="button" aria-label="Next theme" onClick={() => goToSlide(activeIdx + 1)} className="flex h-8 w-8 items-center justify-center text-xl leading-none text-black">›</button>
+            </div>
+          </div>
+        </div>
+        {/* DESKTOP carousel (lg+) — matches hermes.com desktop exactly
+            (measured from the user's laptop screenshots of hermes.com):
+            full-bleed; centre slide 60.8vw wide × 35vw tall (16:9 desktop
+            editorial); side slides as 185px strips (same 16:9 image,
+            centre-cropped), 2 visible per side (5 slices total — the
+            128px strips the old code used showed 3 per side, 7 total);
+            white label button only on the centre slide, 32px above its
+            bottom. Clicking a strip (or an arrow) brings it to the centre
+            with a smooth width transition and the previous centre becomes
+            a strip. Starts with CADEAUX FEMME (index 0) in the centre. The window
+            renders the 11 slides around the active index (circular), so
+            wrapping 15→1 / 1→15 is seamless and no slide mounts/unmounts
+            in view. Interaction (measured live on hermes.com 2026-11-20):
+            hovering a side strip scales ONLY its photo to 1.05 (600ms
+            ease-out; the strip frame does not move, the enlarged photo is
+            cropped at the strip edges); the centre slide does NOT zoom on
+            hover. One click on a side strip centres it only — no
+            navigation; a second click on the centred slide (or its label)
+            navigates to the theme page. Zoom is a plain :hover rule in
+            theme.css (.carousel-slide) — Tailwind group-hover produced no
+            visible zoom on this carousel in two live checks (2026-11-20)
+            despite being verified in the DOM and built CSS. */}
+        <div className="carousel-full-bleed mt-6 hidden overflow-hidden lg:mt-8 lg:block" role="tablist" aria-label="Discover themes">
+          <div className="flex h-[35vw] justify-center gap-[3px]">
+            {Array.from({ length: 11 }, (_, k) => k - 5).map((off) => {
+              const logicalIdx = (((activeIdx + off) % CAROUSEL_THEMES.length) + CAROUSEL_THEMES.length) % CAROUSEL_THEMES.length;
+              const t = CAROUSEL_THEMES[logicalIdx] ?? "Cadeaux Femme";
+              const ed = CAROUSEL_EDITORIAL_DESKTOP[t];
+              if (!ed) return null;
+              const isActive = off === 0;
+              return (
+                <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${(logicalIdx % 5) + 1} of 5`} onClick={() => { if (isActive) go(themeDest(t)); else goToSlide(logicalIdx); }}
+                  className={`carousel-slide${isActive ? " carousel-slide-active" : ""} relative h-full shrink-0 overflow-hidden transition-[width] duration-500 ease-out`}
+                  style={{ width: isActive ? "60.8vw" : 185 }}>
+                  <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
+                  {isActive && (
+                    <span className="font-mono-d absolute bottom-8 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-xs font-medium uppercase text-black">{t}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {/* MOBILE carousel — windowed (like desktop): the centre slide is
+            wide (73vw, 3:4) and the side strips are narrow slices; tapping
+            a side strip GROWS it to the centre while the old centre
+            shrinks to a strip (width transition, exactly as on hermes.com
+            — the user's video shows the side photo growing into the
+            middle on tap). No scrolling: the width transition does the
+            move. Swipe left/right moves one theme. The row height is the
+            centre slide's height (73vw x 4/3 = 97.33vw) so it never jumps
+            while the widths animate. Label only on the centre slide. */}
+        <div className="-mx-4 mt-6 overflow-hidden lg:hidden" role="tablist" aria-label="Discover themes"
+          onTouchStart={onCarouselTouchStart} onTouchEnd={onCarouselTouchEnd}>
+          <div className="flex h-[97.33vw] justify-center gap-[3px]">
+            {Array.from({ length: 11 }, (_, k) => k - 5).map((off) => {
+              const logicalIdx = (((activeIdx + off) % CAROUSEL_THEMES.length) + CAROUSEL_THEMES.length) % CAROUSEL_THEMES.length;
+              const t = CAROUSEL_THEMES[logicalIdx] ?? "Cadeaux Femme";
+              const ed = CAROUSEL_EDITORIAL[t];
+              if (!ed) return null;
+              const isActive = off === 0;
+              return (
+                <button key={logicalIdx} role="tab" aria-selected={isActive} aria-label={`Theme ${t}, ${(logicalIdx % 5) + 1} of 5`}
+                  onClick={() => { if (suppressClickRef.current) return; if (isActive) go(themeDest(t)); else goToSlide(logicalIdx); }}
+                  className="relative h-full shrink-0 cursor-pointer overflow-hidden transition-[width] duration-500 ease-out"
+                  style={{ width: isActive ? "73vw" : 64 }}>
+                  <img src={ed.img} alt={ed.alt} loading="lazy" className="h-full w-full object-cover" />
+                  {isActive && (
+                    <span className="font-mono-d absolute bottom-4 left-1/2 flex h-12 -translate-x-1/2 items-center whitespace-nowrap rounded-none bg-white px-8 text-sm font-medium uppercase text-black">{t}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="mx-auto mt-6 h-px w-[120px] bg-black/15 lg:mt-8" aria-hidden="true">
+          <div className="h-full bg-black transition-transform duration-300" style={{ width: `${100 / CAROUSEL_THEMES.length}%`, transform: `translateX(${activeIdx * 100}%)` }} />
+        </div>
+        {/* No counter/arrows on mobile — the original's mobile carousel has only
+            the progress line above (verified on hermes.com, phone). The 1/15
+            counter + arrows are in the desktop heading above (hidden lg:block). */}
+        {/* The original renders this heading sr-only (visually hidden,
+            screen-reader only) — verified in hermes.com's rendered HTML:
+            <h2 class="sr-only">Products for the theme Belts</h2>. The 4
+            products below ARE visible on the original, so only the heading
+            is hidden, not the products. */}
+        <h2 className="sr-only">PRODUITS POUR LE THÈME {theme.toUpperCase()}</h2>
+        <div key={theme} className="-mx-4 mt-6 grid grid-cols-2 gap-x-[2px] gap-y-8 sm:mx-0 lg:mt-8 lg:grid-cols-4 lg:gap-[2px]">
+          {shown.map((p) => <ProductCard key={p.id} p={p} plainTile eyebrow={theme === "Beauty" ? BEAUTY_EYEBROWS[p.id] : undefined} onOpen={(id) => go({ t: "product", id })} onQuickBuy={isSneakerProduct(p) ? (prod) => addToCart(prod) : undefined} />)}
+        </div>
+      </div>
+      </section>
+
+      {/* BOARD d) VIDEO — Cottage film, full-bleed board (France homepage,
+          verified 2026-11-21 via the fr_fr homepage content JSON, id 403686;
+          same film as the US NOV_PHASE_2 board). Same board geometry as the
+          old Baladeur board (desktop FULL viewport height, 100vh; mobile
+          75vh) and the same overlay pattern: a dark gradient over the
+          bottom ~53% (near-black at the bottom) and NO black block below
+          the video. The original shows NO title here — only the CTA,
+          centred ~60px above the video bottom. Controls are bare white
+          glyphs (no white squares) at the video's bottom-right, ~25px
+          above the bottom, sound closest to the right edge. The NID banner
+          abuts directly below (no gap). */}
+      <section ref={vidRef} className="relative overflow-hidden bg-black" aria-label="Explorez la petite maroquinerie — vidéo">
+        <div className="relative overflow-hidden">
+        <ProductVideo src={cottageSrc} poster={cottagePoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[75vh] w-full object-cover lg:h-screen" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[53%] bg-gradient-to-t from-black via-black/60 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-[58px] z-10 px-4 text-center text-white">
+          <button aria-label="Explorez la petite maroquinerie" className="font-mono-d pointer-events-auto text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => go({ t: "category", cat: "maroquinerie", sub: "Portefeuilles" })}>Explorez la petite maroquinerie</button>
+        </div>
+        <div className="absolute bottom-[10px] right-[10px] z-10 flex items-center gap-[5px]">
+          <button aria-label={vidPaused ? "Play video" : "Pause video"} aria-pressed={vidPaused} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setVidPaused(!vidPaused)}>
+            {vidPaused
+              ? <svg width="10" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5-13-7.5Z" /></svg>
+              : <svg width="10" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" /><rect x="14" y="4" width="5" height="16" /></svg>}
+          </button>
+          <button aria-label={vidMuted ? "Enable sound" : "Mute"} aria-pressed={!vidMuted} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setVidMuted(!vidMuted)}>
+            {vidMuted
+              ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16 9l6 6M22 9l-6 6" /></svg>
+              : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor" stroke="none" /><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>}
+          </button>
+        </div>
+        </div>
+      </section>
+
+      {/* NID static banner — France homepage (block_full_hero_media,
+          verified 2026-11-21 via the fr_fr homepage content JSON, id 403686):
+          below the Cottage video board, above the service strip. A bird's
+          nest on a gold chain with jewelry pendants hanging from a pine
+          branch, blue silk scarves flying like birds in a snowy forest.
+          The original shows NO description text here — image + CTA only.
+          CTA "Découvrez la bijouterie" goes to the gold-jewelry category
+          (bijoux-en-or), the JSON token's own path. */}
+      <section className="relative mb-12 cursor-pointer overflow-hidden lg:mb-16" onClick={() => go({ t: "category", cat: "bijouterie", sub: "Bijoux en or" })} aria-label="Découvrez la bijouterie">
+        <div className="relative aspect-[9/16] overflow-hidden sm:aspect-auto">
+          <picture>
+            <source media="(max-width: 640px)" srcSet={nidImgMobile} />
+            <img src={nidImg} alt="A bird's nest on a gold chain with jewelry pendants hanging from a pine branch, blue silk scarves flying like birds in a snowy forest" className="block w-full" />
+          </picture>
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 pb-6 pt-6 text-center text-white sm:pb-8 sm:pt-8">
+            <button aria-label="Découvrez la bijouterie" className="font-mono-d mt-4 text-xs font-medium uppercase tracking-normal underline underline-offset-8 lg:mt-6" onClick={() => go({ t: "category", cat: "bijouterie", sub: "Bijoux en or" })}>Découvrez la bijouterie</button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
