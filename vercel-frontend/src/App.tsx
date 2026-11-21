@@ -9339,6 +9339,22 @@ function AdminView({ products, settings, qc, navOverrides, setNavOverrides }: { 
           <label className="text-xs uppercase tracking-[0.2em]">Service strip — payment text<textarea aria-label="Setting service payment body" className={inputCls + " mt-1"} rows={2} value={stg.servicePaymentBody} onChange={(e) => setStg({ ...stg, servicePaymentBody: e.target.value })} /></label>
           <label className="text-xs uppercase tracking-[0.2em]">Chat welcome message<textarea aria-label="Setting chat welcome" className={inputCls + " mt-1"} rows={2} value={stg.chatWelcome} onChange={(e) => setStg({ ...stg, chatWelcome: e.target.value })} /></label>
           <label className="flex items-center gap-2 text-xs uppercase tracking-[0.2em]"><input aria-label="Setting chat enabled" type="checkbox" checked={stg.chatEnabled} onChange={(e) => setStg({ ...stg, chatEnabled: e.target.checked })} /> Chat bubble enabled</label>
+          {(() => {
+            let mode = "fr";
+            try { mode = localStorage.getItem("hlx-locale") || "fr"; } catch { mode = "fr"; }
+            const isUS = mode === "us";
+            return (
+              <div className="border border-black/15 bg-white p-4">
+                <p className="text-xs uppercase tracking-[0.2em]">Language &amp; Region</p>
+                <p className="mt-1 text-sm text-neutral-600">Current language: {isUS ? "United States" : "France"}</p>
+                <div className="mt-3 flex gap-3">
+                  <button type="button" aria-label="Switch language to France" disabled={!isUS} onClick={() => (window as any).__hermesSetLocale("fr")} className={isUS ? "border border-black px-6 py-2.5 text-[11px] uppercase tracking-[0.2em]" : "bg-black px-6 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white disabled:opacity-60"}>France</button>
+                  <button type="button" aria-label="Switch language to United States" disabled={isUS} onClick={() => (window as any).__hermesSetLocale("us")} className={isUS ? "bg-black px-6 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white disabled:opacity-60" : "border border-black px-6 py-2.5 text-[11px] uppercase tracking-[0.2em]"}>United States</button>
+                </div>
+                <p className="mt-3 text-xs leading-5 text-neutral-500">Switching the language changes this store in your browser only — other visitors still see the default language (Français). Switching empties the cart, because products and prices differ between the two catalogues. To change the default language for everyone, ask the assistant — it needs a code update, the panel cannot do it.</p>
+              </div>
+            );
+          })()}
           <p className="text-xs leading-5 text-neutral-500">Admin changes are saved in this browser only (localStorage) — there is no working backend, so they do not carry to another device or browser, and clearing browser data wipes them.</p>
           <button aria-label="Save settings" type="submit" className="bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white">{saveSettings.isPending ? "Saving…" : "Save settings & theme"}</button>
         </form>
