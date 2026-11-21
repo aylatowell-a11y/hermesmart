@@ -11602,6 +11602,16 @@ const NEW_TILE: Record<number, string> = {
   11986: "https://assets.hermes.com/is/image/hermesproduct/008658E%2000_front_wm_102?wid=750&hei=1000&fit=fit&$product_default_bg$",
   11987: "https://assets.hermes.com/is/image/hermesproduct/011665UK89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   11988: "https://assets.hermes.com/is/image/hermesproduct/800270E%2019_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  11995: "https://assets.hermes.com/is/image/hermesproduct/021056Z%2002_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  11996: "https://assets.hermes.com/is/image/hermesproduct/222299Z%20LF_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  11997: "https://assets.hermes.com/is/image/hermesproduct/231288Z%20AA_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  11998: "https://assets.hermes.com/is/image/hermesproduct/088537CKAA_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  11999: "https://assets.hermes.com/is/image/hermesproduct/088537CKAB_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  12000: "https://assets.hermes.com/is/image/hermesproduct/086915CKQ0_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  12001: "https://assets.hermes.com/is/image/hermesproduct/084658CP63_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  12002: "https://assets.hermes.com/is/image/hermesproduct/084274CKAC_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  12003: "https://assets.hermes.com/is/image/hermesproduct/056277CK89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  12004: "https://assets.hermes.com/is/image/hermesproduct/069426CCAV_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
 };
 
 const BAG_POOL = [picotinLock18V2, kellyShoulderV2, tablierSellier, boxBag, doubleLonge, neoDoubleSens35, fallbackHandbag];
