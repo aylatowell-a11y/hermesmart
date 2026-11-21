@@ -11717,7 +11717,16 @@ export function productImageFor(p: { id?: number; price?: number; name: string; 
   if (/collar|leash/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/800696EJS3_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
   // Real Hermes cap photo (Max CDS cap id6663) replaces the generated
   // bucketHat placeholder for hat/cap rows with no own photo.
-  if (/bucket hat|\bhat\b|cap/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/262066N%2002_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
+  // 2026-11-21: "cap" MUST be a whole word (\bcap\b) — the unbounded /cap/
+  // matched "Cape" in "Montre Cape Cod" (and "capuche", "Capri",
+  // "Capitaine", "Landscape"), so 42 Cape Cod watches showed a man's cap
+  // photo on their tiles (verified live on Montres Femme tiles 3–4) and the
+  // same wrong thumbnail as the PDP colour swatch. No genuine cap row in
+  // the fallback path relies on a non-standalone "cap" (checked 2026-11-21:
+  // all 42 no-NEW_TILE "cap" rows are Cape Cod watches; genuine caps match
+  // \bcap\b or \bhat\b). The watches now fall through to the watches
+  // WATCH_POOL below instead of the cap photo.
+  if (/bucket hat|\bhat\b|\bcap\b/.test(n)) return "https://assets.hermes.com/is/image/hermesproduct/262066N%2002_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$";
   if (/saddle|bridle|tack|horse/.test(n)) return saddleBridle;
   // Ready-to-wear is model-worn, as on hermes.com: dresses rotate through
   // the model-worn dress photos, coats/knits/pants/hats get their own
