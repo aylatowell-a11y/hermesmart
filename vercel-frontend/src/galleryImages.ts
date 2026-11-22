@@ -13124,6 +13124,14 @@ export function hiResHermes(src: string): string {
   if (!src.includes("$product_default_bg$")) return src;
   const q = src.indexOf("?");
   const base = q >= 0 ? src.slice(0, q) : src;
+  // Belt-kit composite URLs (beltkits-{mm}-f34) encode the assembled belt in
+  // the QUERY ($leatherstrap/$buckle) — rebuilding from the path alone drops
+  // those params and the image 403s in the PDP (live-proven 2026-11-23 on the
+  // 1286 PDP: views 2-3 broken). Keep every param, only upscale wid/hei.
+  // Verified: the param-preserving form returns HTTP 200.
+  if (src.includes("beltkits-")) {
+    return src.replace("wid=750&hei=1000", "wid=1536&hei=2048&qlt=99");
+  }
   return `${base}?wid=1536&hei=2048&qlt=99&$product_default_bg$`;
 }
 
