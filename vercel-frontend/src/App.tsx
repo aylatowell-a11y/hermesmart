@@ -322,6 +322,7 @@ function frMenuTarget(entry: MegaEntry, overrides: NavOverrides, heading: string
     if (txt.includes("Finance")) return { t: "external", url: "https://finance.hermes.com" };
     if (txt.includes("Rejoindre")) return { t: "external", url: "https://talents.hermes.com" };
     if (txt.toLowerCase().includes("développement durable")) return { t: "page", page: "sustainability" };
+    if (txt.toLowerCase().includes("artisan contemporain")) return { t: "page", page: "artisan" };
     return { t: "about" };
   }
   // FR_HEADING_PAGE keys are 2-part `${parentKey}|${heading}` (see the map
@@ -810,7 +811,7 @@ export function ProductVisual({ p, large: _large, altSrc, altActive, hideStatus 
   // mobile the tile renders it as text below the photo instead).
   // Recommendation tiles (RelatedRow) hide it entirely — the original's
   // Perfect Partner / Keep exploring tiles carry no status at all.
-  const statusLabel = p.status === "available_soon" ? "Bientôt disponible" : p.status === "in_store_only" ? "In store only" : p.status === "out_of_stock" ? "Out of stock" : "";
+  const statusLabel = p.status === "available_soon" ? "Bientôt disponible" : p.status === "out_of_stock" ? "Bientôt disponible" : "";
   return (
     <div className="relative h-full w-full overflow-hidden" style={{ background: p.tone }} aria-label={p.name}>
       <img src={img} alt={p.name} loading="lazy" className="h-full w-full object-cover" />
@@ -909,7 +910,7 @@ function ProductCard({ p, onOpen, onQuickBuy, colourInName, plainTile, eyebrow, 
   // the coat or the sweater tiles, while the clone rendered it below the
   // photo on mobile. The status stays screen-reader-only here and drives
   // buyability (isBuyableStatus) only.
-  const statusText = p.status === "available_soon" ? "Bientôt disponible" : p.status === "in_store_only" ? "In store only" : p.status === "out_of_stock" ? "Out of stock" : "";
+  const statusText = p.status === "available_soon" ? "Bientôt disponible" : p.status === "out_of_stock" ? "Bientôt disponible" : "";
   const altViews = useMemo(() => {
     const views = galleryForProduct(p, 0);
     const afterFirst = views.filter((v, i) => i >= 1 && !v.video && v.src !== tileSrc).map((v) => v.src);
@@ -1115,7 +1116,7 @@ export function App() {
   const qc = useQueryClient();
   const store = useQuery({ queryKey: ["storefront"], queryFn: () => api.getStorefront({}) });
   const products = useMemo(() => store.data?.products ?? [], [store.data]);
-  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "+33 1 40 17 47 00", heroTitle: "L'hiver sera conte", heroText: "", shipTo: "FRANCE", deliveryText: "Free standard delivery in France.", returnsText: "Free returns within 30 days. See conditions and procedure in our FAQ.", paymentMethods: "By card: Visa®, MasterCard® and American Express®. By PayPal® and Apple Pay®.", bgColor: "#fcf7f1", serviceHours: "Lundi au Samedi", logoMode: "both", logoUrl: "", flagshipStore: "", shipToCountries: "FRANCE", newsletterText: "Recevez notre newsletter et découvrez nos histoires, nos collections et nos surprises.", newsletterSuccess: "Merci \u2014 vous êtes inscrit(e) à la newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. Tous droits r\u00e9serv\u00e9s", serviceDeliveryBody: "Livraison standard gratuite. Hermès offre plusieurs modes de livraison rapides et sécurisés.", serviceReturnsBody: "", servicePaymentBody: "Toutes les transactions effectuées sur Hermes.com sont sécurisées.", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"Conditions Générales de Vente\",\"terms\"],[\"Conditions Générales d'Utilisation\",\"terms\"],[\"Données personnelles\",\"privacy\"],[\"Mentions légales\",\"legal\"],[\"Plan du site\",\"sitemap\"]]" };
+  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "+33 1 40 17 47 00", heroTitle: "L'hiver sera conte", heroText: "", shipTo: "FRANCE", deliveryText: "Livraison en France du lundi au samedi offerte pour toutes les commandes (exception faite de CHRONOPOST - Precise)\n\nÀ l'exception de certains objets, les achats sont livrés dans une boîte orange enveloppée d'un ruban Bolduc\n\nConsultez les questions fréquentes sur les livraisons pour plus d'informations sur les méthodes d'expédition, frais connexes et heures de livraison\n\nVotre facture sera envoyée par e-mail", returnsText: "Faciles et sans frais, dans un délai de 30 jours\n\nConsultez les questions fréquentes pour connaître les instructions et conditions de retour\n\nToutes les commandes sont livrées dans une boîte orange enveloppée d’un ruban Bolduc, à l’exception des produits de parfumerie, maquillage et beauté, des produits calendaires, des livres, des objets Hermès Editeur, des objets volumineux et de certains articles d’équitation. Les objets Hermès Editeur sont livrés dans un coffret incluant un livre et un certificat d’authenticité.\n\nAu moment du paiement, vous pouvez inclure, si vous le désirez, une carte accompagnée d’un message personnel et masquer le prix de l’objet.\n\nUn client peut échanger un cadeau. Pour plus de détails, veuillez contacter le Service Clients.", paymentMethods: "Par carte: Visa®, MasterCard®, Maestro®, American Express® et JCB®.\n\nPaiement carte authentifié et sécurisé avec 3D Secure: Verified by Visa®, MasterCard® SecureCode, American Express SafeKey®\n\nPar PayPal® et Apple Pay®", bgColor: "#fcf7f1", serviceHours: "Lundi au Samedi", logoMode: "both", logoUrl: "", flagshipStore: "", shipToCountries: "FRANCE", newsletterText: "Recevez notre newsletter et découvrez nos histoires, nos collections et nos surprises.", newsletterSuccess: "Merci \u2014 vous êtes inscrit(e) à la newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. Tous droits r\u00e9serv\u00e9s", serviceDeliveryBody: "Livraison standard gratuite. Hermès offre plusieurs modes de livraison rapides et sécurisés.", serviceReturnsBody: "", servicePaymentBody: "Toutes les transactions effectuées sur Hermes.com sont sécurisées.", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"Conditions Générales de Vente\",\"terms\"],[\"Conditions Générales d'Utilisation\",\"terms\"],[\"Données personnelles\",\"privacy\"],[\"Mentions légales\",\"legal\"],[\"Plan du site\",\"sitemap\"]]" };
 
   // Real URLs (History API routing): the initial view comes from the URL
   // when it is a routed one (category, contact page, or home); a product
@@ -1553,7 +1554,7 @@ export function App() {
                 the same query), so typing shows results at once. */}
             <div className="hidden items-center gap-2 lg:flex">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>
-              <input aria-label="Search for an article" className="w-44 bg-transparent pb-0.5 text-xs outline-none" placeholder="Search" value={searchQ} onChange={(e) => { setSearchQ(e.target.value); if (e.target.value.trim()) setSearchOpen(true); }} onFocus={() => { if (searchQ.trim()) setSearchOpen(true); }} style={{ borderBottom: `1px solid ${onHero ? "rgba(255,255,255,.7)" : "rgba(0,0,0,.6)"}`, color: onHero ? "#fff" : "#525252" }} />
+              <input aria-label="Rechercher un article" className="w-44 bg-transparent pb-0.5 text-xs outline-none" placeholder="Rechercher" value={searchQ} onChange={(e) => { setSearchQ(e.target.value); if (e.target.value.trim()) setSearchOpen(true); }} onFocus={() => { if (searchQ.trim()) setSearchOpen(true); }} style={{ borderBottom: `1px solid ${onHero ? "rgba(255,255,255,.7)" : "rgba(0,0,0,.6)"}`, color: onHero ? "#fff" : "#525252" }} />
             </div>
             <button aria-label="Search" className="flex h-9 w-9 items-center justify-center lg:hidden" onClick={() => setSearchOpen(true)}>
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke={ink} strokeWidth="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></svg>
@@ -1699,13 +1700,13 @@ export function App() {
           <div className="mx-auto max-w-5xl px-4 py-8">
             <div className="flex items-center gap-3 border-b border-black pb-3">
               <span className="text-xl">⌕</span>
-              <input aria-label="Search for an article input" autoFocus className="w-full bg-transparent text-lg outline-none" placeholder="Search for an article" value={searchQ} onChange={(e) => setSearchQ(e.target.value)} />
+              <input aria-label="Rechercher un article" autoFocus className="w-full bg-transparent text-lg outline-none" placeholder="Rechercher un article" value={searchQ} onChange={(e) => setSearchQ(e.target.value)} />
               <button aria-label="Close search" className="text-xl" onClick={() => { setSearchOpen(false); setSearchQ(""); }}>✕</button>
             </div>
-            {searchQ && <p className="mt-4 text-xs uppercase tracking-[0.2em] text-neutral-500">{searchResults.length} result{searchResults.length === 1 ? "" : "s"} for “{searchQ}”</p>}
+            {searchQ && (<><p className="mt-4 text-xs uppercase tracking-[0.2em] text-neutral-500">Voici les résultats pour «{searchQ}»</p><p className="mt-1 text-xs text-neutral-500">{searchResults.length} produits</p></>)}
             {searchQ.trim() && (() => { const terms = [...new Set(searchResults.flatMap((p) => [p.name, p.line, p.subcategory].filter(Boolean)))].slice(0, 5); return terms.length > 0 ? (
               <div className="mt-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-neutral-500">Suggested searches, {terms.length} items</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-neutral-500">Quelques suggestions</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {terms.map((t) => { const c = searchResults.filter((p) => [p.name, p.line, p.subcategory].includes(t)).length; return <button key={t} aria-label={`Suggested search ${t}`} className="border border-black/30 px-3.5 py-1.5 text-xs hover:border-black" onClick={() => setSearchQ(t)}>{t} <span className="text-neutral-500">({c})</span></button>; })}
                 </div>
@@ -1713,7 +1714,7 @@ export function App() {
             <div className="mt-6 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
               {searchResults.map((p) => <ProductCard key={p.id} p={p} onOpen={(id) => { setSearchOpen(false); go({ t: "product", id }); }} />)}
             </div>
-            {searchQ && searchResults.length === 0 && <p className="mt-10 text-center text-sm text-neutral-600">No article matches your search. Try “scarf”, “Cape Cod” or “Picotin”.</p>}
+            {searchQ && searchResults.length === 0 && (<><p className="mt-10 text-center text-sm text-neutral-600">IL N’Y A PAS DE RÉSULTAT POUR «{searchQ.toUpperCase()}»</p><p className="mt-2 text-center text-sm text-neutral-600">Vous pourriez être intéressé(e) par un de ces produits :</p></>)}
           </div>
         </div>
       )}
@@ -2082,20 +2083,20 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
 // specific colourways into families (Black, Beige/Natural, Blue …).
 function colorFamily(name: string): string {
   const n = name.toLowerCase();
-  if (/multi|colorblock|tricolore/.test(n)) return "Multi-colored";
-  if (/noir|black/.test(n)) return "Black";
-  if (/blanc|white|céramique|ceramique|craie|neige/.test(n)) return "White";
-  if (/vert|green|loden|sauge|jade|céladon|celadon|menthe|olive/.test(n)) return "Green";
-  if (/bleu|blue|marine|indigo|saphire|saphir|céleste|celeste|hydra|atoll|jean/.test(n)) return "Blue";
-  if (/gris|grey|gray|graphite|ardoise|acier|étoupe|etoupe/.test(n)) return "Grey";
-  if (/rouge|red|vermillon|lie de vin|amarante|bourgogne|corail/.test(n)) return "Red";
-  if (/rose|pink|pivoine|sakura|fuchsia/.test(n)) return "Pink";
+  if (/multi|colorblock|tricolore/.test(n)) return "Multicolore";
+  if (/noir|black/.test(n)) return "Noir";
+  if (/blanc|white|céramique|ceramique|craie|neige/.test(n)) return "Blanc";
+  if (/vert|green|loden|sauge|jade|céladon|celadon|menthe|olive/.test(n)) return "Vert";
+  if (/bleu|blue|marine|indigo|saphire|saphir|céleste|celeste|hydra|atoll|jean/.test(n)) return "Bleu";
+  if (/gris|grey|gray|graphite|ardoise|acier|étoupe|etoupe/.test(n)) return "Gris";
+  if (/rouge|red|vermillon|lie de vin|amarante|bourgogne|corail/.test(n)) return "Rouge";
+  if (/rose|pink|pivoine|sakura|fuchsia/.test(n)) return "Rose";
   if (/orange|boîte|boite/.test(n)) return "Orange";
-  if (/jaune|yellow|souffre|lime|curry/.test(n)) return "Yellow";
-  if (/violet|mauve|prune|cassis|lilas|purple/.test(n)) return "Purple";
-  if (/marron|brown|chocolat|ébène|ebene|noisette|havane|cognac|moka/.test(n)) return "Brown";
-  if (/beige|natural|naturel|gold|caramel|fauve|alezan|alézan|biscuit|chai|sable|paille|argile|kraft|miel|bois|doré|dore/.test(n)) return "Beige/Natural";
-  return "Others";
+  if (/jaune|yellow|souffre|lime|curry/.test(n)) return "Jaune";
+  if (/violet|mauve|prune|cassis|lilas|purple/.test(n)) return "Violet";
+  if (/marron|brown|chocolat|ébène|ebene|noisette|havane|cognac|moka/.test(n)) return "Marron";
+  if (/beige|natural|naturel|gold|caramel|fauve|alezan|alézan|biscuit|chai|sable|paille|argile|kraft|miel|bois|doré|dore/.test(n)) return "Beige/Naturel";
+  return "Autres";
 }
 
 // ---- Filter-facet derivations (verified from hermes.com's served facet
@@ -2606,6 +2607,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const isRTWPage = false;
   const isShoesPage = false;
   const isBeltsPage = false;
+  const isBeltsPageLive = subLow === "ceintures";
+  const isTextilesPageLive = cat === "maison-art-de-vivre" && subLow === "textiles";
+  const isMaroquinerieParentLive = cat === "maroquinerie" && !sub;
   const isMensShoesPage = false;
 
   const RTW_SUBS = [
@@ -2638,6 +2642,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "boucles d'oreilles": "Boucles d’oreilles",
     "bijoux d'oreilles": "Bijoux d’oreilles",
     "t-shirts et sweat-shirts": "T-shirts et sweat-shirts",
+    "textiles": "Plaids et coussins",
     "bagues en argent": "Bagues",
     "bijoux d'oreilles en argent": "Bijoux d'oreilles",
     "bracelets en argent": "Bracelets",
@@ -2660,7 +2665,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     : (cat === "parfums-et-maquillage" && subLow === "homme") ? "L'Univers Homme"
     : (cat === "parfums-et-maquillage" && !sub) ? "Parfums et maquillage"
     : COLLECTION_TITLES_FR[subLow] ?? (sub ? sentenceCaseSub(sub) : catLabel(cat));
-  const crumbTop = !sub ? "" : `${catLabel(cat).toUpperCase()} | ${titleText.toUpperCase()}`;
+  // Breadcrumb second level differs from the H1 on a few pages (the
+  // original's Textiles page: "MAISON ET ART DE VIVRE | MAISON").
+  const CRUMB_SECOND: Record<string, string> = { "textiles": "Maison" };
+  const crumbTop = !sub ? "" : `${catLabel(cat).toUpperCase()} | ${(CRUMB_SECOND[subLow] ?? titleText).toUpperCase()}`;
 
   // Sub-nav siblings — the row under the title, current one underlined,
   // ending with "View all" (lists verified on hermes.com for bags /
@@ -2927,6 +2935,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const [chainParaOpen, setChainParaOpen] = useState(false);
   const [objectsParaOpen, setObjectsParaOpen] = useState(false);
   const [textilesParaOpen, setTextilesParaOpen] = useState(false);
+  const [maroParaOpen, setMaroParaOpen] = useState(false);
   const [sportsParaOpen, setSportsParaOpen] = useState(false);
   const [beachParaOpen, setBeachParaOpen] = useState(false);
   const [leatherAccParaOpen, setLeatherAccParaOpen] = useState(false);
@@ -3251,22 +3260,22 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
       if (e) e.count += 1; else famMap.set(f, { count: 1, hex: c.hex });
     }
   }
-  const colorOpts = [...famMap.entries()].map(([value, e]) => ({ value, count: e.count, hex: e.hex })).sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+  const colorOpts = [...famMap.entries()].map(([value, e]) => ({ value, count: e.count, hex: e.hex })).sort((a, b) => a.value.localeCompare(b.value, "fr"));
 
-  const secCategory: FSection | null = base.length ? { key: "category", title: "Category", kind: "checks", group: "category", options: countBy((p) => catVal(p)) } : null;
-  const secLine: FSection | null = countBy((p) => p.line).length ? { key: "line", title: isRTWPage ? "Collection" : "Line", kind: "checks", group: "line", options: countBy((p) => p.line) } : null;
-  const secMaterial: FSection | null = countBy((p) => matVal(p)).length ? { key: "material", title: "Material", kind: "checks", group: "material", options: countBy((p) => matVal(p)) } : null;
-  const secModelSize: FSection | null = countBy((p) => p.modelSize).length ? { key: "modelsize", title: "Model size", kind: "checks", group: "modelSize", options: countBy((p) => p.modelSize) } : null;
-  const secFinish: FSection | null = countBy((p) => finishVal(p)).length ? { key: "finish", title: "Metallic finish", kind: "checks", group: "finish", options: countBy((p) => finishVal(p)) } : null;
-  const secSize: FSection | null = sizeOpts.length ? { key: "size", title: "Size", kind: "size", group: "size", options: sizeOpts } : null;
-  const secColor: FSection | null = colorOpts.length ? { key: "color", title: "Color", kind: "color", group: "color", options: colorOpts } : null;
+  const secCategory: FSection | null = base.length ? { key: "category", title: "Catégorie", kind: "checks", group: "category", options: countBy((p) => catVal(p)) } : null;
+  const secLine: FSection | null = countBy((p) => p.line).length ? { key: "line", title: isRTWPage ? "Collection" : "Ligne", kind: "checks", group: "line", options: countBy((p) => p.line) } : null;
+  const secMaterial: FSection | null = countBy((p) => matVal(p)).length ? { key: "material", title: "Matière", kind: "checks", group: "material", options: countBy((p) => matVal(p)) } : null;
+  const secModelSize: FSection | null = countBy((p) => p.modelSize).length ? { key: "modelsize", title: "Taille", kind: "checks", group: "modelSize", options: countBy((p) => p.modelSize) } : null;
+  const secFinish: FSection | null = countBy((p) => finishVal(p)).length ? { key: "finish", title: "Finition métallique", kind: "checks", group: "finish", options: countBy((p) => finishVal(p)) } : null;
+  const secSize: FSection | null = sizeOpts.length ? { key: "size", title: "Taille", kind: "size", group: "size", options: sizeOpts } : null;
+  const secColor: FSection | null = colorOpts.length ? { key: "color", title: "Couleur", kind: "color", group: "color", options: colorOpts } : null;
   // Belts-only facets (verified facet JSON): Width buckets from the mm
   // modelSize; Personalize "Yes" for belt kits; Universe kit-width/complete.
-  const secWidth: FSection | null = countBy((p) => beltWidthBucket(p.modelSize)).length ? { key: "width", title: "Width", kind: "checks", group: "width", options: countBy((p) => beltWidthBucket(p.modelSize)) } : null;
-  const secPersonalize: FSection | null = countBy((p) => isBeltKit(p) ? "Yes" : "").length ? { key: "personalize", title: "Personalize", kind: "checks", group: "personalize", options: countBy((p) => isBeltKit(p) ? "Yes" : "") } : null;
-  const secUniverse: FSection | null = countBy((p) => universeVal(p)).length ? { key: "universe", title: "Universe", kind: "checks", group: "universe", options: countBy((p) => universeVal(p)) } : null;
-  const secPrice: FSection | null = priceHi - priceLo >= 50 ? { key: "price", title: "Price", kind: "price", options: [] } : null;
-  const secSort: FSection = { key: "sort", title: "Sort by", kind: "sort", options: [] };
+  const secWidth: FSection | null = countBy((p) => beltWidthBucket(p.modelSize)).length ? { key: "width", title: "Largeur", kind: "checks", group: "width", options: countBy((p) => beltWidthBucket(p.modelSize)) } : null;
+  const secPersonalize: FSection | null = countBy((p) => isBeltKit(p) ? "Yes" : "").length ? { key: "personalize", title: "Personnaliser", kind: "checks", group: "personalize", options: countBy((p) => isBeltKit(p) ? "Yes" : "") } : null;
+  const secUniverse: FSection | null = countBy((p) => universeVal(p)).length ? { key: "universe", title: "Univers", kind: "checks", group: "universe", options: countBy((p) => universeVal(p)) } : null;
+  const secPrice: FSection | null = priceHi - priceLo >= 50 ? { key: "price", title: "Prix", kind: "price", options: [] } : null;
+  const secSort: FSection = { key: "sort", title: "Trier par", kind: "sort", options: [] };
   const sections: FSection[] = [];
   const pushSec = (s: FSection | null) => { if (s) sections.push(s); };
   // Facet order per category — live extraction §F (belts: Available
@@ -3276,7 +3285,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // switch rendered at the very top of the drawer, before the sections;
   // Sort by is a section inside the drawer and stays last. Other pages
   // keep their existing order.
-  if (isBeltsPage) { pushSec(secCategory); pushSec(secFinish); pushSec(secWidth); pushSec(secPersonalize); pushSec(secColor); pushSec(secSize); pushSec(secPrice); pushSec(secUniverse); pushSec(secLine); pushSec(secSort); }
+  if (isBeltsPage || isBeltsPageLive) { pushSec(secCategory); pushSec(secFinish); pushSec(secUniverse); pushSec(secLine); pushSec(secColor); pushSec(secSize); pushSec(secPrice); pushSec(secPersonalize); pushSec(secWidth); pushSec(secSort); }
   else if (isMensShoesPage) { pushSec(secLine); pushSec(secMaterial); pushSec(secSize); pushSec(secCategory); pushSec(secUniverse); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
   else if (isRTWPage) { pushSec(secLine); pushSec(secSize); pushSec(secCategory); pushSec(secMaterial); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
   else if (isBagsPage) { pushSec(secCategory); pushSec(secLine); pushSec(secMaterial); pushSec(secModelSize); pushSec(secFinish); pushSec(secColor); pushSec(secPrice); pushSec(secSort); }
@@ -4397,7 +4406,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
                 <div className="mt-1 flex justify-between text-xs text-neutral-600"><span>{fmt(dpMin)}</span><span>{fmt(dpMax)}</span></div>
               </div>
             )}
-            {s.kind === "sort" && [["relevance", "Relevance"], ["low", "Lowest price"], ["high", "Highest price"]].map(([v = "relevance", l = ""]) => (
+            {s.kind === "sort" && [["relevance", "Pertinence"], ["low", "Prix le plus bas"], ["high", "Prix le plus élevé"]].map(([v = "relevance", l = ""]) => (
               <label key={v} className="flex cursor-pointer items-center gap-2.5 py-1.5 text-sm">
                 <input type="radio" name="catsort" aria-label={`Sort by ${l}`} checked={dSort === v} onChange={() => { setDSort(v); }} className="h-4 w-4 accent-black" />{l}
               </label>
@@ -4488,7 +4497,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
                 {pl.label}<span aria-hidden="true">×</span>
               </button>
             ))}
-            <button aria-label="Clear filters" className="ml-auto text-xs underline underline-offset-4" onClick={clearFilters}>Clear</button>
+            <button aria-label="Effacer les filtres" className="ml-auto text-xs underline underline-offset-4" onClick={clearFilters}>Effacer</button>
           </div>
         )}
       </div>
@@ -4499,10 +4508,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           not an empty grid. Filtered-empty keeps the old text. */}
       {gridList.length === 0 && !filtersActive && sub ? (
         <div className="py-16 text-center">
-          <p className="text-sm text-neutral-600">We&apos;re sorry. These items are no longer available.</p>
-          <p className="mt-2 text-sm text-neutral-600">Explore our other products to discover more.</p>
+          <p className="text-sm text-neutral-600">Nous sommes désolés, ces articles ne sont plus disponibles.</p>
+          <p className="mt-2 text-sm text-neutral-600">Nous vous invitons à découvrir nos autres produits.</p>
         </div>
-      ) : gridList.length === 0 && <p className="py-16 text-center text-sm text-neutral-600">{sub ? `No articles in “${sub}” in this store yet.` : "No articles match these filters. Clear a filter to see more."}</p>}
+      ) : gridList.length === 0 && (<div className="py-16 text-center"><p className="text-sm text-neutral-600">Nous sommes désolés, ces articles ne sont plus disponibles.</p><p className="mt-2 text-sm text-neutral-600">Nous vous invitons à découvrir nos autres produits.</p></div>)}
 
       {!mosaic ? (
         <div className={`carousel-full-bleed mt-8 grid grid-cols-2 gap-[2px] lg:grid-cols-4${isChildPage ? " grid-flow-dense" : ""}`}>
@@ -4545,21 +4554,21 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               </button>
             ))}
           </div>
-          <p className="mt-4 text-center text-xs text-neutral-500">{`${gridList.length} products viewed out of ${totalForCounter}`}</p>
+          <p className="mt-4 text-center text-xs text-neutral-500">{`${gridList.length} produits consultés sur ${totalForCounter}`}</p>
         </div>
       )}
 
       {!mosaic && visible < gridList.length && (
         <div className="mt-12 text-center">
-          <p className="text-xs text-neutral-500">{`${Math.min(visible, gridList.length)} products viewed out of ${totalForCounter}`}</p>
+          <p className="text-xs text-neutral-500">{`${Math.min(visible, gridList.length)} produits chargés`}</p>
           <div className="mx-auto mt-4 h-px w-[120px] bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${totalForCounter ? (Math.min(visible, gridList.length) / totalForCounter) * 100 : 0}%` }} /></div>
-          <button aria-label="VOIR PLUS DE PRODUITS" className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal" onClick={() => { const next = Math.min(visible + 40, gridList.length); const added = next - visible; setVisible(next); setLoadedMsg(`${added} products loaded`); }}>VOIR PLUS DE PRODUITS</button>
+          <button aria-label="VOIR PLUS DE PRODUITS" className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal" onClick={() => { const next = Math.min(visible + 40, gridList.length); const added = next - visible; setVisible(next); setLoadedMsg(`${added} produits supplémentaires chargés`); }}>VOIR PLUS DE PRODUITS</button>
           {loadedMsg && <p className="sr-only" role="status">{loadedMsg}</p>}
         </div>
       )}
       {!mosaic && visible >= gridList.length && gridList.length > 0 && (
         <div className="mt-12 text-center">
-          <p className="text-xs text-neutral-500">{`${gridList.length} products viewed out of ${totalForCounter}`}</p>
+          <p className="text-xs text-neutral-500">{`${gridList.length} produits consultés sur ${totalForCounter}`}</p>
           <div className="mx-auto mt-4 h-px w-[120px] bg-black" />
         </div>
       )}
@@ -4580,7 +4589,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           keeps its 2-level breadcrumb (separate branch below). */}
       {!isHomeArtPage && !isGiftsPage && !isWatchesPage && !isFragrancesPage && (<nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         {isBeachPage ? (<span className="tracking-normal text-black">{titleText}</span>) : isFashionJewelryParentPage ? (<button aria-label="Breadcrumb Women" className="underline underline-offset-4" onClick={() => go({ t: "category", cat: "women" })}>Women</button>) : isWomensBagsPage ? (<button aria-label="Breadcrumb Leather goods" className="underline underline-offset-4" onClick={() => go({ t: "category", cat: "leather" })}>Leather goods</button>) : (<button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>)}
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isMensShoesPage && !isWomensScarvesPage && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && !isHomeArtPage && !isGiftWomenPage && !isGiftMenPage && !isGiftChildPage && !isGiftDogsPage && !isWatchWomenPage && !isWatchMenPage && !isJewelryMenPage && !isHorsePage && !isFragViewPage && !isSlgSub && !isTablewarePage && (
+        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isMensShoesPage && !isWomensScarvesPage && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isTextilesPageLive && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && !isHomeArtPage && !isGiftWomenPage && !isGiftMenPage && !isGiftChildPage && !isGiftDogsPage && !isWatchWomenPage && !isWatchMenPage && !isJewelryMenPage && !isHorsePage && !isFragViewPage && !isSlgSub && !isTablewarePage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -4722,10 +4731,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             WOMEN | SCARVES, SHAWLS AND STOLES, Wonders / Precious →
             JEWELRY | COLLECTIONS. (Children was listed here as 1 level;
             corrected 2026-11-19 to 2 levels — see the branch above.) */}
-        {sub && (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage) && (
+        {sub && (isFurnPage || isCasesPage || isOfficePage || isObjectsPage || isTextilesPage || isTextilesPageLive) && (
           <>
             {" | "}
-            <span className="tracking-normal text-black">HOME</span>
+            <span className="tracking-normal text-black">MAISON</span>
             {" | "}
             <span className="tracking-normal text-black">{titleText}</span>
           </>
@@ -4778,7 +4787,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         {sub && isTablewarePage && (
           <>
             {" | "}
-            <span className="tracking-normal text-black">HOME</span>
+            <span className="tracking-normal text-black">MAISON</span>
             {" | "}
             <span className="tracking-normal text-black">{titleText}</span>
           </>
@@ -4855,7 +4864,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               .…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setFineJewelryParaOpen(!fineJewelryParaOpen)}>{fineJewelryParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setFineJewelryParaOpen(!fineJewelryParaOpen)}>{fineJewelryParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {/* SLG descriptive paragraphs — verbatim from hermes.com
@@ -4870,7 +4879,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               ? "Explore the universe of Hermès small leather goods, where the art of detail meets functionality. Our collection reveals a range of elegant wallets, sometimes revisiting the emblematic codes of the Kelly line. Whether chosen in classic black or vivid hues, these daily companions suit your needs. Appreciate the finesse of our card holders in exceptional leather, also available in deep black, all enhanced with palladium or gold-plated finishes."
               : "Explore the universe of Hermès small leather goods, where the art of detail meets functionality. Our collection reveals a range of elegant wallets, sometimes revisiting the emblematic codes of the Kelly line…"}
           </p>
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setSlgParaOpen(!slgParaOpen)}>{slgParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setSlgParaOpen(!slgParaOpen)}>{slgParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {/* France conversion (Stage B): the US SLG sub-page paragraphs are disabled —
@@ -4918,7 +4927,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Living with Hermès means inviting a certain sense of poise and purity into the heart of one&apos;s intimacy. The home is not a mere backdrop, but a territory of expression where every object contributes to harmony…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setHomeParaOpen(!homeParaOpen)}>{homeParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setHomeParaOpen(!homeParaOpen)}>{homeParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5062,7 +5071,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               For Hermès, the art of living is not a mere aesthetic; it is a daily philosophy that consists of cultivating beauty in the simplest rituals. Every object, every scent, and every texture is designed to provide a breath of fresh air, an enchanted pause in the tumult of the world.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setBathParaOpen(!bathParaOpen)}>{bathParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setBathParaOpen(!bathParaOpen)}>{bathParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5083,7 +5092,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Infuse a touch of whimsy into your leather goods with the Hermès bag charm collection. Handcrafted in Milo lambskin or Epsom calfskin like the Oran Nano charm, these playful companions often celebrate the House&apos;s equestrian universe.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setCharmParaOpen(!charmParaOpen)}>{charmParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setCharmParaOpen(!charmParaOpen)}>{charmParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5104,7 +5113,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Perfect the art of the getaway with Hermès travel accessories. Thought out for organization and serenity, our collection protects your essentials.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTravAccParaOpen(!travAccParaOpen)}>{travAccParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTravAccParaOpen(!travAccParaOpen)}>{travAccParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5124,7 +5133,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Celebrate the art of movement with Hermès suitcases, ideal companions for great departures. Combining lightness and robustness, our 4-wheeled suitcases in technical canvas and leather facilitate every stopover.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setSuitParaOpen(!suitParaOpen)}>{suitParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setSuitParaOpen(!suitParaOpen)}>{suitParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5142,7 +5151,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Elevate your daily life and favorite objects with Hermès leather accessories. Bring a unique touch of whimsy to your bag thanks to our bag charms in leather, playful nods to the equestrian universe.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setLeatherAccParaOpen(!leatherAccParaOpen)}>{leatherAccParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setLeatherAccParaOpen(!leatherAccParaOpen)}>{leatherAccParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5160,7 +5169,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Accompany every escapade with creations combining lightness and technicality. From great departures with our rolling suitcases or 48h travel bags, to details that simplify the stopover thanks to travel accessories, everything is thought out for movement.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setLuggageParaOpen(!luggageParaOpen)}>{luggageParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setLuggageParaOpen(!luggageParaOpen)}>{luggageParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5181,7 +5190,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Hermès accessories for women are bold and sophisticated, from colorful straw hats and soft wool beanies to whimsical handkerchiefs and warm leather gloves.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWomensAccParaOpen(!womensAccParaOpen)}>{womensAccParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWomensAccParaOpen(!womensAccParaOpen)}>{womensAccParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5203,7 +5212,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               From silk ties with cheerful motifs to silk pocket squares and multicolored silk bow ties, Hermès' collection of silk accessories for men offers chic ways to accentuate any silhouette.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTiesParaOpen(!tiesParaOpen)}>{tiesParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTiesParaOpen(!tiesParaOpen)}>{tiesParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5221,7 +5230,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               From silk ties with cheerful motifs to silk pocket squares and multicolored silk bow ties, Hermès' collection of silk accessories for men offers chic ways to accentuate any silhouette.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setMenTiesParentParaOpen(!menTiesParentParaOpen)}>{menTiesParentParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setMenTiesParentParaOpen(!menTiesParentParaOpen)}>{menTiesParentParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5242,7 +5251,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Dive into the universe of Hermès horology, where technical expertise meets creative whimsy.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTimepiecesParaOpen(!timepiecesParaOpen)}>{timepiecesParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTimepiecesParaOpen(!timepiecesParaOpen)}>{timepiecesParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5276,7 +5285,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               The Petit h workshop is based on a philosophy of &quot;reverse creation&quot;: here, we do not start from a predetermined sketch, but from the material itself. This laboratory of ideas gives a second life to the House&apos;s dormant materials—such as leather scraps, silk remnants, crystal, or porcelain—to transform them into unexpected curiosities. Each piece is the result of a meeting between designers, artists, and artisans who unite their talents to repurpose resources with humor and poetry. This creative &quot;upcycling&quot; process gives birth to singular, often unique creations, where the ingenuity of the gesture transfigures the material&apos;s original purpose.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setPetitHParaOpen(!petitHParaOpen)}>{petitHParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setPetitHParaOpen(!petitHParaOpen)}>{petitHParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5299,7 +5308,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Hermès tech accessories combine the precision of digital innovation with the excellence of leather craftsmanship. Designed to protect and enhance your communication tools, our iPhone cases, Paddock chargers, and AirTag accessories are fashioned from calfskins—such as Barenia or Epsom leather—selected for their durability and unique feel.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTechParaOpen(!techParaOpen)}>{techParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTechParaOpen(!techParaOpen)}>{techParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5325,7 +5334,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Hermès furniture is defined by a constant search for balance, where structure dialogues with comfort in absolute purity. Each piece of furniture is designed to integrate into the architecture of a space while asserting its own personality.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setFurnParaOpen(!furnParaOpen)}>{furnParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setFurnParaOpen(!furnParaOpen)}>{furnParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5351,7 +5360,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Bath time is a quiet interlude, a return to oneself that demands the most delicate materials. Hermès designs its linens with particular attention to fiber length and loop density, guaranteeing perfect absorption and an incomparable plush sensation.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setCasesParaOpen(!casesParaOpen)}>{casesParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setCasesParaOpen(!casesParaOpen)}>{casesParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5377,7 +5386,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               The office is a territory apart, a place where the mind focuses and thoughts take shape. At Hermès, office accessories are designed to transform organization into a daily pleasure, favoring leather for its soft touch and reassuring patina.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setOfficeParaOpen(!officeParaOpen)}>{officeParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setOfficeParaOpen(!officeParaOpen)}>{officeParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5404,32 +5413,51 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               At Hermès, an object is never an accessory; it is a necessary punctuation. These creations, often small in scale, are designed with the same exacting standards as the most imposing pieces.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setObjectsParaOpen(!objectsParaOpen)}>{objectsParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setObjectsParaOpen(!objectsParaOpen)}>{objectsParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {/* Blankets and pillows descriptive paragraphs — verbatim from hermes.com
           (SSR HTML, 2026-11-17). Blankets page only; below the
           grid with See More, as on the original. */}
-      {isTextilesPage && (
+      {(isTextilesPage || isTextilesPageLive) && (
         <div className="mx-auto mt-12 max-w-3xl text-center">
           {textilesParaOpen ? (
             <>
               <p className="text-sm leading-7 text-neutral-700">
-                Textiles at Hermès are the invisible architects of domestic well-being. They do more than simply dress a room; they define its emotional and tactile temperature. Drawing from an exceptional mastery of natural fibers, the House offers creations where weaving, printing, and embroidery respond to one another to create a vibrant interior landscape. Whether linen, wool, or cashmere, each textile is a promise of softness and protection.
+                Les textiles chez Hermès sont les architectes invisibles du bien-être domestique. Ils ne se contentent pas d’habiller une pièce, ils en définissent la température émotionnelle et tactile. Puisant dans une maîtrise exceptionnelle des fibres naturelles, la maison propose des créations où le tissage, l’impression et la broderie se répondent pour créer un paysage intérieur vibrant. Qu’il s’agisse de lin, de laine ou de cachemire, chaque textile est une promesse de douceur et de protection.
               </p>
               <p className="mt-4 text-sm leading-7 text-neutral-700">
-                In the living room or the bedroom, Hermès textiles become allies for moments of relaxation. Pillows become design objects in their own right, providing a graphic note or a color contrast that brightens a seat. For cooler evenings or moments of reading, throws offer their lightness and enveloping warmth, bearing witness to an artisanal craftsmanship that prioritizes the fineness of the fiber. These pieces, often adorned with iconic motifs, are companions for the road that grow more beautiful over time, acquiring a unique suppleness through use.
+                Dans le salon ou la chambre, le textile Hermès se fait l’allié des instants de décompression. Les coussins deviennent des objets de design à part entière, apportant une note graphique ou un contraste de couleurs qui réveille une assise. Pour les soirées plus fraîches ou les moments de lecture, les plaids offrent leur légèreté et leur chaleur enveloppante, témoins d’un savoir-faire artisanal qui privilégie la finesse de la fibre. Ces pièces, souvent ornées de motifs emblématiques, sont des compagnons de route qui s’embellissent avec le temps, acquérant une souplesse unique au fil des usages.
               </p>
               <p className="mt-4 text-sm leading-7 text-neutral-700">
-                The bedroom, the sanctuary of the home, demands particular attention to the quality of sleep and rest. Hermès blankets are part of this quest for the essential, offering an ideal thermal structure and an impeccable drape. Their presence on the bed brings immediate serenity, the fruit of rigorous manufacturing where every stitch is controlled. Choosing these textiles means investing in objects that respect both the skin and the environment—pieces designed to last and be passed down, carrying within them the family spirit and the warmth of a home inhabited by beauty.
+                La chambre à coucher, sanctuaire de la maison, exige une attention particulière portée à la qualité du sommeil et du repos. Les couvertures Hermès s’inscrivent dans cette quête de l’essentiel, proposant une structure thermique idéale et un tomber impeccable. Leur présence sur le lit apporte une sérénité immédiate, fruit d’une fabrication rigoureuse où chaque point est contrôlé. Choisir ces textiles, c’est investir dans des objets qui respectent la peau et l’environnement, des pièces conçues pour durer et être transmises, portant en elles l’esprit de famille et la chaleur d’un foyer habité par le beau.
               </p>
             </>
           ) : (
             <p className="text-sm leading-7 text-neutral-700">
-              Textiles at Hermès are the invisible architects of domestic well-being. They do more than simply dress a room; they define its emotional and tactile temperature.…
+              Les textiles chez Hermès sont les architectes invisibles du bien-être domestique. Ils ne se contentent pas d’habiller une pièce, ils en définissent la température émotionnelle et tactile.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTextilesParaOpen(!textilesParaOpen)}>{textilesParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setTextilesParaOpen(!textilesParaOpen)}>{textilesParaOpen ? "Afficher moins" : "Afficher plus"}</button>
+        </div>
+      )}
+      {/* Maroquinerie descriptive paragraph — verbatim from hermes.com
+          (live read, 2026-11-23). Parent page only; below the grid with
+          Afficher plus / Afficher moins, as on the original. The paragraph's
+          five inline links (sacs pour femme, sacs pour homme, petite
+          maroquinerie, portefeuilles, valises) are plain text for now. */}
+      {isMaroquinerieParentLive && (
+        <div className="mx-auto mt-12 max-w-3xl text-center">
+          {maroParaOpen ? (
+            <p className="text-sm leading-7 text-neutral-700">
+              Pénétrez dans l’univers de la maroquinerie Hermès, un monde façonné par l’excellence. Explorez les silhouettes iconiques des sacs pour femme et l’élégance structurée des sacs pour homme. Notre expertise artisanale s’étend à la petite maroquinerie, proposant des pochettes polyvalentes et des portefeuilles intemporels aux couleurs vibrantes. Pour le quotidien ou les lointains horizons avec nos valises, découvrez des créations en cuir fin ou en toile. Des petits aux grands formats, chaque pièce est sublimée par des finitions signature dorées ou argentées.
+            </p>
+          ) : (
+            <p className="text-sm leading-7 text-neutral-700">
+              Pénétrez dans l’univers de la maroquinerie Hermès, un monde façonné par l’excellence. Explorez les silhouettes iconiques des sacs pour femme et l’élégance structurée des sacs pour homme.…
+            </p>
+          )}
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setMaroParaOpen(!maroParaOpen)}>{maroParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {/* Sports and outdoor descriptive paragraphs — verbatim from hermes.com
@@ -5454,7 +5482,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               At Hermès, games and sports are not mere distractions; they are expressions of discipline, freedom, and joy. The House approaches this universe with the same artisanal mastery as its historical métiers, transforming a sporting tool into a design object.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setSportsParaOpen(!sportsParaOpen)}>{sportsParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setSportsParaOpen(!sportsParaOpen)}>{sportsParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {/* Beach descriptive paragraphs — verbatim from hermes.com
@@ -5479,7 +5507,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Hermès accompanies these solar escapes with a collection designed for clarity and movement. The beach becomes a stage for vibrant graphic expression, where the House&apos;s motifs unfold on lightweight and generous materials.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setBeachParaOpen(!beachParaOpen)}>{beachParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setBeachParaOpen(!beachParaOpen)}>{beachParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {/* The Wonders descriptive paragraph — verbatim from hermes.com
@@ -5498,7 +5526,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Hermès icons become talismans in this collection dedicated to the House&apos;s emblems. Padlocks, keys, miniature bags, and Ex-Libris signatures become precious amulets to keep close to you.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWondersParaOpen(!wondersParaOpen)}>{wondersParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWondersParaOpen(!wondersParaOpen)}>{wondersParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5518,7 +5546,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Celebrate emotion and unbreakable bonds with the Precious Moments collection. Each creation is a promise, designed to mark unforgettable moments, from engagement to anniversaries.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setPreciousParaOpen(!preciousParaOpen)}>{preciousParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setPreciousParaOpen(!preciousParaOpen)}>{preciousParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5540,7 +5568,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Née du regard de Robert Dumas sur une chaîne de bateau en 1938, la collection Chaîne d&apos;ancre incarne l&apos;esprit marin d&apos;Hermès.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setChainParaOpen(!chainParaOpen)}>{chainParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setChainParaOpen(!chainParaOpen)}>{chainParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5562,7 +5590,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Cultivate the art of the word with Hermès reading and writing accessories. From notebooks with neat binding to rechargeable leather covers, each object invites you to put your thoughts on paper.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setReadingParaOpen(!readingParaOpen)}>{readingParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setReadingParaOpen(!readingParaOpen)}>{readingParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5626,7 +5654,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Gifting at Hermès is an act of sharing: a story, a moment of poise, and the resonance of centuries-old craftsmanship. It is far more than a simple gesture; it is a meeting between a thoughtful intention and an object of exceptional beauty…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftParaOpen(!giftParaOpen)}>{giftParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftParaOpen(!giftParaOpen)}>{giftParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
@@ -5667,7 +5695,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Finding the perfect gift for a woman is an exploration of Hermès, where each object tells a story of craftsmanship and high standards. Whether you are seeking a present for a specific occasion or to celebrate a suspended moment, our selection of gifts offers a variety of iconic pieces and new iterations. From fashion accessories to decorative objects, the House&apos;s universe offers gift ideas that combine utility with a timeless aesthetic. To give a piece of Hermès is to choose an object designed to last, that grows more beautiful with time, and accompanies every silhouette with natural distinction.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftWomenParaOpen(!giftWomenParaOpen)}>{giftWomenParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftWomenParaOpen(!giftWomenParaOpen)}>{giftWomenParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {isGiftMenPage && (
@@ -5689,7 +5717,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Finding the perfect gift for a man at Hermès is an exploration of the House&apos;s métiers, where each object is designed to last and accompany daily life with precision. Whether you are seeking a present for a birthday, a graduation, a wedding, or simply to show your appreciation, our gift ideas for men will lead you to timeless pieces: leather goods, watches, jewelry, silk, ready-to-wear, and home objects. Each gift tells a story of excellence, craftsmanship, and art de vivre.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftMenParaOpen(!giftMenParaOpen)}>{giftMenParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftMenParaOpen(!giftMenParaOpen)}>{giftMenParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {isGiftChildPage && (
@@ -5711,7 +5739,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Finding a baby gift at Hermès is a celebration of life&apos;s first moments. Our selection offers objects designed to accompany a newborn&apos;s awakening and the parents&apos; enchantment through durable creations. Whether you are looking for a present for a birth, a christening, or a first birthday, the world of childhood unfolds in an inventory of iconic pieces. To give a Hermès gift for a newborn is to choose a first treasure, a piece of craftsmanship destined to become a precious family heirloom.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftChildParaOpen(!giftChildParaOpen)}>{giftChildParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftChildParaOpen(!giftChildParaOpen)}>{giftChildParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {isGiftDogsPage && (
@@ -5733,7 +5761,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Celebrating the loyalty of one&apos;s four-legged companion is a gesture imbued with tenderness and distinction. To give a Hermès gift for a dog is to choose an object of design where the House&apos;s saddlery heritage meets the absolute comfort of the animal. Protected by the emblematic orange box, each present becomes the symbol of a shared affection, transforming a simple walk or a moment of rest into a true ritual of elegance. Whether to mark an event or simply for the pleasure of giving, our selection of canine accessories honors the nobility of this unbreakable bond.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftDogsParaOpen(!giftDogsParaOpen)}>{giftDogsParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setGiftDogsParaOpen(!giftDogsParaOpen)}>{giftDogsParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {isWatchWomenPage && (
@@ -5752,7 +5780,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               The Hermès vision of time embraces femininity, blending timepieces&apos; precision with the poetry of design. True objects of style, our women&apos;s watches enhance the wrist while celebrating our saddlery heritage. Elegance resides in the details of the interchangeable straps: opt for the absolute sleekness of black, the authentic warmth of brown leather, or the subtlety of a contemporary silver watches.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWatchWomenParaOpen(!watchWomenParaOpen)}>{watchWomenParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWatchWomenParaOpen(!watchWomenParaOpen)}>{watchWomenParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {isWatchMenPage && (
@@ -5771,7 +5799,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Masculine time according to Hermès is a matter of form, movement, and allure. Our men&apos;s watches combine the rigor of fine mechanics with a bold aesthetic, designed to seamlessly fit into everyday life.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWatchMenParaOpen(!watchMenParaOpen)}>{watchMenParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setWatchMenParaOpen(!watchMenParaOpen)}>{watchMenParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
       {/* Group 10 (2026-11-18) — Jewelry Men descriptive paragraph,
@@ -5792,39 +5820,41 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
               Affirmation of style, Hermès men&apos;s jewelry explores the tension between raw materials and architectural design. Silver, leather, and gold unite to create pieces with assumed masculinity, where function inspires form. Discover the modern purity and radical graphics of our white gold wedding rings, discreet symbols of an eternal attachment. Elegance is also played out in functional details: our cufflinks revisit saddle studs or motifs from the Ex-Libris collection to sublime the shirt with wit. The iconic Chaîne d&apos;ancre link, inspired by the marine universe, structures many of our bracelets, whether braided with Tournis leather or sculpted in solid metal. This graphic strength is also worn as a long necklace: explore our necklaces with assertive volumes, and let yourself be captivated by the mineral and sophisticated radiance of our white gold necklaces, touches of cold light on the silhouette.…
             </p>
           )}
-          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setJewelryMenParaOpen(!jewelryMenParaOpen)}>{jewelryMenParaOpen ? "See less" : "See More"}</button>
+          <button className="mt-3 text-xs font-medium uppercase tracking-[0.2em] underline underline-offset-4" onClick={() => setJewelryMenParaOpen(!jewelryMenParaOpen)}>{jewelryMenParaOpen ? "Afficher moins" : "Afficher plus"}</button>
         </div>
       )}
 
-      <button aria-label="Filter and sort products" className={`font-mono-d fixed bottom-4 left-1/2 z-40 flex h-12 -translate-x-1/2 items-center gap-2 px-8 text-xs font-medium uppercase tracking-normal shadow-lg ring-1 ring-black/10 lg:hidden ${totalSel > 0 ? "bg-black text-white" : "bg-white"}`} onClick={openDrawer}>
+      <button aria-label="Filtrer les produits" className={`font-mono-d fixed bottom-4 left-1/2 z-40 flex h-12 -translate-x-1/2 items-center gap-2 px-8 text-xs font-medium uppercase tracking-normal shadow-lg ring-1 ring-black/10 lg:hidden ${totalSel > 0 ? "bg-black text-white" : "bg-white"}`} onClick={openDrawer}>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2.2" /><circle cx="10" cy="17" r="2.2" /></svg>
-        Filter &amp; Sort{totalSel > 0 ? ` (${totalSel})` : ""}
+        Filtrer{totalSel > 0 ? ` (${totalSel})` : ""}
       </button>
 
       {fOpen && (
         <div className="fixed inset-0 z-50 bg-black/40" onClick={closeDrawer}>
           <div className="drawer-in absolute flex flex-col bg-[#fffcf7] max-lg:inset-x-0 max-lg:bottom-0 max-lg:max-h-[88vh] lg:right-0 lg:top-0 lg:h-full lg:w-[33vw] lg:min-w-[380px] lg:max-w-[520px]" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Filter">
             <div className="flex items-center justify-between px-6 pt-5">
-              <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">FILTER</h2>
-              <button aria-label="Close filters" className="flex items-center gap-1.5 py-1 text-sm" onClick={closeDrawer}>
+              <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">FILTRER</h2>
+              <button aria-label="Fermer les filtres" className="flex items-center gap-1.5 py-1 text-sm" onClick={closeDrawer}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
-                Close
+                Fermer
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4">
-              <p className="mt-3 text-xs leading-5 text-neutral-500">Selecting a filter will apply the update to products count based on selection</p>
+              <p className="pt-2 text-xs text-neutral-500">Mise à jour {draftCount} produits</p>
+              <p className="mt-3 text-xs leading-5 text-neutral-500">Sélectionner un filtre appliquera la mise à jour des produits affichés sur la page</p>
               <div className="mt-4 flex items-start justify-between gap-4 border-t border-black/10 pt-4">
                 <div>
-                  <p className="text-sm font-medium">Available online</p>
+                  <p className="text-sm font-medium">Disponible en ligne</p>
                 </div>
-                <button type="button" role="switch" aria-checked={dOnline} aria-label="Available online" onClick={() => { setDOnline(!dOnline); }} className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${dOnline ? "bg-black" : "bg-black/25"}`}>
+                <button type="button" role="switch" aria-checked={dOnline} aria-label="Disponible en ligne" onClick={() => { setDOnline(!dOnline); }} className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${dOnline ? "bg-black" : "bg-black/25"}`}>
                   <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${dOnline ? "left-[22px]" : "left-0.5"}`} />
                 </button>
               </div>
               {sections.map(renderSection)}
             </div>
             <div className="border-t border-black/10 px-6 py-4">
-              <button aria-label={`Apply filters, update ${draftCount} products`} className="w-full bg-black py-3.5 text-[12px] font-semibold uppercase tracking-[0.25em] text-white" onClick={closeDrawer}>APPLY Update {draftCount} products</button>
+              {totalSel > 0 && <button aria-label="Effacer les filtres appliqués" className="mb-3 w-full border border-black bg-white py-3 text-[12px] font-semibold uppercase tracking-[0.25em] text-black" onClick={clearFilters}>EFFACER</button>}
+              <button aria-label="Appliquer les filtres" className="w-full bg-black py-3.5 text-[12px] font-semibold uppercase tracking-[0.25em] text-white" onClick={closeDrawer}>APPLIQUER</button>
             </div>
           </div>
         </div>
@@ -6039,6 +6069,9 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   const [sizeGone, setSizeGone] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState(user?.email ?? "");
   const [notifyOpen, setNotifyOpen] = useState(false);
+  const [storeOpen, setStoreOpen] = useState(false);
+  const [storeQuery, setStoreQuery] = useState("");
+  const [storeFound, setStoreFound] = useState<number | null>(null);
   const [configOpen, setConfigOpen] = useState(false);
   const [notified, setNotified] = useState("");
   // Apple Pay is only offered on devices that support it. ApplePaySession
@@ -6099,7 +6132,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
     ob.observe(el);
     return () => ob.disconnect();
   }, []);
-  const notifyMut = useMutation({ mutationFn: () => api.requestNotify({ productId: p?.id ?? 0, productName: p?.name ?? "", email: notifyEmail }), onSuccess: () => setNotified("Thank you — we will notify you when this product is back in stock.") });
+  const notifyMut = useMutation({ mutationFn: () => api.requestNotify({ productId: p?.id ?? 0, productName: p?.name ?? "", email: notifyEmail }), onSuccess: () => setNotified("Merci — nous vous informerons lorsque ce produit sera disponible.") });
   // Last viewed: session-only, derived from the App-level id list (never
   // seeded from storage) — the section renders only once at least one
   // product was actually opened in this session (RelatedRow returns null
@@ -6122,7 +6155,8 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   // Track the viewport while the gallery dialog is open (the dialog's zoom
   // math is viewport-relative).
   useEffect(() => { if (!zoomOpen) return; const onRs = () => setVp({ w: window.innerWidth, h: window.innerHeight }); onRs(); window.addEventListener("resize", onRs); return () => window.removeEventListener("resize", onRs); }, [zoomOpen]);
-  if (!p) return <p className="p-10 text-center">Product not found.</p>;
+  useEffect(() => { if (!p) go({ t: "home" }); }, [p]);
+  if (!p) return null;
   const color = p.colors[colorIdx] ?? p.colors[0];
   // Sibling colourways (Cashmere coat): hermes.com shows both colour
   // thumbs on each colour's page and tapping one navigates to that
@@ -6177,6 +6211,10 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
         ? `${p.refCode.replace("v", " ")}${Math.round(parseFloat(displaySize) * 10)}`
         : `${p.refCode.replace("v", " ")}${displaySize}`)
     : p.refCode.replace("v", " ");
+  // Belt kits show two references on the original ("Références des
+  // produits : H012320UD26 | H065538CABB065"); every other product shows
+  // one ("Référence du produit : …").
+  const compRefs = (p.refCode ?? "").match(/^U_BELT_\d+(?:_HOMME)?p(H[0-9A-Za-z]+)p(H[0-9A-Za-z]+)$/) ?? (p.refCode ?? "").match(/^SANGLEp(H[0-9A-Za-z]+)p(H[0-9A-Za-z]+)$/);
   // Gallery views — EVERY view is a DISTINCT photo whose content matches
   // its label (Detail = extreme close-up, Worn = model wearing it, Above =
   // top-down, Back = rear, Side = profile), shot for that view in
@@ -6227,8 +6265,8 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   // first view and any playing video stops.
   const galleryKey = views.map((v) => v.src).join("|");
   useEffect(() => { setThumb(0); setVidPlaying(false); stripRef.current?.scrollTo({ left: 0 }); }, [galleryKey]);
-  const descLines = p.detailLines.filter((l) => !l.startsWith("Finish options:") && !/\+\d+ more/.test(l) && !l.startsWith("Also available as"));
-  const editorial = p.story && !p.story.startsWith("The story behind") ? p.story : "";
+  const descLines = p.detailLines.filter((l) => !l.startsWith("Finish options:") && !/\+\d+ more/.test(l) && !l.startsWith("Also available as") && !l.includes("ceintures à composer"));
+  const editorial = p.story && !p.story.startsWith("The story behind") ? p.story.replace(/^Les secrets d’un objet — /, "") : "";
   const partnerPool = products.filter((x) => x.id !== p.id);
   // Per-product overrides (Cashmere coat): the exact "The Perfect Partner"
   // / "Keep exploring" rows from hermes.com; every other product keeps the
@@ -6266,43 +6304,45 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
     return <>{out}</>;
   };
   const accBodies: Record<string, string[]> = p.accordionBodies ?? {};
+  // Belt kits (ceintures à composer) and parfums get their own accordion
+  // sets on hermes.com (live reads, 2026-11-23): a belt kit shows PLUS
+  // D'INFORMATIONS, a parfum with a verbatim body shows INGRÉDIENTS /
+  // GESTUELLE instead of ENTRETIEN.
+  const isBeltKitRow = /^(U_BELT|SANGLE)/.test(p.refCode ?? "");
+  const isParfumRow = p.category === "fragrances";
+  const BELT_KIT_NOTE = "Cet article fait partie de nos ceintures à composer. Nos boucles ne peuvent être vendues seules. Les bandes de cuir peuvent être achetées séparément afin d’être assorties à votre boucle selon vos envies.";
+  const plusBody: string[] | null = isBeltKitRow ? [BELT_KIT_NOTE] : (accBodies["PLUS D'INFORMATIONS"] ?? null);
+  const GIFT_PARAS = ["Toutes les commandes sont livrées dans une boîte orange enveloppée d’un ruban Bolduc, à l’exception des produits de parfumerie, maquillage et beauté, des produits calendaires, des livres, des objets Hermès Editeur, des objets volumineux et de certains articles d’équitation. Les objets Hermès Editeur sont livrés dans un coffret incluant un livre et un certificat d’authenticité.", "Au moment du paiement, vous pouvez inclure, si vous le désirez, une carte accompagnée d’un message personnel et masquer le prix de l’objet.", "Un client peut échanger un cadeau. Pour plus de détails, veuillez contacter le Service Clients."];
   const accItems: { title: string; content: React.ReactNode }[] = [
-    // PRODUCT DETAILS first — the user's phone video of hermes.com (8 Nov
-    // 2026) proves the mobile product page carries this accordion above
-    // CARE, superseding the earlier desktop audit. Its content is the
-    // product's own key details (material + the audited detail lines).
-    { title: "PRODUCT DETAILS", content: (<>
-      {p.material && <p>{p.material}</p>}
-      {descLines.map((l) => <p key={l} className="mt-1.5">{l}</p>)}
-      {p.modelSize && <p className="mt-1.5">Model size: {p.modelSize}</p>}
-      {p.metallicFinish && <p className="mt-1.5">Finish: {p.metallicFinish}</p>}
-      {descLines.length === 0 && !p.material && <p>See the product description for this article's details.</p>}
-    </>) },
-    { title: "CARE", content: <>Preserve the original qualities of this article by avoiding contact with water, perfume and cosmetics. Store it in its original case, away from direct light and heat, and entrust maintenance to a Hermès boutique.</> },
-    { title: "DELIVERY & RETURNS", content: (<>
-      <p className="font-semibold text-black">Shipping</p>
-      {settings.deliveryText ? <p className="mt-1">{settings.deliveryText}</p> : <>
-        <p className="mt-1">Free standard delivery in France.</p>
-      </>}
-      <p className="mt-4 font-semibold text-black">Payment methods</p>
-      {settings.paymentMethods ? <p className="mt-1">{settings.paymentMethods}</p> : <p className="mt-1">By card: Visa®, MasterCard® and American Express®. By PayPal® and Apple Pay®. Payment is debited immediately for personalized product.</p>}
-      <p className="mt-4 font-semibold text-black">Returns and exchanges</p>
-      {settings.returnsText ? <p className="mt-1">{settings.returnsText}</p> : <>
-        <p className="mt-1">Free returns within 30 days. See conditions and procedure in our FAQ.</p>
-        <p className="mt-3 font-semibold text-black">Returns</p>
-        <p className="mt-1">If you do not receive your order within [estimated time shown on order summary], please contact Customer Service.</p>
-        <p className="mt-3 font-semibold text-black">Designer or product exclusions</p>
-        <p className="mt-1">Some items are not eligible for delivery. Please see our Delivery FAQs for more details.</p>
-        <p className="mt-3 font-semibold text-black">Return policy</p>
-        <p className="mt-1">Returning your item is free. You have 30 days from the delivery date to return your product. Your item must be in a new condition and the packaging must be in its original state. Packages (including the orange box) will be collected at no extra charge when you have your return pick-up. Please note that international shipping costs and certain categories in Leather Goods are not refundable.</p>
-      </>}
-    </>) },
-    { title: "GIFTING", content: <>Your purchases are delivered in an orange box tied with a Bolduc ribbon, with the exception of fragrances, makeup and beauty products, books, certain equestrian and bulky items. During checkout, you can include one card with a personalized message and a priceless invoice. The gift recipient can exchange a gift. For more details, please contact Customer Service.</> },
-    // USER GUIDE (Arceau id 53) is NOT rendered yet: the original's
-    // USER GUIDE is a PDF link ("Open PDF … (Open in a new tab)") and
-    // the PDF URL is not in any saved source. Restore it as a link row
-    // once the real PDF URL is read from the live product page — the
-    // invented watch-care sentences above were removed 2026-11-10.
+    // PLUS D'INFORMATIONS — belt kits only (the kit sentence lives in the
+    // data as a detailLine bullet on those rows; it moves here), or a row
+    // with a verbatim override body. Every other product shows no such
+    // accordion (the Mallette PDP has none).
+    ...(plusBody ? [{ title: "PLUS D'INFORMATIONS", content: (<div className="space-y-1.5">{renderRichLines(plusBody)}</div>) }] : []),
+    // INGRÉDIENTS / GESTUELLE D'APPLICATION — parfums with a verbatim
+    // override body only (row 34 Musc Pallida tonight); other parfums keep
+    // the generic set below.
+    ...(isParfumRow && accBodies["INGRÉDIENTS"] ? [{ title: "INGRÉDIENTS", content: (<div className="space-y-1.5">{renderRichLines(accBodies["INGRÉDIENTS"])}</div>) }] : []),
+    ...(isParfumRow && accBodies["GESTUELLE D'APPLICATION"] ? [{ title: "GESTUELLE D'APPLICATION", content: (<div className="space-y-1.5">{renderRichLines(accBodies["GESTUELLE D'APPLICATION"])}</div>) }] : []),
+    // ENTRETIEN — every product except a parfum that already shows its
+    // ingredient / application accordions. The body is the original's
+    // leather-care sentence (link to the maintenance page); rows with a
+    // verbatim override body use it via the .map below.
+    ...(!(isParfumRow && (accBodies["INGRÉDIENTS"] || accBodies["GESTUELLE D'APPLICATION"])) ? [{ title: "ENTRETIEN", content: (<>Veuillez lire avec attention les <button className="underline underline-offset-4" onClick={() => go({ t: "page", page: "maintenance" })}>conseils d’entretien suivants</button>. Ils vous aideront à préserver votre cuir Hermès durablement.</>) }] : []),
+    { title: "LIVRAISON ET RETOURS", content: (
+      <>
+        <p className="font-semibold text-black">Livraison</p>
+        {(settings.deliveryText ? settings.deliveryText.split("\n\n") : ["Livraison en France du lundi au samedi offerte pour toutes les commandes (exception faite de CHRONOPOST - Precise)", "À l'exception de certains objets, les achats sont livrés dans une boîte orange enveloppée d'un ruban Bolduc", "Consultez les questions fréquentes sur les livraisons pour plus d'informations sur les méthodes d'expédition, frais connexes et heures de livraison", "Votre facture sera envoyée par e-mail"]).map((t, i) => <p key={i} className="mt-1">{t}</p>)}
+        <p className="mt-4 font-semibold text-black">Moyens de paiement</p>
+        {(settings.paymentMethods ? settings.paymentMethods.split("\n\n") : ["Par carte: Visa®, MasterCard®, Maestro®, American Express® et JCB®.", "Paiement carte authentifié et sécurisé avec 3D Secure: Verified by Visa®, MasterCard® SecureCode, American Express SafeKey®", "Par PayPal® et Apple Pay®"]).map((t, i) => <p key={i} className="mt-1">{t}</p>)}
+        <p className="mt-4 font-semibold text-black">Retours et échanges</p>
+        {(settings.returnsText ? settings.returnsText.split("\n\n") : ["Faciles et sans frais, dans un délai de 30 jours", "Consultez les questions fréquentes pour connaître les instructions et conditions de retour", ...GIFT_PARAS]).map((t, i) => <p key={i} className="mt-1">{t}</p>)}
+      </>
+    ) },
+    { title: "OFFRIR UN CADEAU", content: (<>{GIFT_PARAS.map((t, i) => <p key={i} className={i ? "mt-1" : undefined}>{t}</p>)}</>) },
+    // USER GUIDE (Arceau id 53) is NOT rendered yet: the full user guide
+    // (a long manual with ~40 sections) has not been extracted from
+    // hermes.com, and it only appears on this one product.
   ].map((it) => {
     const body = accBodies[it.title];
     return body ? { title: it.title, content: <div className="space-y-1.5">{renderRichLines(body)}</div> } : it;
@@ -6311,8 +6351,8 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
   // Notify me) — shared by the desktop buy box and the mobile row
   // after the description, so each device matches the original's
   // own order (mobile: description first, then the buttons).
-  const buyActions = (
-    isConfigProduct(p) ? (
+  const buyActions = (<>
+    {isConfigProduct(p) ? (
             <div className="mt-4">
               <button aria-label="Personalize" className="font-mono-d flex h-12 w-full items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => setConfigOpen((v) => !v)}>Personalize</button>
               {configOpen && <p className="mt-4 border border-black/20 p-3 text-sm">Personalization for this article is not available in this store yet.{settings.phone ? (<> Please call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a> for assistance.</>) : null}</p>}
@@ -6321,29 +6361,42 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
             <div className="mt-4">
               <div className="flex">
                 {p.applePay && <button aria-label="Buy with Apple Pay" className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border border-black text-xs font-medium uppercase text-black${applePayAvailable ? "" : " max-lg:hidden"}`} onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
-                <button aria-label="Add to cart" className="font-mono-d flex h-12 flex-1 items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
+                <button aria-label="Ajouter au panier" className="font-mono-d flex h-12 flex-1 items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Ajouter au panier</button>
               </div>
             </div>
           ) : p.status === "in_store_only" ? (
             <p className="mt-4 border border-black/20 p-3 text-sm">This article is available in store only. Please visit a boutique{settings.phone ? (<> or call <a className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></>) : null}.</p>
           ) : (
             <div className="mt-4">
-              <p className="text-sm">We will notify you when this product is back in stock</p>
+              <p className="text-sm">Nous vous informerons lorsque ce produit sera disponible</p>
               {notified ? <p className="mt-3 text-sm font-medium" role="status">{notified}</p> : notifyOpen ? (
-                <div className="mt-3 flex gap-2">
-                  <input aria-label="Email for notify me" type="email" maxLength={254} className="min-w-0 flex-1 border border-black/30 px-3 py-3 text-sm" placeholder="Your email" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} />
-                  <button aria-label="Notify me when back in stock" className="flex items-center gap-2 border border-black bg-white px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => { if (isValidEmail(notifyEmail)) notifyMut.mutate(); }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="1.5" /><path d="m3.5 7 8.5 6 8.5-6" /></svg>Notify me
-                  </button>
+                <div className="mt-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em]">Me notifier</p>
+                  <p className="mt-1 text-sm">{p.name}</p>
+                  {isParfumRow && selSize && <p className="text-xs text-neutral-500">Contenance : {selSize}</p>}
+                  <p className="text-xs text-neutral-500">Réf: {p.refCode}</p>
+                  <p className="text-xs text-neutral-500">{priceText(p)}</p>
+                  <p className="mt-2 text-xs text-neutral-500">* Informations requises</p>
+                  <label htmlFor="notify-email" className="mt-3 block text-sm">E-mail *</label>
+                  <input id="notify-email" aria-label="E-mail pour être notifié" type="email" maxLength={254} className="mt-1 w-full border border-black/30 px-3 py-3 text-sm" placeholder="Format attendu : nomprenom@domaine.com" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} />
+                  <p className="mt-2 text-xs leading-5 text-neutral-600">En cliquant sur « Continuer », j’accepte les Conditions générales d'utilisation et consens au traitement de mes données, en accord avec la Politique de confidentialité d’Hermès</p>
+                  <div className="mt-3 flex gap-2">
+                    <button aria-label="Continuer la notification" className="flex flex-1 items-center justify-center gap-2 border border-black bg-black px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => { if (isValidEmail(notifyEmail)) notifyMut.mutate(); }}>Continuer</button>
+                    <button aria-label="Fermer" className="border border-black bg-white px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => setNotifyOpen(false)}>Fermer</button>
+                  </div>
                 </div>
               ) : (
-                <button aria-label="Notify me when back in stock" className="mt-3 flex w-full items-center justify-center gap-2 border border-black bg-white py-3.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => setNotifyOpen(true)}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="1.5" /><path d="m3.5 7 8.5 6 8.5-6" /></svg>Notify me
-                </button>
+                <button aria-label="Me notifier" className="mt-3 flex w-full items-center justify-center gap-2 border border-black bg-white py-3.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => setNotifyOpen(true)}>Me notifier</button>
               )}
             </div>
-          )
-  );
+          )}
+          {isParfumRow && (
+            <button aria-label="Trouver en magasin" className="mt-3 flex w-full items-center justify-center gap-2 border border-black bg-white py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => setStoreOpen(true)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11Z" /><circle cx="12" cy="10" r="2.5" /></svg>
+              Trouver en magasin
+            </button>
+          )}
+  </>);
 
   return (
     <div className="pb-24 lg:pb-24">
@@ -6429,7 +6482,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           {p.colors.length > 0 && color && (
             <>
               <div className="mt-4 flex items-baseline justify-between">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Color</p>
+                <p className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Couleur</p>
                 <p className="text-sm">{color.pdpName ?? color.name}</p>
               </div>
               {isBuyableStatus(p.status) ? (
@@ -6480,15 +6533,15 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           )}
           {isBuyableStatus(p.status) && needsSize && (
             <div className="mt-4">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Size</p>
-              <button aria-label="Select a size" className="mt-1 flex min-h-[46px] w-full items-center justify-between border-b border-black/20 py-3 text-sm" onClick={() => setSizeDrawer(true)}>
-                <span className="flex flex-col items-start leading-snug"><span className={selSize ? "text-neutral-500" : ""}>Select a size</span>{selSize ? <span className="underline underline-offset-4">{selSize}</span> : null}</span>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Taille</p>
+              <button aria-label="Choisir une taille" className="mt-1 flex min-h-[46px] w-full items-center justify-between border-b border-black/20 py-3 text-sm" onClick={() => setSizeDrawer(true)}>
+                <span className="flex flex-col items-start leading-snug"><span className={selSize ? "text-neutral-500" : ""}>Choisir une taille</span>{selSize ? <span className="underline underline-offset-4">{selSize}</span> : null}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
               </button>
               {p.category !== "jewelry" && p.category !== "fashion-jewelry" && (<div className="mt-2 flex justify-end">
-                <button aria-label="Size guide" className="flex items-center gap-1.5 text-xs underline underline-offset-2" onClick={() => setSizeGuideOpen(true)}>
+                <button aria-label="Guide des tailles" className="flex items-center gap-1.5 text-xs underline underline-offset-2" onClick={() => setSizeGuideOpen(true)}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="2" y="9" width="20" height="7" rx="1" /><path d="M6.5 9v3.5M11 9v3.5M15.5 9v3.5M20 9v3.5" /></svg>
-                  Size Guide
+                  Guide des tailles
                 </button>
               </div>)}
               {sizeGone && <p className="mt-1.5 text-xs font-medium text-red-700" role="status">The desired size is no longer available</p>}
@@ -6514,16 +6567,16 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           DETAILS), all closed by default, only one open at a time. */}
       <div className="mx-auto mt-0 grid max-w-5xl gap-6 px-4 sm:px-6 lg:mt-12 lg:grid-cols-2">
         <section className="bg-[#fffcf7] p-5">
-          <h3 className="sr-only">Product description</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-[0.2em]">Description produit</h3>
           <p className="mt-2.5 text-xs leading-5 text-black">{p.description}</p>
           {descLines.length > 0 && (
             <div className="mt-2.5 space-y-2.5 text-xs leading-5 text-black">
-              {renderRichLines(descLines)}
+              {descLines.map((l) => <p key={l}>{l.replace(/^• /, "")}</p>)}
             </div>
           )}
-          {p.madeIn && <p className="mt-2.5 text-xs leading-5 text-black">Made in {p.madeIn}</p>}
-          {displayRef && <p className="mt-4 text-xs text-[#696969]">Product reference: {displayRef}</p>}
-          <p className="mt-4 text-xs text-[#696969]">Like to know more? <button aria-label="Contact Customer Service" className="underline underline-offset-4" onClick={() => go({ t: "page", page: "contact" })}>Contact Customer Service</button></p>
+          {p.madeIn && <p className="mt-2.5 text-xs leading-5 text-black">Fabriqué en {p.madeIn}</p>}
+          {compRefs ? <p className="mt-4 text-xs text-[#696969]">Références des produits : {compRefs[1]} | {compRefs[2]}</p> : displayRef ? <p className="mt-4 text-xs text-[#696969]">Référence du produit : {displayRef}</p> : null}
+          <p className="mt-4 text-xs text-[#696969]">Une question ? <button aria-label="Contactez notre Service Clients" className="underline underline-offset-4" onClick={() => go({ t: "page", page: "contact" })}>Contactez notre Service Clients</button></p>
         </section>
         {/* Mobile buy actions — on the original's mobile PDP the
             buttons sit AFTER the description (desktop keeps them in the
@@ -6551,7 +6604,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           (e.g. the Rouge H lipstick film, square 1:1, autoplay muted loop). */}
       {(editorial || p.storyVideo) && (
         <section className="mx-auto mt-12 max-w-5xl px-4 text-center sm:px-6 lg:mt-20">
-          <h2 className="font-serif-d text-center text-[30px] italic leading-snug">The story behind</h2>
+          <h2 className="font-serif-d text-center text-[30px] italic leading-snug">Les secrets d’un objet</h2>
           {p.storyVideo && (
             <div className="mx-auto mt-8 w-full">
               <ProductVideo src={p.storyVideo} poster={views[0]?.src ?? ""} playing muted className="h-auto w-full object-cover" />
@@ -6562,8 +6615,8 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           )}
         </section>
       )}
-      <RelatedRow title="The Perfect Partner" items={partners} go={go} onQuickBuy={(p) => addToCart(p)} feature={p} />
-      <RelatedRow title="Keep exploring" items={explore} go={go} onQuickBuy={(p) => addToCart(p)} />
+      <RelatedRow title="Le compagnon idéal" items={partners} go={go} onQuickBuy={(p) => addToCart(p)} feature={p} />
+      <RelatedRow title="Explorez d'autres pistes" items={explore} go={go} onQuickBuy={(p) => addToCart(p)} />
       <RelatedRow title="Last viewed products" items={lastViewed} go={go} mt="mt-20 lg:mt-28" hidePrice onQuickBuy={(p) => addToCart(p)} />
 
       <nav aria-label="Breadcrumb" className="font-mono-d mx-auto mt-14 max-w-5xl border-t border-black/10 px-4 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 sm:px-6">
@@ -6668,11 +6721,11 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           closes the drawer and fills the buy-box size button; "Size Guide"
           sits at the bottom right with a small ruler icon to its left. */}
       {sizeDrawer && (
-        <div className="fixed inset-0 z-[60]" role="dialog" aria-label="Select a size">
+        <div className="fixed inset-0 z-[60]" role="dialog" aria-label="Choisir une taille">
           <button aria-label="Close size selector" className="absolute inset-0 h-full w-full bg-black/30" onClick={() => setSizeDrawer(false)} />
           <div className="drawer-in absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col bg-[#fffcf7] shadow-2xl lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-0 lg:h-full lg:w-[340px] lg:max-w-[88vw]">
             <div className="relative border-b border-black/10 px-5 py-4">
-              <span className="block text-center text-[12px] font-semibold uppercase tracking-[0.25em] underline underline-offset-4">Select a size</span>
+              <span className="block text-center text-[12px] font-semibold uppercase tracking-[0.25em] underline underline-offset-4">Choisir une taille</span>
               <span className="mt-1.5 block text-center text-xs text-neutral-500">Please select a size to add this product to your cart</span>
               <button aria-label="Close size selector" className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center" onClick={() => setSizeDrawer(false)}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
@@ -6703,51 +6756,73 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
       {/* "SIZE GUIDE" — a slide-in drawer from the RIGHT on desktop and a
           bottom sheet on mobile, as on hermes.com. Scale matches the
           original (user's 1366px screenshots, 2026-11-11): ~380px wide,
-          11px title, icon + label tabs, "Select a location *" select
+          11px title, icon + label tabs, "Sélectionnez un lieu *" select
           showing US, small cm/inches radio circles, compact 12px table
           with sentence-case headers. The coat's table has 7 columns
           (Hip + Back width included); a sweater's has 5 (no Hip/Back
           width) — the original varies the table by garment, and no
           sweater in our catalogue carries sizes yet, so the 7-column
           table is what this drawer shows. */}
+      {storeOpen && (
+        <div className="fixed inset-0 z-[60]" role="dialog" aria-label="Trouver en magasin">
+          <button aria-label="Fermer la recherche de magasin" className="absolute inset-0 h-full w-full bg-black/30" onClick={() => setStoreOpen(false)} />
+          <div className="drawer-in absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col bg-[#fffcf7] shadow-2xl lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-0 lg:h-full lg:w-[380px] lg:max-w-[92vw]">
+            <div className="relative border-b border-black/10 px-4 py-3.5">
+              <span className="block text-center text-[11px] font-medium uppercase tracking-[0.3em]">Trouver en magasin</span>
+              <button aria-label="Fermer" className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center" onClick={() => setStoreOpen(false)}>✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              <p className="text-sm">{p.name}</p>
+              <p className="mt-1 text-xs text-neutral-500">PRIX {priceText(p)}</p>
+              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.25em]">Trouver un magasin</p>
+              <input aria-label="Saisir un lieu" className="mt-2 w-full border-b border-black/25 bg-transparent py-2 text-sm outline-none" placeholder="Saisir un lieu" value={storeQuery} onChange={(e) => { setStoreQuery(e.target.value); setStoreFound(null); }} />
+              <button className="mt-3 text-xs underline underline-offset-4" onClick={() => { if (navigator.geolocation) navigator.geolocation.getCurrentPosition(() => setStoreFound(0), () => setStoreFound(0)); else setStoreFound(0); }}>Utiliser ma position actuelle</button>
+              <button className="mt-4 w-full bg-black py-3 text-[12px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => setStoreFound(0)}>Trouver</button>
+              {storeFound !== null && <p className="mt-4 text-sm font-medium">{storeFound} BOUTIQUE TROUVÉE</p>}
+              <p className="mt-4 text-xs leading-5 text-neutral-600">Pour les magasins suivants, les informations de stock ne sont pas disponibles en ligne : Cannes, Courchevel, Dijon, Faubourg, George V, Nice, Montpellier, Tours, Megève, Monaco, Sèvres, St Barthélémy, St Tropez. Merci de contacter directement les magasins.</p>
+            </div>
+          </div>
+        </div>
+      )}
       {sizeGuideOpen && (
-        <div className="fixed inset-0 z-[60]" role="dialog" aria-label="Size guide">
+        <div className="fixed inset-0 z-[60]" role="dialog" aria-label="Guide des tailles">
           <button aria-label="Close size guide" className="absolute inset-0 h-full w-full bg-black/30" onClick={() => setSizeGuideOpen(false)} />
           <div className="drawer-in absolute inset-x-0 bottom-0 flex max-h-[88vh] flex-col bg-[#fffcf7] shadow-2xl lg:inset-x-auto lg:bottom-auto lg:right-0 lg:top-0 lg:h-full lg:w-[380px] lg:max-w-[92vw]">
             <div className="relative border-b border-black/10 px-4 py-3.5">
-              <span className="block text-center text-[11px] font-medium uppercase tracking-[0.3em]">Size Guide</span>
+              <span className="block text-center text-[11px] font-medium uppercase tracking-[0.3em]">Guide des tailles</span>
               <button aria-label="Close size guide" className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center" onClick={() => setSizeGuideOpen(false)}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-4 py-4">
               <div className="flex items-start justify-between border-b border-black/10 pb-3">
-                <button aria-label="Find the right size tab" className={`flex flex-col items-center gap-1.5 text-xs ${guideTab === "chart" ? "font-semibold" : "text-neutral-500"}`} onClick={() => setGuideTab("chart")}>
+                <button aria-label="Trouvez la bonne taille tab" className={`flex flex-col items-center gap-1.5 text-xs ${guideTab === "chart" ? "font-semibold" : "text-neutral-500"}`} onClick={() => setGuideTab("chart")}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><circle cx="12" cy="7.5" r="3.2" /><path d="M5.5 20c.8-3.4 3.4-5 6.5-5s5.7 1.6 6.5 5" /></svg>
-                  Find the right size
+                  Trouvez la bonne taille
                 </button>
-                <button aria-label="Measurement guide tab" className={`flex flex-col items-center gap-1.5 text-xs ${guideTab === "measure" ? "font-semibold" : "text-neutral-500"}`} onClick={() => setGuideTab("measure")}>
+                <button aria-label="Guide de mesures tab" className={`flex flex-col items-center gap-1.5 text-xs ${guideTab === "measure" ? "font-semibold" : "text-neutral-500"}`} onClick={() => setGuideTab("measure")}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1Z" /><path d="M14.5 6.5l3 3" /></svg>
-                  Measurement guide
+                  Guide de mesures
                 </button>
               </div>
-              <label className="mt-4 block text-[11px] text-neutral-500" htmlFor="guide-location">Select a location *</label>
+              <label className="mt-4 block text-[11px] text-neutral-500" htmlFor="guide-location">Sélectionnez un lieu *</label>
               <div className="relative mt-1">
                 {/* Shoes: US + UK (both measured live). RTW/knit: US only
                     (the chart is the US conversion). */}
                 {isShoeSize ? (
-                  <select id="guide-location" aria-label="Select a location" className="w-full appearance-none border-b border-black/25 bg-transparent py-2 pr-8 text-sm outline-none" value={guideLoc} onChange={(e) => setGuideLoc(e.target.value as "US" | "UK")}>
+                  <select id="guide-location" aria-label="Sélectionnez un lieu" className="w-full appearance-none border-b border-black/25 bg-transparent py-2 pr-8 text-sm outline-none" value={guideLoc} onChange={(e) => setGuideLoc(e.target.value as "US" | "UK")}>
                     <option value="US">US</option>
                     <option value="UK">UK</option>
                   </select>
                 ) : (
-                  <select id="guide-location" aria-label="Select a location" className="w-full appearance-none border-b border-black/25 bg-transparent py-2 pr-8 text-sm outline-none" value="US" onChange={() => {}}>
+                  <select id="guide-location" aria-label="Sélectionnez un lieu" className="w-full appearance-none border-b border-black/25 bg-transparent py-2 pr-8 text-sm outline-none" value={isBeltKitRow ? "FR" : "US"} onChange={() => {}}>
                     <option value="US">US</option>
+                    {isBeltKitRow && <option value="FR">FR</option>}
                   </select>
                 )}
                 <svg className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
               </div>
-              <div className="mt-4 flex items-center gap-6" role="radiogroup" aria-label="Measurement unit">
+              <div className="mt-4 flex items-center gap-6" role="radiogroup" aria-label="Choisissez l’unité de mesure">
                 <button role="radio" aria-checked={guideUnit === "cm"} aria-label="Show measurements in centimetres" className="flex items-center gap-2 text-xs" onClick={() => setGuideUnit("cm")}>
                   <span className="flex h-[14px] w-[14px] items-center justify-center rounded-full border border-black">{guideUnit === "cm" ? <span className="h-[6px] w-[6px] rounded-full bg-black" /> : null}</span>
                   cm
@@ -6854,6 +6929,11 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                     </table>
                     </div>
                   </div>
+                ) : isBeltKitRow ? (
+                <div className="mt-5 text-xs leading-6 text-neutral-700">
+                  <p className="font-semibold text-black">Comment mesurer votre tour de taille</p>
+                  <p className="mt-2">Mesurez votre tour de taille avec un mètre ruban en le gardant bien droit. Le tour de taille correspond à l’endroit où vous portez votre ceinture.</p>
+                </div>
                 ) : (
                 <div className="mt-5 text-xs leading-6 text-neutral-700">
                   <p>To take your measurements and find your perfect size, you will need a measuring tape. Make sure to keep the tape loose. If you are in-between sizes, we recommend sizing up. Time to follow the guide!</p>
@@ -6921,9 +7001,9 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               Personalize
             </button>
           ) : (
-          <button aria-label="Add to cart" disabled={sizeGone} className={`flex w-full items-center justify-center gap-2 py-4 text-[12px] font-semibold uppercase tracking-[0.22em] text-white ${sizeGone ? "cursor-not-allowed bg-neutral-400" : "bg-black"}`} onClick={() => { if (needsSize && !selSize) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}>
+          <button aria-label="Ajouter au panier" disabled={sizeGone} className={`flex w-full items-center justify-center gap-2 py-4 text-[12px] font-semibold uppercase tracking-[0.22em] text-white ${sizeGone ? "cursor-not-allowed bg-neutral-400" : "bg-black"}`} onClick={() => { if (needsSize && !selSize) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>
-            Add to cart
+            Ajouter au panier
           </button>
           )}
         </div>
@@ -6948,7 +7028,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
             ) : (
               <>
                 {p.applePay && <button aria-label="Buy with Apple Pay" className={`font-mono-d flex h-12 items-center justify-center gap-1.5 border border-black px-6 text-xs font-medium uppercase text-black${applePayAvailable ? "" : " max-lg:hidden"}`} onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
-                <button aria-label="Add to cart" className="font-mono-d flex h-12 items-center justify-center gap-2 bg-black px-8 text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Add to cart</button>
+                <button aria-label="Ajouter au panier" className="font-mono-d flex h-12 items-center justify-center gap-2 bg-black px-8 text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Ajouter au panier</button>
               </>
             )}
           </div>
@@ -6956,9 +7036,9 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
       )}
       {!isBuyableStatus(p.status) && p.status !== "in_store_only" && (
         <div className="fixed inset-x-0 bottom-0 z-40 bg-white px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_10px_rgba(0,0,0,0.14)] lg:hidden">
-          <button aria-label="Notify me when back in stock" className="flex w-full items-center justify-center gap-2 border border-black bg-white py-3.5 text-[12px] font-semibold uppercase tracking-[0.22em] text-black" onClick={() => { setNotifyOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
+          <button aria-label="Me notifier" className="flex w-full items-center justify-center gap-2 border border-black bg-white py-3.5 text-[12px] font-semibold uppercase tracking-[0.22em] text-black" onClick={() => { setNotifyOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="1.5" /><path d="m3.5 7 8.5 6 8.5-6" /></svg>
-            Notify me
+            Me notifier
           </button>
         </div>
       )}
@@ -6973,40 +7053,38 @@ const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
   { title: "MENTIONS LÉGALES", links: [["Conditions générales de vente", "terms"], ["Conditions générales d'utilisation", "terms"], ["Données personnelles", "privacy"], ["Cookies", "privacy"], ["Règles d'entreprise contraignantes (BCR)", "bcr"], ["Mentions légales", "legal"], ["Accessibilité : partiellement conforme", "accessibility"], ["Plan du site Hermès", "sitemap"]] },
 ];
 const PAGES: Record<string, { title: string; body: string[] }> = {
-  contact: { title: "Service client", body: ["Whatsapp France: +33 1 40 17 47 00. Du lundi au samedi de 9h à 18h30.", "Magasins et commandes en ligne du lundi au samedi 10h - 19h : +33 (0)1 40 17 47 00", "Pour les demandes d'information au Siège, contactez notre Standard général du lundi au vendredi 8h30 - 18h : +33 (0)1 40 17 47 17", "The answer to your question can certainly be found in the FAQs.", "You can also contact us outside public holidays:"] },
+  contact: { title: "Service client", body: ["Whatsapp France: +33 1 40 17 47 00. Du lundi au samedi de 9h à 18h30.", "Magasins et commandes en ligne du lundi au samedi 10h - 19h : +33 (0)1 40 17 47 00", "Pour les demandes d'information au Siège, contactez notre Standard général du lundi au vendredi 8h30 - 18h : +33 (0)1 40 17 47 17", "La réponse à votre question se trouve certainement dans les Questions fréquentes", "Vous pouvez également nous contacter en dehors des jours fériés :"] },
   faq: { title: "FAQ", body: ["How long is delivery? Free standard delivery in France. Free returns within 30 days of delivery.", "Can I return an article? Yes — free returns within 30 days of delivery, in its original condition and packaging.", "Which payment methods are accepted? MasterCard, Visa, American Express; PayPal and Apple Pay for select products.", "Are Birkin and Kelly quota bags sold online? No. These articles are offered in store only."] },
   stores: { title: "Find a store", body: ["Hermès boutiques welcome you across France.", "Beauty products and Apple Watch Hermès are available in selected boutiques."] },
   gifting: { title: "Gifting", body: ["Every order arrives in the orange box tied with Bolduc ribbon. Add a gift message at checkout; the delivery note never shows prices. Gift cards are available under Gifts → Gift cards."] },
   measure: { title: "Made to measure", body: ["The Sur Mesure atelier creates pieces measured, cut and finished for one person only. Appointments are arranged in boutique."] },
   maintenance: { title: "Maintenance and repair", body: ["Hermès artisans restore leather goods, silk, watches and jewelry in the Maison's workshops. Bring your article to any boutique for an assessment; a quotation is provided before any work begins."] },
   guides: { title: "User guides", body: ["Watch user guide: pull the crown to set the time; keep away from magnetic fields; service every 3–5 years.", "Scarf guide: your scarf 90 can be worn around the neck, as a top, a belt or on a bag handle. Dry clean only.", "Leather guide: wipe with a soft dry cloth and store in the dust bag provided.", "Wrist size guide: measure around your wrist and choose the closest size between 5.5\" and 6.5\" for Petite Lune straps."] },
-  payment: { title: "Payment", body: ["We accept MasterCard, Visa and American Express. PayPal and Apple Pay are available for select products.", "All the transactions made on the Hermes.com website are secure."] },
-  shipping: { title: "Shipping", body: ["Free standard delivery in France.", "Every parcel is delivered in the orange box tied with Bolduc ribbon, with signature required for high-value orders."] },
+  payment: { title: "Paiement", body: ["Le règlement de vos achats s'effectue uniquement par carte de crédit ou carte bancaire: Visa®, MasterCard®, American Express®, Maestro®, JCB®. Les paiements par Paypal® et Apple Pay® sont autorisés.", "Toutes les transactions effectuées sur le site Hermes.com sont sécurisées.", "Les cartes ne sont pas débitées tant que la commande n'a pas été expédiée, sauf pour les produits personnalisés et pour les précommandes."] },
+  shipping: { title: "Livraison", body: ["Livraison standard gratuite. Les frais de port standard sont offerts pour toute commande Colissimo, ainsi que pour les livraisons CHRONOPOST - Express.", "Livraisons en France continentale: deux (2) jours ouvrés pour toute commande passée et validée avant treize (13) heures un jour ouvré; trois (3) jours ouvrés pour toute commande passée et validée après treize (13) heures un jour ouvré.", "CHRONOPOST - Precise: 15 € pour une commande d'un montant inférieur ou égal à 200 €, 5 € pour une commande d'un montant supérieur à 200 €."] },
   collect: { title: "Collect in store", body: ["Select articles can be reserved online and collected in boutique. Bring your order confirmation and an ID; your article will be held for 48 hours."] },
   track: { title: "Track orders", body: ["Order tracking is available from your account after sign-in."] },
-  returns: { title: "Returns and exchanges", body: ["Free returns within 30 days of delivery. Articles must be returned in their original condition and packaging, with the Sellier tag intact; personalised articles are not eligible for return.", "A complimentary pre-paid return label is available from your account. Fragrances must be unopened, shoes must have undamaged soles, and an Apple Watch Hermès must be unpaired before return. Returns made in store are eligible for exchange or store credit only."] },
-  sustainability: { title: "Sustainable development", body: ["Hermès builds objects made to last and be repaired. Materials are sourced responsibly and craftsmanship is passed down through six generations of artisans."] },
+  returns: { title: "Retour et échanges", body: ["Vous avez la possibilité de retourner, pour une demande d'échange ou de remboursement, tout produit commandé sur le site Hermes.com dans les trente (30) jours calendaires de la date de la livraison.", "Les produits retournés doivent être accompagnés de leur facture d'achat ou d'une copie en cas de retour partiel.", "Le retour est offert en utilisant notre système d'étiquettes de retour prépayées. Si les articles vous ont été offerts, vous avez uniquement la possibilité de les échanger contre des articles d'une même valeur.", "Les magasins Hermès ne proposent pas le remboursement des produits achetés sur le site Hermes.com.", "Votre remboursement interviendra 15 jours ouvrés suivant la réception de votre retour à notre entrepôt."] },
+  artisan: { title: "Hermès, artisan contemporain depuis 1837", body: ["Depuis 1837, Hermès reste fidèle à son modèle artisanal et à ses valeurs humanistes. La liberté de création, la recherche permanente des plus belles matières, la transmission de savoir-faire d’excellence, jusqu’aux détails pensés pour l’usage – c’est-à-dire l’esthétique de la fonction – forgent la singularité de la maison, créatrice d’objets conçus pour durer. Entreprise familiale indépendante qui exerce 16 métiers, Hermès s’attache à conserver l’essentiel de sa production en France au sein de ses 63 sites de production et de formation, tout en développant son réseau de près de 300 magasins dans 45 pays. Le groupe emploie plus de 26 000 collaborateurs dans le monde, dont 16 300 en France.. Hermès est dirigé depuis 2013 par Axel Dumas, membre de la sixième génération.", "Hermès, acteur économique et social", "Depuis six générations, Hermès est une maison française familiale indépendante, artisanale, créative, innovante, engagée et responsable. Tout en concevant des objets intemporels et durables, elle s’emploie à sauvegarder, transmettre et développer les savoir-faire et gestes d’excellence en accord avec ses valeurs humanistes issues de l’artisanat.", "Créativité, innovation et singularité au cœur de la stratégie", "Inspirés chaque année par un nouveau thème, les 16 métiers de la maison donnent libre cours à leur créativité, à l’appui de l’excellence des savoir-faire artisanaux. Ils imaginent ainsi des objets qui conjuguent liberté, inventivité et durabilité, pensés pour accompagner l’évolution des modes de vie.", "Une maison d’artisans aux valeurs humanistes", "Issues du monde artisanal, les valeurs humanistes guident l’entreprise dans son développement : Hermès s’engage en faveur de la préservation des ressources, s’implique au sein des territoires qui accueillent ses manufactures et veille à la transmission de ses savoir-faire d’excellence.", "Hermès dans le monde", "Les clients d’Hermès constituent une véritable communauté par-delà les frontières. C’est pour ce public fidèle toujours plus nombreux que la maison déploie, en ligne comme dans son réseau international de magasins, de véritables « maisons d’objets » qui se distinguent les unes des autres par une offre unique.", "Six générations d'artisans", "Depuis 1837, génération après génération, la maison Hermès suit une double trame, celle du travail minutieux de l’artisan et celle du mode de vie de ses clients."] },
+  sustainability: { title: "Développement durable", body: ["Maison artisanale familiale et indépendante depuis 1837, Hermès crée des objets beaux et fonctionnels, qui se réparent et se transmettent de génération en génération. La qualité des matières, associée aux savoir-faire d’exception que perpétuent ses artisans, contribue à rendre durables ses créations caractérisées par leur élégance intemporelle. Attachée aux valeurs humanistes et artisanales, l’entreprise, qui emploie plus de 27 000 collaborateurs, est inscrite dans une démarche responsable qui repose, dans sa production comme dans son développement, sur une exigence permanente de qualité, et dont témoignent ses engagements culturels, sociétaux et environnementaux.", "Durabilité de l'objet", "Conjuguant exigence esthétique et fonctionnalité, Hermès se distingue par la haute qualité de ses créations issues de savoir-faire d’exception et par leur adaptation aux usages. De la selle à la soie en passant par la montre, les propriétaires d’objets Hermès peuvent en demander l’entretien et la réparation partout dans le monde. Attentive à produire au plus juste, la maison s’attache à intégrer les principes de la circularité dans son processus de fabrication, tout en étant engagée dans la recherche et le développement pour concevoir des matières alternatives innovantes.", "Durabilité de l'emploi", "Pour accompagner sa croissance, Hermès crée chaque année de nouveaux emplois et, attaché à la transmission de ses savoir-faire d’exception, forme ses artisans. La maison a ainsi ouvert en 2021 l’École Hermès des savoir-faire, qui se déploie désormais au sein de 12 écoles de formation en région, et délivre un CAP Maroquinerie. La mobilité interne est encouragée de manière à ce que chaque collaborateur puisse déployer ses talents au sein d’un groupe engagé dans une démarche d’inclusion et attentif à la diversité de ses équipes. Hermès veille enfin à offrir des emplois de qualité dans un environnement de travail propice au bien-être de chacun.", "Durabilité de l'ancrage territorial", "Avec 63 sites de production et de formation en France, la maison Hermès est présente dans 11 des 13 régions françaises. Les objets Hermès y sont fabriqués pour 75% d’entre eux . L’entreprise contribue à la revitalisation active de ces territoires : l’implantation des manufactures dans une logique de pôles régionaux permet aux collaborateurs de s’inscrire dans un écosystème social et culturel local. Chaque nouveau site de production est soumis à un référentiel construction durable, gage d’infrastructures responsables.", "Durabilité des partenariats", "Une grande fidélité unit Hermès à ses fournisseurs et ce depuis 21 ans en moyenne pour les 50 principaux fournisseurs directs. La stabilité de ces partenariats, reposant sur des valeurs partagées, permet de garantir la sécurisation des approvisionnements du groupe et d’assurer l’indispensable traçabilité des matières. Une dynamique commune anime Hermès et ses partenaires qui progressent ensemble dans leurs engagements RSE. Hermès met en place pour chacune de ses filières d’achats un objectif de certification par des tierces parties.", "Durabilité des ressources naturelles", "Entreprise responsable, Hermès veille à limiter ses impacts sur le monde, dans le respect de la nature, source de ses matières d’exception. À cet égard, la transparence, la sécurisation et la dimension locale des filières d’approvisionnement font l’objet d’une considération particulière. Le groupe s’astreint par ailleurs à maîtriser sa consommation d’eau et d’énergie, mais aussi son empreinte carbone au fil de sa production comme dans la construction, durable, de ses nouveaux sites. Enfin, Hermès a également pris des engagements et mène des actions pour la préservation de la biodiversité, qui constitue l’un des piliers de sa Fondation.", "En savoir plus", "Retrouvez des informations plus détaillées sur notre modèle d'affaires et nos contributions en matière sociale et environnementale.", "Empreintes sur le monde", "Au travers de cette collection, le cinéaste et documentariste Frédéric Laffont révèle avec un regard humaniste, notre rapport singulier au développement durable."] },
   foundation: { title: "The Hermès Foundation", body: ["Created in 2008, the Fondation d'entreprise Hermès supports creators, artisans and biodiversity through programmes in the arts, training and the environment."] },
   join: { title: "Join Hermès", body: ["The Maison recruits artisans, sales associates and head-office talent throughout the year. A human adventure since 1837 — bring your savoir-faire."] },
   finance: { title: "Finance & Governance", body: ["Hermès International is listed on Euronext Paris. Annual reports, regulated information and governance documents are published for shareholders each year."] },
   partners: { title: "Our partner brands", body: ["The group includes Puiforcat (silversmith), Saint-Louis (crystal), John Lobb (bootmaker) and Shang Xia — Maisons that share the same demand for exceptional craftsmanship."] },
-  terms: { title: "Terms and conditions", body: ["By purchasing on this store you accept these terms. Prices are shown in euros, taxes calculated at checkout. Articles remain the property of the Maison until payment is received in full."] },
+  terms: { title: "Conditions Générales de Vente", body: ["Veuillez lire attentivement les présentes Conditions Générales de Vente et Conditions Générales d'Utilisation du site Hermes.com.", "Les présentes conditions générales de vente s'appliquent aux ventes définies ci-après et réalisées par la société HERMÈS SELLIER, société par action simplifiée au capital social de 4 976 000 €, dont le siège social est situé 24 rue du Faubourg Saint Honoré – 75008 Paris – France, immatriculée au registre du commerce et des sociétés de Paris sous le numéro 696 520 410. Son numéro Siret est le 696 520 410 00023 et son numéro de TVA intracommunautaire est le FR 46 696 520 410. Ses coordonnées téléphoniques sont les suivantes: +33 (0)1 40 17 47 17.", "Dernière mise à jour: mercredi 21 octobre 2026."] },
   privacy: { title: "Privacy & cookies", body: ["We process your data to fulfil orders, manage your account and — with your consent — send the newsletter. You may refuse or accept cookies at any time from the cookie dialog shown on your first visit."] },
   bcr: { title: "Binding Corporate Rules", body: ["The group's Binding Corporate Rules govern international transfers of personal data and have been approved by the competent European authorities."] },
-  california: { title: "California Transparency in Supply Chain Act", body: ["The Maison audits its supply chain to verify that materials are not produced by forced or trafficked labour, and trains employees with direct responsibility for supply-chain management."] },
-  coverage: { title: "Transparency in coverage", body: ["Machine-readable files for the group's US health plans are made available in accordance with the Transparency in Coverage rule."] },
-  donotsell: { title: "Do Not Sell/Share My Personal Information", body: ["We do not sell your personal information. To exercise your privacy rights, contact customer service from your account page."] },
   legal: { title: "Legal issues", body: ["All content on this site — texts, images and the Hermès name — is protected. Counterfeit articles harm artisans and customers; report suspected counterfeits to customer service."] },
   accessibility: { title: "Accessibility", body: ["We aim to make this store usable by everyone: full keyboard navigation, labelled controls and text alternatives for imagery. Tell us via our contact page if any page is difficult to use."] },
 };
 
-// Contact form, per the original hermes.com/us/en/contact-us/ (audited
-// 2026-11-11): labels ABOVE every field, underline-only inputs (no boxes,
+// Contact form, per the original hermes.com/fr/fr/contact-us/ (audited
+// 2026-11-23): labels ABOVE every field, underline-only inputs (no boxes,
 // no placeholders), "Expected format" hints under e-mail and telephone,
 // area code as a flag + "US +1" control, subject as a custom dropdown with
 // the original's exact 12 options, message ~95px tall, consent on the left
 // with a fixed ~200px SEND button right-aligned on the same row.
-const SUBJECTS = ["Product information", "Order follow up", "Returns and exchanges for online purchases", "Returns and exchanges for in-store purchases", "Customer experience", "Product care and repair", "Press and communication", "Bespoke", "Furniture specialist", "Equestrian specialist", "Do not sell my data", "Other"];
+const SUBJECTS = ["Informations sur un objet", "Suivi de commande", "Retours et échanges pour des achats en ligne", "Retours et échanges pour des achats en magasin", "Expérience client", "Entretien et réparation des objets", "Presse et communication", "Sur-mesure", "Spécialiste en meubles", "Spécialiste en équitation", "Accessibilité du site", "Autre"];
 
 function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void }) {
   const [f, setF] = useState({ first: "", last: "", email: "", area: "FR +33", phone: "", subject: "", message: "" });
@@ -7028,37 +7106,38 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
   if (sent) return <p className="mt-6 border border-black/15 bg-[#fffcf7] p-5 text-sm" role="status">{sent}</p>;
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!f.first || !f.last || !isValidEmail(f.email) || !/^\d{10}$/.test(f.phone.replace(/\D/g, "")) || !f.message || !f.subject) {
+    if (!f.first || !f.last || !isValidEmail(f.email) || !/^\d{8,}$/.test(f.phone.replace(/\D/g, "")) || !f.message || !f.subject) {
       setSubjectTouched(true);
-      setErr("Please complete all fields — the telephone must be a French number (10 digits).");
+      setErr("Veuillez compléter tous les champs — le numéro de téléphone doit comporter au moins 8 chiffres.");
       return;
     }
     // No email backend exists in this build: the message is saved locally
     // for the admin (Admin Panel > Chat tab) instead of being dropped.
     const saved = await api.contactMessage({ first: f.first, last: f.last, email: f.email, subject: f.subject, message: f.message });
-    if (!saved.ok) { setErr("Your message could not be saved. Please check your email address and try again."); return; }
-    setErr(""); setSent(`Thank you, ${f.first}. Your message about “${f.subject}” has been sent — customer service will reply to ${f.email}.`);
+    if (!saved.ok) { setErr("Votre message n'a pas pu être enregistré. Veuillez vérifier votre adresse e-mail et réessayer."); return; }
+    setErr(""); setSent(`Merci, ${f.first}. Votre message au sujet de « ${f.subject} » a bien été envoyé — le service client vous répondra à l'adresse ${f.email}.`);
   };
   return (
     <form className="mt-2 space-y-9" onSubmit={submit}>
+      <p className="text-xs text-neutral-500">* Informations requises</p>
       <div className="grid gap-x-8 gap-y-9 sm:grid-cols-2">
         <div>
-          <label className={labelCls} htmlFor="cf-first">First name *</label>
+          <label className={labelCls} htmlFor="cf-first">Prénom *</label>
           <input id="cf-first" aria-label="Contact first name" maxLength={100} className={fieldCls} value={f.first} onChange={(e) => setF({ ...f, first: e.target.value })} />
         </div>
         <div>
-          <label className={labelCls} htmlFor="cf-last">Last name *</label>
+          <label className={labelCls} htmlFor="cf-last">Nom *</label>
           <input id="cf-last" aria-label="Contact last name" maxLength={100} className={fieldCls} value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
         </div>
       </div>
       <div>
         <label className={labelCls} htmlFor="cf-email">E-mail *</label>
         <input id="cf-email" aria-label="Contact email" type="email" maxLength={254} className={fieldCls} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
-        <p className="mt-1 text-xs text-neutral-500">Expected format: yourname@domain.com</p>
+        <p className="mt-1 text-xs text-neutral-500">Format attendu: nomprenom@domaine.com</p>
       </div>
       <div className="flex items-start gap-8">
         <div className="w-[140px] shrink-0">
-          <label className={labelCls} htmlFor="cf-area">Area code *</label>
+          <label className={labelCls} htmlFor="cf-area">Indicatif *</label>
           <div className="flex items-center gap-2 border-b border-black/30 py-2 focus-within:border-black">
             {flag}
             <select id="cf-area" aria-label="Contact area code" className="w-full appearance-none bg-transparent text-sm text-black focus:outline-none" value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })}>
@@ -7068,19 +7147,19 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          <label className={labelCls} htmlFor="cf-phone">Telephone number *</label>
+          <label className={labelCls} htmlFor="cf-phone">Numéro de téléphone *</label>
           <input id="cf-phone" aria-label="Contact telephone" maxLength={20} className={fieldCls} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
-          <p className="mt-1 text-xs text-neutral-500">Expected format: phone number with 10 digits</p>
+          <p className="mt-1 text-xs text-neutral-500">Format attendu : numéro de téléphone avec au moins 8 chiffres</p>
           {/* hermes.com shows a second hint under the telephone field. */}
-          <p className="mt-1 text-xs text-neutral-500">Minimum 10 numbers</p>
+          
         </div>
       </div>
       <div className="relative">
         <button type="button" aria-label="Contact subject" aria-expanded={subjectOpen} className={`flex w-full items-center justify-between border-b bg-transparent px-0 py-2 text-left text-sm focus:outline-none ${subjectInvalid ? "border-red-700" : "border-black/30 focus:border-black"}`} onClick={() => { if (subjectOpen) { setSubjectOpen(false); setSubjectTouched(true); } else setSubjectOpen(true); }}>
-          <span className={f.subject ? "text-black" : "text-neutral-500"}>{f.subject || "Please select a subject *"}</span>
+          <span className={f.subject ? "text-black" : "text-neutral-500"}>{f.subject || "Veuillez sélectionner un sujet *"}</span>
           <span className="text-neutral-500">{chevron}</span>
         </button>
-        {subjectInvalid && <p className="mt-1 text-xs text-red-700" role="status">Required information</p>}
+        {subjectInvalid && <p className="mt-1 text-xs text-red-700" role="status">Informations requises</p>}
         {subjectOpen && (
           <>
             <button aria-hidden="true" tabIndex={-1} className="fixed inset-0 z-10 cursor-default" onClick={() => { setSubjectOpen(false); setSubjectTouched(true); }} />
@@ -7091,13 +7170,13 @@ function ContactForm({ settings, go }: { settings: Settings; go: (v: View, opts?
         )}
       </div>
       <div>
-        <label className={labelCls} htmlFor="cf-message">Your message *</label>
+        <label className={labelCls} htmlFor="cf-message">Votre message *</label>
         <textarea id="cf-message" aria-label="Contact message" maxLength={2000} className={fieldCls} rows={4} value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} />
       </div>
       {err && <p className="-mt-4 text-sm text-red-700" role="status">{err}</p>}
       <div className="flex items-end justify-between gap-6">
-        <p className="max-w-[520px] text-xs leading-5 text-neutral-600">By sending your message, you agree to accept the <button type="button" aria-label="General Terms and Conditions of Use" className="underline" onClick={() => go({ t: "page", page: "terms" })}>General Terms and Conditions of Use<span className="sr-only"> (new window)</span></button> and that your data will be processed in compliance with the <button type="button" aria-label="Privacy Policy" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy<span className="sr-only"> (new window)</span></button> of Hermès.</p>
-        <button aria-label="Send contact message" type="submit" className="h-10 w-[200px] shrink-0 bg-black text-[11px] font-semibold uppercase tracking-[0.2em] text-white">Send</button>
+        <p className="max-w-[520px] text-xs leading-5 text-neutral-600">En envoyant ce message, vous acceptez les <button type="button" aria-label="Conditions Générales d'Utilisation" className="underline" onClick={() => go({ t: "page", page: "terms" })}>Conditions Générales d'Utilisation<span className="sr-only"> (nouvelle fenêtre)</span></button> et consentez au traitement de vos données, conformément à la <button type="button" aria-label="Politique de confidentialité d'Hermès" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Politique de confidentialité d'Hermès<span className="sr-only"> (nouvelle fenêtre)</span></button>.</p>
+        <button aria-label="Send contact message" type="submit" className="h-10 w-[200px] shrink-0 bg-black text-[11px] font-semibold uppercase tracking-[0.2em] text-white">Envoyer</button>
       </div>
     </form>
   );
@@ -7777,7 +7856,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
     // (audited 2026-11-11): BACK button above a white panel on the cream
     // page; "CONTACT US" in a pale heading band with a divider below it;
     // "Customer Service" sub-heading; hours line, then the phone on its
-    // own line as a tel link; FAQs as a bold link; "* Required information"
+    // own line as a tel link; FAQs as a bold link; "* Informations requises"
     // right-aligned just above the form. Panel is ~2/3 of the viewport
     // wide (905px at 1366, ~1270px at 1919), full width on mobile.
     const back = () => { if (window.history.length > 1) window.history.back(); else go({ t: "home" }); };
@@ -7796,7 +7875,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
               <p className="text-sm leading-7 text-neutral-700">Pour les demandes d’information au Siège, contactez notre Standard général du lundi au vendredi 8h30 - 18h : +33 (0)1 40 17 47 17</p>
               <p className="mt-4 text-sm leading-7 text-neutral-700">The answer to your question can certainly be found in the <a href="/fr/fr/faq/" aria-label="Frequently asked questions" className="font-bold underline underline-offset-4" onClick={(e) => { e.preventDefault(); go({ t: "faq", topic: "index" }); }}>FAQs</a></p>
               <p className="mt-4 text-sm leading-7 text-neutral-700">You can also contact us outside public holidays:</p>
-              <p className="mt-6 text-right text-xs text-neutral-600">* Required information</p>
+              <p className="mt-6 text-right text-xs text-neutral-600">* Informations requises</p>
               <ContactForm settings={settings} go={go} />
             </div>
           </div>
@@ -7913,17 +7992,17 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
   // payment text and the flagship store address, when the admin has set
   // them. Otherwise the original's wording stands.
   let body = data.body;
-  if (page === "shipping" && settings.deliveryText) body = [settings.deliveryText, ...data.body.slice(1)];
-  if (page === "returns" && settings.returnsText) body = [settings.returnsText, ...data.body.slice(1)];
-  if (page === "payment" && settings.paymentMethods) body = [`We accept ${settings.paymentMethods}.`, ...data.body.slice(1)];
+  if (page === "shipping" && settings.deliveryText) body = settings.deliveryText.split("\n\n");
+  if (page === "returns" && settings.returnsText) body = settings.returnsText.split("\n\n");
+  if (page === "payment" && settings.paymentMethods) body = settings.paymentMethods.split("\n\n");
   if (page === "stores" && settings.flagshipStore) body = data.body.map((b) => b.replace("691 Madison Avenue, New York", settings.flagshipStore));
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="font-serif-d text-3xl italic">{data.title}</h1>
-      {body.map((b, i) => <p key={i} className="mt-4 text-sm leading-7 text-neutral-700">{b}</p>)}
+      {body.flatMap((b) => b.split("\n\n")).map((b, i) => <p key={i} className="mt-4 text-sm leading-7 text-neutral-700">{b}</p>)}
       {page === "contact" && <ContactForm settings={settings} go={go} />}
-      {(page === "donotsell" || page === "legal") && <p className="mt-4 text-sm">Service client — {settings.serviceHours}.</p>}
-      <button aria-label="Continue shopping" className="mt-8 border border-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => go({ t: "home" })}>Continue shopping</button>
+      {(page === "legal") && <p className="mt-4 text-sm">Service client — {settings.serviceHours}.</p>}
+      <button aria-label="Continue shopping" className="mt-8 border border-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => go({ t: "home" })}>Continuez vos achats</button>
     </div>
   );
 }
@@ -7949,7 +8028,7 @@ function TrackOrders({ user, go }: { settings: Settings; user: { name: string; e
     <div className="mx-auto max-w-md px-4 py-12 text-center">
       <h1 className="text-xs font-semibold uppercase tracking-[0.35em]">Track orders</h1>
       <p className="mt-4 text-sm leading-6 text-neutral-700">Please sign in to track your orders — order tracking is available from your account.</p>
-      <button aria-label="Sign in to track orders" className="mt-6 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "account" })}>Sign in</button>
+      <button aria-label="Se connecter pour suivre vos commandes" className="mt-6 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "account" })}>Se connecter</button>
     </div>
   );
   return (
@@ -7983,15 +8062,30 @@ function TrackOrders({ user, go }: { settings: Settings; user: { name: string; e
 }
 
 function AboutPage({ go }: { go: (v: View, opts?: { restore?: boolean }) => void }) {
+  // "L'esprit d'entreprendre" (content/332841) — verbatim from hermes.com,
+  // fetched 2026-11-23. The A PROPOS menu heading opens this page. (The
+  // "de croissance Ce dynamisme" line is verbatim as the original's page
+  // text extracts it — no period between the two sentences.)
+  const sections: { heading: string; body: string[] }[] = [
+    { heading: "Une maison indépendante", body: ["À l’appui d’une structure actionnariale familiale, l’indépendance de la maison Hermès témoigne de la solidité de son modèle artisanal de croissance Ce dynamisme engage la maison à aller de l’avant dans le respect de ses valeurs : transmission, durabilité et humanisme. L’entrée du groupe au CAC 40 en juin 2018 et dans l’Euro Stoxx 50 en décembre 2021 a consacré cet esprit d’entreprendre. Depuis 2013, Axel Dumas, gérant et membre de la sixième génération de la famille fondatrice, porte la vision du développement international et multilocal d’Hermès."] },
+    { heading: "Une maison créatrice de valeur sociale", body: ["Entreprise engagée, Hermès montre son attachement à la création de valeur sociale pour favoriser un développement responsable en France comme à l’étranger. Cela se traduit de manière collective par la création d’emplois. De 2023 à 2025, près de 6200 nouveaux collaborateurs ont rejoint l'entreprise, dont 3500 en France.", "Fidèle à son engagement d’employeur responsable, la création de valeur sociale s’exerce également de manière individuelle, par le versement d’une participation et d’un intéressement annuels aux collaborateurs en France, ainsi que par des plans d’attribution gratuite d’actions. Depuis 2007, six plans d’attribution d’actions se sont ainsi succédé et, à fin 2024, plus de 70 % des collaborateurs d’Hermès sont devenus actionnaires. Hermès témoigne ainsi de sa volonté de partager les fruits de sa croissance avec celles et ceux qui y contribuent par leur travail quotidien."] },
+    { heading: "L’esprit d’entreprendre, au cœur de la maison Hermès", body: ["Depuis 1837, l’esprit d’entreprendre guide Hermès dans toutes les étapes de son développement. Il s’illustre par la liberté et le foisonnement de la créativité au sein de chacun des 16 métiers, et par une capacité d’innovation constante associée à des savoir-faire d’exception que la maison s’attache à sauvegarder, transmettre et développer. L’intégration de ses activités de production, préservées ou consolidées par des acquisitions, et la relation de long terme avec ses partenaires constituent la singularité du modèle Hermès.", "Concrètement, l’entreprise s’engage durablement dans les territoires et auprès des communautés où sont ancrées ses activités.", "Cet esprit se déploie par ailleurs à travers un réseau international de magasins, tous rendus uniques par le dialogue qu’ils entretiennent avec la culture locale.", "Au plus près de leur clientèle aux quatre coins du monde, les directeurs de magasin sont, en effet, libres de composer, parmi les métiers de la maison, une sélection originale d’objets proposés au sein de leur magasin. Cette approche multilocale permet à Hermès d’aller au-devant des attentes spécifiques de ses clients en leur apportant une expérience d’achat singulière d’un territoire à l’autre."] },
+    { heading: "Six générations d'artisans", body: ["Depuis 1837, génération après génération, la maison Hermès suit une double trame, celle du travail minutieux de l’artisan et celle du mode de vie de ses clients."] },
+  ];
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <p className="text-[11px] uppercase tracking-[0.3em] text-neutral-500">About Hermès</p>
-      <h1 className="font-serif-d mt-2 text-4xl italic">A house of creation since 1837</h1>
-      <p className="mt-5 text-sm leading-7 text-neutral-700">Founded in 1837 as a harness workshop in Paris, Hermès is a family-run, independent house built on craftsmanship, creative freedom and objects made to last. Six generations of artisans have shaped its leather goods, silk, ready-to-wear, jewelry, watches, perfume and art of living.</p>
-      <p className="mt-4 text-sm leading-7 text-neutral-700">Sixteen métiers work side by side: leather, silk, porcelain, crystal, jewelry and more — each object beginning in the hands of a single artisan who signs their work through its quality alone.</p>
+      <p className="text-[11px] uppercase tracking-[0.3em] text-neutral-500">À propos d’Hermès</p>
+      <h1 className="font-serif-d mt-2 text-4xl italic">L’esprit d’entreprendre</h1>
+      <p className="mt-5 text-sm leading-7 text-neutral-700">Depuis six générations, Hermès est une maison française familiale indépendante, artisanale, créative, innovante, engagée et responsable. Tout en concevant des objets intemporels et durables, elle s’emploie à sauvegarder, transmettre et développer les savoir-faire et gestes d’excellence en accord avec ses valeurs humanistes issues de l’artisanat.</p>
+      {sections.map((s) => (
+        <div key={s.heading} className="mt-12 text-center">
+          <h2 className="font-serif-d text-2xl italic">{s.heading}</h2>
+          {s.body.map((p, i) => <p key={i} className="mt-4 text-sm leading-7 text-neutral-700">{p}</p>)}
+        </div>
+      ))}
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        {[["Leather Goods", "leather"], ["Silk", "women"], ["The Home", "home"]].map(([l, c]) => (
-          <button key={l} aria-label={`Explore ${l}`} className="border border-black px-4 py-4 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => go({ t: "category", cat: c ?? "home" })}>{l}</button>
+        {[["Maroquinerie", "maroquinerie"], ["Femme", "femme"], ["Maison", "maison-art-de-vivre"]].map(([l, c]) => (
+          <button key={l} aria-label={`Découvrir ${l}`} className="border border-black px-4 py-4 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => go({ t: "category", cat: c ?? "home" })}>{l}</button>
         ))}
       </div>
     </div>
@@ -8027,9 +8121,13 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
       </section>
       <section className="bg-[#fffcf7] px-5 py-5" aria-label="Reinsurance section">
         <h2 className={CO_HEAD}>Réassurance</h2>
-        <div className="mt-5 grid grid-cols-2 gap-4 text-center">
-          <button aria-label="Returns and exchanges from cart" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "returns" })}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M7 8h11l-3-3M17 16H6l3 3" /></svg>Returns &amp; exchanges</button>
-          <button aria-label="Shop securely from cart" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "payment" })}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="1" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>Shop securely</button>
+        <div className="mt-5 grid grid-cols-3 gap-4 text-center">
+          <button aria-label="Livraison gratuite depuis le panier" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "shipping" })}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 8l9-4 9 4v8l-9 4-9-4V8Z" /><path d="M3 8l9 4 9-4M12 12v8" /></svg>
+              Livraison gratuite
+            </button>
+            <button aria-label="Retours et échanges depuis le panier" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "returns" })}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M7 8h11l-3-3M17 16H6l3 3" /></svg>Retours &amp; échanges</button>
+          <button aria-label="Paiement sécurisé depuis le panier" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "payment" })}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="1" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>Paiement sécurisé</button>
         </div>
       </section>
     </div>
@@ -8066,13 +8164,14 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
           <span className="w-10" />
         </div>
         <div className="mt-2"><CheckoutProgress step={1} nextStep /></div>
+        <h1 className="mt-8 text-center text-lg font-medium uppercase tracking-[0.25em]">Panier</h1>
         {cart.length === 0 ? (
           <div className="mt-8">
             <div className="grid gap-6 lg:grid-cols-[1fr_463px]">
               <div className="flex flex-col items-center bg-[#fffcf7] px-6 py-16 text-center">
                 <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>
-                <h1 className="mt-5 text-lg">Your cart is empty</h1>
-                <button aria-label="Continue shopping from empty cart" className="mt-6 bg-black px-10 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "home" })}>Continue shopping</button>
+                <h1 className="mt-5 text-lg">Votre panier est vide</h1>
+                <button aria-label="Continue shopping from empty cart" className="mt-6 bg-black px-10 py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "home" })}>Continuez vos achats</button>
               </div>
               {rightCol}
             </div>
@@ -8235,7 +8334,7 @@ function ChatBubble({ settings, go, view, buyBarVisible }: { settings: Settings;
             </div>
             {stage === "consent" && (
               <div role="alertdialog" aria-label="Live chat consent">
-                <p className="mt-2 text-sm leading-6 text-neutral-700">By using our Live Chat, you accept the use of your personal data by Hermès of Paris in order to respond to your requests about a product or service and to enhance the customer experience. To find out more about the management of your personal data and your rights, please see our <button type="button" aria-label="Privacy Policy" className="underline" onClick={() => { closePanel(); go({ t: "page", page: "privacy" }); }}>Privacy Policy</button>.</p>
+                <p className="mt-2 text-sm leading-6 text-neutral-700">En utilisant notre Chat en direct, vous acceptez l'utilisation de vos données personnelles par Hermès of Paris afin de répondre à vos demandes concernant un produit ou un service et d'améliorer l'expérience client. Pour en savoir plus sur la gestion de vos données personnelles et sur vos droits, veuillez consulter notre <button type="button" aria-label="Politique de confidentialité" className="underline" onClick={() => { closePanel(); go({ t: "page", page: "privacy" }); }}>Politique de confidentialité</button>.</p>
                 <button aria-label="Continue to live chat" className="mx-auto mt-5 block border border-black px-8 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={continueChat}>Continue</button>
               </div>
             )}
@@ -8469,7 +8568,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   const [authMode, setAuthMode] = useState<"login" | "signup">(mode ?? "login");
   // Sign-in form. After a fresh sign-up the visitor lands here (not signed
   // in yet) with their new email prefilled — see "hlx-just-registered".
-  const [liEmail, setLiEmail] = useState(() => load<{ email?: string }>("hlx-just-registered", {}).email ?? ""); const [liPw, setLiPw] = useState(""); const [liMsg, setLiMsg] = useState(() => load("hlx-just-registered", null) ? "Your account has been created. Please sign in." : ""); const [emailStep, setEmailStep] = useState(true);
+  const [liEmail, setLiEmail] = useState(() => load<{ email?: string }>("hlx-just-registered", {}).email ?? ""); const [liPw, setLiPw] = useState(""); const [liMsg, setLiMsg] = useState(() => load("hlx-just-registered", null) ? "Votre compte a été créé. Veuillez vous connecter." : ""); const [emailStep, setEmailStep] = useState(true);
   const [forgotMsg, setForgotMsg] = useState("");
   // Create-account form (Hermes create-account page layout).
   const [suTitle, setSuTitle] = useState(""); const [suFirst, setSuFirst] = useState(""); const [suLast, setSuLast] = useState("");
@@ -8571,7 +8670,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
                 {(ordersQ.data?.orders.length ?? 0) === 0 ? (
                   <>
                     <p className="mt-4 text-sm text-neutral-700">Nothing&apos;s tickled your fancy yet?</p>
-                    <button aria-label="Continue shopping from account" className="mt-6 bg-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "home" })}>Continue shopping</button>
+                    <button aria-label="Continue shopping from account" className="mt-6 bg-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "home" })}>Continuez vos achats</button>
                   </>
                 ) : (
                   ordersQ.data?.orders.map((o) => {
@@ -8652,7 +8751,7 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   // max 5 attempts — the code proves nothing (it is displayed on the page),
   // but it is no longer guessable or reusable forever.
   const sendCode = () => {
-    if (!isValidEmail(suEmail)) { setSuMsg("Please enter a valid email address first."); return; }
+    if (!isValidEmail(suEmail)) { setSuMsg("Veuillez saisir une adresse e-mail valide."); return; }
     const buf = new Uint32Array(1);
     crypto.getRandomValues(buf);
     setSentCode(String(100000 + (buf[0] % 900000)));
@@ -8662,29 +8761,29 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
     setSuMsg("");
   };
   const submitSignup = () => {
-    if (!isValidEmail(suEmail)) return setSuMsg("Please enter a valid email address.");
+    if (!isValidEmail(suEmail)) return setSuMsg("Veuillez saisir une adresse e-mail valide.");
     // Already registered? Tell the visitor right away instead of letting
     // them fill the whole form — they should sign in, not sign up again.
     const existingUsers = load<{ email?: string }[]>("hv-users", []);
-    if (existingUsers.some((u) => (u.email ?? "").toLowerCase() === suEmail.trim().toLowerCase())) return setSuMsg("An account with this email already exists. Please sign in.");
-    if (!sentCode) return setSuMsg("Please press SEND CODE first — a code will be shown for you to enter.");
-    if (Date.now() - sentCodeAt > 10 * 60 * 1000) return setSuMsg("That code has expired. Please press SEND CODE again for a new one.");
-    if (codeTries >= 5) return setSuMsg("Too many wrong attempts. Please press SEND CODE again for a new code.");
-    if (suCode.trim() !== sentCode) { setCodeTries((v) => v + 1); return setSuMsg("The verification code does not match the code shown above."); }
-    if (!critOk) return setSuMsg("Please choose a password that meets all the criteria below.");
-    if (!suTitle) return setSuMsg("Please choose a title.");
-    if (!suFirst.trim() || !suLast.trim()) return setSuMsg("Please enter your first and last name.");
+    if (existingUsers.some((u) => (u.email ?? "").toLowerCase() === suEmail.trim().toLowerCase())) return setSuMsg("Un compte existe déjà avec cette adresse e-mail. Veuillez vous connecter.");
+    if (!sentCode) return setSuMsg("Veuillez d’abord appuyer sur ENVOYER LE CODE — un code vous sera affiché à saisir.");
+    if (Date.now() - sentCodeAt > 10 * 60 * 1000) return setSuMsg("Ce code a expiré. Veuillez appuyer de nouveau sur ENVOYER LE CODE pour en obtenir un nouveau.");
+    if (codeTries >= 5) return setSuMsg("Trop de tentatives incorrectes. Veuillez appuyer de nouveau sur ENVOYER LE CODE pour obtenir un nouveau code.");
+    if (suCode.trim() !== sentCode) { setCodeTries((v) => v + 1); return setSuMsg("Le code de vérification ne correspond pas au code affiché ci-dessus."); }
+    if (!critOk) return setSuMsg("Veuillez choisir un mot de passe qui respecte tous les critères ci-dessous.");
+    if (!suTitle) return setSuMsg("Veuillez choisir une civilité.");
+    if (!suFirst.trim() || !suLast.trim()) return setSuMsg("Veuillez saisir votre prénom et votre nom.");
     const digits = suPhone.replace(/\D/g, "");
-    if (!/^\d{10}$/.test(digits)) return setSuMsg("Please enter a 10-digit telephone number.");
+    if (!/^\d{8,}$/.test(digits)) return setSuMsg("Veuillez saisir un numéro de téléphone d’au moins 8 chiffres.");
     // Date of birth comes from the calendar picker (YYYY-MM-DD), so it is
     // always complete — month, day and year together. Age is checked by
     // calendar: the visitor is 18+ when their 18th birthday is today or earlier.
     const dobParts = suDob.split("-");
     const dobDate = dobParts.length === 3 ? new Date(Number(dobParts[0]), Number(dobParts[1]) - 1, Number(dobParts[2])) : null;
     const dobValid = !!dobDate && dobDate.getFullYear() === Number(dobParts[0]) && dobDate.getMonth() === Number(dobParts[1]) - 1 && dobDate.getDate() === Number(dobParts[2]);
-    if (!dobValid) return setSuMsg("Please enter your complete date of birth.");
+    if (!dobValid) return setSuMsg("Veuillez saisir votre date de naissance complète.");
     const today = new Date(); const eighteenth = new Date(dobDate.getFullYear() + 18, dobDate.getMonth(), dobDate.getDate());
-    if (eighteenth > today) return setSuMsg("Please enter a valid date of birth to confirm that you are at least 18 years of age.");
+    if (eighteenth > today) return setSuMsg("Veuillez saisir une date de naissance valide pour confirmer que vous avez au moins 18 ans.");
     setSuMsg("");
     reg.mutate();
   };
@@ -8694,18 +8793,18 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
   if (authMode === "login") {
     return (
       <div className="mx-4 my-10 max-w-md bg-[#fffcf7] px-6 py-10 sm:mx-auto sm:px-8">
-        <h1 className="font-mono-d text-center text-xs font-medium uppercase tracking-normal">Account</h1>
-        <p className="mt-4 text-center text-sm leading-6 text-neutral-700">Please enter your email below to access or create your account</p>
-        <p className="mt-2 text-center text-sm leading-6 text-neutral-700">Please insert your email to receive your order confirmation. If you have already registered with us, your password will be requested.</p>
+        <h1 className="font-mono-d text-center text-xs font-medium uppercase tracking-normal">Votre compte</h1>
+        <p className="mt-4 text-center text-sm leading-6 text-neutral-700">Veuillez ajouter votre e-mail ci-dessous pour accéder à votre compte ou créer un compte</p>
+        <p className="mt-2 text-center text-sm leading-6 text-neutral-700">Merci d’indiquer l’adresse e-mail sur laquelle vous souhaitez recevoir votre confirmation de commande. Si vous avez déjà créé un compte, vous serez également invité à introduire votre mot de passe.</p>
         <div className="mt-6 space-y-4">
           <label className={lab}>E-mail *
             <input aria-label="Sign in email" type="email" className={underline} value={liEmail} disabled={!emailStep} onChange={(e) => setLiEmail(e.target.value)} />
-            <span className={hint}>Expected format: yourname@domain.com</span>
+            <span className={hint}>Format attendu: nomprenom@domaine.com</span>
           </label>
           {!emailStep && (
             <>
-              <button aria-label="Use a different email" className="block text-xs uppercase tracking-[0.2em] underline" onClick={() => { setEmailStep(true); setLiPw(""); setLiMsg(""); }}>Use a different email</button>
-              <label className={lab}>Password *
+              <button aria-label="Utiliser une autre adresse e-mail" className="block text-xs uppercase tracking-[0.2em] underline" onClick={() => { setEmailStep(true); setLiPw(""); setLiMsg(""); }}>Utiliser une autre adresse e-mail</button>
+              <label className={lab}>Mot de passe *
                 <input aria-label="Sign in password" type="password" className={underline} value={liPw} onChange={(e) => setLiPw(e.target.value)} />
               </label>
             </>
@@ -8713,99 +8812,99 @@ function AccountView({ user, setUser, go, mode }: { user: { name: string; email:
         </div>
         {liMsg && <p className="mt-3 text-sm text-red-700" role="status">{liMsg}</p>}
         {emailStep ? (
-          <button aria-label="Continue with email" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!isValidEmail(liEmail)) { setLiMsg("Please enter a valid email address."); return; } setLiMsg(""); setEmailStep(false); }}>Continue</button>
+          <button aria-label="Continue with email" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!isValidEmail(liEmail)) { setLiMsg("Veuillez saisir une adresse e-mail valide."); return; } setLiMsg(""); setEmailStep(false); }}>Continuer</button>
         ) : (
-          <button aria-label="Sign in button" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => login.mutate()}>Sign in</button>
+          <button aria-label="Se connecter" className="font-mono-d mt-5 flex h-12 w-full items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => login.mutate()}>Se connecter</button>
         )}
-        <button aria-label="Forgot password" className="mt-4 w-full text-center text-xs uppercase tracking-[0.2em] underline" onClick={() => setForgotMsg("This standalone build has no email service, so password reset is unavailable — please create a new account or contact customer service.")}>Forgot your password?</button>
+        <button aria-label="Mot de passe oublié" className="mt-4 w-full text-center text-xs uppercase tracking-[0.2em] underline" onClick={() => setForgotMsg("Ce site autonome n’a pas de service e-mail, la réinitialisation du mot de passe n’est donc pas disponible — veuillez créer un nouveau compte ou contacter le service client.")}>Mot de passe oublié ?</button>
         {forgotMsg && <p className="mt-3 text-center text-xs leading-5 text-neutral-600" role="status">{forgotMsg}</p>}
-        <p className="mt-6 text-center text-sm text-neutral-700">New here? <button aria-label="Go to create account" className="underline" onClick={() => { setAuthMode("signup"); setLiMsg(""); setEmailStep(true); setSuEmail(liEmail); }}>Create an account</button></p>
+        <p className="mt-6 text-center text-sm text-neutral-700">Nouveau ici ? <button aria-label="Aller à la création de compte" className="underline" onClick={() => { setAuthMode("signup"); setLiMsg(""); setEmailStep(true); setSuEmail(liEmail); }}>Créer un compte</button></p>
       </div>
     );
   }
   // Create account — laid out like hermes.com/us/en/account/create/:
-  // intro + "* Required information", then two columns (Login information |
+  // intro + "* Informations requises", then two columns (Login information |
   // Personal information), then the create button.
   return (
     <div className="mx-4 my-10 max-w-4xl bg-[#fffcf7] px-6 py-10 sm:mx-auto sm:px-8">
-      <h1 className="font-mono-d mb-6 text-center text-xs font-medium uppercase tracking-normal">Create an account</h1>
+      <h1 className="font-mono-d mb-6 text-center text-xs font-medium uppercase tracking-normal">Créer un compte</h1>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <p className="max-w-2xl text-sm leading-6 text-neutral-700">By creating an account, you agree to accept the <button aria-label="General Terms and Conditions of Use" className="underline" onClick={() => go({ t: "page", page: "terms" })}>General Terms and Conditions of Use</button> and that your data will be processed in compliance with the <button aria-label="Privacy Policy" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button> of Hermès.</p>
-        <p className="shrink-0 text-xs text-neutral-500">* Required information</p>
+        <p className="max-w-2xl text-sm leading-6 text-neutral-700">En créant un compte, vous acceptez les <button aria-label="Conditions Générales d’Utilisation" className="underline" onClick={() => go({ t: "page", page: "terms" })}>Conditions Générales d’Utilisation</button> et que vos données seront traitées conformément à la <button aria-label="Politique de confidentialité" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Politique de confidentialité</button> d’Hermès.</p>
+        <p className="shrink-0 text-xs text-neutral-500">* Informations requises</p>
       </div>
       <div className="mt-8 grid gap-10 md:grid-cols-2">
         <div>
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Login information</h2>
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Informations de connexion</h2>
           <label className={`${lab} mt-5`}>E-mail *
             <span className="mt-1 flex items-end gap-3">
               <input aria-label="Create account email" type="email" maxLength={254} className={`${underline} min-w-0 flex-1`} value={suEmail} onChange={(e) => setSuEmail(e.target.value)} />
-              <button aria-label="Send verification code" type="button" disabled={codeWait > 0} className="shrink-0 bg-black px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white disabled:opacity-50" onClick={sendCode}>Send code</button>
+              <button aria-label="Send verification code" type="button" disabled={codeWait > 0} className="shrink-0 bg-black px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white disabled:opacity-50" onClick={sendCode}>Envoyer le code</button>
             </span>
-            {sentCode && <span className="mt-1 block text-xs text-neutral-500">{codeWait} SECONDS REMAINING BEFORE YOU CAN REQUEST A NEW CODE</span>}
-            <span className={hint}>Expected format: yourname@domain.com</span>
+            {sentCode && <span className="mt-1 block text-xs text-neutral-500">{codeWait} SECONDES RESTANTES AVANT DE POUVOIR DEMANDER UN NOUVEAU CODE</span>}
+            <span className={hint}>Format attendu: nomprenom@domaine.com</span>
           </label>
-          {sentCode && <p className="mt-3 border border-black/15 bg-[#f6f1eb] px-3 py-2 text-xs leading-5 text-neutral-800" role="status">Your code is <strong>{sentCode}</strong>; enter it in Verification code below.</p>}
-          <label className={`${lab} mt-5`}>Verification code *
+          {sentCode && <p className="mt-3 border border-black/15 bg-[#f6f1eb] px-3 py-2 text-xs leading-5 text-neutral-800" role="status">Votre code est <strong>{sentCode}</strong> ; saisissez-le dans le champ Code de vérification ci-dessous.</p>}
+          <label className={`${lab} mt-5`}>Code de vérification *
             <input aria-label="Verification code" type={suShowCode ? "text" : "password"} inputMode="numeric" className={underline} value={suCode} onChange={(e) => setSuCode(e.target.value)} disabled={!sentCode} />
-            <span className={hint}>Expected format: 123456</span>
+            <span className={hint}>Format attendu : 123456</span>
           </label>
-          <button aria-label={suShowCode ? "Hide verification code" : "Show verification code"} type="button" className="mt-1 block w-full text-right text-xs uppercase tracking-[0.15em] underline" onClick={() => setSuShowCode(!suShowCode)}>{suShowCode ? "Hide" : "Show"}</button>
-          <label className={`${lab} mt-5`}>Password *
+          <button aria-label={suShowCode ? "Masquer le code de vérification" : "Afficher le code de vérification"} type="button" className="mt-1 block w-full text-right text-xs uppercase tracking-[0.15em] underline" onClick={() => setSuShowCode(!suShowCode)}>{suShowCode ? "Masquer" : "Afficher"}</button>
+          <label className={`${lab} mt-5`}>Mot de passe *
             <input aria-label="Create account password" type={suShowPw ? "text" : "password"} className={underline} value={suPw} onChange={(e) => setSuPw(e.target.value)} />
           </label>
-          <button aria-label={suShowPw ? "Hide password" : "Show password"} type="button" className="mt-1 block w-full text-right text-xs uppercase tracking-[0.15em] underline" onClick={() => setSuShowPw(!suShowPw)}>{suShowPw ? "Hide" : "Show"}</button>
+          <button aria-label={suShowPw ? "Masquer le mot de passe" : "Afficher le mot de passe"} type="button" className="mt-1 block w-full text-right text-xs uppercase tracking-[0.15em] underline" onClick={() => setSuShowPw(!suShowPw)}>{suShowPw ? "Masquer" : "Afficher"}</button>
           <div className="mt-3 bg-[#f6f1eb] px-4 py-3">
-            <p className="text-xs leading-5 text-neutral-700">For your security, we invite you to fill your password according to the following criteria:</p>
+            <p className="text-xs leading-5 text-neutral-700">Pour votre sécurité, nous vous invitons à choisir un mot de passe respectant les critères suivants :</p>
             <ul className="mt-2 space-y-1 text-xs text-neutral-700">
-              <li><span className={crit.len ? "font-bold text-green-700" : "text-neutral-400"}>{crit.len ? "✓" : "•"}</span> At least 10 characters</li>
-              <li><span className={crit.upper ? "font-bold text-green-700" : "text-neutral-400"}>{crit.upper ? "✓" : "•"}</span> At least 1 uppercase letter</li>
-              <li><span className={crit.lower ? "font-bold text-green-700" : "text-neutral-400"}>{crit.lower ? "✓" : "•"}</span> At least 1 lowercase letter</li>
-              <li><span className={crit.digit ? "font-bold text-green-700" : "text-neutral-400"}>{crit.digit ? "✓" : "•"}</span> At least 1 number</li>
-              <li><span className={crit.special ? "font-bold text-green-700" : "text-neutral-400"}>{crit.special ? "✓" : "•"}</span> At least 1 special character</li>
+              <li><span className={crit.len ? "font-bold text-green-700" : "text-neutral-400"}>{crit.len ? "✓" : "•"}</span> Au moins 10 caractères</li>
+              <li><span className={crit.upper ? "font-bold text-green-700" : "text-neutral-400"}>{crit.upper ? "✓" : "•"}</span> Au moins 1 lettre majuscule</li>
+              <li><span className={crit.lower ? "font-bold text-green-700" : "text-neutral-400"}>{crit.lower ? "✓" : "•"}</span> Au moins 1 lettre minuscule</li>
+              <li><span className={crit.digit ? "font-bold text-green-700" : "text-neutral-400"}>{crit.digit ? "✓" : "•"}</span> Au moins 1 chiffre</li>
+              <li><span className={crit.special ? "font-bold text-green-700" : "text-neutral-400"}>{crit.special ? "✓" : "•"}</span> Au moins 1 caractère spécial</li>
             </ul>
           </div>
         </div>
         <div>
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Personal information</h2>
-          <label className={`${lab} mt-5`}>Title *
-            <select aria-label="Title" className={underline} value={suTitle} onChange={(e) => setSuTitle(e.target.value)}>
-              <option value="">Select</option><option value="Mr">Mr</option><option value="Mrs">Mrs</option><option value="Miss">Miss</option><option value="Ms">Ms</option><option value="Dr">Dr</option>
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.25em]">Informations personnelles</h2>
+          <label className={`${lab} mt-5`}>Civilité *
+            <select aria-label="Civilité" className={underline} value={suTitle} onChange={(e) => setSuTitle(e.target.value)}>
+              <option value="">Sélectionner</option><option value="Mr">M.</option><option value="Mrs">Mme</option><option value="Miss">Mlle</option><option value="Ms">Mme</option><option value="Dr">Dr</option>
             </select>
           </label>
-          <label className={`${lab} mt-5`}>First name *
-            <input aria-label="First name" type="text" maxLength={100} className={underline} value={suFirst} onChange={(e) => setSuFirst(e.target.value)} />
+          <label className={`${lab} mt-5`}>Prénom *
+            <input aria-label="Prénom" type="text" maxLength={100} className={underline} value={suFirst} onChange={(e) => setSuFirst(e.target.value)} />
           </label>
-          <label className={`${lab} mt-5`}>Last name *
-            <input aria-label="Last name" type="text" maxLength={100} className={underline} value={suLast} onChange={(e) => setSuLast(e.target.value)} />
+          <label className={`${lab} mt-5`}>Nom *
+            <input aria-label="Nom" type="text" maxLength={100} className={underline} value={suLast} onChange={(e) => setSuLast(e.target.value)} />
           </label>
           <div className="mt-5 flex items-end gap-3">
-            <label className={`${lab} w-32 shrink-0`}>Area code *
-              <select aria-label="Area code" className={underline} value={suArea} onChange={(e) => setSuArea(e.target.value)}>
+            <label className={`${lab} w-32 shrink-0`}>Indicatif *
+              <select aria-label="Indicatif" className={underline} value={suArea} onChange={(e) => setSuArea(e.target.value)}>
                 <option value="FR +33">🇫🇷 FR +33</option>
               </select>
             </label>
-            <label className={`${lab} min-w-0 flex-1`}>Telephone number *
-              <input aria-label="Telephone number" type="tel" maxLength={20} className={underline} value={suPhone} onChange={(e) => setSuPhone(e.target.value)} />
-              <span className={hint}>Expected format: phone number with 10 digits</span>
-              <span className={hint}>Minimum 10 numbers</span>
-              <span className={hint}>Numbers only</span>
+            <label className={`${lab} min-w-0 flex-1`}>Numéro de téléphone *
+              <input aria-label="Numéro de téléphone" type="tel" maxLength={20} className={underline} value={suPhone} onChange={(e) => setSuPhone(e.target.value)} />
+              <span className={hint}>Format attendu : numéro de téléphone avec au moins 8 chiffres</span>
+              
+              
             </label>
           </div>
           <div className="mt-5">
-            <label className={lab}>Date of birth *
+            <label className={lab}>Date de naissance *
               <input aria-label="Date of birth" type="date" className={underline} value={suDob} onChange={(e) => setSuDob(e.target.value)} />
-              <span className={hint}>Choose your date of birth from the calendar — you must be at least 18 years of age</span>
+              <span className={hint}>Choisissez votre date de naissance dans le calendrier — vous devez avoir au moins 18 ans</span>
             </label>
           </div>
         </div>
       </div>
       <label className="mt-8 flex cursor-pointer items-start gap-2.5 text-sm leading-6 text-neutral-700">
-        <input type="checkbox" aria-label="Receive marketing information from Hermès" checked={suMarketing} onChange={(e) => setSuMarketing(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-black" />
+        <input type="checkbox" aria-label="Recevoir des informations commerciales de Hermès" checked={suMarketing} onChange={(e) => setSuMarketing(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-black" />
         <span>I agree to receive information about offers, services, products and events from Hermès Sellier and other Hermès group companies via phone, email, instant messaging, and mail, in accordance with the Privacy Policy. I can update my communication preferences anytime through my customer account and opt out of commercial email messages by clicking the &ldquo;Unsubscribe&rdquo; link located at the bottom of each email.</span>
       </label>
       {suMsg && <p className="mt-6 text-sm text-red-700" role="status">{suMsg}</p>}
-      <button aria-label="Create an account" className="mt-8 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white sm:mx-auto sm:block sm:w-80" onClick={submitSignup}>Create an account</button>
-      <p className="mt-6 text-center text-sm text-neutral-700">Already have an account? <button aria-label="Go to sign in" className="underline" onClick={() => { setAuthMode("login"); setSuMsg(""); setEmailStep(true); }}>Sign in</button></p>
+      <button aria-label="Create an account" className="mt-8 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white sm:mx-auto sm:block sm:w-80" onClick={submitSignup}>Créer un compte</button>
+      <p className="mt-6 text-center text-sm text-neutral-700">Vous avez déjà un compte ? <button aria-label="Aller à la connexion" className="underline" onClick={() => { setAuthMode("login"); setSuMsg(""); setEmailStep(true); }}>Se connecter</button></p>
     </div>
   );
 
@@ -8883,8 +8982,8 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
   });
   const req = (v: string) => attempted && !v.trim();
   const phoneDigits = f.phone.replace(/\D/g, "");
-  const phoneBad = attempted && !/^\d{10}$/.test(phoneDigits);
-  const fieldErr = (bad: boolean) => bad ? <p className="mt-1 text-xs text-[#b3261e]">Required information</p> : null;
+  const phoneBad = attempted && !/^\d{8,}$/.test(phoneDigits);
+  const fieldErr = (bad: boolean) => bad ? <p className="mt-1 text-xs text-[#b3261e]">Informations requises</p> : null;
   const underline = "w-full border-0 border-b border-black/40 bg-transparent px-0 py-2 text-[15px] outline-none focus:border-black";
   const labelCls = "block text-[13px] text-neutral-500";
   const footerLinks: [string, string][] = parseLegalLinks(settings);
@@ -8913,13 +9012,13 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         <button aria-label="View my orders after checkout" className="bg-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "account" })}>My Orders</button>
         <button aria-label="Track order after checkout" className="border border-black px-8 py-3 text-[11px] uppercase tracking-[0.25em]" onClick={() => go({ t: "page", page: "track" })}>Track order</button>
-        <button aria-label="Continue shopping after order" className="border border-black px-8 py-3 text-[11px] uppercase tracking-[0.25em]" onClick={() => go({ t: "home" })}>Continue shopping</button>
+        <button aria-label="Continue shopping after order" className="border border-black px-8 py-3 text-[11px] uppercase tracking-[0.25em]" onClick={() => go({ t: "home" })}>Continuez vos achats</button>
       </div>
     </div>, 3);
 
   if (cart.length === 0) return shell(
     <div className="mt-8 bg-[#fffcf7] px-5 py-16 text-center">
-      <h1 className="font-serif-d text-3xl italic">Your cart is empty</h1>
+      <h1 className="font-serif-d text-3xl italic">Votre panier est vide</h1>
       <button aria-label="Shop from empty checkout" className="mt-6 border border-black px-10 py-3 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => go({ t: "home" })}>Discover the collections</button>
     </div>, 2);
 
@@ -8969,11 +9068,11 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
             {emailErr && <p className="mt-1 text-xs text-[#b3261e]" role="status">{emailErr}</p>}
             <label className="mt-4 flex cursor-pointer items-start gap-3 p-4 text-sm leading-6 text-neutral-800">
               <input type="checkbox" aria-label="Agree to receive information about offers" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-black" />
-              <span>I agree to receive information about offers, services, products and events from <span className="underline">Hermès Seller</span> and other <span className="underline">Hermès group companies</span> via phone, email, instant messaging, and mail, in accordance with the <button type="button" aria-label="Privacy Policy from account consent" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button>.</span>
+              <span>J'accepte de recevoir des informations sur les offres, services, produits et événements de <span className="underline">Hermès Sellier</span> et des autres <span className="underline">sociétés du groupe Hermès</span> par téléphone, e-mail, messagerie instantanée et courrier, conformément à la <button type="button" aria-label="Politique de confidentialité" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Politique de confidentialité</button>.</span>
             </label>
             <p className="mt-3 text-[13px] leading-5 text-neutral-400">I can update my communication preferences anytime through my customer account and opt out of commercial email messages by clicking the &quot;Unsubscribe&quot; link located at the bottom of each email.</p>
             <button aria-label="Use another email address" className="mt-3 text-sm underline underline-offset-4" onClick={() => { setEmail(""); setEmailErr(""); }}>Use another email address</button>
-            <p className="mt-5 text-[13px] leading-5 text-neutral-600">By clicking on &quot;Continue&quot;, you agree that your information will be processed by Hermès International, Hermès Seller and their service providers, in accordance with the <button type="button" aria-label="Privacy Policy from continue text" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button>.</p>
+            <p className="mt-5 text-[13px] leading-5 text-neutral-600">En cliquant sur « Continuer », vous acceptez que vos informations soient traitées par Hermès International, Hermès Sellier et leurs prestataires de services, conformément à la <button type="button" aria-label="Politique de confidentialité" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Politique de confidentialité</button>.</p>
             <button aria-label="Continue from account step" className="mt-4 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => { if (!isValidEmail(email)) { setEmailErr("Please enter a valid email address."); return; } setAccountEdit(false); }}>Continue</button>
             <div className="mt-6 space-y-2 border-t border-[#f6f1eb] pt-4 text-[13px] text-neutral-600">
               {footerLinks.map(([l, pg]) => <button key={l} aria-label={`Account footer ${l}`} className="block hover:underline" onClick={() => go({ t: "page", page: pg })}>{l}</button>)}
@@ -8999,7 +9098,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
         {tab === "ship" ? (
           <div className="pt-5">
             <h3 className="text-[17px] font-bold">Shipping address</h3>
-            <p className="mt-3 text-right text-[13px]">* Required information</p>
+            <p className="mt-3 text-right text-[13px]">* Informations requises</p>
             <div className="mt-2 space-y-6">
               <label className={labelCls}>Location *
                 <span className="relative block">
@@ -9009,21 +9108,21 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
                   <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2" aria-hidden="true">⌄</span>
                 </span>
               </label>
-              <label className={labelCls}>Title *
+              <label className={labelCls}>Civilité *
                 <span className="relative block">
-                  <select aria-label="Title" className={`${underline} appearance-none pr-8`} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })}>
-                    <option value=""> </option>{["Mr", "Mrs", "Miss", "Ms", "Dr"].map((t) => <option key={t} value={t}>{t}</option>)}
+                  <select aria-label="Civilité" className={`${underline} appearance-none pr-8`} value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })}>
+                    <option value=""> </option>{[["Mr", "M."], ["Mrs", "Mme"], ["Miss", "Mlle"], ["Ms", "Mme"], ["Dr", "Dr"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
                   <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2" aria-hidden="true">⌄</span>
                 </span>
                 {fieldErr(req(f.title))}
               </label>
-              <label className={labelCls}>First name *
-                <input aria-label="First name" maxLength={100} className={underline} value={f.first} onChange={(e) => setF({ ...f, first: e.target.value })} />
+              <label className={labelCls}>Prénom *
+                <input aria-label="Prénom" maxLength={100} className={underline} value={f.first} onChange={(e) => setF({ ...f, first: e.target.value })} />
                 {fieldErr(req(f.first))}
               </label>
-              <label className={labelCls}>Last name *
-                <input aria-label="Last name" maxLength={100} className={underline} value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
+              <label className={labelCls}>Nom *
+                <input aria-label="Nom" maxLength={100} className={underline} value={f.last} onChange={(e) => setF({ ...f, last: e.target.value })} />
                 {fieldErr(req(f.last))}
               </label>
               <label className={labelCls}>Company (optional)
@@ -9051,23 +9150,23 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
                 <input aria-label="Zip plus" inputMode="numeric" maxLength={4} className={underline} value={f.zipPlus} onChange={(e) => setF({ ...f, zipPlus: e.target.value })} />
               </label>
               <div className="grid grid-cols-[1fr_1.2fr] gap-4">
-                <label className={labelCls}>Area code *
-                  <select aria-label="Area code" className={`${underline} appearance-none`} value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })}>
+                <label className={labelCls}>Indicatif *
+                  <select aria-label="Indicatif" className={`${underline} appearance-none`} value={f.area} onChange={(e) => setF({ ...f, area: e.target.value })}>
                     <option value="FR +33">🇫🇷 FR +33</option>
                   </select>
                 </label>
-                <label className={labelCls}>Telephone number *
-                  <input aria-label="Telephone number" inputMode="tel" maxLength={20} className={underline} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
+                <label className={labelCls}>Numéro de téléphone *
+                  <input aria-label="Numéro de téléphone" inputMode="tel" maxLength={20} className={underline} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
                 </label>
               </div>
               <div>
                 {fieldErr(phoneBad)}
-                <p className="text-xs text-neutral-600">Expected format: phone number with 10 digits</p>
+                <p className="text-xs text-neutral-600">Format attendu : numéro de téléphone avec au moins 8 chiffres</p>
               </div>
             </div>
             <button aria-label="Save delivery address" className="mt-7 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => {
               setAttempted(true);
-              const ok = f.title && f.first.trim() && f.last.trim() && f.address.trim() && f.city.trim() && f.zip.trim() && /^\d{10}$/.test(phoneDigits);
+              const ok = f.title && f.first.trim() && f.last.trim() && f.address.trim() && f.city.trim() && f.zip.trim() && /^\d{8,}$/.test(phoneDigits);
               if (ok) { setDeliverySaved(true); }
             }}>Save</button>
             {deliverySaved && <p className="mt-3 text-sm font-medium" role="status">Delivery address saved — payment is now available below.</p>}
@@ -9110,8 +9209,8 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
             <p className="mt-2 text-xs text-neutral-500">PayPal and Apple Pay are available for select products.</p>
             <p className="mt-3 text-xs leading-5 text-neutral-500">Selecting a method records it on the order; no card is charged and no card details are collected.</p>
             <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm leading-6 text-neutral-800">
-              <input type="checkbox" aria-label="Agree to the General Terms and Conditions of Use" checked={termsAgree} onChange={(e) => { setTermsAgree(e.target.checked); setTermsErr(""); }} className="mt-1 h-4 w-4 shrink-0 accent-black" />
-              <span>I agree to the Hermès <button type="button" aria-label="General Terms and Conditions of Use" className="underline" onClick={() => go({ t: "page", page: "terms" })}>General Terms and Conditions of Use</button>. I also agree to the creation of a customer account (if I do not have one yet) and to the processing of my data in compliance with Hermès <button type="button" aria-label="Privacy Policy from payment consent" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy Policy</button>.</span>
+              <input type="checkbox" aria-label="Accepter les Conditions Générales d’Utilisation" checked={termsAgree} onChange={(e) => { setTermsAgree(e.target.checked); setTermsErr(""); }} className="mt-1 h-4 w-4 shrink-0 accent-black" />
+              <span>J'accepte les <button type="button" aria-label="Conditions Générales d’Utilisation" className="underline" onClick={() => go({ t: "page", page: "terms" })}>Conditions Générales d’Utilisation</button> d'Hermès. J'accepte également la création d'un compte client (si je n'en ai pas encore) et le traitement de mes données conformément à la <button type="button" aria-label="Politique de confidentialité" className="underline" onClick={() => go({ t: "page", page: "privacy" })}>Politique de confidentialité</button> d'Hermès.</span>
             </label>
             <label className="mt-3 flex cursor-pointer items-start gap-3 text-sm leading-6 text-neutral-800">
               <input type="checkbox" aria-label="Accept that Hermès keeps my bank details until my account is debited" checked={bankAgree} onChange={(e) => setBankAgree(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-black" />
@@ -9140,14 +9239,18 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
         <p className="mt-4 text-sm text-neutral-600">Whatsapp France: +33 1 40 17 47 00. Du lundi au samedi de 9h à 18h30.</p>
         <p className="mt-1 text-sm text-neutral-600">Magasins et commandes en ligne du lundi au samedi 10h - 19h : +33 (0)1 40 17 47 00</p>
         <p className="mt-1 text-sm text-neutral-600">Pour les demandes d’information au Siège, contactez notre Standard général du lundi au vendredi 8h30 - 18h : +33 (0)1 40 17 47 17</p>
-        <div className="mt-6 grid grid-cols-2 gap-4 text-center">
-          <button aria-label="Returns and exchanges from checkout" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "returns" })}>
+        <div className="mt-6 grid grid-cols-3 gap-4 text-center">
+          <button aria-label="Livraison gratuite depuis la commande" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "shipping" })}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M3 8l9-4 9 4v8l-9 4-9-4V8Z" /><path d="M3 8l9 4 9-4M12 12v8" /></svg>
+              Livraison gratuite
+            </button>
+            <button aria-label="Retours et échanges depuis la commande" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "returns" })}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M7 8h11l-3-3M17 16H6l3 3" /></svg>
-            Returns &amp; exchanges
+            Retours &amp; échanges
           </button>
-          <button aria-label="Shop securely" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "payment" })}>
+          <button aria-label="Paiement sécurisé" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "payment" })}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="1" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
-            Shop securely
+            Paiement sécurisé
           </button>
         </div>
         <div className="mt-8 space-y-2 border-t border-[#f6f1eb] pt-4 text-[13px] text-neutral-600">
