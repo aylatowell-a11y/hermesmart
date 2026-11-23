@@ -335,11 +335,12 @@ export function accountUrl(): string {
   return "/fr/fr/account/";
 }
 
-// The original's FAQ topic URL. Only "payment" has a built FAQ page so
-// far; other topics are not routed. (France FAQ groups are unverified —
-// the /online-shopping/ group slug is carried over from the US build.)
+// The original's France FAQ topic URL: /fr/fr/faq/<group>/<slug>/
+// (groups: achat-en-ligne, compte-client, objets, la-maison-hermes).
+// Unused by the app today — faqPath() in App.tsx builds the URL from the
+// topic's own group; direct loads resolve via the App-level fallback.
 export function faqUrl(topic: string): string {
-  return `/fr/fr/faq/online-shopping/${slugify(topic)}/`;
+  return `/fr/fr/faq/achat-en-ligne/${slugify(topic)}/`;
 }
 
 // The product ref embedded in a product URL path, if the path is one.
@@ -403,9 +404,11 @@ export function parseUrl(
   if (clean === "cart") return { kind: "cart" };
   if (clean.startsWith("faq/online-shopping/")) {
     const topic = clean.slice("faq/online-shopping/".length).split("/")[0] ?? "";
-    // Only the Payment FAQ page is built so far; other topics fall back
-    // to home rather than rendering an empty FAQ page.
-    if (topic === "payment") return { kind: "faq", topic };
+    // Legacy US-build FAQ URL — the France topics live under
+    // /faq/achat-en-ligne|compte-client|objets|la-maison-hermes/ and
+    // resolve via the App-level fallback. Only the old payment URL keeps
+    // a mapping (to the France paiement topic).
+    if (topic === "payment") return { kind: "faq", topic: "paiement" };
     return null;
   }
   if (clean.startsWith("product/")) {
