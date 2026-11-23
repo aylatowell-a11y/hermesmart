@@ -1737,16 +1737,17 @@ export function App() {
       {view.t !== "admin" && <ChatBubble settings={settings} go={go} view={view} buyBarVisible={buyBarVisible} />}
 
       {addedDialog && (
-        <div className="fixed right-4 top-4 z-50 w-[320px] max-w-[calc(100vw-32px)] bg-[#fffcf7] p-5 fade-up" role="dialog" aria-label="Item added to cart">
-          <button aria-label="Close added to cart dialog" className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center text-lg leading-none text-neutral-600" onClick={() => setAddedDialog("")}>×</button>
+        <div className="fixed right-4 top-4 z-50 w-[320px] max-w-[calc(100vw-32px)] bg-[#fffcf7] p-5 fade-up" role="dialog" aria-label="Objet ajouté au panier">
+          <button aria-label="Fermer la fenêtre" className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center text-lg leading-none text-neutral-600" onClick={() => setAddedDialog("")}>×</button>
           <div className="flex items-start gap-3 pr-6">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" className="mt-0.5 shrink-0"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>
             <div>
-              <p className="text-sm leading-6">This item has been added to the cart</p>
+              <p className="text-sm leading-6">Cet objet a été ajouté au panier</p>
               <p className="mt-1 text-xs text-neutral-500">{addedDialog}</p>
             </div>
           </div>
-          <button aria-label="View cart" className="mt-4 w-full bg-black py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => { setAddedDialog(""); go({ t: "cart" }); }}>View cart</button>
+          <button aria-label="Voir le panier" className="mt-4 w-full bg-black py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={() => { setAddedDialog(""); go({ t: "cart" }); }}>Voir le panier</button>
+          <button aria-label="Continue shopping from added dialog" className="mt-2 w-full border border-black py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-black" onClick={() => setAddedDialog("")}>Continuez vos achats</button>
         </div>
       )}
 
@@ -2102,21 +2103,37 @@ function colorFamily(name: string): string {
 // ---- Filter-facet derivations (verified from hermes.com's served facet
 // JSONs for women's belts + men's shoes, 2026-11-10; counts are always OUR
 // catalogue's, never the original's) ----
-// Belts Width buckets — the facet JSON's own value lists map the mm widths:
-// Extra narrow = extra_fin/13mm, Narrow = fin/24mm, Wide = large/32/38/40mm,
-// Extra wide = extra_large/50mm. 18mm (Kelly Pocket 18) is an extra-fine
-// width, so it joins Extra narrow.
-function beltWidthBucket(modelSize: string): string {
-  const m = parseInt(modelSize, 10);
-  if (Number.isNaN(m)) return "";
-  if (m <= 18) return "Extra narrow";
-  if (m <= 24) return "Narrow";
-  if (m <= 40) return "Wide";
-  return "Extra wide";
+// Belt width in mm — the France rows' modelSize is mostly empty, so the
+// width is resolved from the composite refCode (U_BELT_{mm}…, tolerant
+// of _ARGENT/_FEMME suffixes), the name ("… 24 mm" / "Ceinture Kelly
+// 18, …"). Validated 2026-11-24 against the original's live Ceintures
+// facet counts (Extra fin 71 vs 73, Fin 142 vs 145, Large 60 vs 60,
+// Extra large 3 vs 3; the 2 unresolvable rows are buckle accessories
+// with no width in their data).
+function beltWidthMm(p: { name: string; modelSize?: string; refCode?: string }): number | null {
+  const m0 = parseInt((p.modelSize || "").trim(), 10);
+  if (!Number.isNaN(m0)) return m0;
+  const m1 = /^U_BELT_(\d+)/.exec(p.refCode ?? "");
+  if (m1) return parseInt(m1[1], 10);
+  const m2 = /(\d+)\s*mm/.exec(p.name);
+  if (m2) return parseInt(m2[1], 10);
+  const m3 = /^Ceinture .*? (\d+),/.exec(p.name);
+  if (m3) return parseInt(m3[1], 10);
+  return null;
+}
+// Belt Width buckets — France facet values (live read 2026-11-24):
+// Extra fin <=15 mm, Fin 16-24 mm, Large 25-40 mm, Extra large >40 mm.
+function beltWidthBucket(p: { name: string; modelSize?: string; refCode?: string }): string {
+  const m = beltWidthMm(p);
+  if (m === null) return "";
+  if (m <= 15) return "Extra fin";
+  if (m <= 24) return "Fin";
+  if (m <= 40) return "Large";
+  return "Extra large";
 }
 // A belt kit is a buckle + a strap sold together ("buckle & ... strap") —
 // the original's Customizable / Personalize: Yes products.
-function isBeltKit(p: { name: string }): boolean { return /buckle &/i.test(p.name); }
+function isBeltKit(p: { name: string; refCode?: string }): boolean { return /^(U_BELT|SANGLE)/.test(p.refCode ?? "") || /buckle &|& cuir de ceinture/i.test(p.name); }
 // A product is buyable when its page shows ADD TO CART on hermes.com.
 // "Available soon" tiles show ADD TO CART on their product pages (verified
 // in the live extraction), so they are buyable here too — the tile shows
@@ -2129,14 +2146,37 @@ function isBuyableStatus(s: string): boolean { return s === "available" || s ===
 // The store has no configurator yet, so the button opens an honest notice
 // (ProductPage, configOpen); configUrl preserves the original config page.
 function isConfigProduct(p: { configUrl?: string }): boolean { return !!p.configUrl; }
-// Belts Universe — kit belts by their width, complete belts under "Belts".
-// (Kit widths other than 13/24/32mm have no Universe option on the original;
-// those rows simply carry no Universe value, as on hermes.com.)
-function beltUniverse(p: { name: string; modelSize: string }): string {
-  if (!isBeltKit(p)) return "Belts";
-  const m = parseInt(p.modelSize, 10);
-  if (m === 13 || m === 24 || m === 32) return `${m} mm kit belt`;
+// Belts Universe — France facet values (live read 2026-11-24): kit belts
+// by their width ("Ceintures à composer 13/24/32 mm"), complete belts
+// under "Ceintures", straps alone under "Bandes seules". Kit widths
+// other than 13/24/32mm have no Universe option on the original; those
+// rows simply carry no Universe value, as on hermes.com.
+function beltUniverse(p: { name: string; modelSize?: string; refCode?: string }): string {
+  if ((p.refCode ?? "").startsWith("SANGLE")) return "Bandes seules";
+  if (p.name.startsWith("Cuir de ceinture")) return "Bandes seules";
+  if (!isBeltKit(p)) return "Ceintures";
+  const m = beltWidthMm(p);
+  if (m === 13 || m === 24 || m === 32) return `Ceintures à composer ${m} mm`;
   return "";
+}
+// Belts Category — France facet values (live read 2026-11-24). The
+// original's categories overlap (a reversible kit counts under both
+// "Ceintures à composer" and "Ceintures réversibles"); the clone's
+// facet model is single-value, so each row takes its primary type:
+// kits, then straps, then the name's type, else plain leather.
+// Validated 2026-11-24 (composer 154 vs 154, en cuir 66 vs 63,
+// cuirs seuls 55 vs 53, réversibles 2 vs 6, textiles 1 vs 3).
+function beltCategory(p: { name: string; material?: string; refCode?: string; configUrl?: string }): string {
+  if (isBeltKit(p)) return "Ceintures à composer";
+  const n = p.name;
+  if (n.startsWith("Cuir de ceinture")) return "Cuirs seuls";
+  const low = n.toLowerCase();
+  if (low.includes("réversible")) return "Ceintures réversibles";
+  if (low.includes("taille unique")) return "Ceintures taille unique";
+  if (low.includes("textile") || (p.material || "").toLowerCase().includes("textile")) return "Ceintures textiles";
+  if (p.configUrl) return "Produits personnalisables";
+  if (low.startsWith("boucle de ceinture")) return "Accessoires de ceinture";
+  return "Ceintures en cuir";
 }
 // Men's-shoes type from the product name (the original's Category facet for
 // men's shoes is the shoe type, not our flat "Shoes" subcategory).
@@ -2160,14 +2200,14 @@ function shoeUniverse(p: { name: string }): string {
   if (t === "Ankle boots") return "Boots and ankle boots";
   return t;
 }
-// Metallic finish families — the original's facet groups finishes into
-// Silver / Yellow gold / Rose gold / Black.
+// Metallic finish families — the original's France facet groups
+// finishes into Argenté / Doré jaune / Doré rose / Noir.
 function finishFamily(f: string): string {
   const v = (f || "").toLowerCase();
-  if (/argent|palladium|silver/.test(v)) return "Silver";
-  if (/gold plated|^gold$|yellow gold/.test(v)) return "Yellow gold";
-  if (/rose/.test(v)) return "Rose gold";
-  if (/black|noir/.test(v)) return "Black";
+  if (/argent|palladium|silver/.test(v)) return "Argenté";
+  if (/gold plated|^gold$|yellow gold/.test(v)) return "Doré jaune";
+  if (/rose/.test(v)) return "Doré rose";
+  if (/black|noir/.test(v)) return "Noir";
   return f;
 }
 // Men's-shoes material families — the original's Material facet options.
@@ -2988,10 +3028,10 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   // Per-page derived facet values (see the helpers above). On the belts
   // page Category is kit-vs-complete and Finish is the family; on men's
   // shoes Category is the shoe type and Material is the family.
-  const catVal = (p: Product) => isBeltsPage ? (isBeltKit(p) ? "Belt kits" : "Belts") : isMensShoesPage ? shoeType(p) : p.subcategory;
-  const finishVal = (p: Product) => isBeltsPage ? finishFamily(p.metallicFinish) : p.metallicFinish;
+  const catVal = (p: Product) => (isBeltsPage || isBeltsPageLive) ? beltCategory(p) : isMensShoesPage ? shoeType(p) : p.subcategory;
+  const finishVal = (p: Product) => (isBeltsPage || isBeltsPageLive) ? finishFamily(p.metallicFinish) : p.metallicFinish;
   const matVal = (p: Product) => isMensShoesPage ? materialFamily(p.material) : p.material;
-  const universeVal = (p: Product) => isBeltsPage ? beltUniverse(p) : isMensShoesPage ? shoeUniverse(p) : "";
+  const universeVal = (p: Product) => (isBeltsPage || isBeltsPageLive) ? beltUniverse(p) : isMensShoesPage ? shoeUniverse(p) : "";
   const filterList = (s: Record<FGroup, string[]>, on: boolean, lo: number, hi: number) => base.filter((p) =>
     (!on || isBuyableStatus(p.status)) &&
     (!s.category.length || s.category.includes(catVal(p))) &&
@@ -3001,8 +3041,8 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     (!s.finish.length || s.finish.includes(finishVal(p))) &&
     (!s.size.length || (p.sizeOptions ?? []).some((sz) => s.size.includes(sz.label))) &&
     (!s.color.length || p.colors.some((c) => s.color.includes(colorFamily(c.name)))) &&
-    (!s.width.length || s.width.includes(beltWidthBucket(p.modelSize))) &&
-    (!s.personalize.length || (isBeltKit(p) && s.personalize.includes("Yes"))) &&
+    (!s.width.length || s.width.includes(beltWidthBucket(p))) &&
+    (!s.personalize.length || (isConfigProduct(p) && s.personalize.includes("Oui"))) &&
     (!s.universe.length || s.universe.includes(universeVal(p))) &&
     p.price >= lo && p.price <= hi);
   // France (2026-11-21): the grid lists the page's rows in the original's
@@ -3230,7 +3270,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   type Pill = { group: FGroup | "online" | "price"; value: string; label: string };
   const pills: Pill[] = [
     ...(Object.keys(EMPTY_SEL) as FGroup[]).flatMap((g) => sel[g].map((v) => ({ group: g as FGroup | "online" | "price", value: v, label: v }))),
-    ...(onlineOnly ? [{ group: "online" as const, value: "online", label: "Available online" }] : []),
+    ...(onlineOnly ? [{ group: "online" as const, value: "online", label: "Disponible en ligne" }] : []),
     ...(priceNarrowed ? [{ group: "price" as const, value: "price", label: `${fmt(pMin)} – ${fmt(pMax)}` }] : []),
   ];
   const removePill = (pl: Pill) => {
@@ -3262,6 +3302,12 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   }
   const colorOpts = [...famMap.entries()].map(([value, e]) => ({ value, count: e.count, hex: e.hex })).sort((a, b) => a.value.localeCompare(b.value, "fr"));
 
+  // The original's Width / Universe value orders are curated, not
+  // alphabetical (live read 2026-11-24) — sort those two facets by
+  // these lists; every other facet stays alphabetical.
+  const WIDTH_ORDER = ["Extra fin", "Fin", "Large", "Extra large"];
+  const UNIVERSE_ORDER = ["Ceintures à composer 13 mm", "Ceintures à composer 24 mm", "Ceintures à composer 32 mm", "Ceintures", "Bandes seules"];
+  const inOrder = (opts: { value: string; count: number }[], order: string[]) => [...opts].sort((a, b) => (order.indexOf(a.value) === -1 ? 99 : order.indexOf(a.value)) - (order.indexOf(b.value) === -1 ? 99 : order.indexOf(b.value)));
   const secCategory: FSection | null = base.length ? { key: "category", title: "Catégorie", kind: "checks", group: "category", options: countBy((p) => catVal(p)) } : null;
   const secLine: FSection | null = countBy((p) => p.line).length ? { key: "line", title: isRTWPage ? "Collection" : "Ligne", kind: "checks", group: "line", options: countBy((p) => p.line) } : null;
   const secMaterial: FSection | null = countBy((p) => matVal(p)).length ? { key: "material", title: "Matière", kind: "checks", group: "material", options: countBy((p) => matVal(p)) } : null;
@@ -3271,9 +3317,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const secColor: FSection | null = colorOpts.length ? { key: "color", title: "Couleur", kind: "color", group: "color", options: colorOpts } : null;
   // Belts-only facets (verified facet JSON): Width buckets from the mm
   // modelSize; Personalize "Yes" for belt kits; Universe kit-width/complete.
-  const secWidth: FSection | null = countBy((p) => beltWidthBucket(p.modelSize)).length ? { key: "width", title: "Largeur", kind: "checks", group: "width", options: countBy((p) => beltWidthBucket(p.modelSize)) } : null;
-  const secPersonalize: FSection | null = countBy((p) => isBeltKit(p) ? "Yes" : "").length ? { key: "personalize", title: "Personnaliser", kind: "checks", group: "personalize", options: countBy((p) => isBeltKit(p) ? "Yes" : "") } : null;
-  const secUniverse: FSection | null = countBy((p) => universeVal(p)).length ? { key: "universe", title: "Univers", kind: "checks", group: "universe", options: countBy((p) => universeVal(p)) } : null;
+  const secWidth: FSection | null = countBy((p) => beltWidthBucket(p)).length ? { key: "width", title: "Largeur", kind: "checks", group: "width", options: inOrder(countBy((p) => beltWidthBucket(p)), WIDTH_ORDER) } : null;
+  const secPersonalize: FSection | null = countBy((p) => isConfigProduct(p) ? "Oui" : "").length ? { key: "personalize", title: "Personnaliser", kind: "checks", group: "personalize", options: countBy((p) => isConfigProduct(p) ? "Oui" : "") } : null;
+  const secUniverse: FSection | null = countBy((p) => universeVal(p)).length ? { key: "universe", title: "Univers", kind: "checks", group: "universe", options: inOrder(countBy((p) => universeVal(p)), UNIVERSE_ORDER) } : null;
   const secPrice: FSection | null = priceHi - priceLo >= 50 ? { key: "price", title: "Prix", kind: "price", options: [] } : null;
   const secSort: FSection = { key: "sort", title: "Trier par", kind: "sort", options: [] };
   const sections: FSection[] = [];
@@ -4469,9 +4515,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             ))}
           </nav>)}
           <div className="ml-auto flex shrink-0 items-center gap-3">
-            <button aria-label={totalSel ? `Open filters, ${totalSel} selected` : "Open filters"} className={`font-mono-d hidden items-center gap-2 py-1 text-xs font-medium uppercase tracking-normal lg:flex ${totalSel > 0 ? "bg-black px-3 text-white" : ""}`} onClick={openDrawer}>
+            <button aria-label={totalSel ? `Ouvrir les filtres, ${totalSel} sélectionné(s)` : "Ouvrir les filtres"} className={`font-mono-d hidden items-center gap-2 py-1 text-xs font-medium uppercase tracking-normal lg:flex ${totalSel > 0 ? "bg-black px-3 text-white" : ""}`} onClick={openDrawer}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M3 6h12M19 6h2M3 12h4M11 12h10M3 18h9M16 18h5" /><circle cx="17" cy="6" r="2" /><circle cx="9" cy="12" r="2" /><circle cx="14" cy="18" r="2" /></svg>
-              FILTER{totalSel > 0 ? ` (${totalSel})` : ""}
+              FILTRER{totalSel > 0 ? ` (${totalSel})` : ""}
             </button>
             <div className="flex items-center gap-1.5" role="radiogroup" aria-label="View toggle">
               <button aria-label="Product view" role="radio" aria-checked={!mosaic} className={`flex h-8 w-8 items-center justify-center ${!mosaic ? "text-black" : "text-neutral-400 hover:text-neutral-600"}`} onClick={() => setMosaic(false)}>
@@ -4491,9 +4537,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
         </div>
         {filtersActive && (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-black/10 pt-3">
-            <span className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Selected filters:</span>
+            <span className="text-[11px] uppercase tracking-[0.2em] text-neutral-500">Filtres sélectionnés :</span>
             {pills.map((pl) => (
-              <button key={`${pl.group}-${pl.value}`} aria-label={`Remove this filter ${pl.label}`} className="flex items-center gap-1.5 bg-black px-2.5 py-1 text-xs uppercase text-white" onClick={() => removePill(pl)}>
+              <button key={`${pl.group}-${pl.value}`} aria-label={`Retirer ce filtre ${pl.label}`} className="flex items-center gap-1.5 bg-black px-2.5 py-1 text-xs uppercase text-white" onClick={() => removePill(pl)}>
                 {pl.label}<span aria-hidden="true">×</span>
               </button>
             ))}
@@ -4560,6 +4606,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
 
       {!mosaic && visible < gridList.length && (
         <div className="mt-12 text-center">
+          <p className="text-xs text-neutral-500">{`${Math.min(visible, gridList.length)} produits consultés sur ${totalForCounter}`}</p>
           <p className="text-xs text-neutral-500">{`${Math.min(visible, gridList.length)} produits chargés`}</p>
           <div className="mx-auto mt-4 h-px w-[120px] bg-black/15"><div className="h-full bg-black transition-all" style={{ width: `${totalForCounter ? (Math.min(visible, gridList.length) / totalForCounter) * 100 : 0}%` }} /></div>
           <button aria-label="VOIR PLUS DE PRODUITS" className="font-mono-d mt-4 inline-flex h-12 items-center justify-center border border-black px-8 text-xs font-medium uppercase tracking-normal" onClick={() => { const next = Math.min(visible + 40, gridList.length); const added = next - visible; setVisible(next); setLoadedMsg(`${added} produits supplémentaires chargés`); }}>VOIR PLUS DE PRODUITS</button>
@@ -4589,7 +4636,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
           keeps its 2-level breadcrumb (separate branch below). */}
       {!isHomeArtPage && !isGiftsPage && !isWatchesPage && !isFragrancesPage && (<nav aria-label="Breadcrumb" className="font-mono-d mt-12 border-t border-black/10 pt-5 text-center text-[10px] font-medium uppercase tracking-normal text-neutral-500 lg:mt-16">
         {isBeachPage ? (<span className="tracking-normal text-black">{titleText}</span>) : isFashionJewelryParentPage ? (<button aria-label="Breadcrumb Women" className="underline underline-offset-4" onClick={() => go({ t: "category", cat: "women" })}>Women</button>) : isWomensBagsPage ? (<button aria-label="Breadcrumb Leather goods" className="underline underline-offset-4" onClick={() => go({ t: "category", cat: "leather" })}>Leather goods</button>) : (<button aria-label={`Breadcrumb ${label}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat })}>{label}</button>)}
-        {sub && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isMensShoesPage && !isWomensScarvesPage && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isTextilesPageLive && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && !isHomeArtPage && !isGiftWomenPage && !isGiftMenPage && !isGiftChildPage && !isGiftDogsPage && !isWatchWomenPage && !isWatchMenPage && !isJewelryMenPage && !isHorsePage && !isFragViewPage && !isSlgSub && !isTablewarePage && (
+        {sub && !isBeltsPage && !isBeltsPageLive && !isSlgParent && !(isWomensRtwPage || isMensRtwPage) && !isMensShoesPage && !isWomensScarvesPage && !isCharmsPage && !isTravAccPage && !isSuitcasesPage && !isTechPage && !isFurnPage && !isTwillyPage && !isChildPage && !isBalletPage && !isWondersPage && !isPreciousPage && !isCollectionsPage && !isChainedAncrePage && !isCasesPage && !isOfficePage && !isReadingPage && !isObjectsPage && !isTextilesPage && !isTextilesPageLive && !isSportsPage && !isBeachPage && !isLeatherAccPage && !isLuggagePage && !isWomensAccPage && !isStrapsPage && !isTiesPage && !isMensScarvesPage && !isMenTiesParentPage && !isTimepiecesPage && !isPetitHPage && !isHomeArtPage && !isGiftWomenPage && !isGiftMenPage && !isGiftChildPage && !isGiftDogsPage && !isWatchWomenPage && !isWatchMenPage && !isJewelryMenPage && !isHorsePage && !isFragViewPage && !isSlgSub && !isTablewarePage && (
           <>
             {" | "}
             <button aria-label={`Breadcrumb ${isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)}`} className="underline underline-offset-4" onClick={() => go({ t: "category", cat, sub: isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : sub })}>{(isBagsPage ? "Bags and clutches" : isRTWPage ? "Ready-to-Wear" : (base[0]?.subcategory ?? sub)).toUpperCase()}</button>
@@ -4798,6 +4845,15 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
             row's subcategory (women: "Dresses and skirts"), so it is
             omitted here, like the SLG parent (2026-11-16). */}
         {sub && (isWomensRtwPage || isMensRtwPage) && (
+          <>
+            {" | "}
+            <span className="tracking-normal text-black">{titleText}</span>
+          </>
+        )}
+        {/* Ceintures (2026-11-24): the original's bottom breadcrumb is 2
+            levels (FEMME | CEINTURES) — the generic middle level would leak
+            the internal subcategory key ("Belts"). */}
+        {sub && (isBeltsPage || isBeltsPageLive) && (
           <>
             {" | "}
             <span className="tracking-normal text-black">{titleText}</span>
@@ -6360,7 +6416,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
           ) : isBuyableStatus(p.status) ? (
             <div className="mt-4">
               <div className="flex">
-                {p.applePay && <button aria-label="Buy with Apple Pay" className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border border-black text-xs font-medium uppercase text-black${applePayAvailable ? "" : " max-lg:hidden"}`} onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
+                {p.applePay && <button aria-label="Payer avec Apple Pay" className={`font-mono-d flex h-12 flex-1 items-center justify-center gap-1.5 border border-black text-xs font-medium uppercase text-black${applePayAvailable ? "" : " max-lg:hidden"}`} onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Payer avec Apple Pay</span></button>}
                 <button aria-label="Ajouter au panier" className="font-mono-d flex h-12 flex-1 items-center justify-center gap-2 bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Ajouter au panier</button>
               </div>
             </div>
@@ -6375,7 +6431,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
                   <p className="mt-1 text-sm">{p.name}</p>
                   {isParfumRow && selSize && <p className="text-xs text-neutral-500">Contenance : {selSize}</p>}
                   <p className="text-xs text-neutral-500">Réf: {p.refCode}</p>
-                  <p className="text-xs text-neutral-500">{priceText(p)}</p>
+                  <p className="text-xs text-neutral-500">{fmt(p.price)}</p>
                   <p className="mt-2 text-xs text-neutral-500">* Informations requises</p>
                   <label htmlFor="notify-email" className="mt-3 block text-sm">E-mail *</label>
                   <input id="notify-email" aria-label="E-mail pour être notifié" type="email" maxLength={254} className="mt-1 w-full border border-black/30 px-3 py-3 text-sm" placeholder="Format attendu : nomprenom@domaine.com" value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)} />
@@ -7027,7 +7083,7 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
               <button aria-label="Personalize" className="font-mono-d flex h-12 items-center justify-center gap-2 bg-black px-8 text-xs font-medium uppercase tracking-normal text-white" onClick={() => { setConfigOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Personalize</button>
             ) : (
               <>
-                {p.applePay && <button aria-label="Buy with Apple Pay" className={`font-mono-d flex h-12 items-center justify-center gap-1.5 border border-black px-6 text-xs font-medium uppercase text-black${applePayAvailable ? "" : " max-lg:hidden"}`} onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Pay</span></button>}
+                {p.applePay && <button aria-label="Payer avec Apple Pay" className={`font-mono-d flex h-12 items-center justify-center gap-1.5 border border-black px-6 text-xs font-medium uppercase text-black${applePayAvailable ? "" : " max-lg:hidden"}`} onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span>Payer avec Apple Pay</span></button>}
                 <button aria-label="Ajouter au panier" className="font-mono-d flex h-12 items-center justify-center gap-2 bg-black px-8 text-xs font-medium uppercase tracking-normal text-white" onClick={() => { if (!canAdd) { setSizeDrawer(true); return; } addToCart(p, color?.pdpName ?? color?.name, needsSize ? selSize : p.modelSize); }}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M5 8h14l-1.2 12.2a1.8 1.8 0 0 1-1.8 1.6H8a1.8 1.8 0 0 1-1.8-1.6L5 8Z" /><path d="M8.5 10V6.5a3.5 3.5 0 0 1 7 0V10" /></svg>Ajouter au panier</button>
               </>
             )}
@@ -7873,8 +7929,8 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
               <p className="mt-4 text-sm leading-7 text-neutral-700">Whatsapp France: +33 1 40 17 47 00. Du lundi au samedi de 9h à 18h30.</p>
               <p className="text-sm leading-7 text-neutral-700">Magasins et commandes en ligne du lundi au samedi 10h - 19h : +33 (0)1 40 17 47 00</p>
               <p className="text-sm leading-7 text-neutral-700">Pour les demandes d’information au Siège, contactez notre Standard général du lundi au vendredi 8h30 - 18h : +33 (0)1 40 17 47 17</p>
-              <p className="mt-4 text-sm leading-7 text-neutral-700">The answer to your question can certainly be found in the <a href="/fr/fr/faq/" aria-label="Frequently asked questions" className="font-bold underline underline-offset-4" onClick={(e) => { e.preventDefault(); go({ t: "faq", topic: "index" }); }}>FAQs</a></p>
-              <p className="mt-4 text-sm leading-7 text-neutral-700">You can also contact us outside public holidays:</p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">La réponse à votre question se trouve certainement dans la <a href="/fr/fr/faq/" aria-label="Questions fréquentes" className="font-bold underline underline-offset-4" onClick={(e) => { e.preventDefault(); go({ t: "faq", topic: "index" }); }}>FAQ</a></p>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">Vous pouvez également nous contacter en dehors des jours fériés :</p>
               <p className="mt-6 text-right text-xs text-neutral-600">* Informations requises</p>
               <ContactForm settings={settings} go={go} />
             </div>
@@ -8157,8 +8213,8 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
     <div className="min-h-screen bg-[#fcf7f1]">
       <div className="mx-auto max-w-[1290px] px-4 py-6 sm:px-6">
         <div className="relative flex items-start">
-          <button aria-label="Back to store from cart" className="flex h-10 items-center gap-1.5 text-sm" onClick={() => { if (window.history.length > 1) window.history.back(); else go({ t: "home" }); }}>
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg><span className="hidden sm:inline">Back</span>
+          <button aria-label="Retour à la boutique" className="flex h-10 items-center gap-1.5 text-sm" onClick={() => { if (window.history.length > 1) window.history.back(); else go({ t: "home" }); }}>
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M20 12H4m0 0 6-6M4 12l6 6" /></svg><span className="hidden sm:inline">Retour</span>
           </button>
           <span className="absolute left-1/2 top-0 -translate-x-1/2"><HermesLogo settings={settings} variant="brand" /></span>
           <span className="w-10" />
@@ -8181,7 +8237,7 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
           <div>
             <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_463px]">
               <div>
-                <h3 className="font-mono-d text-center text-xs font-medium uppercase tracking-normal">You have {count} item{count === 1 ? "" : "s"} in your cart.</h3>
+                <h3 className="font-mono-d text-center text-xs font-medium uppercase tracking-normal">Vous avez {count} objet{count === 1 ? "" : "s"} dans votre panier.</h3>
                 {cart.map((i) => {
                   const delay = delayFor(i);
                   const delayText = delay ? (delay.endsWith(".") ? delay : `${delay}.`) : "";
@@ -8194,57 +8250,56 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
                           <span aria-label={`Quantity of ${i.name}`}>{i.qty}</span>
                           <button aria-label={`Increase quantity of ${i.name}`} disabled={i.qty >= 9} className="h-7 w-7 border border-black/30 disabled:cursor-not-allowed disabled:opacity-30" onClick={() => setCart(cart.map((x) => x.key === i.key ? { ...x, qty: Math.min(9, x.qty + 1) } : x))}>+</button>
                         </div>
+                        <p className="mt-1 text-center text-[11px] text-neutral-500">{i.qty} objets</p>
                       </div>
                       <div className="min-w-0 flex-1">
                         <button aria-label={`Open ${i.name}`} className="text-left text-sm underline-offset-4 hover:underline" onClick={() => go({ t: "product", id: i.productId })}>{i.name}</button>
-                        {i.color ? <p className="mt-1 text-xs text-neutral-600">Color: {i.color}</p> : null}
-                        {i.size ? <p className="text-xs text-neutral-600">Size: {i.size}</p> : null}
-                        {i.refCode ? <p className="text-xs text-neutral-600">Ref: {i.refCode}{i.size}</p> : null}
+                        {i.color ? <p className="mt-1 text-xs text-neutral-600">Couleur : {i.color}</p> : null}
+                        {i.size ? <p className="text-xs text-neutral-600">Taille : {i.size}</p> : null}
+                        {i.refCode ? <p className="text-xs text-neutral-600">Réf: {i.refCode}{i.size}</p> : null}
                         {delayText ? <p className="mt-2 flex items-start gap-1.5 text-xs text-neutral-600"><span aria-hidden="true">ⓘ</span><span>{delayText}</span></p> : null}
                       </div>
                       <div className="shrink-0 text-right">
-                        <button aria-label={`Remove ${i.name} from cart`} className="text-xs underline" onClick={() => setCart(cart.filter((x) => x.key !== i.key))}>Remove</button>
-                        <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Price</p>
+                        <button aria-label={`Retirer ${i.name} du panier`} className="text-xs underline" onClick={() => setCart(cart.filter((x) => x.key !== i.key))}>Retirer</button>
+                        <p className="mt-4 text-[11px] uppercase tracking-[0.2em] text-neutral-500">Prix</p>
                         <p className="text-sm">{fmt2(i.price * i.qty)}</p>
                       </div>
                     </div>
                   );
                 })}
                 <div className="mt-6 space-y-3 border-t border-black/10 pt-5 text-sm">
-                  <div className="flex justify-between"><span>Subtotal</span><span>{fmt2(total)}</span></div>
-                  <div className="flex justify-between"><span>Shipping</span><span>-</span></div>
-                  <p className="-mt-1 text-xs text-neutral-500">Shipping costs will be calculated during checkout</p>
-                  <div className="flex justify-between"><span>Taxes</span><span>-</span></div>
-                  <p className="-mt-1 text-xs text-neutral-500">Taxes will be calculated during checkout</p>
+                  <div className="flex justify-between"><span>Sous-total</span><span>{fmt2(total)}</span></div>
+                  <div className="flex justify-between"><span>Livraison</span><span>-</span></div>
+                  <p className="-mt-1 text-xs text-neutral-500">Les frais de port seront calculés au moment du paiement</p>
                   <div className="flex justify-between border-t border-black/10 pt-3 text-sm font-semibold uppercase tracking-[0.15em]"><span>Total</span><span>{fmt2(total)}</span></div>
                 </div>
                 <div className="mt-6 border border-black/10">
                   <label className="flex w-full cursor-pointer items-center justify-between px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.22em]">
-                    Gifting
-                    <input type="checkbox" aria-label="Gifting" checked={giftOpen} onChange={(e) => setGiftOpen(e.target.checked)} className="h-4 w-4 shrink-0 accent-black" />
+                    Offrir un cadeau
+                    <input type="checkbox" aria-label="Offrir un cadeau" checked={giftOpen} onChange={(e) => setGiftOpen(e.target.checked)} className="h-4 w-4 shrink-0 accent-black" />
                   </label>
                   {giftOpen && (
                     <div className="border-t border-black/10 px-4 py-4">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em]">You can define a personal message</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em]">Vous pouvez définir un message personnel</p>
                       <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm">
-                        <input type="radio" name="giftcard" aria-label="Blank card" checked={giftCard === "blank"} onChange={() => setGiftCard("blank")} className="h-4 w-4 accent-black" /> Blank card
+                        <input type="radio" name="giftcard" aria-label="Carte vierge" checked={giftCard === "blank"} onChange={() => setGiftCard("blank")} className="h-4 w-4 accent-black" /> Carte vierge
                       </label>
                       <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
-                        <input type="radio" name="giftcard" aria-label="Personal message" checked={giftCard === "personal"} onChange={() => setGiftCard("personal")} className="h-4 w-4 accent-black" /> Personal message
+                        <input type="radio" name="giftcard" aria-label="Message personnel" checked={giftCard === "personal"} onChange={() => setGiftCard("personal")} className="h-4 w-4 accent-black" /> Message personnel
                       </label>
                       {giftCard === "personal" && (
-                        <textarea aria-label="Your personal gift message" className="mt-3 w-full border border-black/25 bg-white px-3 py-2.5 text-sm outline-none" rows={3} placeholder="Write your message" value={giftMsg} onChange={(e) => setGiftMsg(e.target.value)} />
+                        <textarea aria-label="Votre message cadeau personnel" className="mt-3 w-full border border-black/25 bg-white px-3 py-2.5 text-sm outline-none" rows={3} placeholder="Écrivez votre message" value={giftMsg} onChange={(e) => setGiftMsg(e.target.value)} />
                       )}
-                      <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.22em]">You can hide price on invoice</p>
+                      <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.22em]">Vous pouvez masquer le prix sur la facture</p>
                       <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm">
-                        <input type="checkbox" aria-label="Hide price on invoice" checked={hidePrice} onChange={(e) => setHidePrice(e.target.checked)} className="h-4 w-4 accent-black" /> Hide price on invoice
+                        <input type="checkbox" aria-label="Masquer le prix sur la facture" checked={hidePrice} onChange={(e) => setHidePrice(e.target.checked)} className="h-4 w-4 accent-black" /> Masquer le prix sur la facture
                       </label>
                     </div>
                   )}
                 </div>
                 <div className="mt-6 flex gap-3">
-                  <button aria-label="Checkout from cart" className="font-mono-d flex h-12 flex-1 items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => go({ t: "checkout" })}>Checkout</button>
-                  <button aria-label="Buy with Apple Pay from cart" className="flex h-12 flex-1 items-center justify-center gap-1.5 border border-black bg-white text-sm font-semibold" onClick={() => go({ t: "checkout" })}><span className="text-sm font-semibold">Buy with</span><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span className="text-sm font-semibold">Pay</span></button>
+                  <button aria-label="Commander depuis le panier" className="font-mono-d flex h-12 flex-1 items-center justify-center bg-black text-xs font-medium uppercase tracking-normal text-white" onClick={() => go({ t: "checkout" })}>Commander</button>
+                  <button aria-label="Payer avec Apple Pay depuis le panier" className="flex h-12 flex-1 items-center justify-center gap-1.5 border border-black bg-white text-sm font-semibold" onClick={() => go({ t: "checkout" })}><svg width="15" height="15" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" /></svg><span className="text-sm font-semibold">PAYER AVEC APPLE PAY</span></button>
                 </div>
               </div>
               <aside className="h-fit lg:sticky lg:bottom-0">{rightCol}</aside>
@@ -8942,7 +8997,7 @@ function CheckoutProgress({ step, nextStep }: { step: 1 | 2 | 3; nextStep?: bool
               <span key={l} className="flex w-20 flex-col items-center gap-2">
                 <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] ${done || current ? "bg-black text-white" : "border border-black/50 bg-[#fcf7f1] text-transparent"}`}>{done ? "✓" : "•"}</span>
                 <span className={`font-mono-d text-[10px] font-medium uppercase tracking-normal ${current || done ? "text-black" : "text-neutral-500"}`}>{l}</span>
-                {nextStep && !done && !current && <span className="text-[8px] uppercase tracking-[0.18em] text-neutral-400">Next step</span>}
+                {nextStep && !done && !current && <span className="text-[8px] uppercase tracking-[0.18em] text-neutral-400">ÉTAPE SUIVANTE</span>}
               </span>
             );
           })}
@@ -9040,7 +9095,7 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
                 <span className="text-sm">{fmt2(i.price * i.qty)}</span>
               </div>
             ))}
-            <div className="flex justify-between border-t border-[#f6f1eb] pt-3 text-sm"><span>Shipping</span><span className="text-xs text-neutral-500">Calculated at delivery step</span></div>
+            <div className="flex justify-between border-t border-[#f6f1eb] pt-3 text-sm"><span>Livraison</span><span className="text-xs text-neutral-500">Calculé à l’étape de livraison</span></div>
             <div className="mt-1 flex justify-between text-sm font-medium"><span>Total</span><span>{fmt2(total)}</span></div>
           </div>
         )}

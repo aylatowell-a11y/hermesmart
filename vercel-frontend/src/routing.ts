@@ -329,10 +329,11 @@ export function defileUrl(page: string): string | null {
   return null;
 }
 
-// The account page URL — a direct load of /fr/fr/account/ renders the
-// account view.
+// The account page URL — the original's login page: /fr/fr/login/
+// renders the account view (a direct load of /fr/fr/account/ still
+// does too).
 export function accountUrl(): string {
-  return "/fr/fr/account/";
+  return "/fr/fr/login/";
 }
 
 // The original's France FAQ topic URL: /fr/fr/faq/<group>/<slug>/
@@ -395,6 +396,7 @@ export function parseUrl(
   if (clean === "") return { kind: "home" };
   if (clean === "contact-us") return { kind: "contact" };
   if (clean === "account") return { kind: "account" };
+  if (clean === "login") return { kind: "account" };
   if (clean === "content/329243-sur-mesure-equitation" || clean === "content/344534-bespoke-equestrian") return { kind: "bespoke" };
   if (clean === "content/402900-defile-femme-printemps-ete") return { kind: "defile", page: "defile-femme-pe2027" };
   if (clean === "content/345618-defile-femme-automne-hiver-2026") return { kind: "defile", page: "defile-femme-ah2026" };
