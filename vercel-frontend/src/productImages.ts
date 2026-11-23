@@ -11962,6 +11962,7 @@ const NEW_TILE: Record<number, string> = {
   12321: "https://assets.hermes.com/is/image/hermesproduct/beltkits-32-f34?$leatherstrap=011822UAAQ_composite_103&$buckle=010632UP2K_composite_103&wid=750&hei=1000&fit=fit&$product_default_bg$",
   12322: "https://assets.hermes.com/is/image/hermesproduct/beltkits-32-f34?$leatherstrap=073967CAAB_composite_103&$buckle=010632UK05_composite_103&wid=750&hei=1000&fit=fit&$product_default_bg$",
   12323: "https://assets.hermes.com/is/image/hermesproduct/beltkits-32-f34?$leatherstrap=011822UAAK_composite_103&$buckle=010497UJJ4_composite_103&wid=750&hei=1000&fit=fit&$product_default_bg$",
+  12324: "https://assets.hermes.com/is/image/hermesproduct/6H1119DN5H_worn_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
 };
 
 const BAG_POOL = [picotinLock18V2, kellyShoulderV2, tablierSellier, boxBag, doubleLonge, neoDoubleSens35, fallbackHandbag];
