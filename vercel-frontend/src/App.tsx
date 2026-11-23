@@ -109,8 +109,8 @@ const MEGA_RAW: MegaEntry[] = [
     [{ heading: "HOMME", items: [] }],
     [{ heading: "HAUTE BIJOUTERIE", items: [] }],
   ]},
-  { key: "montres", label: "MONTRES", caption: "Montres", tone: "#8a7a68", glyph: "⌚", img: "watchHoliday", imgView: { t: "category", cat: "montres" }, columns: [
-    [{ heading: "", items: ["Nos collections", "Femme", "Homme", "Bracelets", "Watches & Wonders Geneva"] }],
+  { key: "montres", label: "MONTRES", caption: "Montres", tone: "#8a7a68", glyph: "⌚", img: "watchHoliday", imgView: { t: "category", cat: "montres", sub: "Horlogerie" }, columns: [
+    [{ heading: "HORLOGERIE", items: ["Nos collections", "Femme", "Homme", "Bracelets", "Watches & Wonders Geneva"] }],
     [{ heading: "APPLE WATCH HERMÈS", items: [] }],
   ]},
   { key: "parfums-et-maquillage", label: "PARFUMS ET MAQUILLAGE", caption: "Collection Grigris d’Hermès", tone: "#dfb3ba", glyph: "◈", img: "grigrisPortrait", imgView: { t: "category", cat: "parfums-et-maquillage", sub: "Maquillage" }, columns: [
@@ -223,8 +223,8 @@ const FR_MENU_EXTERNAL: Record<string, string> = {
   "homme|PRÊT-À-PORTER|Défilé automne-hiver 2026": "https://www.hermes.com/fr/fr/content/344007-defile-homme-automne-hiver-2026/",
   "maison-art-de-vivre|ATELIERS HORIZONS|": "https://www.hermes.com/fr/fr/content/186736-campagne-institutionnelle-2019/",
   "maison-art-de-vivre|MAISON|Art de la table": "https://www.hermes.com/fr/fr/content/308227-collections-art-de-la-table/",
-  "montres||Nos collections": "https://www.hermes.com/fr/fr/content/346183-montres/",
-  "montres||Watches & Wonders Geneva": "https://www.hermes.com/fr/fr/content/338946-watches-and-wonders-geneva/",
+  "montres|HORLOGERIE|Nos collections": "https://www.hermes.com/fr/fr/content/346183-montres/",
+  "montres|HORLOGERIE|Watches & Wonders Geneva": "https://www.hermes.com/fr/fr/content/338946-watches-and-wonders-geneva/",
   "parfums-et-maquillage|CADEAUX|Cadeaux": "https://www.hermes.com/fr/fr/content/339528-cadeaux-parfums-beaute/",
   "parfums-et-maquillage|CADEAUX|Essayez virtuellement nos rouges à lèvres et vernis à ongles": "https://www.hermes.com/fr/fr/content/343491-essayage-virtuel-maquillage/",
   "parfums-et-maquillage|CADEAUX|Trouvez votre parfum": "https://www.hermes.com/fr/fr/fragrance-finder/",
@@ -271,6 +271,7 @@ const FR_HEADING_PAGE: Record<string, string> = {
   "maroquinerie|PETITE MAROQUINERIE": "Petite maroquinerie",
   "maroquinerie|SACS ET POCHETTES": "Sacs et pochettes",
   "montres|APPLE WATCH HERMÈS": "Apple Watch Hermès",
+  "montres|HORLOGERIE": "Horlogerie",
   "parfums-et-maquillage|MAQUILLAGE": "Maquillage",
   "parfums-et-maquillage|PARFUMS": "Parfums",
 };
@@ -440,8 +441,12 @@ function catLabel(cat: string): string {
   return CAT_LABELS[fr] ?? fr.toUpperCase();
 }
 
-const titleCaseSub = (s: string) => {
-  return s.split(" ").map((w) => (w ? w[0]!.toUpperCase() + w.slice(1) : "")).join(" ");
+const sentenceCaseSub = (s: string) => {
+  // France H1s are sentence-case on the original ("Sacs et pochettes femme",
+  // "Art de la table") — capitalise the first letter only, leave the rest
+  // untouched. (Was title-case: capitalised every word, wrongly hitting
+  // small words "et"/"de"/"la" and the letter after an apostrophe.)
+  return s ? s[0]!.toUpperCase() + s.slice(1) : "";
 };
 
 const SUBS_BY_CAT: Record<string, string[]> = Object.fromEntries(
@@ -558,6 +563,7 @@ const FR_PAGE_FIELDS: Record<string, string[]> = {
   "montres|homme": ["frMontresHommePos"],
   "montres|bracelets": ["frMontresBraceletsPos"],
   "montres|apple watch hermès": ["frMontresAppleWatchHermesPos"],
+  "montres|horlogerie": ["frHorlogeriePos"],
   "parfums-et-maquillage|maquillage": ["frMaquillageLevresPos", "frMaquillageTeintPos", "frMaquillageYeuxPos", "frMaquillageMainsPos", "frMaquillageAccessoiresPos"],
       "parfums-et-maquillage|hermessence": ["frParfumsHermessencePos"],
   "parfums-et-maquillage|femme": ["frParfumsFemmePos"],
@@ -1109,7 +1115,7 @@ export function App() {
   const qc = useQueryClient();
   const store = useQuery({ queryKey: ["storefront"], queryFn: () => api.getStorefront({}) });
   const products = useMemo(() => store.data?.products ?? [], [store.data]);
-  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "", heroTitle: "L'hiver sera conte", heroText: "", shipTo: "FRANCE", deliveryText: "Free standard delivery in France.", returnsText: "Free returns within 30 days. See conditions and procedure in our FAQ.", paymentMethods: "By card: Visa®, MasterCard® and American Express®. By PayPal® and Apple Pay®.", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10am - 9pm EST", logoMode: "both", logoUrl: "", flagshipStore: "", shipToCountries: "FRANCE", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. Tous droits r\u00e9serv\u00e9s", serviceDeliveryBody: "Free standard delivery in France.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
+  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "", heroTitle: "L'hiver sera conte", heroText: "", shipTo: "FRANCE", deliveryText: "Free standard delivery in France.", returnsText: "Free returns within 30 days. See conditions and procedure in our FAQ.", paymentMethods: "By card: Visa®, MasterCard® and American Express®. By PayPal® and Apple Pay®.", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10 AM - 9 PM", logoMode: "both", logoUrl: "", flagshipStore: "", shipToCountries: "FRANCE", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. Tous droits r\u00e9serv\u00e9s", serviceDeliveryBody: "Free standard delivery in France.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
 
   // Real URLs (History API routing): the initial view comes from the URL
   // when it is a routed one (category, contact page, or home); a product
@@ -2466,6 +2472,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
     "montres|homme": frHas("frMontresHommePos"),
     "montres|bracelets": frHas("frMontresBraceletsPos"),
     "montres|apple watch hermès": frHas("frMontresAppleWatchHermesPos"),
+    "montres|horlogerie": frHas("frHorlogeriePos"),
     "parfums-et-maquillage|maquillage": frAny("frMaquillageLevresPos", "frMaquillageTeintPos", "frMaquillageYeuxPos", "frMaquillageMainsPos", "frMaquillageAccessoiresPos"),
       "parfums-et-maquillage|hermessence": frHas("frParfumsHermessencePos"),
     "parfums-et-maquillage|femme": frHas("frParfumsFemmePos"),
@@ -2627,7 +2634,9 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const COLLECTION_TITLES_FR: Record<string, string> = {
     "apple watch hermès": "Apple Watch Hermès",
     "collection automne-hiver 2026": "Collection Automne-Hiver 2026",
-    "collection printemps-été 2027": "Collection Printemps-Eté 2027",
+    "collection printemps-été 2027": "Collection Printemps-Été 2027",
+    "boucles d'oreilles": "Boucles d’oreilles",
+    "bijoux d'oreilles": "Bijoux d’oreilles",
     "t-shirts et sweat-shirts": "T-shirts et sweat-shirts",
     "bagues en argent": "Bagues",
     "bijoux d'oreilles en argent": "Bijoux d'oreilles",
@@ -2650,7 +2659,7 @@ function CategoryView({ products, cat, sub, go, addToCart, pinTop, stickyTop, in
   const titleText = (cat === "parfums-et-maquillage" && subLow === "femme") ? "L'Univers Femme"
     : (cat === "parfums-et-maquillage" && subLow === "homme") ? "L'Univers Homme"
     : (cat === "parfums-et-maquillage" && !sub) ? "Parfums et maquillage"
-    : COLLECTION_TITLES_FR[subLow] ?? (sub ? titleCaseSub(sub) : catLabel(cat));
+    : COLLECTION_TITLES_FR[subLow] ?? (sub ? sentenceCaseSub(sub) : catLabel(cat));
   const crumbTop = !sub ? "" : `${catLabel(cat).toUpperCase()} | ${titleText.toUpperCase()}`;
 
   // Sub-nav siblings — the row under the title, current one underlined,
@@ -8042,7 +8051,7 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
       </section>
       <section className="bg-[#fffcf7] px-5 py-5" aria-label="Customer service section">
         <h2 className={CO_HEAD}>Customer Service</h2>
-        <p className="mt-4 text-sm text-neutral-600">Monday to Saturday 10am - 9pm EST :</p>
+        <p className="mt-4 text-sm text-neutral-600">Monday to Saturday 10 AM - 9 PM :</p>
         <p className="mt-1 text-sm"><a aria-label="Call customer service from cart" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
       </section>
       <section className="bg-[#fffcf7] px-5 py-5" aria-label="Reinsurance section">

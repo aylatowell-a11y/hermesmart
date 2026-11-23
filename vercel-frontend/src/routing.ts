@@ -287,7 +287,7 @@ const REVERSE_PATHS: Record<string, { cat: string; sub?: string }> = {
   "cadeaux/cadeaux-pour-homme": { cat: "cadeaux", sub: "Pour homme" },
   "cadeaux/cadeaux-enfants-et-naissance": { cat: "cadeaux", sub: "Enfants et naissance" },
   "cadeaux/cadeaux-pour-chien": { cat: "cadeaux", sub: "Pour chien" },
-  "horlogerie": { cat: "montres" },
+  "horlogerie": { cat: "montres", sub: "Horlogerie" },
 };
 
 export const TOP_CATS = ["femme", "homme", "maroquinerie", "bijouterie", "montres", "parfums-et-maquillage", "maison-art-de-vivre", "equitation", "cadeaux", "about"];
