@@ -1115,7 +1115,7 @@ export function App() {
   const qc = useQueryClient();
   const store = useQuery({ queryKey: ["storefront"], queryFn: () => api.getStorefront({}) });
   const products = useMemo(() => store.data?.products ?? [], [store.data]);
-  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "", heroTitle: "L'hiver sera conte", heroText: "", shipTo: "FRANCE", deliveryText: "Free standard delivery in France.", returnsText: "Free returns within 30 days. See conditions and procedure in our FAQ.", paymentMethods: "By card: Visa®, MasterCard® and American Express®. By PayPal® and Apple Pay®.", bgColor: "#fcf7f1", serviceHours: "Monday to Saturday 10 AM - 9 PM", logoMode: "both", logoUrl: "", flagshipStore: "", shipToCountries: "FRANCE", newsletterText: "Receive our newsletter and discover our stories, collections, and surprises.", newsletterSuccess: "Thank you \u2014 you are subscribed to the newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. Tous droits r\u00e9serv\u00e9s", serviceDeliveryBody: "Free standard delivery in France.", serviceReturnsBody: "Free returns within 30 days. See conditions and procedure in our return FAQs.", servicePaymentBody: "All the transactions made on Hermes.com are secured", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"General Terms and Conditions of Sale\",\"terms\"],[\"General Terms and Conditions of Use\",\"terms\"],[\"Terms and conditions\",\"terms\"],[\"Privacy & cookies\",\"privacy\"],[\"Legal issues\",\"legal\"],[\"Accessibility\",\"accessibility\"],[\"Site map\",\"sitemap\"]]" };
+  const settings: Settings = store.data?.settings ?? { storeName: "HERMÈS PARIS", phone: "+33 1 40 17 47 00", heroTitle: "L'hiver sera conte", heroText: "", shipTo: "FRANCE", deliveryText: "Free standard delivery in France.", returnsText: "Free returns within 30 days. See conditions and procedure in our FAQ.", paymentMethods: "By card: Visa®, MasterCard® and American Express®. By PayPal® and Apple Pay®.", bgColor: "#fcf7f1", serviceHours: "Lundi au Samedi", logoMode: "both", logoUrl: "", flagshipStore: "", shipToCountries: "FRANCE", newsletterText: "Recevez notre newsletter et découvrez nos histoires, nos collections et nos surprises.", newsletterSuccess: "Merci \u2014 vous êtes inscrit(e) à la newsletter.", copyrightText: "\u00a9 Herm\u00e8s 2026. Tous droits r\u00e9serv\u00e9s", serviceDeliveryBody: "Livraison standard gratuite. Hermès offre plusieurs modes de livraison rapides et sécurisés.", serviceReturnsBody: "", servicePaymentBody: "Toutes les transactions effectuées sur Hermes.com sont sécurisées.", chatEnabled: true, chatWelcome: "", legalLinksJson: "[[\"Conditions Générales de Vente\",\"terms\"],[\"Conditions Générales d'Utilisation\",\"terms\"],[\"Données personnelles\",\"privacy\"],[\"Mentions légales\",\"legal\"],[\"Plan du site\",\"sitemap\"]]" };
 
   // Real URLs (History API routing): the initial view comes from the URL
   // when it is a routed one (category, contact page, or home); a product
@@ -6967,13 +6967,13 @@ function ProductView({ products, id, go, addToCart, settings, user, from, lastVi
 }
 
 const FOOTER_COLS: { title: string; links: [string, string][] }[] = [
-  { title: "SERVICES", links: [["Contact us", "contact"], ["FAQ", "faq:index"], ["Find a store", "stores"], ["Stores selling beauty products", "stores"], ["Stores selling Apple Watch Hermès", "stores"], ["Gifting", "gifting"], ["Made to measure", "measure"], ["Maintenance and repair", "maintenance"], ["User guides", "guides"]] },
-  { title: "ORDERS", links: [["Payment", "faq:payment"], ["Shipping", "shipping"], ["Collect in store", "collect"], ["Track orders", "track"], ["Returns and exchanges", "returns"]] },
-  { title: "LA MAISON HERMÈS", links: [["Sustainable development", "sustainability"], ["The Hermès Foundation", "foundation"], ["Join Hermès", "join"], ["Finance & Governance", "finance"], ["Our partner brands", "partners"]] },
-  { title: "LEGAL", links: [["Terms and conditions", "terms"], ["Privacy & cookies", "privacy"], ["Binding Corporate Rules (BCRs)", "bcr"], ["California Transparency in Supply Chain Act", "california"], ["Transparency in coverage", "coverage"], ["Do Not Sell/Share My Personal Information", "donotsell"], ["Legal issues", "legal"], ["Accessibility", "accessibility"], ["Hermès Sitemap", "sitemap"]] },
+  { title: "SERVICES", links: [["Nous contacter", "contact"], ["Questions fréquentes", "faq:index"], ["Trouver un magasin", "stores"], ["Points de vente proposant la beauté", "stores"], ["Points de vente proposant l'Apple Watch Hermès", "stores"], ["Offrir un cadeau", "gifting"], ["Le Sur-mesure", "measure"], ["L'entretien et la réparation", "maintenance"], ["Conseils d'utilisation", "guides"]] },
+  { title: "COMMANDES", links: [["Paiement", "faq:payment"], ["Livraison", "shipping"], ["Retrait en magasin", "collect"], ["Suivi de commandes", "track"], ["Retour et échange", "returns"]] },
+  { title: "LA MAISON HERMÈS", links: [["Développement durable", "sustainability"], ["La Fondation d'entreprise Hermès", "foundation"], ["Rejoindre Hermès", "join"], ["Finance & Gouvernance", "finance"], ["Nos maisons partenaires", "partners"]] },
+  { title: "MENTIONS LÉGALES", links: [["Conditions générales de vente", "terms"], ["Conditions générales d'utilisation", "terms"], ["Données personnelles", "privacy"], ["Cookies", "privacy"], ["Règles d'entreprise contraignantes (BCR)", "bcr"], ["Mentions légales", "legal"], ["Accessibilité : partiellement conforme", "accessibility"], ["Plan du site Hermès", "sitemap"]] },
 ];
 const PAGES: Record<string, { title: string; body: string[] }> = {
-  contact: { title: "Customer Service", body: ["Monday to Saturday 10 AM - 9 PM.", "The answer to your question can certainly be found in the FAQs.", "You can also contact us outside public holidays:"] },
+  contact: { title: "Service client", body: ["Whatsapp France: +33 1 40 17 47 00. Du lundi au samedi de 9h à 18h30.", "Magasins et commandes en ligne du lundi au samedi 10h - 19h : +33 (0)1 40 17 47 00", "Pour les demandes d'information au Siège, contactez notre Standard général du lundi au vendredi 8h30 - 18h : +33 (0)1 40 17 47 17", "The answer to your question can certainly be found in the FAQs.", "You can also contact us outside public holidays:"] },
   faq: { title: "FAQ", body: ["How long is delivery? Free standard delivery in France. Free returns within 30 days of delivery.", "Can I return an article? Yes — free returns within 30 days of delivery, in its original condition and packaging.", "Which payment methods are accepted? MasterCard, Visa, American Express; PayPal and Apple Pay for select products.", "Are Birkin and Kelly quota bags sold online? No. These articles are offered in store only."] },
   stores: { title: "Find a store", body: ["Hermès boutiques welcome you across France.", "Beauty products and Apple Watch Hermès are available in selected boutiques."] },
   gifting: { title: "Gifting", body: ["Every order arrives in the orange box tied with Bolduc ribbon. Add a gift message at checkout; the delivery note never shows prices. Gift cards are available under Gifts → Gift cards."] },
@@ -7818,12 +7818,13 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
           <button aria-label="Back" className="font-mono-d mb-4 text-xs font-medium uppercase tracking-[0.15em] text-black" onClick={back}>← BACK</button>
           <div className="bg-white">
             <div className="border-b border-[#e2d8ce] bg-[#fcf7f1] px-6 py-5 sm:px-8">
-              <h1 className="font-mono-d text-xl font-medium uppercase">Contact us</h1>
+              <h1 className="font-mono-d text-xl font-medium uppercase">Nous contacter</h1>
             </div>
             <div className="px-6 py-7 sm:px-8">
-              <h2 className="text-[15px] font-bold text-black">Customer Service</h2>
-              <p className="mt-4 text-sm leading-7 text-neutral-700">{settings.serviceHours} :</p>
-              <p className="text-sm leading-7"><a aria-label="Call Hermès customer service" className="underline underline-offset-4" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
+              <h2 className="text-[15px] font-bold text-black">Service client</h2>
+              <p className="mt-4 text-sm leading-7 text-neutral-700">Whatsapp France: +33 1 40 17 47 00. Du lundi au samedi de 9h à 18h30.</p>
+              <p className="text-sm leading-7 text-neutral-700">Magasins et commandes en ligne du lundi au samedi 10h - 19h : +33 (0)1 40 17 47 00</p>
+              <p className="text-sm leading-7 text-neutral-700">Pour les demandes d’information au Siège, contactez notre Standard général du lundi au vendredi 8h30 - 18h : +33 (0)1 40 17 47 17</p>
               <p className="mt-4 text-sm leading-7 text-neutral-700">The answer to your question can certainly be found in the <a href="/fr/fr/faq/" aria-label="Frequently asked questions" className="font-bold underline underline-offset-4" onClick={(e) => { e.preventDefault(); go({ t: "faq", topic: "index" }); }}>FAQs</a></p>
               <p className="mt-4 text-sm leading-7 text-neutral-700">You can also contact us outside public holidays:</p>
               <p className="mt-6 text-right text-xs text-neutral-600">* Required information</p>
@@ -7952,7 +7953,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
       <h1 className="font-serif-d text-3xl italic">{data.title}</h1>
       {body.map((b, i) => <p key={i} className="mt-4 text-sm leading-7 text-neutral-700">{b}</p>)}
       {page === "contact" && <ContactForm settings={settings} go={go} />}
-      {(page === "donotsell" || page === "legal") && <p className="mt-4 text-sm">Customer service{settings.phone ? (<>: <a aria-label="Call customer service" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></>) : null} — {settings.serviceHours}.</p>}
+      {(page === "donotsell" || page === "legal") && <p className="mt-4 text-sm">Service client — {settings.serviceHours}.</p>}
       <button aria-label="Continue shopping" className="mt-8 border border-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => go({ t: "home" })}>Continue shopping</button>
     </div>
   );
@@ -8043,19 +8044,20 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
   const rightCol = (
     <div className="space-y-6">
       <section className="bg-[#fffcf7] px-5 py-5" aria-label="The orange box section">
-        <div className="border-b border-[#f6f1eb] pb-4"><h2 className={CO_HEAD_LG}>The Orange Box</h2></div>
+        <div className="border-b border-[#f6f1eb] pb-4"><h2 className={CO_HEAD_LG}>La Boîte Orange</h2></div>
         <div className="flex items-center gap-4 py-4">
-          <img src="https://www.hermes.com/us/en/assets/images/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
-          <p className="text-xs leading-5 text-black">All orders are delivered in an orange box tied with a Bolduc ribbon, with the exception of <button aria-label="Certain items exceptions from cart" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certain items</button></p>
+          <img src="https://www.hermes.com/fr/fr/assets/images/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
+          <p className="text-xs leading-5 text-black">Toutes les commandes sont livrées dans une boîte orange enveloppée d'un ruban Bolduc à l'exception de <button aria-label="Certains objets exceptions" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certains objets</button></p>
         </div>
       </section>
       <section className="bg-[#fffcf7] px-5 py-5" aria-label="Customer service section">
-        <h2 className={CO_HEAD}>Customer Service</h2>
-        <p className="mt-4 text-sm text-neutral-600">Monday to Saturday 10 AM - 9 PM :</p>
-        <p className="mt-1 text-sm"><a aria-label="Call customer service from cart" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
+        <h2 className={CO_HEAD}>Service client</h2>
+        <p className="mt-4 text-sm text-neutral-600">Whatsapp France: +33 1 40 17 47 00. Du lundi au samedi de 9h à 18h30.</p>
+        <p className="mt-1 text-sm text-neutral-600">Magasins et commandes en ligne du lundi au samedi 10h - 19h : +33 (0)1 40 17 47 00</p>
+        <p className="mt-1 text-sm text-neutral-600">Pour les demandes d’information au Siège, contactez notre Standard général du lundi au vendredi 8h30 - 18h : +33 (0)1 40 17 47 17</p>
       </section>
       <section className="bg-[#fffcf7] px-5 py-5" aria-label="Reinsurance section">
-        <h2 className={CO_HEAD}>Reinsurance</h2>
+        <h2 className={CO_HEAD}>Réassurance</h2>
         <div className="mt-5 grid grid-cols-2 gap-4 text-center">
           <button aria-label="Returns and exchanges from cart" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "returns" })}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M7 8h11l-3-3M17 16H6l3 3" /></svg>Returns &amp; exchanges</button>
           <button aria-label="Shop securely from cart" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "payment" })}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="1" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>Shop securely</button>
@@ -8064,21 +8066,22 @@ function CartPage({ cart, setCart, settings, go, total, count, products }: { car
     </div>
   );
   // Minimal cart-page footer (§E): five links + copyright only — no
-  // newsletter / footer services block on the cart page. The link set
-  // matches hermes.com's cart footer exactly: "Terms and conditions,
-  // Privacy & cookies, Legal issues, Accessibility, Site map".
+  // newsletter / footer services block on the cart page. The link set is
+  // the original's France cart footer (live-read 2026-11-23):
+  // "Conditions Générales de Vente / Conditions Générales d'Utilisation /
+  // Données personnelles / Mentions légales / Plan du site".
   const cartFooter = (
     <div className="mt-10 border-t border-[#f6f1eb] bg-[#fffcf7] px-5 py-5 text-[13px] text-neutral-600">
       <p>
-        <button aria-label="Cart footer Terms and conditions" className="hover:underline" onClick={() => go({ t: "page", page: "terms" })}>Terms and conditions</button>
+        <button aria-label="Cart footer Conditions Générales de Vente" className="hover:underline" onClick={() => go({ t: "page", page: "terms" })}>Conditions Générales de Vente</button>
         {" | "}
-        <button aria-label="Cart footer Privacy and cookies" className="hover:underline" onClick={() => go({ t: "page", page: "privacy" })}>Privacy &amp; cookies</button>
+        <button aria-label="Cart footer Conditions Générales d'Utilisation" className="hover:underline" onClick={() => go({ t: "page", page: "terms" })}>Conditions Générales d'Utilisation</button>
         {" | "}
-        <button aria-label="Cart footer Legal issues" className="hover:underline" onClick={() => go({ t: "page", page: "legal" })}>Legal issues</button>
+        <button aria-label="Cart footer Données personnelles" className="hover:underline" onClick={() => go({ t: "page", page: "privacy" })}>Données personnelles</button>
         {" | "}
-        <button aria-label="Cart footer Accessibility" className="hover:underline" onClick={() => go({ t: "page", page: "accessibility" })}>Accessibility</button>
+        <button aria-label="Cart footer Mentions légales" className="hover:underline" onClick={() => go({ t: "page", page: "legal" })}>Mentions légales</button>
         {" | "}
-        <button aria-label="Cart footer Site map" className="hover:underline" onClick={() => go({ t: "page", page: "sitemap" })}>Site map</button>
+        <button aria-label="Cart footer Plan du site" className="hover:underline" onClick={() => go({ t: "page", page: "sitemap" })}>Plan du site</button>
       </p>
       <p className="pt-1">{settings.copyrightText || "© Hermès 2026. Tous droits réservés"}</p>
     </div>
@@ -8328,32 +8331,33 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
   const sub = useMutation({ mutationFn: () => api.subscribeNewsletter({ email }), onSuccess: () => { setDone(settings.newsletterSuccess || "Thank you — you are subscribed to the newsletter."); setEmail(""); } });
   useEffect(() => { setShip(settings.shipTo); }, [settings.shipTo]);
   const serviceIcons: Record<string, React.ReactNode> = {
-    "STANDARD DELIVERY": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2.5 6h12v10h-12zM14.5 9.5h3.6l3 3.4v3.1h-6.6" /><circle cx="6.5" cy="17.8" r="1.9" /><circle cx="17.3" cy="17.8" r="1.9" /></svg>,
-    "RETURNS": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M8.5 5.5 4 10l4.5 4.5M4 10h10a6 6 0 0 1 0 12h-3" /></svg>,
-    "CUSTOMER SERVICE": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M5 3.5h4l1.5 4.5L8 10a13 13 0 0 0 6 6l2-2.5 4.5 1.5v4a2 2 0 0 1-2.2 2A18.5 18.5 0 0 1 3 5.7a2 2 0 0 1 2-2.2Z" /></svg>,
-    "SECURED PAYMENT": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><rect x="2.5" y="6" width="15" height="11" rx="1.5" /><path d="M2.5 9.8h15" /><path d="M17.2 13.2v-1.4a1.5 1.5 0 0 1 3 0v1.4" /><rect x="15.8" y="13.2" width="5.7" height="5" rx="0.8" fill="currentColor" stroke="none" /></svg>,
+    "LIVRAISON STANDARD": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M2.5 6h12v10h-12zM14.5 9.5h3.6l3 3.4v3.1h-6.6" /><circle cx="6.5" cy="17.8" r="1.9" /><circle cx="17.3" cy="17.8" r="1.9" /></svg>,
+    "RETOURS": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M8.5 5.5 4 10l4.5 4.5M4 10h10a6 6 0 0 1 0 12h-3" /></svg>,
+    "SERVICE CLIENT": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><path d="M5 3.5h4l1.5 4.5L8 10a13 13 0 0 0 6 6l2-2.5 4.5 1.5v4a2 2 0 0 1-2.2 2A18.5 18.5 0 0 1 3 5.7a2 2 0 0 1 2-2.2Z" /></svg>,
+    "PAIEMENT SÉCURISÉ": <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true"><rect x="2.5" y="6" width="15" height="11" rx="1.5" /><path d="M2.5 9.8h15" /><path d="M17.2 13.2v-1.4a1.5 1.5 0 0 1 3 0v1.4" /><rect x="15.8" y="13.2" width="5.7" height="5" rx="0.8" fill="currentColor" stroke="none" /></svg>,
   };
   const services: { title: string; body: React.ReactNode; page: string }[] = [
-    { title: "STANDARD DELIVERY", page: "shipping", body: <>{settings.serviceDeliveryBody || "Free standard delivery in France."}</> },
-    { title: "RETURNS", page: "returns", body: settings.serviceReturnsBody ? <>{settings.serviceReturnsBody}</> : <>Free returns within 30 days. See conditions and procedure in our return<button aria-label="Return FAQs" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "returns" }); }}>FAQs</button>.</> },
-    // Footer CUSTOMER SERVICE card: the original's footer reads "Monday to Saturday
-    // 10 AM - 9 PM" with no EST (verified from hermes.com's own footer data
-    // 2026-11-15). The contact page keeps the EST form via settings.serviceHours.
-    { title: "CUSTOMER SERVICE", page: "contact", body: <>Monday to Saturday 10 AM - 9 PM<br />{settings.phone ? (<><a aria-label="Call Hermès customer service" className="underline underline-offset-2" href={`tel:${settings.phone}`} onClick={(e) => e.stopPropagation()}>{settings.phone}</a> | </>) : null}<button aria-label="Contact us from footer" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Contact us</button></> },
-    { title: "SECURED PAYMENT", page: "payment", body: <>{settings.servicePaymentBody || "All the transactions made on Hermes.com are secured"}</> },
+    { title: "LIVRAISON STANDARD", page: "shipping", body: <>{settings.serviceDeliveryBody || "Livraison standard gratuite. Hermès offre plusieurs modes de livraison rapides et sécurisés."}</> },
+    { title: "RETOURS", page: "returns", body: settings.serviceReturnsBody ? <>{settings.serviceReturnsBody}</> : <>Retours gratuits sous 30 jours. Consultez les conditions et la procédure dans notre <button aria-label="FAQ retours" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "returns" }); }}>FAQ retours</button>.</> },
+    // Footer SERVICE CLIENT card: the original's footer strip reads
+    // "Lundi au Samedi" with links "Trouver un magasin | Nous contacter" —
+    // no phone number, no clock hours (live-read 2026-11-23, category +
+    // FAQ pages). The phone + hours belong to the cart / contact pages.
+    { title: "SERVICE CLIENT", page: "contact", body: <>Lundi au Samedi<br /><button aria-label="Trouver un magasin" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "stores" }); }}>Trouver un magasin</button> | <button aria-label="Nous contacter" className="underline underline-offset-2" onClick={(e) => { e.stopPropagation(); go({ t: "page", page: "contact" }); }}>Nous contacter</button></> },
+    { title: "PAIEMENT SÉCURISÉ", page: "payment", body: <>{settings.servicePaymentBody || "Toutes les transactions effectuées sur Hermes.com sont sécurisées."}</> },
   ];
   const newsletterForm = (boxed: boolean) => done ? <p className="mt-3 text-sm font-medium" role="status">{done}</p> : boxed ? (
     <>
-      <input aria-label="Newsletter email" type="email" maxLength={254} className="mt-3 w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <button aria-label="Subscribe to the newsletter" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (isValidEmail(email)) sub.mutate(); }}>Subscribe<span className="sr-only"> to the Newsletter</span></button>
+      <input aria-label="Adresse e-mail de la newsletter" type="email" maxLength={254} className="mt-3 w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Votre adresse e-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <button aria-label="S'inscrire à la newsletter" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (isValidEmail(email)) sub.mutate(); }}>S'inscrire<span className="sr-only"> à la newsletter</span></button>
     </>
   ) : (
     <>
-      <button aria-label="Subscribe to the newsletter" className="font-mono-d mt-2 text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => setSubOpen(!subOpen)}>Subscribe<span className="sr-only"> to the Newsletter</span></button>
+      <button aria-label="S'inscrire à la newsletter" className="font-mono-d mt-2 text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => setSubOpen(!subOpen)}>S'inscrire<span className="sr-only"> à la newsletter</span></button>
       {subOpen && (
         <div className="mt-3">
-          <input aria-label="Newsletter email" type="email" maxLength={254} className="w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Your email address" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <button aria-label="Confirm newsletter subscription" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (isValidEmail(email)) sub.mutate(); }}>Subscribe<span className="sr-only"> to the Newsletter</span></button>
+          <input aria-label="Adresse e-mail de la newsletter" type="email" maxLength={254} className="w-full border border-black/30 px-3 py-2.5 text-sm" placeholder="Votre adresse e-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <button aria-label="Confirmer l'inscription à la newsletter" className="mt-2 w-full border border-black py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={() => { if (isValidEmail(email)) sub.mutate(); }}>S'inscrire<span className="sr-only"> à la newsletter</span></button>
         </div>
       )}
     </>
@@ -8418,7 +8422,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
           <p className="font-mono-d text-xs font-light uppercase tracking-normal">Newsletter</p>
           <p className="mt-4 text-[11px] leading-[18px] text-black">{settings.newsletterText || "Receive our newsletter and discover our stories, collections, and surprises."}</p>
           {newsletterForm(false)}
-          <p className="font-mono-d mt-8 text-xs font-light uppercase tracking-normal">Follow us</p>
+          <p className="font-mono-d mt-8 text-xs font-light uppercase tracking-normal">Suivez-nous</p>
           <div className="mt-3"><SocialCircles /></div>
           <div className="relative mt-7 border-t border-[#f6f1eb] pt-5">
             <button aria-label="Modifier votre emplacement" aria-expanded={shipOpen} className="flex items-center gap-2 text-xs text-neutral-700 uppercase tracking-wider" onClick={() => setShipOpen(!shipOpen)}>
@@ -8453,7 +8457,7 @@ function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { r
             <p className="font-mono-d text-xs font-light uppercase tracking-normal">Newsletter</p>
             <p className="mt-4 text-[11px] leading-[18px] text-black">{settings.newsletterText || "Receive our newsletter and discover our stories, collections, and surprises."}</p>
             {newsletterForm(false)}
-            <p className="font-mono-d mt-8 text-xs font-light uppercase tracking-normal">Follow us</p>
+            <p className="font-mono-d mt-8 text-xs font-light uppercase tracking-normal">Suivez-nous</p>
             <div className="mt-3"><SocialCircles /></div>
           </div>
         </div>
@@ -8843,17 +8847,19 @@ const CO_HEAD = "font-mono-d text-xs font-medium uppercase tracking-normal";
 // Orange Box heading on the original: Overpass Mono 16px/24px/300
 // (cart shell CSS .orange-box-title), not the 12px/500 section head.
 const CO_HEAD_LG = "font-mono-d text-base font-light uppercase tracking-normal";
-// Legal footer links (cart / checkout / account footers): the original
-// lists General Terms and Conditions of Sale + of Use first, verbatim
-// from the served cart HTML. Admin-editable via settings.legalLinksJson.
-const DEFAULT_LEGAL_LINKS: [string, string][] = [["General Terms and Conditions of Sale", "terms"], ["General Terms and Conditions of Use", "terms"], ["Terms and conditions", "terms"], ["Privacy & cookies", "privacy"], ["Legal issues", "legal"], ["Accessibility", "accessibility"], ["Site map", "sitemap"]];
+// Legal footer links (cart / checkout / account footers): the original's
+// France cart footer lists five links (live-read 2026-11-23):
+// Conditions Générales de Vente, Conditions Générales d'Utilisation,
+// Données personnelles, Mentions légales, Plan du site.
+// Admin-editable via settings.legalLinksJson.
+const DEFAULT_LEGAL_LINKS: [string, string][] = [["Conditions Générales de Vente", "terms"], ["Conditions Générales d'Utilisation", "terms"], ["Données personnelles", "privacy"], ["Mentions légales", "legal"], ["Plan du site", "sitemap"]];
 function parseLegalLinks(s: Settings): [string, string][] {
   try { const v = JSON.parse(s.legalLinksJson || "") as unknown; if (Array.isArray(v) && v.length) return v as [string, string][]; } catch { /* fall through */ }
   return DEFAULT_LEGAL_LINKS;
 }
 
 function CheckoutProgress({ step, nextStep }: { step: 1 | 2 | 3; nextStep?: boolean }) {
-  const labels = ["Cart", "Checkout", "Confirmation"];
+  const labels = ["Panier", "Livraison & Paiement", "Confirmation"];
   return (
     <div className="px-2 pb-[15px] pt-6 lg:pb-6 lg:pt-8" aria-label="Checkout progress">
       <div className="relative mx-6">
@@ -9152,18 +9158,19 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
 
       {/* THE ORANGE BOX */}
       <section className="bg-[#fffcf7] px-4 pt-0 lg:px-6" aria-label="The orange box section">
-        <div className="flex min-h-[56px] items-center border-b border-[#f6f1eb]"><h2 className={CO_HEAD_LG}>The Orange Box</h2></div>
+        <div className="flex min-h-[56px] items-center border-b border-[#f6f1eb]"><h2 className={CO_HEAD_LG}>La Boîte Orange</h2></div>
         <div className="flex items-center gap-4 py-4">
-          <img src="https://www.hermes.com/us/en/assets/images/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
-          <p className="text-xs leading-5 text-black">All orders are delivered in an orange box tied with a Bolduc ribbon, with the exception of <button aria-label="Certain items exceptions" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certain items</button></p>
+          <img src="https://www.hermes.com/fr/fr/assets/images/orange-box.png" alt="" aria-hidden="true" className="h-[70px] w-[70px] shrink-0" style={{ boxShadow: "-6px 6px 12px #f6f1eb78" }} />
+          <p className="text-xs leading-5 text-black">Toutes les commandes sont livrées dans une boîte orange enveloppée d'un ruban Bolduc à l'exception de <button aria-label="Certains objets exceptions" className="underline" onClick={() => go({ t: "page", page: "gifting" })}>certains objets</button></p>
         </div>
       </section>
 
       {/* CUSTOMER SERVICE */}
       <section className="bg-[#fffcf7] px-4 pb-5 pt-0 lg:px-6" aria-label="Customer service section">
-        <div className="flex min-h-[56px] items-center border-b border-[#f6f1eb]"><h2 className={CO_HEAD}>Customer Service</h2></div>
-        <p className="mt-4 text-sm text-neutral-600">{settings.serviceHours}</p>
-        <p className="mt-1 text-sm"><a aria-label="Call customer service from checkout" className="underline" href={`tel:${settings.phone}`}>{settings.phone}</a></p>
+        <div className="flex min-h-[56px] items-center border-b border-[#f6f1eb]"><h2 className={CO_HEAD}>Service client</h2></div>
+        <p className="mt-4 text-sm text-neutral-600">Whatsapp France: +33 1 40 17 47 00. Du lundi au samedi de 9h à 18h30.</p>
+        <p className="mt-1 text-sm text-neutral-600">Magasins et commandes en ligne du lundi au samedi 10h - 19h : +33 (0)1 40 17 47 00</p>
+        <p className="mt-1 text-sm text-neutral-600">Pour les demandes d’information au Siège, contactez notre Standard général du lundi au vendredi 8h30 - 18h : +33 (0)1 40 17 47 17</p>
         <div className="mt-6 grid grid-cols-2 gap-4 text-center">
           <button aria-label="Returns and exchanges from checkout" className="flex flex-col items-center gap-2 text-sm" onClick={() => go({ t: "page", page: "returns" })}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M7 8h11l-3-3M17 16H6l3 3" /></svg>
