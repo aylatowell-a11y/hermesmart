@@ -1155,7 +1155,7 @@ export function App() {
   // Back controls return to it, never to the default bags category.
   const [fromView, setFromView] = useState<View | null>(null);
   // Desktop sticky buy bar visibility, reported up from ProductView so
-  // the chat bubble can sit above the bar (see ChatBubble).
+  // the chat bubble can sit above the bar .
   const [buyBarVisible, setBuyBarVisible] = useState(false);
   const [cart, setCart] = useState<CartItem[]>(() => load("hlx-cart", []));
   // Sessions last 24 h and are re-checked against the account store on load:
@@ -1320,7 +1320,6 @@ export function App() {
   // products actually opened in this browser; a fresh browser shows none.
   const [lastViewedIds, setLastViewedIds] = useState<number[]>(() => load("hlx-lastviewed", []));
   useEffect(() => { save("hlx-lastviewed", lastViewedIds); }, [lastViewedIds]);
-  const [cookie, setCookie] = useState<string | null>(() => { try { return localStorage.getItem("hlx-cookies"); } catch { return "pending"; } });
   const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { save("hlx-cart", cart); }, [cart]);
@@ -1355,6 +1354,7 @@ export function App() {
     requestAnimationFrame(() => { window.setTimeout(() => window.scrollTo({ top: y }), 60); });
   };
   const go = (v: View, opts?: { restore?: boolean }) => {
+    if (v.t === "page" && v.page === "track") return go({ t: "account" }, opts);
     const cur = viewRef.current;
     // External menu links open the original's own France URL in a new tab.
     if (v.t === "external") { window.open(v.url, "_blank", "noopener,noreferrer"); return; }
@@ -1725,7 +1725,7 @@ export function App() {
         {view.t === "category" && view.cat === "about" && <AboutPage go={go} />}
         {view.t === "category" && view.cat !== "about" && <CategoryView key={view.cat + (view.sub ?? "")} products={products} cat={view.cat} sub={view.sub} go={go} addToCart={addToCart} pinTop={pinTop} stickyTop={subNavTop} initialVisible={catStateRef.current[catKey(view.cat, view.sub)]?.visible ?? 40} onVisibleChange={(n) => { const k = catKey(view.cat, view.sub); const prev = catStateRef.current[k] ?? { visible: 40, scrollY: 0 }; catStateRef.current[k] = { ...prev, visible: n }; }} />}
         {view.t === "product" && <ProductView key={view.id} products={products} id={view.id} go={go} addToCart={addToCart} settings={settings} user={user} from={fromView} lastViewedIds={lastViewedIds} onBuyBarChange={setBuyBarVisible} onViewed={(pid) => setLastViewedIds((prev) => [pid, ...prev.filter((x) => x !== pid)].slice(0, 9))} />}
-        {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} />}
+        {view.t === "page" && <InfoPage page={view.page} settings={settings} go={go} user={user} setUser={setUser} />}
         {view.t === "faq" && <FaqPage key={view.topic} topic={view.topic} go={go} />}
         {view.t === "about" && <AboutPage go={go} />}
         {view.t === "account" && <AccountView key={view.mode ?? "login"} user={user} setUser={setUser} go={go} mode={view.mode} />}
@@ -1734,7 +1734,6 @@ export function App() {
       </main>
 
       {view.t !== "cart" && view.t !== "checkout" && <Footer settings={settings} go={go} />}
-      {view.t !== "admin" && <ChatBubble settings={settings} go={go} view={view} buyBarVisible={buyBarVisible} />}
 
       {addedDialog && (
         <div className="fixed right-4 top-4 z-50 w-[320px] max-w-[calc(100vw-32px)] bg-[#fffcf7] p-5 fade-up" role="dialog" aria-label="Objet ajouté au panier">
@@ -1751,19 +1750,6 @@ export function App() {
         </div>
       )}
 
-      {cookie === null && (
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-black/20 bg-[#fffcf7] p-5">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-xs font-semibold uppercase tracking-[0.25em]">Cookies Hermes.com</h2>
-            <p className="mt-2 text-sm text-neutral-700">We use cookies to improve your experience, analyse traffic and personalise content. You may set your preferences, refuse all cookies, or accept all cookies.</p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button aria-label="Set your cookies" className="border border-black px-5 py-2.5 text-[11px] uppercase tracking-[0.2em]" onClick={() => { localStorage.setItem("hlx-cookies", "custom"); setCookie("custom"); }}>Set your cookies</button>
-              <button aria-label="Refuse all cookies" className="border border-black px-5 py-2.5 text-[11px] uppercase tracking-[0.2em]" onClick={() => { localStorage.setItem("hlx-cookies", "refused"); setCookie("refused"); }}>Refuse all cookies</button>
-              <button aria-label="Accept all cookies" className="bg-black px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] text-white" onClick={() => { localStorage.setItem("hlx-cookies", "accepted"); setCookie("accepted"); }}>Accept all cookies</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -7119,7 +7105,6 @@ const PAGES: Record<string, { title: string; body: string[] }> = {
   payment: { title: "Paiement", body: ["Le règlement de vos achats s'effectue uniquement par carte de crédit ou carte bancaire: Visa®, MasterCard®, American Express®, Maestro®, JCB®. Les paiements par Paypal® et Apple Pay® sont autorisés.", "Toutes les transactions effectuées sur le site Hermes.com sont sécurisées.", "Les cartes ne sont pas débitées tant que la commande n'a pas été expédiée, sauf pour les produits personnalisés et pour les précommandes."] },
   shipping: { title: "Livraison", body: ["Livraison standard gratuite. Les frais de port standard sont offerts pour toute commande Colissimo, ainsi que pour les livraisons CHRONOPOST - Express.", "Livraisons en France continentale: deux (2) jours ouvrés pour toute commande passée et validée avant treize (13) heures un jour ouvré; trois (3) jours ouvrés pour toute commande passée et validée après treize (13) heures un jour ouvré.", "CHRONOPOST - Precise: 15 € pour une commande d'un montant inférieur ou égal à 200 €, 5 € pour une commande d'un montant supérieur à 200 €."] },
   collect: { title: "Collect in store", body: ["Select articles can be reserved online and collected in boutique. Bring your order confirmation and an ID; your article will be held for 48 hours."] },
-  track: { title: "Track orders", body: ["Order tracking is available from your account after sign-in."] },
   returns: { title: "Retour et échanges", body: ["Vous avez la possibilité de retourner, pour une demande d'échange ou de remboursement, tout produit commandé sur le site Hermes.com dans les trente (30) jours calendaires de la date de la livraison.", "Les produits retournés doivent être accompagnés de leur facture d'achat ou d'une copie en cas de retour partiel.", "Le retour est offert en utilisant notre système d'étiquettes de retour prépayées. Si les articles vous ont été offerts, vous avez uniquement la possibilité de les échanger contre des articles d'une même valeur.", "Les magasins Hermès ne proposent pas le remboursement des produits achetés sur le site Hermes.com.", "Votre remboursement interviendra 15 jours ouvrés suivant la réception de votre retour à notre entrepôt."] },
   artisan: { title: "Hermès, artisan contemporain depuis 1837", body: ["Depuis 1837, Hermès reste fidèle à son modèle artisanal et à ses valeurs humanistes. La liberté de création, la recherche permanente des plus belles matières, la transmission de savoir-faire d’excellence, jusqu’aux détails pensés pour l’usage – c’est-à-dire l’esthétique de la fonction – forgent la singularité de la maison, créatrice d’objets conçus pour durer. Entreprise familiale indépendante qui exerce 16 métiers, Hermès s’attache à conserver l’essentiel de sa production en France au sein de ses 63 sites de production et de formation, tout en développant son réseau de près de 300 magasins dans 45 pays. Le groupe emploie plus de 26 000 collaborateurs dans le monde, dont 16 300 en France.. Hermès est dirigé depuis 2013 par Axel Dumas, membre de la sixième génération.", "Hermès, acteur économique et social", "Depuis six générations, Hermès est une maison française familiale indépendante, artisanale, créative, innovante, engagée et responsable. Tout en concevant des objets intemporels et durables, elle s’emploie à sauvegarder, transmettre et développer les savoir-faire et gestes d’excellence en accord avec ses valeurs humanistes issues de l’artisanat.", "Créativité, innovation et singularité au cœur de la stratégie", "Inspirés chaque année par un nouveau thème, les 16 métiers de la maison donnent libre cours à leur créativité, à l’appui de l’excellence des savoir-faire artisanaux. Ils imaginent ainsi des objets qui conjuguent liberté, inventivité et durabilité, pensés pour accompagner l’évolution des modes de vie.", "Une maison d’artisans aux valeurs humanistes", "Issues du monde artisanal, les valeurs humanistes guident l’entreprise dans son développement : Hermès s’engage en faveur de la préservation des ressources, s’implique au sein des territoires qui accueillent ses manufactures et veille à la transmission de ses savoir-faire d’excellence.", "Hermès dans le monde", "Les clients d’Hermès constituent une véritable communauté par-delà les frontières. C’est pour ce public fidèle toujours plus nombreux que la maison déploie, en ligne comme dans son réseau international de magasins, de véritables « maisons d’objets » qui se distinguent les unes des autres par une offre unique.", "Six générations d'artisans", "Depuis 1837, génération après génération, la maison Hermès suit une double trame, celle du travail minutieux de l’artisan et celle du mode de vie de ses clients."] },
   sustainability: { title: "Développement durable", body: ["Maison artisanale familiale et indépendante depuis 1837, Hermès crée des objets beaux et fonctionnels, qui se réparent et se transmettent de génération en génération. La qualité des matières, associée aux savoir-faire d’exception que perpétuent ses artisans, contribue à rendre durables ses créations caractérisées par leur élégance intemporelle. Attachée aux valeurs humanistes et artisanales, l’entreprise, qui emploie plus de 27 000 collaborateurs, est inscrite dans une démarche responsable qui repose, dans sa production comme dans son développement, sur une exigence permanente de qualité, et dont témoignent ses engagements culturels, sociétaux et environnementaux.", "Durabilité de l'objet", "Conjuguant exigence esthétique et fonctionnalité, Hermès se distingue par la haute qualité de ses créations issues de savoir-faire d’exception et par leur adaptation aux usages. De la selle à la soie en passant par la montre, les propriétaires d’objets Hermès peuvent en demander l’entretien et la réparation partout dans le monde. Attentive à produire au plus juste, la maison s’attache à intégrer les principes de la circularité dans son processus de fabrication, tout en étant engagée dans la recherche et le développement pour concevoir des matières alternatives innovantes.", "Durabilité de l'emploi", "Pour accompagner sa croissance, Hermès crée chaque année de nouveaux emplois et, attaché à la transmission de ses savoir-faire d’exception, forme ses artisans. La maison a ainsi ouvert en 2021 l’École Hermès des savoir-faire, qui se déploie désormais au sein de 12 écoles de formation en région, et délivre un CAP Maroquinerie. La mobilité interne est encouragée de manière à ce que chaque collaborateur puisse déployer ses talents au sein d’un groupe engagé dans une démarche d’inclusion et attentif à la diversité de ses équipes. Hermès veille enfin à offrir des emplois de qualité dans un environnement de travail propice au bien-être de chacun.", "Durabilité de l'ancrage territorial", "Avec 63 sites de production et de formation en France, la maison Hermès est présente dans 11 des 13 régions françaises. Les objets Hermès y sont fabriqués pour 75% d’entre eux . L’entreprise contribue à la revitalisation active de ces territoires : l’implantation des manufactures dans une logique de pôles régionaux permet aux collaborateurs de s’inscrire dans un écosystème social et culturel local. Chaque nouveau site de production est soumis à un référentiel construction durable, gage d’infrastructures responsables.", "Durabilité des partenariats", "Une grande fidélité unit Hermès à ses fournisseurs et ce depuis 21 ans en moyenne pour les 50 principaux fournisseurs directs. La stabilité de ces partenariats, reposant sur des valeurs partagées, permet de garantir la sécurisation des approvisionnements du groupe et d’assurer l’indispensable traçabilité des matières. Une dynamique commune anime Hermès et ses partenaires qui progressent ensemble dans leurs engagements RSE. Hermès met en place pour chacune de ses filières d’achats un objectif de certification par des tierces parties.", "Durabilité des ressources naturelles", "Entreprise responsable, Hermès veille à limiter ses impacts sur le monde, dans le respect de la nature, source de ses matières d’exception. À cet égard, la transparence, la sécurisation et la dimension locale des filières d’approvisionnement font l’objet d’une considération particulière. Le groupe s’astreint par ailleurs à maîtriser sa consommation d’eau et d’énergie, mais aussi son empreinte carbone au fil de sa production comme dans la construction, durable, de ses nouveaux sites. Enfin, Hermès a également pris des engagements et mène des actions pour la préservation de la biodiversité, qui constitue l’un des piliers de sa Fondation.", "En savoir plus", "Retrouvez des informations plus détaillées sur notre modèle d'affaires et nos contributions en matière sociale et environnementale.", "Empreintes sur le monde", "Au travers de cette collection, le cinéaste et documentariste Frédéric Laffont révèle avec un regard humaniste, notre rapport singulier au développement durable."] },
@@ -7882,7 +7867,7 @@ const DEFILE_PAGES: Record<string, { title: string; intro: string[]; sections: {
   },
 };
 
-function InfoPage({ page, settings, go, user }: { page: string; settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; user: { name: string; email: string } | null }) {
+function InfoPage({ page, settings, go, user, setUser }: { page: string; settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; user: { name: string; email: string } | null; setUser: (u: { name: string; email: string; expiresAt?: number } | null) => void }) {
   if (page === "sitemap") {
     return (
       <div className="mx-auto max-w-5xl px-4 py-12">
@@ -7905,7 +7890,7 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
     );
   }
   if (page === "track") {
-    return <TrackOrders settings={settings} user={user} go={go} />;
+    return <AccountView user={user} setUser={setUser} go={go} mode="login" />;
   }
   if (page === "contact") {
     // Contact Us page, per the original hermes.com/us/en/contact-us/
@@ -8059,60 +8044,6 @@ function InfoPage({ page, settings, go, user }: { page: string; settings: Settin
       {page === "contact" && <ContactForm settings={settings} go={go} />}
       {(page === "legal") && <p className="mt-4 text-sm">Service client — {settings.serviceHours}.</p>}
       <button aria-label="Continue shopping" className="mt-8 border border-black px-8 py-3 text-[11px] font-semibold uppercase tracking-[0.25em]" onClick={() => go({ t: "home" })}>Continuez vos achats</button>
-    </div>
-  );
-}
-
-function TrackOrders({ user, go }: { settings: Settings; user: { name: string; email: string } | null; go: (v: View, opts?: { restore?: boolean }) => void }) {
-  const [email, setEmail] = useState(user?.email ?? "");
-  const [orderId, setOrderId] = useState("");
-  const [sent, setSent] = useState("");
-  const [tracked, setTracked] = useState<{ id: number; status: string } | null>(null);
-  const [trackMsg, setTrackMsg] = useState("");
-  const q = useQuery({ queryKey: ["track", sent], queryFn: () => api.myOrders({ email: sent }), enabled: isValidEmail(sent) });
-  const doTrack = async () => {
-    const em = user?.email ?? email;
-    if (orderId.trim()) {
-      const r = await api.trackOrder({ orderId: Number(orderId), email: em });
-      if (r.found && r.order) { setTracked({ id: r.order.id, status: r.order.status }); setTrackMsg(""); setSent(em); }
-      else { setTracked(null); setTrackMsg("No order found with that number and email."); }
-    } else setSent(em);
-  };
-  const steps = ["Pending", "Processing", "Shipped", "Delivered"];
-  const shown = tracked ? (q.data?.orders.filter(o => o.id === tracked.id) ?? []) : (q.data?.orders ?? []);
-  if (!user) return (
-    <div className="mx-auto max-w-md px-4 py-12 text-center">
-      <h1 className="text-xs font-semibold uppercase tracking-[0.35em]">Track orders</h1>
-      <p className="mt-4 text-sm leading-6 text-neutral-700">Please sign in to track your orders — order tracking is available from your account.</p>
-      <button aria-label="Se connecter pour suivre vos commandes" className="mt-6 w-full bg-black py-3.5 text-[11px] font-semibold uppercase tracking-[0.25em] text-white" onClick={() => go({ t: "account" })}>Se connecter</button>
-    </div>
-  );
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="font-serif-d text-3xl italic">Track orders</h1>
-      <p className="mt-3 text-sm text-neutral-700">Enter your order number and the email used at checkout to see its status timeline, or leave the number empty to list all your orders.</p>
-      <div className="mt-5 grid gap-2 sm:grid-cols-[140px_1fr_auto]">
-        <input aria-label="Order number for tracking" inputMode="numeric" className="border border-black/30 px-3 py-3 text-sm" placeholder="Order #" value={orderId} onChange={(e) => setOrderId(e.target.value.replace(/[^0-9]/g, ""))} />
-        <input aria-label="Email for order tracking" type="email" className="min-w-0 border border-black/30 px-3 py-3 text-sm" placeholder="Your checkout email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <button aria-label="Track my orders" className="bg-black px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white" onClick={doTrack}>Track</button>
-      </div>
-      {trackMsg && <p className="mt-4 text-sm text-red-700" role="status">{trackMsg}</p>}
-      {q.data && shown.length === 0 && !trackMsg && <p className="mt-6 text-sm text-neutral-600">No orders found for this email yet.</p>}
-      {shown.map((o) => {
-        const norm = o.status === "Placed" ? "Pending" : o.status === "Confirmed" ? "Processing" : o.status;
-        const idx = steps.indexOf(norm);
-        let items: { name: string; qty: number; price: number }[] = []; try { items = JSON.parse(o.items) as typeof items; } catch { items = []; }
-        return (
-        <div key={o.id} className="mt-4 border border-black/10 bg-[#fffcf7] p-4">
-          <p className="text-sm font-medium">Order #{o.id} — {fmt(o.total)} — <span className="uppercase tracking-wider">{o.status}</span></p>
-          <p className="text-xs text-neutral-500">{new Date(o.createdAt).toLocaleString("fr-FR")}{o.paymentMethod ? ` · Paid with ${o.paymentMethod}` : ""}{o.deliveryOption ? ` · ${o.deliveryOption}` : ""}</p>
-          {items.map((it, i) => <p key={i} className="mt-1 text-sm text-neutral-700">{it.qty} × {it.name} — {fmt(it.price * it.qty)}</p>)}
-          {o.status === "Cancelled" ? <p className="mt-3 text-sm text-red-700">This order was cancelled.</p> : (
-            <div className="mt-4 flex items-center" aria-label={`Order ${o.id} status timeline`}>{steps.map((st, i) => <div key={st} className="flex flex-1 items-center last:flex-none"><div className="flex flex-col items-center"><span className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] ${i <= idx ? "bg-black text-white" : "border border-black/30 text-neutral-400"}`}>{i <= idx ? "✓" : i + 1}</span><span className="mt-1 whitespace-nowrap text-[10px] uppercase tracking-wider">{st}</span></div>{i < steps.length - 1 && <span className={`mx-1 mb-4 h-px flex-1 ${i < idx ? "bg-black" : "bg-black/20"}`} />}</div>)}</div>
-          )}
-        </div> );
-      })}
-      <button aria-label="Go to account" className="mt-8 text-xs uppercase tracking-[0.2em] underline" onClick={() => go({ t: "account" })}>Open my account</button>
     </div>
   );
 }
@@ -8332,116 +8263,6 @@ function SocialCircles() {
 // Floating chat bubble — bottom-right on every page except admin,
 // as on hermes.com: a 48px white circle
 // with the speech-bubble glyph, bottom-5 right-5, accessible name "Open a
-// Live Chat with an advisor". Opening it first shows the Live Chat consent
-// dialog (§G, verbatim text + Privacy Policy link + CONTINUE), then a
-// brief loading spinner, then the chat with the verbatim welcome message
-// and a generic "Client Specialist" greeting — no real advisor is named.
-// The thread itself is localStorage hv-chat (api.getChatMessages /
-// sendChatMessage), the same store the Admin Panel chat tab reads, so the
-// store's replies appear in the same thread. On mobile product pages the
-// bubble sits above the sticky ADD TO CART bar; on desktop it does the
-// same ONLY while the sticky bar is visible (buyBarVisible, reported up
-// from ProductView's IntersectionObserver) — raised 76px so it clears the
-// 72px bar with a gap, exactly as on hermes.com. When the bar is hidden
-// the desktop bubble stays at bottom-5 like everywhere else.
-function ChatBubble({ settings, go, view, buyBarVisible }: { settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void; view: View; buyBarVisible?: boolean }) {
-  const [open, setOpen] = useState(false);
-  const [stage, setStage] = useState<"consent" | "loading" | "chat">("consent");
-  const [msgs, setMsgs] = useState<LocalChat[]>([]);
-  const [draft, setDraft] = useState("");
-  const [chatOpenedAt, setChatOpenedAt] = useState("");
-  const [closedNote, setClosedNote] = useState<"closed" | "new" | null>(null);
-  if (!settings.chatEnabled) return null;
-  const load = () => { void api.getChatMessages({}).then((r) => setMsgs(r.messages)); };
-  const fmtTime = (iso: string) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? "" : d.toLocaleTimeString("fr-FR", { hour: "numeric", minute: "2-digit" }); };
-  const nowTime = () => new Date().toLocaleTimeString("fr-FR", { hour: "numeric", minute: "2-digit" });
-  const hasAdvisorMsg = msgs.some((m) => m.from !== "customer");
-  const openPanel = () => { setOpen(true); setStage("consent"); setClosedNote(null); load(); };
-  const closePanel = () => { const wasChat = stage === "chat"; setOpen(false); if (wasChat) setClosedNote(hasAdvisorMsg ? "new" : "closed"); };
-  const continueChat = () => { setStage("loading"); setChatOpenedAt(nowTime()); window.setTimeout(() => setStage("chat"), 900); };
-  const send = async () => {
-    const t = draft.trim();
-    if (!t) return;
-    const r = await api.sendChatMessage({ from: "customer", text: t });
-    if (r.ok) { setDraft(""); load(); }
-  };
-  // Desktop raise is state-driven: only while the sticky bar is visible
-  // (buyBarVisible); otherwise the desktop bubble stays at bottom-5.
-  // Hidden on the MOBILE homepage: the original's mobile homepage shows
-  // no floating chat bubble (user's video, 2026-11-12) while ours sat on
-  // top of the product photos below the carousel. Desktop homepage keeps
-  // it (the original has it there).
-  const barVisible = view.t === "product" && !!buyBarVisible;
-  return (
-    <div className={`fixed z-40 flex flex-col items-end gap-2 right-5 ${view.t === "home" ? "max-lg:hidden" : ""} ${view.t === "product" ? "bottom-[calc(76px+env(safe-area-inset-bottom))]" : "bottom-5"} ${barVisible ? "lg:bottom-[76px]" : "lg:bottom-5"}`}>
-      {open && (
-        <>
-          <button aria-label="Close the live chat with an advisor" className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-lg leading-none text-neutral-600 shadow-lg ring-1 ring-black/10" onClick={closePanel}>×</button>
-          <div className="w-[390px] max-w-[calc(100vw-40px)] bg-white p-4 shadow-xl ring-1 ring-black/10" role="dialog" aria-label="Message">
-            <div className="flex items-center justify-between">
-              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em]">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5Z" /><path d="M8 10.5h8M8 13.5h5" /></svg>
-                Message
-              </p>
-              <button aria-label="Collapse live chat" className="flex h-8 w-8 items-center justify-center text-neutral-600" onClick={closePanel}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-              </button>
-            </div>
-            {stage === "consent" && (
-              <div role="alertdialog" aria-label="Live chat consent">
-                <p className="mt-2 text-sm leading-6 text-neutral-700">En utilisant notre Chat en direct, vous acceptez l'utilisation de vos données personnelles par Hermès of Paris afin de répondre à vos demandes concernant un produit ou un service et d'améliorer l'expérience client. Pour en savoir plus sur la gestion de vos données personnelles et sur vos droits, veuillez consulter notre <button type="button" aria-label="Politique de confidentialité" className="underline" onClick={() => { closePanel(); go({ t: "page", page: "privacy" }); }}>Politique de confidentialité</button>.</p>
-                <button aria-label="Continue to live chat" className="mx-auto mt-5 block border border-black px-8 py-2.5 text-[11px] font-semibold uppercase tracking-[0.2em]" onClick={continueChat}>Continue</button>
-              </div>
-            )}
-            {stage === "loading" && (
-              <div className="flex items-center justify-center py-16" aria-label="Loading live chat">
-                <span className="h-8 w-8 animate-spin rounded-full border-2 border-black/15 border-t-black" aria-hidden="true" />
-              </div>
-            )}
-            {stage === "chat" && (
-              <>
-                <div className="mt-3 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-neutral-500"><span className="h-px flex-1 bg-black/10" aria-hidden="true" />Today<span className="h-px flex-1 bg-black/10" aria-hidden="true" /></div>
-                <div className="mt-3 max-h-[50vh] space-y-2 overflow-y-auto">
-                  <div className="max-w-[85%] bg-[#f6f1eb] px-3 py-2 text-sm leading-5">
-                    {/* The admin "Chat welcome message" setting (Admin Panel >
-                        Theme & Settings) overrides the original's verbatim
-                        welcome; empty means the original's text stands. */}
-                    {(settings.chatWelcome ?? "").trim() || "Welcome to Hermès.com Live Chat! We are delighted to assist you and a Client Specialist will be with you shortly."}
-                    <p className="mt-1 text-right text-[10px] text-neutral-500">{chatOpenedAt}</p>
-                  </div>
-                  {msgs.map((m) => m.from === "customer" ? (
-                    <div key={m.id} className="ml-auto max-w-[85%] text-right">
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-neutral-500">You</p>
-                      <p className="bg-black px-3 py-2 text-left text-sm leading-5 text-white">{m.text}</p>
-                      <p className="mt-0.5 text-[10px] text-neutral-500">{fmtTime(m.createdAt)}</p>
-                    </div>
-                  ) : (
-                    <div key={m.id} className="max-w-[85%] bg-[#f6f1eb] px-3 py-2 text-sm leading-5">
-                      {m.text}
-                      <p className="mt-1 text-right text-[10px] text-neutral-500">{fmtTime(m.createdAt)}</p>
-                    </div>
-                  ))}
-                </div>
-                <form aria-label="Send a message to an advisor" className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); void send(); }}>
-                  <input aria-label="Your message" required maxLength={1000} className="min-w-0 flex-1 border border-black/20 bg-white px-3 py-2.5 text-sm outline-none" placeholder="Your message" value={draft} onChange={(e) => setDraft(e.target.value)} />
-                  <button aria-label="Send" type="submit" className="flex w-11 shrink-0 items-center justify-center bg-black text-white">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M21 3 10.5 13.5M21 3l-7 18-3.5-7.5L3 10l18-7Z" /></svg>
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        </>
-      )}
-      <button aria-label="Open a Live Chat with an advisor" aria-expanded={open} className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-black/10" onClick={() => { if (open) closePanel(); else openPanel(); }}>
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 20l1.1-5.3A8.5 8.5 0 1 1 21 11.5Z" /><path d="M8 10.5h8M8 13.5h5" /></svg>
-      </button>
-      {!open && closedNote === "closed" && <p className="text-[11px] text-neutral-600">Live chat support closed</p>}
-      {!open && closedNote === "new" && <p className="text-[11px] text-neutral-600">New message from Live chat support</p>}
-    </div>
-  );
-}
-
 function Footer({ settings, go }: { settings: Settings; go: (v: View, opts?: { restore?: boolean }) => void }) {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState("");
@@ -9316,8 +9137,9 @@ function CheckoutView({ cart, setCart, user, go, total, settings, products }: { 
     </div>, 2);
 }
 
-// Admin Panel — Chat tab. Reads the same localStorage thread (hv-chat)
-// the customer ChatBubble writes to, so both sides see one thread.
+// Admin Panel — Chat tab. Reads the localStorage thread (hv-chat).
+// (The customer live chat was removed — the original has none — so this
+// thread receives no new customer messages.)
 // Admin edits are per-browser only (localStorage, no working backend):
 // messages live in this browser only.
 function AdminChat({ email, password, sessionToken, contact }: { email: string; password: string; sessionToken: string; contact: LocalContact[] }) {
