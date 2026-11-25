@@ -12024,6 +12024,7 @@ const NEW_TILE: Record<number, string> = {
   12348: "https://assets.hermes.com/is/image/hermesproduct/P25SETD18B_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   12349: "https://assets.hermes.com/is/image/hermesproduct/P25SETD17B_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
   12350: "https://assets.hermes.com/is/image/hermesproduct/011858UJ89_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
+  11003: "https://assets.hermes.com/is/image/hermesproduct/026022P_front_wm_101?wid=750&hei=1000&fit=fit&$product_default_bg$",
 };
 
 const BAG_POOL = [picotinLock18V2, kellyShoulderV2, tablierSellier, boxBag, doubleLonge, neoDoubleSens35, fallbackHandbag];
