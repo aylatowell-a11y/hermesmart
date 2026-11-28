@@ -1815,11 +1815,13 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
     // products' stored `theme` values do not carry these names, so the
     // destinations are explicit — each one is the JSON token's own category
     // path (routing.ts maps cat+sub to the same France URL).
+    // 2026-11-27 republish (publishedTimestamp 1795792540): "Montres Homme"
+    // now links to bijouterie/homme on the original, not montres/homme.
     if (t === "Cadeaux Femme") return { t: "category", cat: "cadeaux", sub: "Pour femme" };
     if (t === "Bijouterie Or") return { t: "category", cat: "bijouterie", sub: "Bijoux en or" };
     if (t === "Chaussures Femme") return { t: "category", cat: "femme", sub: "Chaussures" };
     if (t === "Chaussures homme") return { t: "category", cat: "homme", sub: "Chaussures" };
-    if (t === "Montres Homme") return { t: "category", cat: "montres", sub: "Homme" };
+    if (t === "Montres Homme") return { t: "category", cat: "bijouterie", sub: "Homme" };
     const rep = products.find((p) => p.theme === t);
     return rep ? { t: "category", cat: rep.category } : { t: "home" };
   };
@@ -2019,13 +2021,15 @@ function HomeView({ settings, products, themeIdx, setThemeIdx, go, addToCart, pu
           centred ~60px above the video bottom. Controls are bare white
           glyphs (no white squares) at the video's bottom-right, ~25px
           above the bottom, sound closest to the right edge. The NID banner
-          abuts directly below (no gap). */}
+          abuts directly below (no gap).
+          CTA destination retargeted 2026-11-27 (homepage republish
+          1795792540): petite-maroquinerie, not portefeuilles. */}
       <section ref={vidRef} className="relative overflow-hidden bg-black" aria-label="Explorez la petite maroquinerie — vidéo">
         <div className="relative overflow-hidden">
         <ProductVideo src={cottageSrc} poster={cottagePoster} playing={!vidPaused && vidInView} muted={vidMuted} className="h-[75vh] w-full object-cover lg:h-screen" />
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[53%] bg-gradient-to-t from-black via-black/60 to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-[58px] z-10 px-4 text-center text-white">
-          <button aria-label="Explorez la petite maroquinerie" className="font-mono-d pointer-events-auto text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => go({ t: "category", cat: "maroquinerie", sub: "Portefeuilles" })}>Explorez la petite maroquinerie</button>
+          <button aria-label="Explorez la petite maroquinerie" className="font-mono-d pointer-events-auto text-xs font-medium uppercase tracking-normal underline underline-offset-8" onClick={() => go({ t: "category", cat: "maroquinerie", sub: "Petite Maroquinerie" })}>Explorez la petite maroquinerie</button>
         </div>
         <div className="absolute bottom-[10px] right-[10px] z-10 flex items-center gap-[5px]">
           <button aria-label={vidPaused ? "Play video" : "Pause video"} aria-pressed={vidPaused} className="flex h-9 w-9 items-center justify-center text-white" onClick={() => setVidPaused(!vidPaused)}>
